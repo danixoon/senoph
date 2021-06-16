@@ -1,5 +1,5 @@
 {
-  "name": "pongchat-client",
+  "name": "senoph-client",
   "version": "0.0.1",
   "main": "./build/index.js",
   "author": "Daniil Bombenkov <danixoon@gmail.com>",

@@ -8,7 +8,7 @@ import Link from "components/Link";
 storiesOf("Components/Text/List Item", module).add("simple-xs", () => (
   <PopupLayerProvider>
     <ListItem label="ID">
-      <Link altLabel={{ text: "ого нихуя умная система" }} isMonospace>
+      <Link href="#" altLabel={{ text: "ого нихуя умная система" }} isMonospace>
         #5e064bcd674976450ca574da
       </Link>
     </ListItem>

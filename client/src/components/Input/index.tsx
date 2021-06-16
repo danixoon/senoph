@@ -28,7 +28,7 @@ const Input: React.FC<InputProps> = (props) => {
         <Label
           className="input__label"
           weight="medium"
-          size={size === "sm" ? "xs" : "sm"}
+          size={size}
         >
           {label}
         </Label>

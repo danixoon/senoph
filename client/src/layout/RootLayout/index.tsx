@@ -1,4 +1,5 @@
 import SideBarContainer from "containers/SideBar";
+import PhonePageContainer from "containers/PhonePage";
 import * as React from "react";
 import { Redirect, Route, Switch } from "react-router-dom";
 
@@ -9,8 +10,8 @@ const RootLayout: React.FC<RootLayoutProps> = (props) => {
     <>
       <SideBarContainer />
       <Switch>
-        <Route path="/">
-          what??
+        <Route path="/phone">
+          <PhonePageContainer />
         </Route>
         <Route path="*">
           <Redirect to="/" />

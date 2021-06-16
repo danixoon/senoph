@@ -70,11 +70,9 @@ declare type StateSchema<
 
 declare type OverrideProps<F, T> = Omit<F, keyof T> & T;
 
-declare type WithHookOnChange = {
-  onChange: (e: {
-    target: { name: string; type?: string; value: any };
-  }) => void;
-};
+declare type HookOnChange = (e: {
+  target: { name: string; type?: string; value: any };
+}) => void;
 
 declare type StateCreator<T extends object> = () => T;
 

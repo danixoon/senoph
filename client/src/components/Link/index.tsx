@@ -1,3 +1,4 @@
+import { Link as RouterLink } from "react-router-dom";
 import { withAltLabel } from "hoc/withAltLabel";
 import * as React from "react";
 import { mergeClassNames, mergeProps } from "utils";
@@ -11,7 +12,7 @@ interface LinkProps
   size?: "xs" | "sm";
 }
 
-const Link: React.FC<LinkProps> = (props: LinkProps) => {
+const Link: React.FC<LinkProps> = ({ href = "#", ...props }: LinkProps) => {
   const { children, isMonospace, size = "xs", onClick, ...rest } = props;
 
   const mergedProps = mergeProps(
@@ -26,9 +27,9 @@ const Link: React.FC<LinkProps> = (props: LinkProps) => {
   );
 
   return (
-    <a tabIndex={0} {...mergedProps} onClick={onClick}>
+    <RouterLink to={href} tabIndex={0} {...mergedProps} onClick={onClick}>
       {children}
-    </a>
+    </RouterLink>
   );
 };
 

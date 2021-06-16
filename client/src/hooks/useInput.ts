@@ -2,7 +2,8 @@ import * as React from "react";
 
 export type InputHook<T = any> = {
   input: T;
-} & WithHookOnChange;
+  onChange: HookOnChange;
+};
 
 export const useInput = function <T extends object = any>(
   defaultValue: T = {} as T

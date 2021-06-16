@@ -1,7 +1,7 @@
 // import { getAction } from "../redux/types";
 
 export const mergeClassNames = (
-  ...names: (string | undefined | false | null)[]
+  ...names: (string | undefined | boolean | null)[]
 ) => {
   return names.filter((name) => typeof name === "string").join(" ");
 };

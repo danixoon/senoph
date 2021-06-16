@@ -16,7 +16,8 @@ type SwitchProps = OverrideProps<
     input: any;
     name: string;
     items: SwitchItem[];
-  } & WithHookOnChange
+    onChange: HookOnChange;
+  }
 >;
 
 const Switch: React.FC<SwitchProps> = (props) => {

@@ -1,0 +1,53 @@
+@require 'stylus/theme.styl'
+
+
+tr
+  &.row_selectable
+    cursor: pointer
+
+    &:hover
+      background-color: colors.light
+
+    &.row_selected
+      background-color: colors.primary
+
+      & > td
+        border-color: colors.primary
+
+td
+  @extend .border, .padding_md
+      
+  &.cell_sortable
+    cursor: pointer
+    user-select: none
+    position: relative
+    padding-right: padding.lg * 3
+
+    &:after
+      content: url('icons/arrowDown.svg')
+      transition: transform 0.1s ease-in-out
+      transform: scaleY(1)
+      position: absolute
+      right: 5px
+      top: 5px
+      display: none
+
+    &.sort_asc
+      &:after
+        transform: scaleY(-1)
+        display: block
+
+    &.sort_desc
+      &:after
+        transform: scaleY(1)
+        display: block
+      
+        
+    
+
+thead
+  @extend .weight_medium
+  text-align: center
+
+.table
+  border-spacing: 0

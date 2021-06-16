@@ -12,18 +12,18 @@ export type RootContainerProps = {};
 const queryCache = new QueryCache();
 
 const Root: React.FC<RootContainerProps> = (props) => {
-  return (  
-  <React.StrictMode>
-    <Provider store={store}>
-      <ReactQueryCacheProvider queryCache={queryCache}>
-        <PopupLayerProvider>
-          <ConnectedRouter history={history}>
-             <RootLayout />
-          </ConnectedRouter>
-        </PopupLayerProvider>
-      </ReactQueryCacheProvider>
-    </Provider>
-  </React.StrictMode>
+  return (
+    <React.StrictMode>
+      <Provider store={store}>
+        <ConnectedRouter history={history}>
+          <ReactQueryCacheProvider queryCache={queryCache}>
+            <PopupLayerProvider>
+              <RootLayout />
+            </PopupLayerProvider>
+          </ReactQueryCacheProvider>
+        </ConnectedRouter>
+      </Provider>
+    </React.StrictMode>
   );
 };
 

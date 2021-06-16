@@ -52,6 +52,7 @@ module.exports = {
   output: {
     filename: "bundle.js",
     path: path.resolve(__dirname, "build"),
+    publicPath: "/build/",
   },
   plugins: [
     new HtmlWebpackPlugin({
@@ -63,7 +64,9 @@ module.exports = {
     contentBase: path.resolve(__dirname, "build"),
     compress: true,
     port: 3000,
+    writeToDisk: true,
     historyApiFallback: true,
+    open:  true,
     proxy: {
       "/api": {
         target: "http://localhost:5000/api",

@@ -5,7 +5,7 @@ import "./styles.styl";
 import { ReactComponent } from "icons/arrowDown.svg";
 import Button from "components/Button";
 
-type DropdownItem = { id: any; label: string; payload: any };
+type DropdownItem = { id: any; label: string; payload?: any };
 
 type DropdownProps = OverrideProps<
   React.InputHTMLAttributes<HTMLInputElement>,
