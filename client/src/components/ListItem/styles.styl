@@ -1,0 +1,17 @@
+@require 'stylus/theme.styl'
+
+.list-item
+  margin: margin.sm margin.md
+  display: flex
+  align-items: center
+
+  &__label
+    @extend .monospace
+    flex: 1
+    margin-right: margin.lg
+    white-space: nowrap
+
+  &__content
+    flex: 10
+    display: flex
+    flex-flow: row wrap

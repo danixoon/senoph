@@ -1,0 +1,43 @@
+@require 'stylus/theme.styl'
+
+.toggle
+  margin: 5px
+  position: relative
+  display: flex
+  align-items: center
+  height: 20px
+  outline: none
+  cursor: pointer
+
+  &__container
+    border-radius: 10px
+    display: flex
+
+  &__icon
+    & > ^[0]__circle
+      transition: transform 0.1s ease-in-out
+      transform: translateX(3px) translateY(3px)
+
+      ^[1]_checked&
+        transform: translateX(19px) translateY(3px)
+
+    & > ^[0]__background
+      fill: colors.disabled
+      transition: fill 0.1s ease-in
+
+      ^[1]_checked&
+        fill: colors.primary
+
+      ^[1]_disabled&
+        fill: lighten(colors.disabled, 50%)
+
+        ^[1]_checked&
+          fill: lighten(colors.primary, 50%)
+
+  &__input
+    width: 0px
+    height: 0px
+    position: absolute
+
+    &:focus + ^[0]__container
+      @extend .focus

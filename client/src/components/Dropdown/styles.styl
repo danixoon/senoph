@@ -1,0 +1,65 @@
+@require 'stylus/theme.styl'
+
+.dropdown
+  margin: margin.md
+  position: relative
+  height: 40px
+
+  &__container
+    background-color: colors.white
+    padding: 0
+    margin: 0
+    position: absolute
+    top: 20px
+    width: 100%
+    border-radius: radius.sm
+
+    ^[0]_opened > &
+      @extend .shadow
+      z-index: zIndex.focused
+
+    & > .dropdown-item
+      align-items: center
+      position: relative
+      margin: 0
+      padding: 0px 5px
+      outline: none
+      display: none
+      cursor: pointer
+      background-color: colors.white
+
+      ^[0]_opened > &
+        display: flex
+        z-index: zIndex.focused
+
+      &:hover, &:focus
+        background-color: colors.light
+        // z-index: 1
+        // outline: none !important
+
+      &:focus
+        z-index: zIndex.focused + 1
+
+      &:first-child
+        display: flex
+        border-radius: radius.sm
+
+        ^[0]_disabled > &
+          background-color: colors.light
+
+        &:after
+          content: url('icons/arrowDown.svg')
+          transition: transform 0.1s ease-in-out
+          transform: scaleY(1)
+          position: absolute
+          right: 5px
+          top: 1px
+
+        ^[0]_opened > &
+          border-radius: radius.sm radius.sm 0px 0px
+
+          &:after
+            transform: scaleY(-1)
+
+      &:last-child
+        border-radius: 0 0 radius.sm (radius.sm)

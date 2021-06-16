@@ -1,0 +1,28 @@
+@require 'stylus/theme.styl'
+
+.spoiler
+  margin: margin.md
+
+  &__container
+    overflow: hidden
+    max-height: 0px
+    display: none
+
+    ^[0]_opened > &
+      max-height: initial
+      display: block
+
+  &__label
+    @extend .focusable, .unselectable
+
+    &:after
+      content: url('icons/spoilerArrow.svg')
+      display: inline
+      margin-left: margin.sm * 2
+      transition: transform 0.1s ease-in-out
+      transform: scaleY(1)
+      height: 20px
+
+    ^[0]_opened > * > &
+      &:after
+        transform: scaleY(-1) !important

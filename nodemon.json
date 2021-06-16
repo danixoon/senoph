@@ -1,0 +1,14 @@
+{
+  "restartable": "rs",
+  "ignore": [".git", "node_modules/**/node_modules", "client"],
+  "events": {
+    "start": "kill-port 5000",
+    "restart": "kill-port 5000",
+    "crash": "kill-port 5000"
+  },
+  "delay": "5000",
+  "env": {
+    "NODE_ENV": "development"
+  },
+  "ext": "js,json,ts,yml"
+}

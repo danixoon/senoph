@@ -1,0 +1,29 @@
+@require 'stylus/theme.styl'
+
+.badge
+  @extend .monospace
+  margin: margin.sm
+  padding: 0 padding.md
+  font-size: fontSize.xs
+  background-color: colors.white
+  border-radius: radius.sm
+  display: flex
+  justify-content: center
+  align-items: center
+
+  &_interactive
+    @extend .focusable
+
+  &_secondary
+    color: colors.bgDark
+    border: 1px solid colors.bgDark
+
+  &_primary
+    color: colors.primary
+    border: 1px solid colors.primary
+
+  &_warn
+    &:after
+      content: url('icons/badgeWarn.svg')
+      height: 14px
+      margin-left: margin.md

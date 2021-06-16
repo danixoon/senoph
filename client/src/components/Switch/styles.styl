@@ -1,0 +1,19 @@
+@require 'stylus/theme.styl'
+
+.switch
+  display: flex
+  padding: 0
+  margin: margin.md
+
+  & > li
+    flex-basis: 150px
+    margin: 0px margin.lg
+
+  &__item
+    @extend .focusable
+    text-align: center
+    border-bottom: 2px solid colors.secondary
+    padding-bottom: padding.lg
+
+    ^[1]_selected&
+      border-bottom: 2px solid colors.primary

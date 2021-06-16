@@ -1,0 +1,18 @@
+@require 'stylus/theme.styl'
+
+.link
+  @extend .focusable
+  text-decoration: underline
+  color: colors.bgDark
+
+  &:hover
+    color: colors.primary
+
+  &_xs
+    font-size: fontSize.xs
+
+  &_sm
+    font-size: fontSize.sm
+
+  &_monospace
+    @extend .monospace

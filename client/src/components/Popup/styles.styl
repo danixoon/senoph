@@ -1,0 +1,36 @@
+@require 'stylus/theme.styl'
+
+.popup
+  pointer-events: all
+  position: relative
+  flex: 1
+  display: flex
+  flex-flow: column
+  z-index: zIndex.popup
+
+  &__fade
+    position: absolute
+    left: 0
+    top: 0
+    height: 100%
+    width: 100%
+    background-color: rgba(colors.white, 50%)
+    backdrop-filter: blur(2px)
+
+  &__container
+    @extend .border, .shadow
+    border-radius: radius.lg
+    background-color: colors.white
+    margin: auto
+    position: relative
+    padding: padding.lg
+    display flex
+
+  &__close
+    @extend .focusable
+    content: url('icons/crossBig.svg')
+    position: absolute
+    top: -30px
+    right: -30px
+    height: 30px
+    width: auto

@@ -1,0 +1,4 @@
+<svg width="32" height="16" viewBox="0 0 32 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect class="toggle-background" width="32" height="16" rx="8" fill="#FB6376"/>
+  <circle class="toggle-circle" cx="5" cy="5" r="5" fill="white"/>
+</svg>

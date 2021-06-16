@@ -1,0 +1,43 @@
+@require 'stylus/theme.styl'
+
+.checkbox
+  margin: margin.md
+  cursor: pointer
+  position: relative
+  display: flex
+  height: 20px
+  outline: none
+
+  &__input
+    width: 0px
+    height: 0px
+
+  & > &__icon
+    @extend .focusable
+    box-sizing: border-box
+    border-radius: 4px
+    border: 2px solid colors.primary
+    background-color: colors.white
+    transition: background-color 0.1s ease-in-out
+    min-width: 16px
+    height: 16px
+    padding: 0px
+    margin: 0px
+
+    &::before
+      content: ''
+      left: 0px
+      top: -3px
+      position: absolute
+
+    ^[0]_checked&
+      background-color: colors.primary
+
+      &::before
+        content: url('icons/check.svg')
+
+    ^[0]_disabled&
+      border-color: lighten(colors.primary, 50%)
+
+    ^[0]_checked^[0]_disabled&
+      background-color: lighten(colors.primary, 50%)

@@ -1,0 +1,24 @@
+@require 'stylus/theme.styl'
+
+.alt-popup
+  @extend .unselectable
+  display: flex
+  position: absolute
+  background-color: colors.bgDark
+  border-radius: radius.sm
+  text-align: center
+  padding: padding.md (padding.lg)
+  z-index: zIndex.alt
+  pointer-events: none
+  width: 120px
+  height: 40px
+
+  &_z-popup
+    z-index: zIndex.alt + zIndex.popup
+
+  &__label
+    color: colors.white
+    margin: auto
+
+  &__icon
+    position: absolute

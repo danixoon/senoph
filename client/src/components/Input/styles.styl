@@ -1,0 +1,32 @@
+@require 'stylus/theme.styl'
+
+.input
+  margin: margin.md
+  position: relative
+
+  &__info
+    @extend .monospace
+    font-weight: 700
+    position: absolute
+    left: 0px
+    bottom: -12px
+    width: 100%
+    text-align: center
+    font-size: 12px
+    color: colors.primary
+
+  &__element
+    @extend .focusable
+    @extend .border
+    border-radius: radius.sm
+    color: colors.dark
+    width: 100%
+    font: inherit
+
+  &_sm
+    height: 20px
+    font-size: fontSize.sm
+
+  &_md
+    height: 30px
+    font-size: fontSize.md

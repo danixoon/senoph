@@ -1,0 +1,27 @@
+@require 'stylus/theme.styl'
+
+.btn-group
+  display: flex
+
+  & > *
+    border-radius: 0px
+    margin: 0px
+    flex: 1
+
+    &:first-child
+      border-radius: radius.sm 0px 0px (radius.sm)
+
+      ^[0]_top&
+        border-radius: radius.sm 0px 0px 0px 0
+
+      ^[0]_bottom&
+        border-radius: 0px 0px 0px radius.sm
+
+    &:last-child
+      border-radius: 0px radius.sm radius.sm 0px
+
+      ^[0]_top&
+        border-radius: 0px radius.sm 0px 0px
+
+      ^[0]_bottom&
+        border-radius: 0px 0px radius.sm 0px

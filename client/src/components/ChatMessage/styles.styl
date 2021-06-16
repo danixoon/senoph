@@ -1,0 +1,26 @@
+@require 'stylus/theme.styl'
+
+.chat-message
+  margin: margin.sm
+  max-width: 200px
+  display: flex
+  flex-flow: column
+
+  &__info
+    float: right
+    padding: padding.md !important
+
+  &__content
+    background-color: colors.bgLight
+    color: colors.dark
+    padding: padding.md
+    border-radius: radius.sm
+    word-break: break-word
+
+    ^[0]_actions > &
+      border-radius: @border-radius @border-radius 0 0
+
+  &__author
+    margin-left: auto
+    margin-right: margin.sm
+    float: right

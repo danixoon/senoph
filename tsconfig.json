@@ -1,0 +1,22 @@
+{
+  "include": ["./src/**/*"],
+  "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.ts"],
+  "compilerOptions": {
+    "baseUrl": "./src/",
+    "paths": {
+      "@backend/utils": ["./utils.ts"],
+      "@backend/db/*": ["./db/*"],
+      "@backend/middleware/*": ["./middleware/*"]
+    },
+    "module": "commonjs",
+    "target": "es6",
+    "noImplicitAny": true,
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "skipLibCheck": true,
+    "strictNullChecks": true,
+    "esModuleInterop": true,
+    "outDir": "build",
+    "plugins": [{ "transform": "typescript-transform-paths" }]
+  }
+}

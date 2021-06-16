@@ -1,0 +1,15 @@
+@require 'stylus/theme.styl'
+
+.label
+  font-size: fontSize.sm
+  font-weight: fontWeight.medium
+  color: colors.bgDark
+  min-height: 20px
+  display: block
+
+  &_unselectable
+    @extend .unselectable
+
+  for key, value in fontSize
+    &_{key}
+      font-size: value

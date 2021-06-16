@@ -1,0 +1,38 @@
+@require 'stylus/theme.styl'
+
+.btn
+  @extend .focusable
+  cursor: pointer
+  border: none
+  font-family: inherit
+  color: colors.white
+  margin: margin.sm
+
+  &_sm
+    @extend .radius-sm
+    min-height: 20px
+    font-size: fontSize.sm
+    padding: 0 padding.lg
+
+  &_md
+    @extend .radius-sm
+    min-height: 30px
+    font-size: fontSize.md
+    font-weight: fontWeight.medium
+    padding: padding.md (padding.lg)
+
+  &_invisible
+    background-color: transparent
+    padding: 0
+    width: 100%
+    border-radius: 0
+
+  for key, value in colors
+    &_{key}
+      background-color: value
+
+      &[disabled]
+        background-color: lighten(@background-color, 50%)
+
+      &:active
+        background-color: darken(@background-color, 10%)
