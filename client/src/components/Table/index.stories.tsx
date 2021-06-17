@@ -5,11 +5,11 @@ import React from "react";
 import Table from ".";
 
 storiesOf("Components/Containers/Table", module).add("simple", () => {
-  const bind = useInput({ selectedId: 0 });
+  // const bind = useInput({ selectedId: 0 });
   return (
     <Table
-      {...bind}
-      name="selectedId"
+      // {...bind}
+      // name="selectedId"
       items={[
         { id: 0, name: "Pupa" },
         { id: 1, name: "Loopa" },

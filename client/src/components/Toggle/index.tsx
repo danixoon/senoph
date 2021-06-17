@@ -6,34 +6,38 @@ import Label from "components/Label";
 import Button from "components/Button";
 
 type ToggleProps = OverrideProps<
-  React.InputHTMLAttributes<HTMLInputElement>,
+  React.HTMLAttributes<HTMLElement>,
   {
     input: any;
     name: string;
     label: string;
+    disabled?: boolean;
+    onChange: HookOnChange;
   }
 >;
 
 const Toggle: React.FC<ToggleProps> = (props) => {
-  const { label, input, disabled, ...rest } = props;
+  const { label, input, disabled, onChange, name, ...rest } = props;
 
   const mergedProps = mergeProps(
-    { className: mergeClassNames(`toggle__input`) },
+    { className: mergeClassNames("toggle") },
     rest
   );
 
-  const checked = input[rest.name];
+  const checked = input[name];
 
   return (
-    <label className="toggle">
+    <label {...mergedProps}>
       <Label unselectable margin="right" className="toggle__label">
         {label}
       </Label>
       <input
+        className="toggle__input"
         type="checkbox"
-        {...mergedProps}
         disabled={disabled}
         checked={checked}
+        onChange={onChange}
+        name={name}
       />
       <div className="toggle__container">
         <svg

@@ -23,19 +23,21 @@ const Dropdown: React.FC<DropdownProps> = (props) => {
 
   const [isOpened, toggleOpen] = React.useState(() => false);
 
-  let listItems = [...items];
-  let selectedItem: ArrayElement<DropdownProps["items"]> = listItems.find(
-    (item, i) => {
+  const emptyItem = {
+    label: "Не выбрано",
+    id: null,
+    payload: {},
+  };
+
+  let listItems =
+    input[name] !== undefined ? [emptyItem, ...items] : [...items];
+  let selectedItem: ArrayElement<DropdownProps["items"]> =
+    listItems.find((item, i) => {
       if (item.id === input[name]) {
         listItems.splice(i, 1);
         return true;
       }
-    }
-  ) ?? {
-    label: "Не выбрано",
-    id: "0",
-    payload: {},
-  };
+    }) ?? emptyItem;
 
   const handleItemSelect = (item: DropdownItem) => {
     onChange({ target: { name: props.name, value: item.id } });
@@ -76,7 +78,7 @@ const Dropdown: React.FC<DropdownProps> = (props) => {
         }}
       >
         <Button color="invisible" className="dropdown-item">
-          <Label unselectable>{selectedItem.label}</Label>
+          <Label className="dropdown-item__label" unselectable>{selectedItem.label}</Label>
         </Button>
         {listItems.map((item, i) => (
           <Button

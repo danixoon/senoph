@@ -2,16 +2,19 @@ import Layout from "components/Layout";
 import Link from "components/Link";
 import LinkItem from "components/LinkItem";
 import Spoiler from "components/Spoiler";
+import Toggle from "components/Toggle";
 import LinkItemContainer from "containers/LinkItem";
+import { useInput } from "hooks/useInput";
 import * as React from "react";
 import "./style.styl";
 
-export type SideBar = { page: "phone" | "category" | "holding" };
+export type SideBar = { page: "phone" | "category" | "holding" | "admin" };
 
 const SideBar: React.FC<SideBar> = (props) => {
   const { page } = props;
   const handleSpoilerToggle = () => {};
-  const isSpoilerOpened = (spoilerPage: string) => page === spoilerPage;
+
+
 
   return (
     <Layout className="sidebar">
@@ -21,7 +24,7 @@ const SideBar: React.FC<SideBar> = (props) => {
         label="Модели ТА"
       >
         <Layout className="sidebar__group">
-          <LinkItemContainer href="/phone/filter">Просмотр</LinkItemContainer>
+          <LinkItemContainer href="/phone/view">Просмотр</LinkItemContainer>
           <LinkItemContainer href="/phone/edit">Управление</LinkItemContainer>
         </Layout>
       </Spoiler>
@@ -31,7 +34,7 @@ const SideBar: React.FC<SideBar> = (props) => {
         label="Движения"
       >
         <Layout className="sidebar__group">
-          <LinkItemContainer href="/holding/filter">Просмотр</LinkItemContainer>
+          <LinkItemContainer href="/holding/view">Просмотр</LinkItemContainer>
           <LinkItemContainer href="/holding/edit">Управление</LinkItemContainer>
         </Layout>
       </Spoiler>
@@ -41,7 +44,7 @@ const SideBar: React.FC<SideBar> = (props) => {
         label="Категорирование"
       >
         <Layout className="sidebar__group">
-          <LinkItemContainer href="/category/filter">
+          <LinkItemContainer href="/category/view">
             Просмотр
           </LinkItemContainer>
           <LinkItemContainer href="/category/edit">
@@ -49,6 +52,16 @@ const SideBar: React.FC<SideBar> = (props) => {
           </LinkItemContainer>
         </Layout>
       </Spoiler>
+      <Spoiler
+        opened={page === "admin"}
+        onToggle={page === "admin" ? handleSpoilerToggle : undefined}
+        label="Администрирование"
+      >
+        <Layout className="sidebar__group">
+          <LinkItemContainer href="/admin/panel">Управление</LinkItemContainer>
+        </Layout>
+      </Spoiler>
+     
     </Layout>
   );
 };

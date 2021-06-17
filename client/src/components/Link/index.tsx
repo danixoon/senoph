@@ -10,8 +10,8 @@ export interface LinkProps
   > {
   isMonospace?: boolean;
   size?: "xs" | "sm";
+  
 }
-
 const Link: React.FC<LinkProps> = ({ href = "#", ...props }: LinkProps) => {
   const { children, isMonospace, size = "xs", onClick, ...rest } = props;
 

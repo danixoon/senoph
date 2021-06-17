@@ -15,25 +15,23 @@ type InputProps = OverrideProps<
 >;
 
 const Input: React.FC<InputProps> = (props) => {
-  const { label, info, size = "sm", input, ...rest } = props;
+  const { label, info, size = "sm", input, name, onChange, ...rest } = props;
 
-  const mergedProps = mergeProps(
-    { className: mergeClassNames(`input__element input_${size}`) },
-    rest
-  );
+  const mergedProps = mergeProps({ className: mergeClassNames(`input`) }, rest);
 
   return (
-    <div className="input">
+    <div {...mergedProps}>
       {label && (
-        <Label
-          className="input__label"
-          weight="medium"
-          size={size}
-        >
+        <Label className="input__label" weight="medium" size={size}>
           {label}
         </Label>
       )}
-      <input {...mergedProps} value={input[rest.name] ?? ""} />
+      <input
+        className={mergeClassNames(`input__element input_${size}`)}
+        value={input[name] ?? ""}
+        name={name}
+        onChange={onChange}
+      />
       {info && <small className="input__info">{info}</small>}
     </div>
   );

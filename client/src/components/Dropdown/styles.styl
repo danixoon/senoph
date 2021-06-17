@@ -5,6 +5,13 @@
   position: relative
   height: 40px
 
+
+  &-item__label
+    text-overflow: ellipsis
+    overflow: hidden
+    white-space: nowrap
+    padding-right: padding.md * 3
+
   &__container
     background-color: colors.white
     padding: 0
@@ -27,6 +34,8 @@
       display: none
       cursor: pointer
       background-color: colors.white
+
+    
 
       ^[0]_opened > &
         display: flex

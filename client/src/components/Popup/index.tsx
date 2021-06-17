@@ -20,7 +20,10 @@ const Popup: React.FC<PopupProps> = (props: PopupProps) => {
 
   const mergedProps = mergeProps(
     {
-      className: mergeClassNames("popup__container"),
+      className: mergeClassNames(
+        "popup__container",
+        `popup__container_${size}`
+      ),
     },
     rest
   );
@@ -38,7 +41,7 @@ const Popup: React.FC<PopupProps> = (props: PopupProps) => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.06 }}
-          className={`popup popup_${size}`}
+          className="popup"
         >
           <div onClick={handleOnToggle} className="popup__fade" />
           <div {...mergedProps}>
