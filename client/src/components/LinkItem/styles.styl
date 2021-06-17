@@ -1,0 +1,18 @@
+@require 'stylus/theme.styl'
+
+.link-item
+  @extend .focusable
+  // text-decoration: underline
+  color: colors.bgDark
+  font-size: fontSize.sm
+  padding: padding.md
+  margin: margin.sm
+
+  &:hover
+    color: colors.primary
+    @extend .focus
+
+  &_selected
+    border-right: 2px solid colors.primary
+
+  

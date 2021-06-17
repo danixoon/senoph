@@ -24,7 +24,7 @@ type TableProps = OverrideProps<
     columns: TableColumn[];
     name?: string;
     onChange?: HookOnChange;
-    input: any;
+    input?: any;
   }
 >;
 
@@ -43,7 +43,7 @@ const TableCell: React.FC<TableCellProps> = ({ children, ...props }) => {
 const Table: React.FC<React.PropsWithChildren<TableProps>> = (
   props: TableProps
 ) => {
-  const { items, columns, onChange, input, name, ...rest } = props;
+  const { items, columns, onChange, input = {}, name, ...rest } = props;
   const mergedProps = mergeProps(
     {
       className: "table",
@@ -94,6 +94,8 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
               onChange && "row_selectable",
               onChange && name && input[name] === item.id && "row_selected"
             )}
+            // TODO: Make rows selectable with keyboard
+            tabIndex={onChange ? 0 : undefined}
             onClick={() =>
               onChange && name && onChange({ target: { name, value: item.id } })
             }

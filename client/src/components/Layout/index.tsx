@@ -7,10 +7,11 @@ export type LayoutProps = React.HTMLAttributes<HTMLDivElement> & {
   padding?: "sm" | "md";
   flex?: React.CSSProperties["flex"];
   border?: boolean | string;
+  flow?: React.CSSProperties["flexFlow"];
 };
 
 const Layout: React.FC<React.PropsWithChildren<LayoutProps>> = (props) => {
-  const { children, padding, margin, border, flex, ...rest } = props;
+  const { children, padding, margin, border, flex, flow, ...rest } = props;
 
   const borderStyle =
     typeof border === "string" ? `${border.split("").map((b) => `b${b}`)}` : "";
@@ -23,7 +24,7 @@ const Layout: React.FC<React.PropsWithChildren<LayoutProps>> = (props) => {
         padding && `padding_${padding}`,
         margin && `margin_${margin}`
       ),
-      style: { flex },
+      style: { flex, flexFlow: flow },
     },
     rest
   );

@@ -4,7 +4,7 @@ import * as React from "react";
 import { mergeClassNames, mergeProps } from "utils";
 import "./styles.styl";
 
-interface LinkProps
+export interface LinkProps
   extends React.PropsWithChildren<
     React.AnchorHTMLAttributes<HTMLAnchorElement>
   > {

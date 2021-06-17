@@ -10,23 +10,29 @@ export type SpoilerProps = OverrideProps<
   React.HTMLAttributes<HTMLDivElement>,
   {
     label: string;
+    opened?: boolean;
+    onToggle?: (open?: boolean) => void;
   }
 >;
 
 const Spoiler: React.FC<SpoilerProps> = (props) => {
-  const { label, children, ...rest } = props;
+  const { label, children, opened, onToggle, ...rest } = props;
 
   const [isOpened, toggleOpen] = React.useState(() => false);
 
   const mergedProps = mergeProps(
     {
-      className: mergeClassNames(`spoiler`, isOpened && "spoiler_opened"),
+      className: mergeClassNames(
+        `spoiler`,
+        (onToggle ? opened : isOpened) && "spoiler_opened"
+      ),
     },
     rest
   );
 
   const handleToggleOpen = () => {
-    toggleOpen(!isOpened);
+    if (onToggle) onToggle(!opened);
+    else toggleOpen(!isOpened);
   };
 
   return (

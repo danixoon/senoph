@@ -13,9 +13,9 @@ const RootLayout: React.FC<RootLayoutProps> = (props) => {
         <Route path="/phone">
           <PhonePageContainer />
         </Route>
-        <Route path="*">
+        {/* <Route path="*">
           <Redirect to="/" />
-        </Route>
+        </Route> */}
       </Switch>
     </>
   );

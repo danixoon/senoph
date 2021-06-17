@@ -9,10 +9,20 @@ tr
       background-color: colors.light
 
     &.row_selected
-      background-color: colors.primary
-
+      
+      @extend .focus
       & > td
+
         border-color: colors.primary
+        
+
+        &:first-child
+          border-left-color: colors.primary
+        &:last-child          
+          border-right-color: colors.primary
+        
+        border-right-color: transparent
+        border-left-color: transparent
 
 td
   @extend .border, .padding_md
@@ -51,3 +61,4 @@ thead
 
 .table
   border-spacing: 0
+  font-size: fontSize.sm
