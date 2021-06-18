@@ -4,6 +4,7 @@ import * as React from "react";
 import { Redirect, Route, Switch } from "react-router-dom";
 import Layout from "components/Layout";
 import TopBarContainer from "containers/TopBar";
+import FilterPageLayout from "layout/FilterPageLayout";
 
 export type RootLayoutProps = {};
 
@@ -17,9 +18,9 @@ const RootLayout: React.FC<RootLayoutProps> = (props) => {
           <Route path="/phone">
             <PhonePageContainer />
           </Route>
-          {/* <Route path="*">
-          <Redirect to="/" />
-        </Route> */}
+          <Route path="/holding">
+            
+          </Route>
         </Switch>
       </Layout>
     </>

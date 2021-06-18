@@ -15,10 +15,10 @@ import PopupLayer from "providers/PopupLayer";
 import * as React from "react";
 import "./style.styl";
 
-export type PhonePageProps = { page: "edit" | "filter" | string };
+export type PhonePageProps = { page: "edit" | "filter" | string; items: any[] };
 
 const PhonePage: React.FC<PhonePageProps> = (props) => {
-  const { page } = props;
+  const { page, items } = props;
   const bind = useInput({
     search: "",
     phoneId: null,
@@ -86,91 +86,81 @@ const PhonePage: React.FC<PhonePageProps> = (props) => {
     );
   };
 
-  const FilterContent = ({ bind }: { bind: InputHook }) => {
-    return (
-      <>
-        <Header align="right" className="margin_md">
-          Фильтрация
-        </Header>
-        <Form className="filter-content__form">
-          <Layout>
-            <Input {...bind} name="search" label="Поиск" />
-            <Dropdown
-              {...bind}
-              name="modelKey"
-              label="Модель ТА"
-              items={[
-                { id: 0, label: "Gigaset A420" },
-                { id: 1, label: "Gigaset A540" },
-                { id: 2, label: "LG LKA 220" },
-                { id: 3, label: "LG LKA 220C" },
-              ]}
-            />
-            <Dropdown
-              {...bind}
-              name="category"
-              label="Категория"
-              items={[
-                { id: 0, label: "1" },
-                { id: 1, label: "2" },
-                { id: 2, label: "3" },
-                { id: 3, label: "4" },
-              ]}
-            />
-            <Dropdown
-              {...bind}
-              name="departmentId"
-              label="Подразделение"
-              items={[
-                { id: 0, label: "Травматологическое отделение" },
-                { id: 1, label: "Кардиологическое отделение" },
-                { id: 2, label: "Офтальмологическое отделение" },
-                { id: 3, label: "Отделение информационных технологий" },
-              ]}
-            />
-
-            <Input {...bind} name="inventoryKey" label="Инвентарный номер" />
-            <Input {...bind} name="factoryKey" label="Заводской номер" />
-
-            <Input
-              style={{ flex: 1 }}
-              {...bind}
-              name="accountingDate"
-              label="Дата принятия к учёту"
-            />
-            <Input
-              style={{ flex: 1 }}
-              {...bind}
-              name="assemblyDate"
-              label="Дата ввода в эксплуатацию"
-            />
-
-            <Input
-              {...bind}
-              name="ownerName"
-              label="Материально-ответственное лицо"
-            />
-          </Layout>
-        </Form>
-      </>
-    );
-  };
-
   return (
     <Layout flex="1" className="phone-page" flow="row">
-      {page === "view" ? (
-        <>
-          <Layout padding="md" flex={5}>
-            <ResultsContent bind={bind} />
-          </Layout>
-          <Layout flex={1} className="filter-content">
-            <FilterContent bind={bind} />
-          </Layout>
-        </>
-      ) : (
-        <EmptyContent />
-      )}
+      {page === "view" ? <ResultsContent bind={bind} /> : <EmptyContent />}
     </Layout>
+  );
+};
+
+export const Filter: React.FC<{ filter: { name: string }, username: true }> = (props) => {
+  const bind = useInput({});
+  return (
+    <>
+      <Header align="right" className="margin_md">
+        Фильтрация
+      </Header>
+      <Form className="filter-content__form">
+        <Layout>
+          <Input {...bind} name="search" label="Поиск" />
+          <Dropdown
+            {...bind}
+            name="modelKey"
+            label="Модель ТА"
+            items={[
+              { id: 0, label: "Gigaset A420" },
+              { id: 1, label: "Gigaset A540" },
+              { id: 2, label: "LG LKA 220" },
+              { id: 3, label: "LG LKA 220C" },
+            ]}
+          />
+          <Dropdown
+            {...bind}
+            name="category"
+            label="Категория"
+            items={[
+              { id: 0, label: "1" },
+              { id: 1, label: "2" },
+              { id: 2, label: "3" },
+              { id: 3, label: "4" },
+            ]}
+          />
+          <Dropdown
+            {...bind}
+            name="departmentId"
+            label="Подразделение"
+            items={[
+              { id: 0, label: "Травматологическое отделение" },
+              { id: 1, label: "Кардиологическое отделение" },
+              { id: 2, label: "Офтальмологическое отделение" },
+              { id: 3, label: "Отделение информационных технологий" },
+            ]}
+          />
+
+          <Input {...bind} name="inventoryKey" label="Инвентарный номер" />
+          <Input {...bind} name="factoryKey" label="Заводской номер" />
+
+          <Input
+            style={{ flex: 1 }}
+            {...bind}
+            name="accountingDate"
+            label="Дата принятия к учёту"
+          />
+          <Input
+            style={{ flex: 1 }}
+            {...bind}
+            name="assemblyDate"
+            label="Дата ввода в эксплуатацию"
+          />
+
+          <Input
+            {...bind}
+            name="ownerName"
+            label="Материально-ответственное лицо"
+          />
+        </Layout>
+      </Form>
+    </>
   );
 };
 

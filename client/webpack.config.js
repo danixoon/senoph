@@ -42,6 +42,10 @@ module.exports = {
         test: /\.(png|jpe?g|gif|svg)$/i,
         use: ["@svgr/webpack", "file-loader"],
       },
+      {
+        test: /\.(ttf)$/i,
+        use: ["file-loader"],
+      },
     ],
   },
   resolve: {
@@ -66,7 +70,7 @@ module.exports = {
     port: 3000,
     writeToDisk: true,
     historyApiFallback: true,
-    open:  true,
+    open: true,
     proxy: {
       "/api": {
         target: "http://localhost:5000/api",

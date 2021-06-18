@@ -34,30 +34,36 @@ td
     padding-right: padding.lg * 3
 
     &:after
-      content: url('icons/arrowDown.svg')
+      content: url('icons/popupArrow.svg')
       transition: transform 0.1s ease-in-out
       transform: scaleY(1)
-      position: absolute
-      right: 5px
-      top: 5px
-      display: none
+      // height: 1px
+      // position: absolute
+      // right: 5px
+      // top: 5px
+      margin-left: margin.md
+      visibility: hidden
+      display: inline-block
 
     &.sort_asc
       &:after
         transform: scaleY(-1)
-        display: block
+        visibility: visible
 
     &.sort_desc
       &:after
         transform: scaleY(1)
-        display: block
+        visibility: visible
       
         
     
 
 thead
-  @extend .weight_medium
+  @extend .weight_medium, .monospace
   text-align: center
+
+  & > tr > td
+    border: none
 
 .table
   border-spacing: 0
