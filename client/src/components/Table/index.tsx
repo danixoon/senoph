@@ -14,6 +14,7 @@ type TableItem = {
 type TableColumn = {
   key: string;
   name: string;
+  type?: "date";
   sortable?: boolean;
 };
 
@@ -63,6 +64,11 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
           (a, b) => (a[sortKey] > b[sortKey] ? 1 : -1) * (asc ? 1 : -1)
         );
 
+  const convertValue = (column: TableColumn, value: any) => {
+    if (column.type === "date") return new Date(value).toLocaleDateString();
+    return value;
+  };
+
   return (
     <table {...mergedProps}>
       <thead>
@@ -103,7 +109,9 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
             {...item.props}
           >
             {columns.map((column) => (
-              <TableCell key={column.key}>{item[column.key]}</TableCell>
+              <TableCell key={column.key}>
+                {convertValue(column, item[column.key])}
+              </TableCell>
             ))}
           </tr>
         ))}

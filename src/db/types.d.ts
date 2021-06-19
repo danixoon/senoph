@@ -13,6 +13,7 @@ declare namespace Database {
 
     modelId: number;
     holderId: number;
+    typeId: number;
   }>;
 
   type Model = WithId<{

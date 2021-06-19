@@ -42,3 +42,7 @@ logger.add(
     ),
   })
 );
+
+export const prepareResponse: <T>(items: T[]) => ItemsResponse<T> = <T>(
+  items: T[]
+) => ({ items });

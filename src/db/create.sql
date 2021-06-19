@@ -2,6 +2,7 @@ DROP TABLE [User];
 DROP TABLE [Holding];
 DROP TABLE [PhoneCategory];
 DROP TABLE [Phone];
+DROP TABLE [PhoneType];
 DROP TABLE [Holder];
 DROP TABLE [Department];
 DROP TABLE [Model];
@@ -26,6 +27,11 @@ CREATE TABLE [Holder] (
   [departmentId] INT FOREIGN KEY REFERENCES [Department]([id]) NOT NULL
 );
 
+CREATE TABLE [PhoneType] (
+  [id] INT PRIMARY KEY NOT NULL IDENTITY(1, 1),
+  [name] VARCHAR(100) NOT NULL
+);
+
 CREATE TABLE [Phone] (
   [id] INT PRIMARY KEY NOT NULL IDENTITY(1, 1),
   [inventoryKey] VARCHAR(100),
@@ -36,13 +42,14 @@ CREATE TABLE [Phone] (
   [commissioningDate] DATETIME,
 
   [modelId] INT FOREIGN KEY REFERENCES [Model]([id]) NOT NULL,
-  [holderId] INT FOREIGN KEY REFERENCES [Holder]([id]) NOT NULL
+  [holderId] INT FOREIGN KEY REFERENCES [Holder]([id]) NOT NULL,
+  [typeId] INT FOREIGN KEY REFERENCES [PhoneType]([id]) NOT NULL
 );
 
 CREATE TABLE [PhoneCategory] (
   [id] INT PRIMARY KEY NOT NULL IDENTITY (1, 1),
   [category] INT NOT NULL DEFAULT 1,
-  [date] DATETIME,
+  [date] DATETIME NOT NULL,
 
   [phoneId] INT FOREIGN KEY REFERENCES [Phone]([id]) NOT NULL
 )

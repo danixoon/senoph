@@ -13,87 +13,90 @@ import Table from "components/Table";
 import { InputHook, useInput } from "hooks/useInput";
 import PopupLayer from "providers/PopupLayer";
 import * as React from "react";
+import { PhoneState } from "store/slices/phone";
 import "./style.styl";
 
-export type PhonePageProps = { page: "edit" | "filter" | string; items: any[] };
+// export type PhonePageProps = {
+//   page: "edit" | "filter" | string;
+//   items: ApiResponse.Phone[];
+// };
 
-const PhonePage: React.FC<PhonePageProps> = (props) => {
-  const { page, items } = props;
-  const bind = useInput({
-    search: "",
-    phoneId: null,
-    page: 5,
-    ownerName: "",
-  });
+// const PhonePage: React.FC<PhonePageProps> = (props) => {
+//   const EmptyContent = () => (
+//     <Label style={{ margin: "auto" }} size="md">
+//       Select Category
+//     </Label>
+//   );
+// };
 
-  React.useEffect(() => {
-    bind.onChange({ target: { name: "phoneId", value: null } });
-  }, [page]);
-
-  const EmptyContent = () => (
-    <Label style={{ margin: "auto" }} size="md">
-      Select Category
-    </Label>
-  );
-
-  const ResultsContent = ({ bind }: { bind: InputHook }) => {
-    const [phoneInfoPopup, togglePhoneInfoPopup] = React.useState(() => false);
-
-    React.useEffect(() => {
-      if (bind.input.phoneId != null) togglePhoneInfoPopup(true);
-    }, [bind.input.phoneId]);
-
-    return (
-      <>
-        <Header align="right" className="margin_md">
-          Результаты поиска
-        </Header>
-        <PopupLayer>
-          <Popup
-            size="lg"
-            closeable
-            isOpen={phoneInfoPopup}
-            onToggle={togglePhoneInfoPopup}
-          >
-            hey
-          </Popup>
-        </PopupLayer>
-        <Table
-          {...bind}
-          name="phoneId"
-          items={[
-            { id: 0, name: "Pupa" },
-            { id: 1, name: "Loopa" },
-            { id: 2, name: "Loopa Lupov" },
-            { id: 3, name: "Loopa Zoopa" },
-            { id: 4, name: "Loopa Owo" },
-          ]}
-          columns={[
-            { key: "id", name: "Ид.", sortable: true },
-            { key: "name", name: "Имя", sortable: true },
-          ]}
-        />
-        <Paginator
-          onChange={(page) => {
-            bind.onChange({ target: { name: "page", value: page } });
-          }}
-          min={1}
-          max={10}
-          size={5}
-          current={bind.input.page as number}
-        />
-      </>
-    );
-  };
-
+export const Items: React.FC<{
+  items: ApiResponse.Phone[];
+  bind: InputHook;
+}> = (props) => {
+  const { items, bind } = props;
   return (
-    <Layout flex="1" className="phone-page" flow="row">
-      {page === "view" ? <ResultsContent bind={bind} /> : <EmptyContent />}
-    </Layout>
+    <>
+      <Header align="right" className="margin_md">
+        Результаты поиска
+      </Header>
+      <PopupLayer>
+        <Popup size="lg" closeable onToggle={() => {}}>
+          hey
+        </Popup>
+      </PopupLayer>
+      <Table
+        {...bind}
+        name="phoneId"
+        items={items}
+        columns={[
+          { key: "id", name: "Ид.", sortable: true },
+          {
+            key: "inventoryKey",
+            name: "Инвентарный номер",
+            sortable: true,
+          },
+          { key: "factoryKey", name: "Заводской номер", sortable: true },
+          {
+            key: "assemblyDate",
+            type: "date",
+            name: "Дата сборки",
+            sortable: true,
+          },
+          {
+            key: "accountingDate",
+            type: "date",
+            name: "Дата учёта",
+            sortable: true,
+          },
+          {
+            key: "commissioningDate",
+            type: "date",
+            name: "Дата ввода в эксплуатацию",
+            sortable: true,
+          },
+          { key: "modelId", name: "Ид. Модели", sortable: true },
+        ]}
+      />
+      <Paginator
+        onChange={(page) => {
+          bind.onChange({ target: { name: "page", value: page } });
+        }}
+        min={1}
+        max={10}
+        size={5}
+        current={bind.input.page as number}
+      />
+    </>
   );
+
+  // return (
+  //   <Layout flex="1" className="phone-page">
+  //     {page === "view" ? <ResultsContent bind={bind} /> : <EmptyContent />}
+  //   </Layout>
+  // );
 };
 
-export const Filter: React.FC<{ filter: { name: string }, username: true }> = (props) => {
+export const Filter: React.FC<{ filter: PhoneState["filter"] }> = (props) => {
   const bind = useInput({});
   return (
     <>
@@ -163,5 +166,3 @@ export const Filter: React.FC<{ filter: { name: string }, username: true }> = (p
     </>
   );
 };
-
-export default PhonePage;

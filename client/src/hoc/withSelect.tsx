@@ -2,21 +2,6 @@ import Layout from "components/Layout";
 import React from "react";
 import { useSelector } from "react-redux";
 
-function withFilter<F extends { filter: P }, P>(
-  FilterComponent: React.FC<F>,
-  name: string
-) {
-  return (props: Omit<F, "filter">) => {
-    const { filter } = useSelector<any, any>((store: any) => store[name]);
-    const fullProps = { filter, ...props } as F;
-    return (
-      <Layout className="filtered-list">
-        <FilterComponent {...fullProps} />
-      </Layout>
-    );
-  };
-}
-
 function withSelect<F extends { [P in K]: any }, K extends string>(
   FilterComponent: React.FC<F>,
   name: string,

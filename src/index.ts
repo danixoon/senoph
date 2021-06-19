@@ -15,8 +15,8 @@ import holder from "./db/models/holder";
 
 const app = express();
 
-app.use("/phone", phoneRoute);
-app.use("/model", modelRoute);
+app.use("/api/phone", phoneRoute);
+app.use("/api/model", modelRoute);
 
 const server = http.createServer(app);
 const port = Number(process.env.PORT) || 5000;
@@ -31,12 +31,12 @@ server.listen(port, async () => {
   //   middleName: "Lupovich",
   // });
 
-  const p = await model.create({
-    accountingDate: new Date(),
-    name: "owo",
-  });
+  // const p = await model.create({
+  //   accountingDate: new Date(),
+  //   name: "owo",
+  // });
 
-  console.log(p);
+  // console.log(p);
 });
 
 server.on("error", (err) => {

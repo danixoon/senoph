@@ -2,6 +2,7 @@ import { Router } from "express";
 
 import Phone from "../db/models/phone";
 import Model from "../db/models/model";
+import { prepareResponse } from "@backend/utils";
 
 const router = Router();
 
@@ -12,7 +13,8 @@ const generateItem = () => ({
 });
 
 router.get("/", async (req, res) => {
-  res.send(await Phone.search({}));
+  const result = await Phone.search({});
+  res.send(result);
 });
 
 router.post("/", async (req, res) => {
@@ -39,7 +41,6 @@ router.post("/", async (req, res) => {
   //     .join(""),
   //   modelId: 1,
   // });
-
   // res.send(result);
 });
 
