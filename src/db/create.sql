@@ -57,7 +57,7 @@ CREATE TABLE [PhoneCategory] (
 CREATE TABLE [Holding] (
   [id] INT PRIMARY KEY NOT NULL IDENTITY(1, 1),
   [actDate] DATETIME NOT NULL,
-  [actKey] INT NOT NULL,
+  [actKey] VARCHAR(50) NOT NULL,
 
   [holderId] INT FOREIGN KEY REFERENCES [Holder]([id]) NOT NULL,
   [phoneId] INT FOREIGN KEY REFERENCES [Phone]([id]) NOT NULL
