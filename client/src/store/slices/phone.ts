@@ -1,19 +1,20 @@
 import axios from "axios";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
-export type PhoneState = {} & WithFilter<
-  PartialNullable<
-    WithoutId<
-      Omit<
-        ApiResponse.Phone,
-        "accountingDate" | "assemblyDate" | "commissioningDate"
-      >
-    > & {
-      search: string;
-    }
-  >
-> &
-  WithItems<Database.Phone>;
+export type PhoneState = {
+  filter: WithFilter<
+    PartialNullable<
+      WithoutId<
+        Omit<
+          ApiResponse.Phone,
+          "accountingDate" | "assemblyDate" | "commissioningDate"
+        >
+      > & {
+        search: string;
+      }
+    >
+  >;
+} & WithItems<Database.Phone>;
 
 const initialState: PhoneState = {
   items: [],

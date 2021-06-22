@@ -1,6 +1,6 @@
-declare type WithFilter<F> = {
-  filter: F & { amount: number; offset: number };
-};
+type FilterProps<F> = F & { amount: number; offset: number };
+
+declare type WithFilter<F> = { amount: number; offset: number } & F;
 
 declare type WithItems<I> = {
   items: I[];

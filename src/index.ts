@@ -8,15 +8,13 @@ dotenv.config();
 import { init as initDb } from "db";
 import phoneRoute from "./route/phone";
 import modelRoute from "./route/model";
-
-import phone from "./db/models/phone";
-import model from "./db/models/model";
-import holder from "./db/models/holder";
+import filterRoute from "./route/filter";
 
 const app = express();
 
 app.use("/api/phone", phoneRoute);
 app.use("/api/model", modelRoute);
+app.use("/api/filter", filterRoute);
 
 const server = http.createServer(app);
 const port = Number(process.env.PORT) || 5000;

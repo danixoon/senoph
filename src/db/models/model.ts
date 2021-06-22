@@ -6,8 +6,8 @@ export default {
   create: async (model: WithoutId<Database.Model>) =>
     insertObject(pool.request(), "Model", model),
 
-  search: async ({}) => {
+  search: async () => {
     const result = await pool.request().query("SELECT * FROM [Model]");
-    return prepareResponse(result.recordset);
+    return prepareResponse<ApiResponse.Model>(result.recordset);
   },
 };

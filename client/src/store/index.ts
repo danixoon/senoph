@@ -10,7 +10,7 @@ import {
 import { phoneSlice } from "./slices/phone";
 
 import { connectRouter, routerMiddleware } from "connected-react-router";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { api } from "./slices/api";
 import { setupListeners } from "@reduxjs/toolkit/dist/query";
 
@@ -31,5 +31,7 @@ export const store = configureStore({
 });
 
 export const useAppDispatch = () => useDispatch<typeof store.dispatch>();
+export const useAppSelector = <T>(selector: (state: StoreType) => T) =>
+  useSelector<StoreType, T>(selector);
 
 setupListeners(store.dispatch);

@@ -16,17 +16,16 @@ export const api = createApi({
   reducerPath: "api",
   baseQuery: fetchBaseQuery({ baseUrl: "/api" }),
   endpoints: (builder) => ({
-    fetchPhones: builder.query<ApiResponse.FetchPhones, {}>({
-      query: () => "phone",
-      // transformResponse: (res: ApiResponse.FetchPhones, meta) => {
-      //   if (Array.isArray(res.items))
-      //     return { ...res, items: convertItems(res.items) };
-
-      //   return res;
-      // },
+    fetchPhones: builder.query<ApiResponse.FetchPhones, ApiRequest.FetchPhones>(
+      {
+        query: (params) => ({ url: "phone", params }),
+      }
+    ),
+    fetchFilterConfig: builder.query<ApiResponse.FetchFilterConfig, {}>({
+      query: () => "filter",
     }),
   }),
 });
 
 // TODO: Learn how names generated in typescript with prefix from user-defined object
-export const { useFetchPhonesQuery } = api;
+export const { useFetchPhonesQuery, useFetchFilterConfigQuery } = api;

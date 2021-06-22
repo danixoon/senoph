@@ -26,7 +26,15 @@ tr
 
 td
   @extend .border, .padding_md
-      
+  
+  // width: 1px;
+  // white-space: nowrap
+
+  word-wrap: normal
+  white-space: pre
+  overflow: hidden
+  text-overflow: ellipsis
+
   &.cell_sortable
     cursor: pointer
     user-select: none
@@ -68,3 +76,6 @@ thead
 .table
   border-spacing: 0
   font-size: fontSize.sm
+  table-layout: fixed
+  width: 100%
+  word-wrap: break-word

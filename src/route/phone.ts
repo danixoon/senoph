@@ -13,14 +13,15 @@ const generateItem = () => ({
 });
 
 router.get("/", async (req, res) => {
-  const result = await Phone.search({});
+  const params = req.query as any as ApiRequest.FetchPhones;
+  const result = await Phone.search(params);
   res.send(result);
 });
 
 router.post("/", async (req, res) => {
   // await Model.create({ color: "Чёрный", name: "Gigaset A420" });
   // const result = Phone.create({
-  //   accountingDate: new Date(2000 + 20 * Math.random(), 10, 23).toISOString(),
+  //   accountingDate: new Date(200 0 + 20 * Math.random(), 10, 23).toISOString(),
   //   assemblyDate: new Date(2000 + 20 * Math.random(), 10, 23).toISOString(),
   //   commissioningDate: new Date(
   //     2000 + 20 * Math.random(),

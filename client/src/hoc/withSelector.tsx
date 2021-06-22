@@ -1,12 +1,18 @@
-import * as React from "react";
+import Layout from "components/Layout";
+import React from "react";
+import { useSelector } from "react-redux";
+import { useAppSelector } from "store";
 
-export const withSelector = function <P extends object, S extends object>(
-  TargetComponent: React.FC<P>,
-  selector: () => S
+function withSelect<P, S extends P>(
+  FilterComponent: React.FC<P>,
+  selector: (state: StoreType) => S
 ) {
-  return (ownProps: Omit<P, keyof S>) => {
-    const selectedProps = selector();
-    const props = { ...ownProps, ...selectedProps } as S & P;
-    return <TargetComponent {...props} />;
+  return (props: Omit<P, keyof S>) => {
+    const selected = useAppSelector(selector);
+
+    const fullProps = { ...props, ...selected } as P;
+    return <FilterComponent {...fullProps} />;
   };
-};
+}
+
+export default withSelect;

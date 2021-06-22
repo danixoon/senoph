@@ -16,9 +16,14 @@ declare namespace Database {
     typeId: number;
   }>;
 
+  type PhoneType = WithId<{
+    name: string;
+  }>;
+
   type Model = WithId<{
     name: string;
     accountingDate: Date;
+    phoneTypeId: number;
   }>;
 
   type Holder = WithId<{

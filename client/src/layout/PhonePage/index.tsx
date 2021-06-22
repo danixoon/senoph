@@ -1,33 +1,16 @@
-import Button from "components/Button";
 import Dropdown from "components/Dropdown";
 import Form from "components/Form";
 import Header from "components/Header";
 import Input from "components/Input";
-import Label from "components/Label";
 import Layout from "components/Layout";
-import Link from "components/Link";
 import Paginator from "components/Paginator";
 import Popup from "components/Popup";
-import Spoiler from "components/Spoiler";
 import Table from "components/Table";
 import { InputHook, useInput } from "hooks/useInput";
 import PopupLayer from "providers/PopupLayer";
 import * as React from "react";
 import { PhoneState } from "store/slices/phone";
 import "./style.styl";
-
-// export type PhonePageProps = {
-//   page: "edit" | "filter" | string;
-//   items: ApiResponse.Phone[];
-// };
-
-// const PhonePage: React.FC<PhonePageProps> = (props) => {
-//   const EmptyContent = () => (
-//     <Label style={{ margin: "auto" }} size="md">
-//       Select Category
-//     </Label>
-//   );
-// };
 
 export const Items: React.FC<{
   items: ApiResponse.Phone[];
@@ -88,16 +71,36 @@ export const Items: React.FC<{
       />
     </>
   );
-
-  // return (
-  //   <Layout flex="1" className="phone-page">
-  //     {page === "view" ? <ResultsContent bind={bind} /> : <EmptyContent />}
-  //   </Layout>
-  // );
 };
 
-export const Filter: React.FC<{ filter: PhoneState["filter"] }> = (props) => {
-  const bind = useInput({});
+export const Filter: React.FC<{
+  bind: InputHook;
+  config: {
+    types: { id: number; name: string }[];
+    departments: { id: number; name: string }[];
+    models: { id: number; name: string; phoneTypeId: number }[];
+  };
+}> = (props) => {
+  const { bind, config } = props;
+  // const bind = useInput({ phoneTypeId: 0 });
+
+  const types = config.types.map((type) => ({
+    id: type.id,
+    label: type.name,
+  }));
+
+  const models = config.models
+    .filter(
+      (model) =>
+        model.phoneTypeId.toString() === bind.input.phoneTypeId?.toString()
+    )
+    .map((model) => ({ id: model.id, label: model.name }));
+
+  const departments = config.departments.map((dep) => ({
+    id: dep.id,
+    label: dep.name,
+  }));
+
   return (
     <>
       <Header align="right" className="margin_md">
@@ -106,16 +109,12 @@ export const Filter: React.FC<{ filter: PhoneState["filter"] }> = (props) => {
       <Form className="filter-content__form">
         <Layout>
           <Input {...bind} name="search" label="Поиск" />
+          <Dropdown {...bind} name="phoneTypeId" label="Тип СС" items={types} />
           <Dropdown
             {...bind}
-            name="modelKey"
-            label="Модель ТА"
-            items={[
-              { id: 0, label: "Gigaset A420" },
-              { id: 1, label: "Gigaset A540" },
-              { id: 2, label: "LG LKA 220" },
-              { id: 3, label: "LG LKA 220C" },
-            ]}
+            name="modelId"
+            label="Модель СС"
+            items={models}
           />
           <Dropdown
             {...bind}
@@ -132,12 +131,7 @@ export const Filter: React.FC<{ filter: PhoneState["filter"] }> = (props) => {
             {...bind}
             name="departmentId"
             label="Подразделение"
-            items={[
-              { id: 0, label: "Травматологическое отделение" },
-              { id: 1, label: "Кардиологическое отделение" },
-              { id: 2, label: "Офтальмологическое отделение" },
-              { id: 3, label: "Отделение информационных технологий" },
-            ]}
+            items={departments}
           />
 
           <Input {...bind} name="inventoryKey" label="Инвентарный номер" />

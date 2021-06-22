@@ -4,17 +4,15 @@ import { useLocation } from "react-router";
 
 type TopBarContainerProps = {};
 
-const TopBarContainer: React.FC<TopBarContainerProps> = (props) => {
-  const { pathname } = useLocation();
-
-  const names = {
-    "/phone/view": "Поиск по моделям ТА",
-    "/phone/edit": "Управление моделями ТА",
-  } as any;
-
-  const label = names[pathname] ?? "";
-
-  return <TopBar label={label} />;
-};
+const TopBarContainer = React.forwardRef<HTMLDivElement, TopBarContainerProps>(
+  (props, ref) => {
+    // TODO: Create notification system via redux
+    return (
+      <TopBar>
+        <div ref={ref} />
+      </TopBar>
+    );
+  }
+);
 
 export default TopBarContainer;

@@ -13,11 +13,7 @@ function withSelect<F extends { [P in K]: any }, K extends string>(
     for (const k in keys) selected[k] = state[k];
 
     const fullProps = { ...props, ...selected } as F;
-    return (
-      <Layout className="filtered-list">
-        <FilterComponent {...fullProps} />
-      </Layout>
-    );
+    return <FilterComponent {...fullProps} />;
   };
 }
 

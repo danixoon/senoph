@@ -1,16 +1,22 @@
+INSERT INTO [PhoneType] VALUES
+  ('СС'),
+  ('ТА'),
+  ('БТА'),
+  ('РС'),
+  ('IP');
 
 INSERT INTO [Model] VALUES 
-  ('Gigaset A420', DATEADD(day, (ABS(CHECKSUM(NEWID())) % 65530), 0)),
-  ('Gigaset A540', DATEADD(day, (ABS(CHECKSUM(NEWID())) % 65530), 0)),
-  ('Gigaset A220', DATEADD(day, (ABS(CHECKSUM(NEWID())) % 65530), 0)),
-  ('Gigaset A430', DATEADD(day, (ABS(CHECKSUM(NEWID())) % 65530), 0)),
-  ('Gigaset A520', DATEADD(day, (ABS(CHECKSUM(NEWID())) % 65530), 0)),
-  ('Euroset 805', DATEADD(day, (ABS(CHECKSUM(NEWID())) % 65530), 0)),
-  ('Euroset 815', DATEADD(day, (ABS(CHECKSUM(NEWID())) % 65530), 0)),
-  ('Euroset 2005', DATEADD(day, (ABS(CHECKSUM(NEWID())) % 65530), 0)),
-  ('Euroset 2010', DATEADD(day, (ABS(CHECKSUM(NEWID())) % 65530), 0)),
-  ('Euroset 2015', DATEADD(day, (ABS(CHECKSUM(NEWID())) % 65530), 0)),
-  ('Gigaset 4000', DATEADD(day, (ABS(CHECKSUM(NEWID())) % 65530), 0));
+  ('Gigaset A420', DATEADD(day, (ABS(CHECKSUM(NEWID())) % 65530), 0), (SELECT TOP 1 [id] FROM [PhoneType] ORDER BY NEWID())),
+  ('Gigaset A540', DATEADD(day, (ABS(CHECKSUM(NEWID())) % 65530), 0), (SELECT TOP 1 [id] FROM [PhoneType] ORDER BY NEWID())),
+  ('Gigaset A220', DATEADD(day, (ABS(CHECKSUM(NEWID())) % 65530), 0), (SELECT TOP 1 [id] FROM [PhoneType] ORDER BY NEWID())),
+  ('Gigaset A430', DATEADD(day, (ABS(CHECKSUM(NEWID())) % 65530), 0), (SELECT TOP 1 [id] FROM [PhoneType] ORDER BY NEWID())),
+  ('Gigaset A520', DATEADD(day, (ABS(CHECKSUM(NEWID())) % 65530), 0), (SELECT TOP 1 [id] FROM [PhoneType] ORDER BY NEWID())),
+  ('Euroset 805', DATEADD(day, (ABS(CHECKSUM(NEWID())) % 65530), 0), (SELECT TOP 1 [id] FROM [PhoneType] ORDER BY NEWID())),
+  ('Euroset 815', DATEADD(day, (ABS(CHECKSUM(NEWID())) % 65530), 0), (SELECT TOP 1 [id] FROM [PhoneType] ORDER BY NEWID())),
+  ('Euroset 2005', DATEADD(day, (ABS(CHECKSUM(NEWID())) % 65530), 0), (SELECT TOP 1 [id] FROM [PhoneType] ORDER BY NEWID())),
+  ('Euroset 2010', DATEADD(day, (ABS(CHECKSUM(NEWID())) % 65530), 0), (SELECT TOP 1 [id] FROM [PhoneType] ORDER BY NEWID())),
+  ('Euroset 2015', DATEADD(day, (ABS(CHECKSUM(NEWID())) % 65530), 0), (SELECT TOP 1 [id] FROM [PhoneType] ORDER BY NEWID())),
+  ('Gigaset 4000', DATEADD(day, (ABS(CHECKSUM(NEWID())) % 65530), 0), (SELECT TOP 1 [id] FROM [PhoneType] ORDER BY NEWID()));
 
 INSERT INTO [Department] VALUES 
   ('Кардиологическое отделение'),
@@ -45,12 +51,6 @@ INSERT INTO [Holder] VALUES
   ('Королёв', 'Герман', 'Никитич', (SELECT TOP 1 [id] FROM [Department] ORDER BY NEWID())),
   ('Логинова', 'Елизавета', 'Тимофеевна', (SELECT TOP 1 [id] FROM [Department] ORDER BY NEWID()));
 
-INSERT INTO [PhoneType] VALUES
-  ('СС'),
-  ('ТА'),
-  ('БТА'),
-  ('РС'),
-  ('IP');
 
 
 -- Заполнение средств связи
@@ -77,6 +77,8 @@ END
 DECLARE @j INT;
 DECLARE @j_max INT;
 DECLARE @category_id INT;
+DECLARE @date_offset INT;
+DECLARE @date_from DATETIME;
 DECLARE category_cursor CURSOR FOR
   SELECT TOP 20 [id] FROM [Phone] ORDER BY NEWID()
 OPEN category_cursor
@@ -85,13 +87,16 @@ INTO @category_id
   WHILE @@FETCH_STATUS = 0
     BEGIN
       SET @j = 0;
-      SET @j_max = ABS(CHECKSUM(NEWID()) % 4) + 1; 
+      SET @j_max = ABS(CHECKSUM(NEWID()) % 4) + 1;
+      SET @date_offset = 0;
+      SET @date_from = DATEADD(day, (ABS(CHECKSUM(NEWID())) % 65530), 0);
       -- DECLARE @j_id int = (SELECT TOP 1 [id] FROM [Phone] ORDER BY NEWID());
       WHILE @j < @j_max
       BEGIN
         INSERT INTO [PhoneCategory] VALUES
-          (@j, DATEADD(day, (ABS(CHECKSUM(NEWID())) % 65530), 0), @category_id);
+          (@j, @date_from + @date_offset, @category_id);
         SET @j = @j + 1;
+        SET @date_offset = @date_offset + 1000;
       END;
 
     FETCH NEXT FROM category_cursor
