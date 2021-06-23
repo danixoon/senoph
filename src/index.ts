@@ -9,12 +9,14 @@ import { init as initDb } from "db";
 import phoneRoute from "./route/phone";
 import modelRoute from "./route/model";
 import filterRoute from "./route/filter";
+import testRoute from "./route/test";
 
 const app = express();
 
 app.use("/api/phone", phoneRoute);
 app.use("/api/model", modelRoute);
 app.use("/api/filter", filterRoute);
+app.use("/api/test", testRoute);
 
 const server = http.createServer(app);
 const port = Number(process.env.PORT) || 5000;

@@ -1,12 +1,14 @@
 declare type ItemsResponse<T> = {
   items: T[];
+  total: number;
+  offset: number;
 };
 
 declare namespace ApiResponse {
   declare type Phone = Database.Phone;
   declare type PhoneType = Database.PhoneType;
   declare type Department = Database.PhoneType;
-  declare type Model = Database.Model;
+  declare type Model = Database.PhoneModel;
 
   declare type FetchModels = ItemsResponse<Database.Model>;
   declare type FetchFilterConfig = {
@@ -20,9 +22,11 @@ declare namespace ApiResponse {
 declare namespace ApiRequest {
   declare type FetchPhones = Partial<{
     search: string;
-    modelId: number;
+    phoneModelId: number;
     phoneTypeId: number;
     departmentId: number;
     category: number;
+    orderKey: "phoneModel" | "phoneType" | "department" | "category" | keyof Pick<Database.Phone, "accountingDate" | "assemblyDate" | "commissioningDate" | "factoryKey" | "id">;
+    orderDir: "asc" | "desc";
   }> & { offset: number; amount: number };
 }

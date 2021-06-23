@@ -2,16 +2,15 @@ export {};
 declare global {
   namespace NodeJS {
     interface ProcessEnv {
-      NODE_ENV: "development" | "production";
-      PORT: string;
+      readonly NODE_ENV: "development" | "production";
+      readonly PORT: string;
+      readonly DB_USERNAME: string;
+      readonly DB_PASSWORD: string;
+      readonly DB_NAME: string;
+      readonly DB_PORT: string;
+      readonly DB_HOST: string;
 
-      JWT_SECRET: string;
-
-      MONGO_URI: string;
-      TEST_MONGO_URI: string;
-
-      CHAT_TOKENS: string;
-      ANON_CHAT_HOST: string;
+      readonly JWT_SECRET: string;
     }
   }
 }

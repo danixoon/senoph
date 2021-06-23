@@ -1,28 +1,26 @@
 import { Router } from "express";
 
-import department from "@backend/db/models/department";
-import phone from "@backend/db/models/phone";
-import model from "@backend/db/models/model";
+// import department from "@backend/db/models/department";
+import phone from "@backend/db/models/phone.model";
+import model from "@backend/db/models/phoneModel.model";
+import PhoneType from "@backend/db/models/phoneType.model";
+import Department from "@backend/db/models/department.model";
+import PhoneModel from "@backend/db/models/phoneModel.model";
 
 const router = Router();
 
 router.get("/", async (req, res) => {
   const [departments, types, models] = await Promise.all([
-    department.search(),
-    phone.getTypes(),
-    model.search(),
+    Department.scope("names").findAll(),
+    PhoneType.scope("names").findAll(),
+    PhoneModel.scope("names").findAll(),
   ]);
 
   const response: ApiResponse.FetchFilterConfig = {
-    departments: departments.items,
-    types: types.items,
-    models: models.items.map((item) => ({
-      id: item.id,
-      name: item.name,
-      phoneTypeId: item.phoneTypeId,
-    })),
+    departments: departments,
+    types: types,
+    models: models,
   };
-
   res.send(response);
 });
 

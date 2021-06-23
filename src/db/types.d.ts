@@ -1,60 +1,19 @@
-declare type WithId<T> = T & { id: number };
+declare type WithId<T> = OptionalId<T>;
 declare type WithoutId<T> = Omit<T, "id">;
+declare type OptionalId<T> = WithoutId<T> & { id?: number };
 declare type Role = "admin" | "user";
 
 declare namespace Database {
-  type Phone = WithId<{
-    inventoryKey: string;
-    factoryKey: string;
-
-    assemblyDate: Date;
-    accountingDate: Date;
-    commissioningDate: Date;
-
-    modelId: number;
-    holderId: number;
-    typeId: number;
-  }>;
-
-  type PhoneType = WithId<{
-    name: string;
-  }>;
-
-  type Model = WithId<{
-    name: string;
-    accountingDate: Date;
-    phoneTypeId: number;
-  }>;
-
-  type Holder = WithId<{
-    firstName: string;
-    lastName: string;
-    middleName: string;
-  }>;
-
-  type Department = WithId<{
-    name: string;
-  }>;
-
-  type PhoneCategory = WithId<{
-    category: number;
-    date: Date;
-
-    phoneId: number;
-  }>;
-
-  type Holding = WithId<{
-    actDate: Date;
-    actKey: number;
-
-    holderId: number;
-    phoneId: number;
-  }>;
-
-  type User = WithId<{
-    username: string;
-    passwordHash: string;
-
-    role: Role;
-  }>;
+  type User = import("@backend/db/models/user.model").UserAttribues;
+  type PhoneType =
+    import("@backend/db/models/phoneType.model").PhoneTypeAttributes;
+  type PhoneModel =
+    import("@backend/db/models/phoneModel.model").PhoneModelAttributes;
+  type PhoneCategory =
+    import("@backend/db/models/phoneCategory.model").PhoneCategoryAttribues;
+  type Holding = import("@backend/db/models/holding.model").HoldingAttributes;
+  type Holder = import("@backend/db/models/holder.model").HolderAttributes;
+  type Department =
+    import("@backend/db/models/department.model").DepartmentAttributes;
+  type Phone = import("@backend/db/models/phone.model").PhoneAttributes;
 }

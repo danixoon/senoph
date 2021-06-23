@@ -43,6 +43,6 @@ logger.add(
   })
 );
 
-export const prepareResponse: <T>(items: T[]) => ItemsResponse<T> = <T>(
-  items: T[]
-) => ({ items });
+export const prepareItems: <T>(items: T[], total: number, offset: number) => ItemsResponse<T> = (
+  items, total, offset
+) => ({ items, total, offset });

@@ -47,7 +47,7 @@ CREATE TABLE [Phone] (
 
   [modelId] INT FOREIGN KEY REFERENCES [Model]([id]) NOT NULL,
   [holderId] INT FOREIGN KEY REFERENCES [Holder]([id]) NOT NULL,
-  [typeId] INT FOREIGN KEY REFERENCES [PhoneType]([id]) NOT NULL
+  -- [typeId] INT FOREIGN KEY REFERENCES [PhoneType]([id]) NOT NULL
 );
 
 CREATE TABLE [PhoneCategory] (

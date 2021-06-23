@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import Model from "../db/models/model";
+import Model from "../db/models/phoneModel.model";
 
 const router = Router();
 

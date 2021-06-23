@@ -36,8 +36,8 @@ const prepareFilter = (filter: PhoneState["filter"]) => {
   const parsedFilter: Partial<typeof filter> = {};
   // OMEGALUL typing kostil' for object properties filtering
   for (const k in filter)
-    (parsedFilter[k as keyof typeof filter] as any) =
-      (filter[k as keyof typeof filter] as any) ?? undefined;
+    (parsedFilter[k as any] as any) =
+      (filter[k as any] as any) ?? undefined;
 
   return parsedFilter;
 };
