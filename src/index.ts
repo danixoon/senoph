@@ -10,6 +10,7 @@ import phoneRoute from "./route/phone";
 import modelRoute from "./route/model";
 import filterRoute from "./route/filter";
 import testRoute from "./route/test";
+import path from "path";
 
 const app = express();
 
@@ -17,6 +18,9 @@ app.use("/api/phone", phoneRoute);
 app.use("/api/model", modelRoute);
 app.use("/api/filter", filterRoute);
 app.use("/api/test", testRoute);
+
+app.use("/build", express.static(path.resolve(__dirname, "../client/build")));
+app.use("*", express.static(path.resolve(__dirname, "../client/build")));
 
 const server = http.createServer(app);
 const port = Number(process.env.PORT) || 5000;
