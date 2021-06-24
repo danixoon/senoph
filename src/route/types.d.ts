@@ -22,11 +22,13 @@ declare namespace ApiResponse {
 declare namespace ApiRequest {
   declare type FetchPhones = Partial<{
     search: string;
+    inventoryKey: string;
+    factoryKey: string;
     phoneModelId: number;
     phoneTypeId: number;
     departmentId: number;
     category: number;
-    orderKey: "phoneModel" | "phoneType" | "department" | "category" | keyof Pick<Database.Phone, "accountingDate" | "assemblyDate" | "commissioningDate" | "factoryKey" | "id">;
-    orderDir: "asc" | "desc";
+    sortKey: string;
+    sortDir: "asc" | "desc";
   }> & { offset: number; amount: number };
 }

@@ -89,3 +89,5 @@ declare type QueryHook<T> = [
   T,
   { isFetching: boolean; error: null | QueryError[] }
 ];
+
+declare type SortDir = "asc" | "desc";

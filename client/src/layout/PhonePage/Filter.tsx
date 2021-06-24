@@ -1,16 +1,10 @@
-
+import React from "react";
 import Dropdown from "components/Dropdown";
 import Form from "components/Form";
 import Header from "components/Header";
 import Input from "components/Input";
 import Layout from "components/Layout";
-import Paginator from "components/Paginator";
-import Popup from "components/Popup";
-import Table from "components/Table";
-import { InputHook, useInput } from "hooks/useInput";
-import PopupLayer from "providers/PopupLayer";
-import * as React from "react";
-import { PhoneState } from "store/slices/phone";
+import { InputHook } from "hooks/useInput";
 
 const Filter: React.FC<{
   bind: InputHook;
@@ -59,10 +53,10 @@ const Filter: React.FC<{
             name="category"
             label="Категория"
             items={[
-              { id: 0, label: "1" },
-              { id: 1, label: "2" },
-              { id: 2, label: "3" },
-              { id: 3, label: "4" },
+              { id: 1, label: "1" },
+              { id: 2, label: "2" },
+              { id: 3, label: "3" },
+              { id: 4, label: "4" },
             ]}
           />
           <Dropdown
@@ -90,7 +84,7 @@ const Filter: React.FC<{
 
           <Input
             {...bind}
-            name="ownerName"
+            name="holderId"
             label="Материально-ответственное лицо"
           />
         </Layout>

@@ -12,54 +12,71 @@ import Department from "@backend/db/models/department.model";
 const router = Router();
 
 router.get("/", async (req, res) => {
-  const { orderDir, orderKey, amount = 50, offset = 0, category, phoneModelId, departmentId, phoneTypeId, search } = req.query as any as ApiRequest.FetchPhones;
-  
+  const {
+    sortDir: orderDir,
+    sortKey: orderKey,
+    amount = 50,
+    offset = 0,
+    category,
+    phoneModelId,
+    departmentId,
+    phoneTypeId,
+    factoryKey,
+    inventoryKey,
+  } = req.query as any as ApiRequest.FetchPhones;
+
   const order = [] as any;
   const dir = orderDir?.toUpperCase() ?? "ASC";
 
-  switch(orderKey) {
-    case "phoneModel":
+  switch (orderKey) {
+    case "modelName":
       order.push([{ model: PhoneModel, as: "model" }, "name", dir]);
       break;
     case "category":
       order.push([{ model: PhoneCategory, as: "category" }, "category", dir]);
       break;
     case "department":
-       order.push([{ model: Holder, as: "holder" }, { model: Department, as: "department" }, "name", dir]);
-       break;
+      order.push([
+        { model: Holder, as: "holder" },
+        { model: Department, as: "department" },
+        "name",
+        dir,
+      ]);
+      break;
     default:
-      if(typeof orderKey === "string")
-        order.push([orderKey, dir])
+      if (typeof orderKey === "string") order.push([orderKey, dir]);
       break;
   }
 
   const offset_ = Number.parseInt(offset.toString()),
-    limit_ = Number.parseInt(amount.toString())
-  
+    limit_ = Number.parseInt(amount.toString());
+
+  const valueOrNotNull = <T>(v: T) => v ?? { [Op.not]: null };
 
   const phones = await Phone.findAll({
     where: {
-      phoneModelId: phoneModelId ?? {
-        [Op.not]: null,
-      },
+      phoneModelId: valueOrNotNull(phoneModelId),
+      inventoryKey: valueOrNotNull(inventoryKey),
+      factoryKey: valueOrNotNull(factoryKey),
     },
     include: [
       {
         model: PhoneModel,
-        where: { phoneTypeId: phoneTypeId ?? { [Op.not]: null } },
+        where: { phoneTypeId: valueOrNotNull(phoneTypeId) },
       },
       {
         model: Holder,
-        where: { departmentId: departmentId   ?? { [Op.not]: null } },
-        include: [{
-          model: Department,
-        }]
+        where: { departmentId: valueOrNotNull(departmentId) },
+        include: [
+          {
+            model: Department,
+          },
+        ],
       },
       {
         model: PhoneCategory,
-        where: { category: category ?? { [Op.not]: null } },
+        where: { category: valueOrNotNull(category) },
       },
-      
     ],
     order,
     // TODO: Избавиться от преобразований данных путём валидаторов в express
@@ -67,16 +84,13 @@ router.get("/", async (req, res) => {
     // limit: limit_,
     // subQuery: false,
     // distinct: true
-    
   }).catch((err) => console.error(err));
 
   // TODO: Неоптимизированный костыль, но что поделать
   const rows = (phones ?? []).slice(offset_, offset_ + limit_);
 
-  if(phones)
-    res.send(prepareItems(rows, phones.length, offset_));
-  else
-    res.sendStatus(500).send("error");
+  if (phones) res.send(prepareItems(rows, phones.length, offset_));
+  else res.sendStatus(500).send("error");
 });
 
 router.post("/", async (req, res) => {

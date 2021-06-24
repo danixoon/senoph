@@ -31,21 +31,21 @@ const Paginator = React.forwardRef<HTMLDivElement, PaginatorProps>(
       if (next <= max && next >= min) onChange(next);
     };
 
-    const s = (max - min) < size ? (max - min + 1) : size;
+    const s = size;
 
     return (
       <ButtonGroup {...mergedProps}>
         <Button onClick={() => handleIncrement(-1)}>{"<"}</Button>
         {new Array(s).fill(0).map((_, i) => {
-          const side = Math.floor(s / 2);
+          let center = Math.floor(s / 2);
           let page =
             i +
-            current -
-            side +
-            (current - side < min ? Math.abs(min - (current - side)) : 0) -
-            (current + side > max ? Math.abs(max - (current + side)) : 0);
+            current - center +
+            
+             ((current - center) < min ? Math.abs(min - (current - center)) : 0) -
+             ((current + center) > max ? Math.abs(max - (current + center)) : 0);
 
-          return (
+          return (page < min || page > max ? "" :
             <Button
               key={page}
               onClick={() => onChange(page)}

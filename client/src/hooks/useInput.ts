@@ -6,9 +6,11 @@ export type InputHook<T = any> = {
   // setInput: React.Dispatch<React.SetStateAction<T>>;
 };
 
-export const useInput = function <T extends object = any>(
+export type InputHookPrepare<T> = <K extends keyof T>(key: K, value: T[K], input: T) => T;
+
+export const useInput = function <T = any>(
   defaultValue: T = {} as T,
-  prepareValue: <K extends keyof T>(key: K, value: T[K], input: T) => T = (
+  prepareValue: InputHookPrepare<T> = (
     key,
     value,
     input
@@ -19,16 +21,22 @@ export const useInput = function <T extends object = any>(
   const onChange = (e: {
     target: { name: string; type?: string; value: any };
   }) => {
-    const changedInput = prepareValue(
-      e.target.name as any,
-      e.target.value as any,
-      { ...input }
-    ) as any;
+    let changedInput = { ...input } as any;
 
     changedInput[e.target.name] =
       e.target.type === "checkbox"
         ? !changedInput[e.target.name]
         : e.target.value;
+
+    if(typeof changedInput[e.target.name] === "string" &&  changedInput[e.target.name].trim() === "")
+      changedInput[e.target.name] = null;
+    
+    changedInput = prepareValue(
+          e.target.name as any,
+          e.target.value as any,
+          changedInput
+        ) as any;
+
     setInput(changedInput);
   };
 

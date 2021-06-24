@@ -33,7 +33,8 @@ const Dropdown: React.FC<DropdownProps> = (props) => {
     input[name] !== undefined ? [emptyItem, ...items] : [...items];
   let selectedItem: ArrayElement<DropdownProps["items"]> =
     listItems.find((item, i) => {
-      if (item.id === input[name]) {
+      if(item.id == null || input[name] == null) return;
+      if (item.id.toString() === input[name].toString()) {
         listItems.splice(i, 1);
         return true;
       }

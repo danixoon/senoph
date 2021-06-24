@@ -3,72 +3,54 @@ import { Route, Switch, useLocation, useRouteMatch } from "react-router";
 
 import Layout from "components/Layout";
 import PhonePage from "layout/PhonePage";
-
-import withSelector from "hoc/withSelector";
-
 import {
   useFetchFilterConfigQuery,
   useFetchPhonesQuery,
 } from "store/slices/api";
-import { useInput } from "hooks/useInput";
 import TopBarLayer from "providers/TopBarLayer";
 import Label from "components/Label";
-import { useAppSelector } from "store";
+import qs from "query-string";
+import { useQueryInput } from "hooks/useQueryInput";
+import { denullObject } from "utils";
 
-type NonNullableObj<T> = {
-  [K in keyof T]?: Exclude<T[K], null>;
-};
-
-const denullValue = function <T>(obj: T) {
-  const parsedFilter: NonNullableObj<T> = {};
-  // OMEGALUL typing kostil' for object properties filtering
-  for (const k in obj)
-    (parsedFilter[k as keyof typeof obj] as any) =
-      (obj[k as keyof typeof obj] as any) ?? undefined;
-
-  return parsedFilter;
-};
-
+type FilterProps = Omit<
+  PartialNullable<Required<ApiRequest.FetchPhones>>,
+  "amount" | "offset" | "sortDir" | "sortKey"
+>;
 type PhonePageContainerProps = {};
 
 const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
-  const { pathname } = useLocation();
-  const page = pathname.split("/")[2];
-  const PAGE_ITEMS = 10;
+  const PAGE_ITEMS = 20;
+
+  const { path, url, params } = useRouteMatch();
+  const { pathname, search } = useLocation();
+
   const [offset, setOffset] = React.useState(() => 0);
+  const [{ sortKey, sortDir }, setSort] = React.useState<{
+    sortKey: null | string;
+    sortDir: SortDir;
+  }>(() => ({ sortKey: null, sortDir: "asc" }));
 
-  console.log("offset: ", offset);
-
-  const bindFilter = useInput<
-    Omit<PartialNullable<Required<ApiRequest.FetchPhones>>, "amount" | "offset" | "orderDir" | "orderKey">
-  >(
-    {
-      search: null,
-      phoneModelId: null,
-      phoneTypeId: null,
-      departmentId: null,
-      category: null,
-    },
+  const query = qs.parse(search) as FilterProps;
+  const bindFilter = useQueryInput<FilterProps>(
+    { ...query },
     (key, value, input) => {
-      if (key === "phoneTypeId") input.phoneModelId = null;
       setOffset(0);
+
+      if (key === "phoneTypeId") input.phoneModelId = null;
       return input;
     }
   );
 
-
-  const { data: itemsData, error, isLoading } = useFetchPhonesQuery({
-    ...denullValue(bindFilter.input),
-    amount: 10,
+  const { data: filterData } = useFetchFilterConfigQuery({});
+  const { data: itemsData } = useFetchPhonesQuery({
+    ...denullObject(bindFilter.input),
+    amount: PAGE_ITEMS,
     offset: offset < 0 ? 0 : offset,
+    sortKey: sortKey ?? undefined,
+    sortDir,
   });
 
-  console.log(itemsData);
-
-  const { data: filterData } = useFetchFilterConfigQuery({});
-
-  const { path, url } = useRouteMatch();
-  
   const totalItems = itemsData?.total ?? PAGE_ITEMS;
 
   return (
@@ -76,10 +58,24 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
       <Layout flex={1}>
         <Switch>
           <Route path={`${path}/view`}>
-            <TopBarLayer> 
+            <TopBarLayer>
               <Label size="md">Средства связи</Label>
             </TopBarLayer>
-            <PhonePage.Items offset={offset} onOffsetChanged={(nextOffset) => setOffset(nextOffset)} pageItems={PAGE_ITEMS} totalItems={totalItems} items={itemsData?.items ?? []} />
+            <PhonePage.Items
+              sorting={{
+                dir: sortDir,
+                key: sortKey,
+                onSort: (sortKey, sortDir) => setSort({ sortKey, sortDir }),
+              }}
+              paging={{
+                offset,
+                onOffsetChanged: (nextOffset) =>
+                  setOffset(nextOffset < 0 ? 0 : nextOffset),
+                pageItems: PAGE_ITEMS,
+                totalItems: totalItems,
+              }}
+              items={itemsData?.items ?? []}
+            />
           </Route>
           <Route path={`${path}/edit`}>
             <TopBarLayer>

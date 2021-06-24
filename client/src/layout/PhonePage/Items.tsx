@@ -11,16 +11,32 @@ import PopupLayer from "providers/PopupLayer";
 import * as React from "react";
 import { PhoneState } from "store/slices/phone";
 
- const Items: React.FC<{
+const Items: React.FC<{
   items: ApiResponse.Phone[];
-  totalItems: number;
-  pageItems: number;
-  onOffsetChanged: (offset: number) => void;
-  offset: number;
+  paging: {
+    totalItems: number;
+    pageItems: number;
+    onOffsetChanged: (offset: number) => void;
+    offset: number;
+  };
+  sorting: {
+    onSort: (key: string, dir: SortDir) => void;
+    dir: SortDir;
+    key: string | null;
+  };
 }> = (props) => {
-  const { items,  totalItems, pageItems, onOffsetChanged, offset} = props;
-  const maxPage = Math.floor(totalItems / pageItems);
-  const currentPage = Math.ceil((offset + pageItems) / totalItems * maxPage);
+  const {
+    items,
+    paging,
+    sorting,
+  } = props;
+
+  const { totalItems, pageItems, offset, onOffsetChanged } = paging;
+  
+  const maxPage = Math.ceil(totalItems / pageItems);
+  let currentPage = Math.floor((offset / totalItems) * maxPage) + 1;
+  if (Number.isNaN(currentPage)) currentPage = 1;
+
   return (
     <>
       <Header align="right" className="margin_md">
@@ -33,6 +49,9 @@ import { PhoneState } from "store/slices/phone";
       </PopupLayer>
       <Table
         // {...bind}
+        onSort={sorting.onSort}
+        sortDir={sorting.dir}
+        sortKey={sorting.key ?? undefined}
         name="phoneId"
         items={items.map((item) => ({ ...item, modelName: item.model?.name }))}
         columns={[
@@ -67,13 +86,12 @@ import { PhoneState } from "store/slices/phone";
       <Paginator
         onChange={(page) => onOffsetChanged((page - 1) * pageItems)}
         min={1}
-        max={maxPage + 1}
+        max={maxPage}
         size={5}
         current={currentPage}
       />
     </>
   );
 };
-
 
 export default Items;

@@ -18,13 +18,20 @@ type TableColumn = {
   sortable?: boolean;
 };
 
+
+
 type TableProps = OverrideProps<
   React.TableHTMLAttributes<HTMLTableElement>,
   {
     items: TableItem[];
     columns: TableColumn[];
     name?: string;
-    onChange?: HookOnChange;
+    onChange?: HookOnChange
+
+    onSort?: (key: string, dir: SortDir) => void;
+    sortKey?: string;
+    sortDir?: SortDir;
+
     input?: any;
   }
 >;
@@ -44,7 +51,7 @@ const TableCell: React.FC<TableCellProps> = ({ children, ...props }) => {
 const Table: React.FC<React.PropsWithChildren<TableProps>> = (
   props: TableProps
 ) => {
-  const { items, columns, onChange, input = {}, name, ...rest } = props;
+  const { items, columns, onChange, input = {}, name, sortKey, sortDir, onSort, ...rest } = props;
   const mergedProps = mergeProps(
     {
       className: "table",
@@ -52,22 +59,26 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
     rest
   );
 
-  const [{ sortKey, asc }, changeSort] = React.useState<{
-    sortKey: string | null;
-    asc: boolean;
-  }>(() => ({ sortKey: null, asc: false }));
 
-  const sortedItems =
-    sortKey === null
-      ? items
-      : [...items].sort(
-          (a, b) => (a[sortKey] > b[sortKey] ? 1 : -1) * (asc ? 1 : -1)
-        );
+  // Local sort
+  // const [{ sortKey, asc }, changeSort] = React.useState<{
+  //   sortKey: string | null;
+  //   asc: boolean;
+  // }>(() => ({ sortKey: null, asc: false }));
+
+  // const sortedItems =
+  //   sortKey === null
+  //     ? items
+  //     : [...items].sort(
+  //         (a, b) => (a[sortKey] > b[sortKey] ? 1 : -1) * (asc ? 1 : -1)
+  //       );
 
   const convertValue = (column: TableColumn, value: any) => {
     if (column.type === "date") return new Date(value).toLocaleDateString();
     return value;
   };
+
+  // console.log(sortDir);
 
   return (
     <table {...mergedProps}>
@@ -77,14 +88,14 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
             <TableCell
               className={mergeClassNames(
                 column.sortable && "cell_sortable",
-                sortKey === column.key && (asc ? "sort_asc" : "sort_desc")
+                sortKey === column.key && `sort_${sortDir}`
               )}
               onClick={() =>
-                column.sortable &&
-                changeSort({
-                  sortKey: column.key,
-                  asc: sortKey == null ? asc : !asc,
-                })
+                column.sortable && onSort &&
+                onSort(
+                   column.key,
+                   sortDir === "asc" ? "desc" : "asc",
+                )
               }
               key={column.key}
             >
@@ -94,7 +105,7 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
         </tr>
       </thead>
       <tbody>
-        {sortedItems.map((item) => (
+        {items.map((item) => (
           <tr
             className={mergeClassNames(
               onChange && "row_selectable",
