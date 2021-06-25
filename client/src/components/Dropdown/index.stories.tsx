@@ -3,7 +3,7 @@ import React from "react";
 import Dropdown from ".";
 import { useInput } from "hooks/useInput";
 storiesOf("Components/Inputs/Dropdown", module).add("info md", () => {
-  const bind = useInput({
+  const [bind] = useInput({
     item1: "2",
   });
   return (

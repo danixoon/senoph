@@ -12,10 +12,12 @@ import Label from "components/Label";
 import qs from "query-string";
 import { useQueryInput } from "hooks/useQueryInput";
 import { denullObject } from "utils";
+import PopupLayer from "providers/PopupLayer";
+import Popup from "components/Popup";
 
 type FilterProps = Omit<
   PartialNullable<Required<ApiRequest.FetchPhones>>,
-  "amount" | "offset" | "sortDir" | "sortKey"
+  "amount" | "offset"
 >;
 type PhonePageContainerProps = {};
 
@@ -26,13 +28,9 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
   const { pathname, search } = useLocation();
 
   const [offset, setOffset] = React.useState(() => 0);
-  const [{ sortKey, sortDir }, setSort] = React.useState<{
-    sortKey: null | string;
-    sortDir: SortDir;
-  }>(() => ({ sortKey: null, sortDir: "asc" }));
 
   const query = qs.parse(search) as FilterProps;
-  const bindFilter = useQueryInput<FilterProps>(
+  const [bindFilter, setFilter] = useQueryInput<FilterProps>(
     { ...query },
     (key, value, input) => {
       setOffset(0);
@@ -41,17 +39,22 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
       return input;
     }
   );
+  
 
   const { data: filterData } = useFetchFilterConfigQuery({});
   const { data: itemsData } = useFetchPhonesQuery({
     ...denullObject(bindFilter.input),
     amount: PAGE_ITEMS,
     offset: offset < 0 ? 0 : offset,
-    sortKey: sortKey ?? undefined,
-    sortDir,
+    sortKey: bindFilter.input.sortKey ?? undefined,
+    sortDir: bindFilter.input.sortDir ?? "asc",
   });
 
   const totalItems = itemsData?.total ?? PAGE_ITEMS;
+
+  const [[phonePopup, selectedId], setPhonePopup] = React.useState<
+    [boolean, any]
+  >(() => [false, null]);
 
   return (
     <Layout flow="row">
@@ -61,11 +64,25 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
             <TopBarLayer>
               <Label size="md">Средства связи</Label>
             </TopBarLayer>
+            <PopupLayer>
+              <Popup
+                size="lg"
+                isOpen={phonePopup}
+                onToggle={(open) => setPhonePopup([open, selectedId])}
+              >
+                hey
+              </Popup>
+            </PopupLayer>
             <PhonePage.Items
+              selection={{
+                onSelect: (item) => setPhonePopup([true, item.id]),
+                selectedId,
+              }}
               sorting={{
-                dir: sortDir,
-                key: sortKey,
-                onSort: (sortKey, sortDir) => setSort({ sortKey, sortDir }),
+                dir: bindFilter.input.sortDir ?? "asc",
+                key: bindFilter.input.sortKey,
+                onSort: (sortKey, sortDir) =>
+                  setFilter({ ...bindFilter.input, sortKey, sortDir }),
               }}
               paging={{
                 offset,

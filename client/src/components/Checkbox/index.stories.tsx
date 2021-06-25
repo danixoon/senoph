@@ -4,7 +4,7 @@ import Checkbox from ".";
 import { useInput } from "hooks/useInput";
 storiesOf("Components/Inputs/Checkbox", module)
   .add("on", () => {
-    const bind = useInput({
+    const [bind] = useInput({
       simple: true,
     });
     return (
@@ -17,7 +17,7 @@ storiesOf("Components/Inputs/Checkbox", module)
     );
   })
   .add("off", () => {
-    const bind = useInput({
+    const [bind] = useInput({
       simple: false,
     });
     return (
@@ -30,7 +30,7 @@ storiesOf("Components/Inputs/Checkbox", module)
     );
   })
   .add("disabled on", () => {
-    const bind = useInput({
+    const [bind] = useInput({
       simple: true,
     });
     return (
@@ -44,7 +44,7 @@ storiesOf("Components/Inputs/Checkbox", module)
     );
   })
   .add("disabled off", () => {
-    const bind = useInput({
+    const [bind] = useInput({
       simple: false,
     });
     return (

@@ -18,15 +18,14 @@ type TableColumn = {
   sortable?: boolean;
 };
 
-
-
 type TableProps = OverrideProps<
   React.TableHTMLAttributes<HTMLTableElement>,
   {
     items: TableItem[];
     columns: TableColumn[];
     name?: string;
-    onChange?: HookOnChange
+    onSelect?: (item: TableItem) => void;
+    selectedId?: any;
 
     onSort?: (key: string, dir: SortDir) => void;
     sortKey?: string;
@@ -51,14 +50,24 @@ const TableCell: React.FC<TableCellProps> = ({ children, ...props }) => {
 const Table: React.FC<React.PropsWithChildren<TableProps>> = (
   props: TableProps
 ) => {
-  const { items, columns, onChange, input = {}, name, sortKey, sortDir, onSort, ...rest } = props;
+  const {
+    items,
+    columns,
+    onSelect,
+    input = {},
+    name,
+    sortKey,
+    sortDir,
+    onSort,
+    selectedId,
+    ...rest
+  } = props;
   const mergedProps = mergeProps(
     {
       className: "table",
     },
     rest
   );
-
 
   // Local sort
   // const [{ sortKey, asc }, changeSort] = React.useState<{
@@ -91,11 +100,9 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
                 sortKey === column.key && `sort_${sortDir}`
               )}
               onClick={() =>
-                column.sortable && onSort &&
-                onSort(
-                   column.key,
-                   sortDir === "asc" ? "desc" : "asc",
-                )
+                column.sortable &&
+                onSort &&
+                onSort(column.key, sortDir === "asc" ? "desc" : "asc")
               }
               key={column.key}
             >
@@ -108,14 +115,12 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
         {items.map((item) => (
           <tr
             className={mergeClassNames(
-              onChange && "row_selectable",
-              onChange && name && input[name] === item.id && "row_selected"
+              onSelect && "row_selectable",
+              onSelect && selectedId === item.id && "row_selected"
             )}
             // TODO: Make rows selectable with keyboard
-            tabIndex={onChange ? 0 : undefined}
-            onClick={() =>
-              onChange && name && onChange({ target: { name, value: item.id } })
-            }
+            tabIndex={onSelect ? 0 : undefined}
+            onClick={() => onSelect && onSelect(item)}
             key={item.id}
             {...item.props}
           >

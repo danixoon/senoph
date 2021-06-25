@@ -4,10 +4,10 @@ import Form from "components/Form";
 import Header from "components/Header";
 import Input from "components/Input";
 import Layout from "components/Layout";
-import { InputHook } from "hooks/useInput";
+import { InputBind } from "hooks/useInput";
 
 const Filter: React.FC<{
-  bind: InputHook;
+  bind: InputBind;
   config: {
     types: { id: number; name: string }[];
     departments: { id: number; name: string }[];

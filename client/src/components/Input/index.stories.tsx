@@ -4,7 +4,7 @@ import Input from ".";
 import { useInput } from "hooks/useInput";
 storiesOf("Components/Inputs/Input", module)
   .add("with label sm", () => {
-    const bind = useInput({
+    const [bind] = useInput({
       simple: "hello",
     });
     return (
@@ -18,13 +18,13 @@ storiesOf("Components/Inputs/Input", module)
     );
   })
   .add("simple sm", () => {
-    const bind = useInput({
+    const [bind] = useInput({
       simple: "hello",
     });
     return <Input size="sm" name="simple" placeholder="текст" {...bind} />;
   })
   .add("info sm", () => {
-    const bind = useInput({
+    const [bind] = useInput({
       simple: "hello",
     });
     return (
@@ -55,7 +55,7 @@ storiesOf("Components/Inputs/Input", module)
     );
   })
   .add("label md", () => {
-    const bind = useInput({
+    const [bind] = useInput({
       simple: "hello",
     });
     return (
@@ -69,7 +69,7 @@ storiesOf("Components/Inputs/Input", module)
     );
   })
   .add("info md", () => {
-    const bind = useInput({
+    const [bind] = useInput({
       simple: "hello",
     });
     return (

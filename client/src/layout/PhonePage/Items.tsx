@@ -24,15 +24,16 @@ const Items: React.FC<{
     dir: SortDir;
     key: string | null;
   };
+  selection: {
+    onSelect: (item: ApiResponse.Phone) => void;
+    selectedId: any;
+  };
 }> = (props) => {
-  const {
-    items,
-    paging,
-    sorting,
-  } = props;
+  const { items, paging, sorting, selection } = props;
 
   const { totalItems, pageItems, offset, onOffsetChanged } = paging;
-  
+  const { onSelect, selectedId } = selection;
+
   const maxPage = Math.ceil(totalItems / pageItems);
   let currentPage = Math.floor((offset / totalItems) * maxPage) + 1;
   if (Number.isNaN(currentPage)) currentPage = 1;
@@ -49,6 +50,8 @@ const Items: React.FC<{
       </PopupLayer>
       <Table
         // {...bind}
+        selectedId={selectedId}
+        onSelect={onSelect}
         onSort={sorting.onSort}
         sortDir={sorting.dir}
         sortKey={sorting.key ?? undefined}

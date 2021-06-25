@@ -6,7 +6,7 @@ import { useInput } from "hooks/useInput";
 import Toggle from "components/Toggle";
 import Checkbox from "components/Checkbox";
 storiesOf("Components/Containers/Spoiler", module).add("info md", () => {
-  const bind = useInput({
+  const [bind] = useInput({
     input: "пупа",
     name: true,
     checkbox: false,
