@@ -4,19 +4,25 @@ declare type ItemsResponse<T> = {
   offset: number;
 };
 
-declare namespace ApiResponse {
-  declare type Phone = Database.Phone;
-  declare type PhoneType = Database.PhoneType;
-  declare type Department = Database.PhoneType;
-  declare type Model = Database.PhoneModel;
+// Converting all response Date types to string type
+// type ApiModel<T, K = RequiredId<T>> = {
+//   [P in keyof K]: K[P] extends Date ? string : K[P];
+// };
 
-  declare type FetchModels = ItemsResponse<Database.Model>;
+declare namespace ApiResponse {
+  declare type Phone = RequiredId<Models.PhoneAttributes>;
+  declare type PhoneType = RequiredId<Models.PhoneTypeAttributes>;
+  declare type PhoneModel = RequiredId<Models.PhoneModelAttributes>;
+  declare type Department = RequiredId<Models.DepartmentAttributes>;
+
+  declare type FetchModels = ItemsResponse<PhoneModel>;
   declare type FetchFilterConfig = {
-    models: Pick<Model, "id" | "name" | "phoneTypeId">[];
+    models: Pick<PhoneModel, "id" | "name" | "phoneTypeId">[];
     types: Pick<PhoneType, "id" | "name">[];
     departments: Pick<Department, "id" | "name">[];
   };
-  declare type FetchPhones = ItemsResponse<Database.Phone>;
+  declare type FetchPhones = ItemsResponse<Phone>;
+  declare type FetchPhone = Phone;
 }
 
 declare namespace ApiRequest {
@@ -31,4 +37,8 @@ declare namespace ApiRequest {
     sortKey: string;
     sortDir: "asc" | "desc";
   }> & { offset: number; amount: number };
+
+  declare type FetchPhone = {
+    id: number;
+  };
 }

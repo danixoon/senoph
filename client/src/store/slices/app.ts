@@ -1,9 +1,36 @@
 import axios from "axios";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
-const initialState = {
-  filter: {},
+const initialState: { config: ApiResponse.FetchFilterConfig } = {
+  config: {
+    departments: [],
+    models: [],
+    types: [],
+  },
 };
+
+export const appSlice = createSlice({
+  name: "app",
+  initialState,
+  reducers: {},
+  // extraReducers: (builder) =>
+  // builder.addCase(fetchPhones.fulfilled, (state, action) => {
+  //   action;
+  // }),
+});
+
+export const createPhone = createAsyncThunk(
+  "app/fetchConfig",
+  async (_, thunk) => {
+    const response = await axios.get("/phone");
+
+    // thunk.dispatch(fetchPhones());
+
+    return response.data;
+  }
+);
+
+export default appSlice.reducer;
 
 // export const createPhone = createAsyncThunk(
 //   "phone/createPhone",
@@ -46,5 +73,3 @@ const initialState = {
 // //     dispatch(incrementByAmount(amount));
 // //   }
 // // };
-
-// export default appSlice.reducer;

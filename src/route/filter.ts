@@ -17,9 +17,9 @@ router.get("/", async (req, res) => {
   ]);
 
   const response: ApiResponse.FetchFilterConfig = {
-    departments: departments,
-    types: types,
-    models: models,
+    departments: departments as ApiResponse.Department[],
+    types: types as ApiResponse.PhoneType[],
+    models: models as ApiResponse.PhoneModel[],
   };
   res.send(response);
 });

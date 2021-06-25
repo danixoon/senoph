@@ -8,16 +8,10 @@ import {
 } from "sequelize-typescript";
 import { Optional } from "sequelize/types";
 
-export type UserAttributes = WithId<{
-  username: string;
-  passwordHash: string;
-  role: Role;
-}>;
-
 @Table
 export default class User extends Model<
-  UserAttributes,
-  OptionalId<UserAttributes>
+  Models.UserAttributes,
+  OptionalId<Models.UserAttributes>
 > {
   @AllowNull(false)
   @Column(DataType.STRING)

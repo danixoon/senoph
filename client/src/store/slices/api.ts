@@ -1,15 +1,11 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
-export const convertItems = <T>(res: T[]): T[] => {
-  const convertItem = (item: any) => {
-    const converted = { ...item };
-    for (let key in converted)
-      if (key.endsWith("Date")) converted[key] = new Date(converted[key]);
+const convertItem = (item: any) => {
+  const converted = { ...item };
+  for (let key in converted)
+    if (key.endsWith("Date")) converted[key] = new Date(converted[key]);
 
-    return converted;
-  };
-
-  return res.map(convertItem);
+  return converted;
 };
 
 export const api = createApi({
@@ -21,6 +17,12 @@ export const api = createApi({
         query: (params) => ({ url: "phone", params }),
       }
     ),
+    fetchPhone: builder.query<ApiResponse.FetchPhone, ApiRequest.FetchPhone>({
+      query: (params) => ({ url: "phone/byId", params }),
+      // transformResponse: (query, meta) => {
+      // return r.
+      // },
+    }),
     fetchFilterConfig: builder.query<ApiResponse.FetchFilterConfig, {}>({
       query: () => "filter",
     }),
@@ -28,4 +30,8 @@ export const api = createApi({
 });
 
 // TODO: Learn how names generated in typescript with prefix from user-defined object
-export const { useFetchPhonesQuery, useFetchFilterConfigQuery } = api;
+export const {
+  useFetchPhonesQuery,
+  useFetchFilterConfigQuery,
+  useFetchPhoneQuery,
+} = api;

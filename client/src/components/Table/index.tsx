@@ -2,14 +2,13 @@ import * as React from "react";
 import { mergeClassNames, mergeProps } from "utils";
 import "./styles.styl";
 
-type TableItem = {
+type TableItem<T> = {
   id: any;
   props?: React.DetailedHTMLProps<
     React.HTMLAttributes<HTMLTableRowElement>,
     HTMLTableRowElement
   >;
-  [key: string]: any;
-};
+} & T;
 
 type TableColumn = {
   key: string;
@@ -18,13 +17,13 @@ type TableColumn = {
   sortable?: boolean;
 };
 
-type TableProps = OverrideProps<
+type TableProps<T = any> = OverrideProps<
   React.TableHTMLAttributes<HTMLTableElement>,
   {
-    items: TableItem[];
+    items: TableItem<T>[];
     columns: TableColumn[];
     name?: string;
-    onSelect?: (item: TableItem) => void;
+    onSelect?: (item: TableItem<T>) => void;
     selectedId?: any;
 
     onSort?: (key: string, dir: SortDir) => void;

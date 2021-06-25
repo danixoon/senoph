@@ -10,33 +10,15 @@ import {
   HasOne,
   HasMany,
 } from "sequelize-typescript";
-import { Optional } from "sequelize/types";
 
 import Holder from "./holder.model";
 import PhoneCategory from "./phoneCategory.model";
 import PhoneModel from "./phoneModel.model";
-import PhoneType from "./phoneType.model";
-
-export type PhoneAttributes = WithId<{
-  inventoryKey: string;
-  factoryKey: string;
-
-  accountingDate: Date;
-  assemblyDate: Date;
-  commissioningDate: Date;
-
-  phoneModelId: number;
-  holderId: number;
-
-  holder?: Holder;
-  model?: PhoneModel;
-  categories?: PhoneCategory[];
-}>;
 
 @Table
 export default class Phone extends Model<
-  PhoneAttributes,
-  OptionalId<PhoneAttributes>
+  Models.PhoneAttributes,
+  OptionalId<Models.PhoneAttributes>
 > {
   @AllowNull(false)
   @Column(DataType.STRING)
@@ -48,15 +30,15 @@ export default class Phone extends Model<
 
   @AllowNull(false)
   @Column(DataType.DATE)
-  accountingDate: Date;
+  accountingDate: string;
 
   @AllowNull(false)
   @Column(DataType.DATE)
-  assemblyDate: Date;
+  assemblyDate: string;
 
   @AllowNull(false)
   @Column(DataType.DATE)
-  commissioningDate: Date;
+  commissioningDate: string;
 
   @ForeignKey(() => PhoneModel)
   @AllowNull(false)

@@ -5,7 +5,7 @@ import { ReactComponent as CrossIcon } from "icons/crossBig.svg";
 import { AnimatePresence, motion, HTMLMotionProps } from "framer-motion";
 import Button from "components/Button";
 
-type PopupProps = OverrideProps<
+export type PopupProps = OverrideProps<
   React.HTMLAttributes<HTMLDivElement>,
   {
     isOpen?: boolean;

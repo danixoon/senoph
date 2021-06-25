@@ -69,7 +69,7 @@ export const fillTestDatabase = async (size: number = 100) => {
 
   const holders = await Holder.bulkCreate(
     holdersNames.map((name) => {
-      const [firstName, lastName, middleName] = name.split(" ");
+      const [lastName, firstName, middleName] = name.split(" ");
       return {
         firstName,
         lastName,
@@ -137,7 +137,7 @@ export const fillTestDatabase = async (size: number = 100) => {
   const models = await PhoneModel.bulkCreate(
     modelsNames.map((model) => ({
       name: model,
-      accountingDate: randomDate(),
+      accountingDate: randomDate().toString(),
       phoneTypeId: getRandomItem(phoneTypes).id,
     }))
   );
@@ -145,10 +145,10 @@ export const fillTestDatabase = async (size: number = 100) => {
   const phonesData = mapGenerated(size, () => ({
     inventoryKey: randomUUID(),
     factoryKey: randomUUID(),
-    
-    accountingDate: randomDate(),
-    assemblyDate: randomDate(),
-    commissioningDate: randomDate(),
+
+    accountingDate: randomDate().toString(),
+    assemblyDate: randomDate().toString(),
+    commissioningDate: randomDate().toString(),
 
     phoneModelId: getRandomItem(models).id,
     holderId: getRandomItem(holders).id,
@@ -160,14 +160,13 @@ export const fillTestDatabase = async (size: number = 100) => {
       const phoneId = getRandomItem(phones).id;
       const date = randomDate();
       return PhoneCategory.bulkCreate(
-        mapGenerated(Math.floor(Math.random() * 4),
-        (i) => ({
+        mapGenerated(Math.floor(Math.random() * 4), (i) => ({
           category: (i + 1).toString(),
           date: new Date(
             date.getFullYear() + i,
             date.getMonth(),
             date.getDay()
-          ),
+          ).toString(),
           phoneId,
         }))
       );
@@ -179,7 +178,7 @@ export const fillTestDatabase = async (size: number = 100) => {
     const randomPhones = getRandomItems(size - 10, phones);
     return {
       actKey: `#${Math.floor(10 + Math.random() * 100)}`,
-      actDate: randomDate(),
+      actDate: randomDate().toString(),
       holderId: getRandomItem(randomHolders).id,
       phoneId: getRandomItem(randomPhones).id,
     };
@@ -194,7 +193,7 @@ export const fillTestDatabase = async (size: number = 100) => {
   });
 
   console.log("fill complete.");
-}
+};
 
 router.get("/db/fill", async (req, res) => {
   await fillTestDatabase();

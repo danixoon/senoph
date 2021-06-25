@@ -11,12 +11,6 @@ import { Optional } from "sequelize/types";
 
 import PhoneType from "./phoneType.model";
 
-export type PhoneModelAttributes = WithId<{
-  name: string;
-  accountingDate: Date;
-  phoneTypeId: number;
-}>;
-
 @Scopes(() => ({
   names: {
     attributes: ["id", "name", "phoneTypeId"],
@@ -24,8 +18,8 @@ export type PhoneModelAttributes = WithId<{
 }))
 @Table
 export default class PhoneModel extends Model<
-  PhoneModelAttributes,
-  OptionalId<PhoneModelAttributes>
+  Models.PhoneModelAttributes,
+  OptionalId<Models.PhoneModelAttributes>
 > {
   @AllowNull(false)
   @Column(DataType.STRING)
@@ -33,7 +27,7 @@ export default class PhoneModel extends Model<
 
   @AllowNull(false)
   @Column(DataType.DATE)
-  accountingDate: Date;
+  accountingDate: string;
 
   @ForeignKey(() => PhoneType)
   @AllowNull(false)

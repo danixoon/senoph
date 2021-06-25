@@ -9,14 +9,12 @@ import {
 } from "sequelize-typescript";
 import { Optional } from "sequelize/types";
 
-export type DepartmentAttributes = WithId<{
-  name: string;
-}>;
+
 @Scopes(() => ({ names: {} }))
 @Table
 export default class Department extends Model<
-  DepartmentAttributes,
-  OptionalId<DepartmentAttributes>
+  Models.DepartmentAttributes,
+  OptionalId<Models.DepartmentAttributes>
 > {
   @AllowNull(false)
   @Column(DataType.STRING)

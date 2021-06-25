@@ -6,23 +6,16 @@ import {
   Table,
   DataType,
   HasOne,
-  BelongsTo
+  BelongsTo,
 } from "sequelize-typescript";
-import {  Optional } from "sequelize/types";
+import { Optional } from "sequelize/types";
 import Department from "./department.model";
 import PhoneType from "./phoneType.model";
 
-export type HolderAttributes = WithId<{
-  firstName: string;
-  lastName: string;
-  middleName: string;
-  departmentId: number;
-}>;
-
 @Table
 export default class Holder extends Model<
-  HolderAttributes,
-  OptionalId<HolderAttributes>
+  Models.HolderAttributes,
+  OptionalId<Models.HolderAttributes>
 > {
   @AllowNull(false)
   @Column(DataType.STRING)

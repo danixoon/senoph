@@ -13,20 +13,14 @@ import Holder from "./holder.model";
 import Phone from "./phone.model";
 import PhoneType from "./phoneType.model";
 
-export type PhoneCategoryAttribues = WithId<{
-  date: Date;
-  category: string;
-  phoneId: number;
-}>;
-
 @Table
 export default class PhoneCategory extends Model<
-  PhoneCategoryAttribues,
-  OptionalId<PhoneCategoryAttribues>
+  Models.PhoneCategoryAttributes,
+  OptionalId<Models.PhoneCategoryAttributes>
 > {
   @AllowNull(false)
   @Column(DataType.DATE)
-  date: Date;
+  date: string;
 
   @AllowNull(false)
   @Column(DataType.STRING)

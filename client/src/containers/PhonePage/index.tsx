@@ -14,11 +14,15 @@ import { useQueryInput } from "hooks/useQueryInput";
 import { denullObject } from "utils";
 import PopupLayer from "providers/PopupLayer";
 import Popup from "components/Popup";
+import PhonePopup from "layout/PhonePopup";
+import { useFilterConfig } from "hooks/api/useFetchConfig";
+import { useFetchPhone } from "hooks/api/useFetchPhone";
+import PhonePopupContainer from "containers/PhonePopup";
 
 type FilterProps = Omit<
   PartialNullable<Required<ApiRequest.FetchPhones>>,
   "amount" | "offset"
->;
+> & { selectedId: any };
 type PhonePageContainerProps = {};
 
 const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
@@ -39,9 +43,8 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
       return input;
     }
   );
-  
 
-  const { data: filterData } = useFetchFilterConfigQuery({});
+  const filterData = useFilterConfig();
   const { data: itemsData } = useFetchPhonesQuery({
     ...denullObject(bindFilter.input),
     amount: PAGE_ITEMS,
@@ -52,9 +55,9 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
 
   const totalItems = itemsData?.total ?? PAGE_ITEMS;
 
-  const [[phonePopup, selectedId], setPhonePopup] = React.useState<
-    [boolean, any]
-  >(() => [false, null]);
+  const handlePhonePopup = (id: any = null) => {
+    setFilter({ ...bindFilter.input, selectedId: id });
+  };
 
   return (
     <Layout flow="row">
@@ -65,18 +68,15 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
               <Label size="md">Средства связи</Label>
             </TopBarLayer>
             <PopupLayer>
-              <Popup
-                size="lg"
-                isOpen={phonePopup}
-                onToggle={(open) => setPhonePopup([open, selectedId])}
-              >
-                hey
-              </Popup>
+              <PhonePopupContainer
+                selectedId={bindFilter.input.selectedId}
+                onToggle={() => handlePhonePopup(null)}
+              />
             </PopupLayer>
             <PhonePage.Items
               selection={{
-                onSelect: (item) => setPhonePopup([true, item.id]),
-                selectedId,
+                onSelect: (item) => handlePhonePopup(item.id),
+                selectedId: bindFilter.input.selectedId,
               }}
               sorting={{
                 dir: bindFilter.input.sortDir ?? "asc",
@@ -102,10 +102,7 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
         </Switch>
       </Layout>
       <Layout style={{ flexBasis: "200px" }}>
-        <PhonePage.Filter
-          bind={bindFilter}
-          config={filterData ?? { types: [], departments: [], models: [] }}
-        />
+        <PhonePage.Filter bind={bindFilter} config={filterData} />
       </Layout>
     </Layout>
   );

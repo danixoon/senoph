@@ -10,17 +10,13 @@ import {
 
 import { Optional } from "sequelize/types";
 
-export type PhoneTypeAttributes = WithId<{
-  name: string;
-}>;
-
 @Scopes(() => ({
   names: {},
 }))
 @Table
 export default class PhoneType extends Model<
-  PhoneTypeAttributes,
-  OptionalId<PhoneTypeAttributes>
+  Models.PhoneTypeAttributes,
+  OptionalId<Models.PhoneTypeAttributes>
 > {
   @AllowNull(false)
   @Column(DataType.STRING)

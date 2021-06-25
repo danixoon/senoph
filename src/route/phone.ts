@@ -11,6 +11,16 @@ import Department from "@backend/db/models/department.model";
 
 const router = Router();
 
+router.get("/byId", async (req, res) => {
+  const { id } = req.query as any as ApiRequest.FetchPhone;
+  const phone = await Phone.findByPk(id, { include: [{ all: true }] });
+
+  console.log(id);
+
+  if (phone != null) res.send(phone);
+  else res.sendStatus(404);
+});
+
 router.get("/", async (req, res) => {
   const {
     sortDir: orderDir,
@@ -18,7 +28,7 @@ router.get("/", async (req, res) => {
     amount = 50,
     offset = 0,
     category,
-    phoneModelId,
+    phoneModelId, 
     departmentId,
     phoneTypeId,
     factoryKey,
