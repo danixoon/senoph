@@ -41,7 +41,7 @@ const Items: React.FC<{
   return (
     <>
       <Header align="right" className="margin_md">
-        Результаты поиска
+        Результаты поиска ({totalItems})
       </Header>
       <PopupLayer>
         <Popup size="lg" closeable onToggle={() => {}}>

@@ -8,6 +8,14 @@
   flex-flow: column
   z-index: zIndex.popup
 
+  
+
+ 
+
+
+  &__header
+    display: flex
+
   &__fade
     position: absolute
     left: 0
@@ -20,16 +28,27 @@
   &__container
     @extend .border, .shadow
     border-radius: radius.lg
+    border-top-right-radius: 0
+
     background-color: colors.white
     margin: auto
     position: relative
     padding: padding.lg
     display flex
+    flex-flow: column
+    flex: 1
+    box-shadow: 0px 0px 15px 5px rgba(0,0,0,0.1)
+    
 
     &_lg
       flex: 0.8
       width: 80%
 
+
+  &_no-padding
+    padding: 0
+
+    
   &__close
     @extend .focusable
     content: url('icons/crossBig.svg')

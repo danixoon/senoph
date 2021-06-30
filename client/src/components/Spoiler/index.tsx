@@ -18,7 +18,7 @@ export type SpoilerProps = OverrideProps<
 const Spoiler: React.FC<SpoilerProps> = (props) => {
   const { label, children, opened, onToggle, ...rest } = props;
 
-  const [isOpened, toggleOpen] = React.useState(() => false);
+  const [isOpened, toggleOpen] = React.useState(() => opened);
 
   const mergedProps = mergeProps(
     {

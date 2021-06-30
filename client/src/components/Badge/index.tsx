@@ -7,18 +7,20 @@ type BadgeProps = OverrideProps<
   {
     color?: "secondary" | "primary";
     isWarn?: boolean;
+    noBorder?: boolean;
   },
   React.PropsWithChildren<React.HTMLAttributes<HTMLElement>>
 >;
 
 const Badge: React.FC<BadgeProps> = (props) => {
-  const { children, isWarn, color = "secondary", onClick, ...rest } = props;
+  const { children, isWarn, noBorder, color = "secondary", onClick, ...rest } = props;
 
   const mergedProps = mergeProps(
     {
       className: mergeClassNames(
         "badge",
         `badge_${color}`,
+        noBorder && "badge_no-border",
         isWarn && "badge_warn",
         onClick && "badge_interactive"
       ),

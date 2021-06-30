@@ -4,15 +4,21 @@ import { useDispatch } from "react-redux";
 import { InputHook, InputHookPrepare, useInput } from "./useInput";
 import qs from "query-string";
 import { useLocation } from "react-router";
+import assert from "assert";
 
 type QueryInputHook = {};
+
+const isEqual = (a: any, b: any) => {
+  for (const k in a) if (a[k] !== b[k]) return false;
+  return true;
+};
 
 export const useQueryInput = <T>(
   defaultInput: T,
   prepare: InputHookPrepare<T>
 ) => {
   const dispatch = useDispatch();
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
 
   const dispatchQuery = (input: T) => {
     const urlSearch = { ...input };
@@ -27,6 +33,15 @@ export const useQueryInput = <T>(
     dispatchQuery(i);
     return i;
   });
+
+  React.useEffect(() => {
+    const q = qs.parse(search) as any;
+    if (!isEqual(q, bind.input)) {
+      console.log("oh..");
+      setInput({ ...q });
+    }
+  }, [pathname, search]);
+
   return [
     bind,
     (v: T) => {

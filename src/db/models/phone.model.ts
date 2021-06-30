@@ -12,6 +12,7 @@ import {
 } from "sequelize-typescript";
 
 import Holder from "./holder.model";
+import Holding from "./holding.model";
 import PhoneCategory from "./phoneCategory.model";
 import PhoneModel from "./phoneModel.model";
 
@@ -58,6 +59,9 @@ export default class Phone extends Model<
 
   @HasMany(() => PhoneCategory)
   categories: PhoneCategory[];
+
+  @HasMany(() => Holding)
+  holdings: Holding[];
 }
 
 // export default {

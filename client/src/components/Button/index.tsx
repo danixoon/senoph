@@ -7,7 +7,7 @@ export type ButtonProps = OverrideProps<
   React.PropsWithChildren<React.ButtonHTMLAttributes<HTMLButtonElement>>,
   {
     color?: "secondary" | "primary" | "invisible";
-    size?: "sm" | "md";
+    size?: Size;
   }
 >;
 

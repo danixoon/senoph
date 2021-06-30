@@ -11,11 +11,12 @@ type InputProps = OverrideProps<
     label?: string;
     info?: string;
     size?: "sm" | "md";
+    inputProps?: React.InputHTMLAttributes<HTMLInputElement>;
   }
 >;
 
 const Input: React.FC<InputProps> = (props) => {
-  const { label, info, size = "sm", input, name, onChange, ...rest } = props;
+  const { label, info, size = "sm", input, name, inputProps = {}, onChange, ...rest } = props;
 
   const mergedProps = mergeProps({ className: mergeClassNames(`input`) }, rest);
 
@@ -31,6 +32,7 @@ const Input: React.FC<InputProps> = (props) => {
         value={input[name] ?? ""}
         name={name}
         onChange={onChange}
+        {...inputProps}
       />
       {info && <small className="input__info">{info}</small>}
     </div>

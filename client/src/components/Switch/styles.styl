@@ -3,17 +3,54 @@
 .switch
   display: flex
   padding: 0
-  margin: margin.md
+  margin: 0
+
+  
+
+  &_md
+    font-size: fontSize.sm
+
+  &_vertical
+    flex-flow: column
+    
 
   & > li
-    flex-basis: 150px
-    margin: 0px margin.lg
+    // flex-basis: 150px
+    // margin: auto
+
+    ^[0]_vertical
+      // margin-bottom: auto
 
   &__item
     @extend .focusable
-    text-align: center
-    border-bottom: 2px solid colors.secondary
-    padding-bottom: padding.lg
+    padding: padding.md padding.md * 4
+    margin: 0
+    
 
-    ^[1]_selected&
-      border-bottom: 2px solid colors.primary
+    ^[0]_border > li > &
+      @extend .border, .bt
+      
+
+    ^[0]_vertical > li > &
+      border-left: 2px solid colors.secondary
+      padding-left: padding.lg
+      
+      &^[1]_selected
+        border-left: 2px solid colors.primary
+        & > *
+          color: colors.primary !important
+    
+    ^[0]_horizontal > li > &
+      border-bottom: 2px solid colors.secondary
+      height: 100%
+      // padding-bottom: padding.lg
+      // text-align: center
+      &^[1]_selected
+        border-bottom: 2px solid colors.primary
+        & > *
+          color: colors.primary !important
+      
+    text-align: center
+    
+
+    

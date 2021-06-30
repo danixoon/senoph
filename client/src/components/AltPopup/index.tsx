@@ -8,10 +8,10 @@ import { AnimatePresence, motion, HTMLMotionProps } from "framer-motion";
 import PopupLayout from "layout/PopupLayout";
 import PopupLayer from "providers/PopupLayer";
 
-type AltPopupProps = OverrideProps<
+export type AltPopupProps = OverrideProps<
   React.PropsWithChildren<HTMLMotionProps<"div">>,
   {
-    position: "left" | "right" | "top" | "bottom";
+    position?: "left" | "right" | "top" | "bottom";
     target: HTMLElement | null;
     zIndex?: "normal" | "popup";
   }
@@ -55,7 +55,7 @@ const AltPopup: React.FC<AltPopupProps> = (props: AltPopupProps) => {
           result.top = centerY;
           break;
         case "right":
-          result.left = rect.width + 15;
+          result.left = rect.x + rect.width;
           result.top = centerY;
           break;
       }

@@ -13,18 +13,37 @@ type SwitchItem = {
 type SwitchProps = OverrideProps<
   React.HTMLAttributes<HTMLUListElement>,
   {
+    position?: "horizontal" | "vertical";
     input: any;
     name: string;
+    border?: boolean;
+    size?: Size;
     items: SwitchItem[];
     onChange: HookOnChange;
   }
 >;
 
 const Switch: React.FC<SwitchProps> = (props) => {
-  const { input, items, name, onChange, ...rest } = props;
+  const {
+    input,
+    items,
+    name,
+    position = "horizontal",
+    border,
+    size = "md",
+    onChange,
+    ...rest
+  } = props;
 
   const mergedProps = mergeProps(
-    { className: mergeClassNames(`switch`) },
+    {
+      className: mergeClassNames(
+        `switch`,
+        `switch_${position}`,
+        `switch_${size}`,
+        border && `switch_border`
+      ),
+    },
     rest
   );
 
@@ -39,6 +58,7 @@ const Switch: React.FC<SwitchProps> = (props) => {
       {items.map((item) => (
         <li key={item.id}>
           <Button
+            size={size}
             color="invisible"
             onClick={() => handleItemSelect(item)}
             className={mergeClassNames(
@@ -46,7 +66,7 @@ const Switch: React.FC<SwitchProps> = (props) => {
               item.id === selectedId && "switch__item_selected"
             )}
           >
-            <Label size="md" className="switch__label">
+            <Label size={size} className="switch__label">
               {item.name}
             </Label>
           </Button>

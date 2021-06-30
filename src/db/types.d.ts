@@ -53,6 +53,7 @@ declare namespace Models {
     holder?: HolderAttributes;
     model?: PhoneModelAttributes;
     categories?: PhoneCategoryAttributes[];
+    holdings?: HoldingAttributes[];
   }>;
 
   type UserAttributes = WithId<{

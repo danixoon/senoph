@@ -2,11 +2,11 @@ import * as React from "react";
 import { mergeClassNames, mergeProps } from "utils";
 import "./styles.styl";
 
-type LabelProps = OverrideProps<
+export type LabelProps = OverrideProps<
   React.PropsWithChildren<React.HTMLAttributes<HTMLSpanElement>>,
   {
     unselectable?: boolean;
-    size?: "xs" | "sm" | "md";
+    size?: Size;
     margin?: "right" | "left";
     weight?: "normal" | "medium" | "bold";
   }

@@ -61,7 +61,7 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
 
   return (
     <Layout flow="row">
-      <Layout flex={1}>
+      <Layout flex="1">
         <Switch>
           <Route path={`${path}/view`}>
             <TopBarLayer>

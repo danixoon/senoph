@@ -73,6 +73,7 @@ router.get("/", async (req, res) => {
       {
         model: PhoneModel,
         where: { phoneTypeId: valueOrNotNull(phoneTypeId) },
+        required: false
       },
       {
         model: Holder,
@@ -80,12 +81,14 @@ router.get("/", async (req, res) => {
         include: [
           {
             model: Department,
+            required: false
           },
         ],
       },
       {
         model: PhoneCategory,
         where: { category: valueOrNotNull(category) },
+        required: false
       },
     ],
     order,

@@ -1,10 +1,13 @@
 @require 'stylus/theme.styl'
 
-.sidebar
+.category-item
+  align-items: center
+  &__level
+    width: 1.5rem
 
-  box-shadow: 5px 0px 10px 5px rgba(0, 0, 0, 0.05)
-
-  &__group
-    display: flex
-    flex-flow: column
-  
+.holding-item
+  padding-bottom: margin.md
+  &:not(:last-child)
+    border-bottom: 1px solid colors.light
+    margin-bottom: margin.md
+    

@@ -91,3 +91,4 @@ declare type QueryHook<T> = [
 ];
 
 declare type SortDir = "asc" | "desc";
+declare type Size = "xs" | "sm" | "md" | "lg";

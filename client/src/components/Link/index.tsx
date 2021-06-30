@@ -13,7 +13,7 @@ export interface LinkProps
   
 }
 const Link: React.FC<LinkProps> = ({ href = "#", ...props }: LinkProps) => {
-  const { children, isMonospace, size = "xs", onClick, ...rest } = props;
+  const { children, isMonospace, size = "sm", onClick, ...rest } = props;
 
   const mergedProps = mergeProps(
     {
