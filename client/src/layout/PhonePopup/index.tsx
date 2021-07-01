@@ -1,7 +1,10 @@
 import Badge from "components/Badge";
+import Button from "components/Button";
+import ButtonGroup from "components/ButtonGroup";
 import Dropdown from "components/Dropdown";
 import Header from "components/Header";
 import Hr from "components/Hr";
+import Icon from "components/Icon";
 import Input from "components/Input";
 import Label, { LabelProps } from "components/Label";
 import Layout from "components/Layout";
@@ -143,12 +146,33 @@ const Content: React.FC<{ phone: NonNullable<PhonePopupProps["phone"]> }> = (
       <Header align="center"> Движения отсутствуют.</Header>
     );
 
+  const [edit, setEdit] = React.useState(() => false);
+
   return (
     <Layout padding="md" flex="1">
       <PopupTopBar>
-        <Header hr align="center" style={{ flex: 1 }}>
+        <Header hr align="center" style={{ flex: 1, display: "flex" }}>
+          <ButtonGroup>
+            <Button
+              margin="none"
+              color="primary"
+              size="xs"
+              onClick={() => setEdit(!edit)}
+            >
+              {edit ? <Icon.Eye /> : <Icon.Edit3 />}
+            </Button>
+            <Badge
+              margin="none"
+              isWarn={edit}
+              color={edit ? "primary" : "secondary"}
+            >
+              {edit ? "Изменение" : "Просмотр"}
+            </Badge>
+          </ButtonGroup>
           {/* <Edit3 color="#C5C5C5" /> */}
-          Средство связи №{phone.id} ({phone.model?.name})
+          <span style={{ margin: "auto" }}>
+            Средство связи №{phone.id} ({phone.model?.name})
+          </span>
         </Header>
         <Switch
           {...bind}

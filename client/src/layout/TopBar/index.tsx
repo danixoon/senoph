@@ -8,14 +8,14 @@ import "./style.styl";
 
 export type TopBarProps = { label?: string };
 
-const TopBar: React.FC<TopBarProps> = (props) => {
+const TopBar = React.forwardRef<HTMLDivElement, TopBarProps>((props, ref) => {
   const { label, children } = props;
 
   return (
-    <Layout flow="row" className="topbar">
+    <Layout ref={ref} flow="row" className="topbar">
       {children}
     </Layout>
   );
-};
+});
 
 export default TopBar;

@@ -35,7 +35,7 @@ const Filter: React.FC<{
 
   return (
     <>
-      <Header align="right" className="margin_md">
+      <Header hr align="right">
         Фильтрация
       </Header>
       <Form className="filter-content__form">

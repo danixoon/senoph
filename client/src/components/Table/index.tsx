@@ -1,3 +1,5 @@
+import Checkbox from "components/Checkbox";
+import { InputBind } from "hooks/useInput";
 import * as React from "react";
 import { mergeClassNames, mergeProps } from "utils";
 import "./styles.styl";
@@ -10,12 +12,14 @@ type TableItem<T> = {
   >;
 } & T;
 
-type TableColumn = {
+export type TableColumn = {
   key: string;
-  name: string;
-  type?: "date";
+  header: React.ReactChild;
   sortable?: boolean;
-};
+} & (
+  | { type?: "date" }
+  | { type?: "checkbox"; onToggle: (state: boolean, id: any) => void }
+);
 
 type TableProps<T = any> = OverrideProps<
   React.TableHTMLAttributes<HTMLTableElement>,
@@ -23,8 +27,11 @@ type TableProps<T = any> = OverrideProps<
     items: TableItem<T>[];
     columns: TableColumn[];
     name?: string;
+
     onSelect?: (item: TableItem<T>) => void;
     selectedId?: any;
+
+    selectMultiple?: boolean;
 
     onSort?: (key: string, dir: SortDir) => void;
     sortKey?: string;
@@ -42,8 +49,9 @@ type TableCellProps = OverrideProps<
   {}
 >;
 
-const TableCell: React.FC<TableCellProps> = ({ children, ...props }) => {
-  return <td {...props}>{children}</td>;
+const TableCell: React.FC<TableCellProps> = ({ children, ...rest }) => {
+  const mergedProps = mergeProps({}, rest);
+  return <td {...mergedProps}>{children}</td>;
 };
 
 const Table: React.FC<React.PropsWithChildren<TableProps>> = (
@@ -59,6 +67,7 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
     sortDir,
     onSort,
     selectedId,
+    selectMultiple,
     ...rest
   } = props;
   const mergedProps = mergeProps(
@@ -81,8 +90,25 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
   //         (a, b) => (a[sortKey] > b[sortKey] ? 1 : -1) * (asc ? 1 : -1)
   //       );
 
-  const convertValue = (column: TableColumn, value: any) => {
-    if (column.type === "date") return new Date(value).toLocaleDateString();
+  const convertValue = (
+    column: TableColumn,
+    item: TableItem<any>,
+    value: any
+  ) => {
+    switch (column.type) {
+      case "date":
+        return new Date(value).toLocaleDateString();
+      case "checkbox":
+        return (
+          <Checkbox
+            onChange={(e) => {
+              column.onToggle(!value, item.id);
+            }}
+            input={{ [column.key]: value }}
+            name={column.key}
+          />
+        );
+    }
     return value;
   };
 
@@ -95,6 +121,7 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
           {columns.map((column) => (
             <TableCell
               className={mergeClassNames(
+                column.type === "checkbox" && "cell_checkbox",
                 column.sortable && "cell_sortable",
                 sortKey === column.key && `sort_${sortDir}`
               )}
@@ -105,7 +132,7 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
               }
               key={column.key}
             >
-              {column.name}
+              {column.header}
             </TableCell>
           ))}
         </tr>
@@ -119,13 +146,20 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
             )}
             // TODO: Make rows selectable with keyboard
             tabIndex={onSelect ? 0 : undefined}
-            onClick={() => onSelect && onSelect(item)}
             key={item.id}
             {...item.props}
           >
             {columns.map((column) => (
-              <TableCell key={column.key}>
-                {convertValue(column, item[column.key])}
+              <TableCell
+                className={mergeClassNames(
+                  column.type === "checkbox" && "cell_checkbox"
+                )}
+                key={column.key}
+                onClick={() =>
+                  column.type != "checkbox" && onSelect && onSelect(item)
+                }
+              >
+                {convertValue(column, item, item[column.key])}
               </TableCell>
             ))}
           </tr>

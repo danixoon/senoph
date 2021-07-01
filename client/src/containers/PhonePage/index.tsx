@@ -4,20 +4,20 @@ import { Route, Switch, useLocation, useRouteMatch } from "react-router";
 import Layout from "components/Layout";
 import PhonePage from "layout/PhonePage";
 import {
-  useFetchFilterConfigQuery,
   useFetchPhonesQuery,
 } from "store/slices/api";
 import TopBarLayer from "providers/TopBarLayer";
-import Label from "components/Label";
 import qs from "query-string";
 import { useQueryInput } from "hooks/useQueryInput";
 import { denullObject } from "utils";
 import PopupLayer from "providers/PopupLayer";
-import Popup from "components/Popup";
-import PhonePopup from "layout/PhonePopup";
 import { useFilterConfig } from "hooks/api/useFetchConfig";
-import { useFetchPhone } from "hooks/api/useFetchPhone";
 import PhonePopupContainer from "containers/PhonePopup";
+import Icon from "components/Icon";
+import Button from "components/Button";
+import ButtonGroup from "components/ButtonGroup";
+import Hr from "components/Hr";
+import Badge from "components/Badge";
 
 type FilterProps = Omit<
   PartialNullable<Required<ApiRequest.FetchPhones>>,
@@ -59,48 +59,66 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
     setFilter({ ...bindFilter.input, selectedId: id });
   };
 
+  const isEditMode = pathname.startsWith(`${path}/edit`);
+  const [selectedCount, setSelectedCound] = React.useState(() => 0);
+
   return (
     <Layout flow="row">
-      <Layout flex="1">
-        <Switch>
-          <Route path={`${path}/view`}>
-            <TopBarLayer>
-              <Label size="md">Средства связи</Label>
-            </TopBarLayer>
-            <PopupLayer>
-              <PhonePopupContainer
-                selectedId={bindFilter.input.selectedId}
-                onToggle={() => handlePhonePopup(null)}
-              />
-            </PopupLayer>
-            <PhonePage.Items
-              selection={{
-                onSelect: (item) => handlePhonePopup(item.id),
-                selectedId: bindFilter.input.selectedId,
-              }}
-              sorting={{
-                dir: bindFilter.input.sortDir ?? "asc",
-                key: bindFilter.input.sortKey,
-                onSort: (sortKey, sortDir) =>
-                  setFilter({ ...bindFilter.input, sortKey, sortDir }),
-              }}
-              paging={{
-                offset,
-                onOffsetChanged: (nextOffset) =>
-                  setOffset(nextOffset < 0 ? 0 : nextOffset),
-                pageItems: PAGE_ITEMS,
-                totalItems: totalItems,
-              }}
-              items={itemsData?.items ?? []}
-            />
-          </Route>
-          <Route path={`${path}/edit`}>
-            <TopBarLayer>
-              <Label size="md">Управление средствами связи</Label>
-            </TopBarLayer>
-          </Route>
-        </Switch>
+      <Layout flex="1" style={{ marginLeft: "0.25rem" }}>
+        <TopBarLayer>
+          {/* <Layout flow="row"> */}
+          <Switch>
+            <Route path={`${path}/view`}>
+              {/* <Label size="md"> Просмотр средств связи</Label> */}
+            </Route>
+            <Route path={`${path}/edit`}>
+              {/* <Label size="md"> Управление средствами связи</Label> */}
+              <Hr vertical />
+              <Button margin="none" color="primary">
+                <Icon.Plus size="md" />
+              </Button>
+              <Hr vertical />
+              <ButtonGroup>
+                <Button margin="none">Выбранное</Button>
+                <Badge margin="none" color="secondary">
+                  {selectedCount}
+                </Badge>
+              </ButtonGroup>
+            </Route>
+          </Switch>
+          {/* </Layout> */}
+        </TopBarLayer>
+        <PopupLayer>
+          <PhonePopupContainer
+            selectedId={bindFilter.input.selectedId}
+            onToggle={() => handlePhonePopup(null)}
+          />
+        </PopupLayer>
+        <PhonePage.Items
+          selection={{
+            onSelection: (all, ids) =>
+              setSelectedCound(all ? totalItems - ids.length : ids.length),
+            onSelect: (item) => handlePhonePopup(item.id),
+            selectedId: bindFilter.input.selectedId,
+          }}
+          sorting={{
+            dir: bindFilter.input.sortDir ?? "asc",
+            key: bindFilter.input.sortKey,
+            onSort: (sortKey, sortDir) =>
+              setFilter({ ...bindFilter.input, sortKey, sortDir }),
+          }}
+          paging={{
+            offset,
+            onOffsetChanged: (nextOffset) =>
+              setOffset(nextOffset < 0 ? 0 : nextOffset),
+            pageItems: PAGE_ITEMS,
+            totalItems: totalItems,
+          }}
+          items={itemsData?.items ?? []}
+          mode={isEditMode ? "edit" : "view"}
+        />
       </Layout>
+      <Hr vertical />
       <Layout style={{ flexBasis: "200px" }}>
         <PhonePage.Filter bind={bindFilter} config={filterData} />
       </Layout>

@@ -8,16 +8,28 @@ export type ButtonProps = OverrideProps<
   {
     color?: "secondary" | "primary" | "invisible";
     size?: Size;
+    margin?: Size;
   }
 >;
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   (props, ref) => {
-    const { children, color = "secondary", size = "sm", ...rest } = props;
+    const {
+      children,
+      color = "secondary",
+      size = "sm",
+      margin = "sm",
+      ...rest
+    } = props;
 
     const mergedProps = mergeProps(
       {
-        className: mergeClassNames("btn", `btn_${color}`, `btn_${size}`),
+        className: mergeClassNames(
+          "btn",
+          `btn_${color}`,
+          `btn_${size}`,
+          `mg_${margin}`
+        ),
       },
       rest
     );

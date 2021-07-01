@@ -5,19 +5,29 @@ import "./styles.styl";
 
 type BadgeProps = OverrideProps<
   {
-    color?: "secondary" | "primary";
+    color?: "secondary" | "primary" | "dark";
     isWarn?: boolean;
     noBorder?: boolean;
+    margin?: Size;
   },
   React.PropsWithChildren<React.HTMLAttributes<HTMLElement>>
 >;
 
 const Badge: React.FC<BadgeProps> = (props) => {
-  const { children, isWarn, noBorder, color = "secondary", onClick, ...rest } = props;
+  const {
+    children,
+    isWarn,
+    noBorder,
+    margin = "sm",
+    color = "dark",
+    onClick,
+    ...rest
+  } = props;
 
   const mergedProps = mergeProps(
     {
       className: mergeClassNames(
+        `mg_${margin}`,
         "badge",
         `badge_${color}`,
         noBorder && "badge_no-border",

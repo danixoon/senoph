@@ -8,7 +8,7 @@ type CheckboxProps = OverrideProps<
   {
     input: any;
     name: string;
-    label: string;
+    label?: string;
   }
 >;
 
@@ -38,9 +38,11 @@ const Checkbox: React.FC<CheckboxProps> = (props) => {
           checked={checked}
         />
       </div>
-      <Label className="checkbox__label" margin="left" unselectable>
-        {label}
-      </Label>
+      {label && (
+        <Label className="checkbox__label" margin="left" unselectable>
+          {label}
+        </Label>
+      )}
     </label>
   );
 };

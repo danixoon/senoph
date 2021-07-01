@@ -6,7 +6,12 @@
   border: none
   font-family: inherit
   color: colors.white
-  margin: margin.sm
+
+  &_xs
+    @extend .radius-sm
+    min-height: 20px
+    font-size: fontSize.xs
+    padding: 0 padding.lg
 
   &_sm
     @extend .radius-sm

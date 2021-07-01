@@ -18,8 +18,8 @@ storiesOf("Components/Containers/Table", module).add("simple", () => {
         { id: 4, name: "Loopa Owo", props: { onClick: () => alert("yeah") } },
       ]}
       columns={[
-        { key: "id", name: "Id.", sortable: true },
-        { key: "name", name: "Name", sortable: true },
+        { key: "id", header: "Id.", sortable: true },
+        { key: "name", header: "Name", sortable: true },
       ]}
     />
   );
