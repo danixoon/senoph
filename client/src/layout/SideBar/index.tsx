@@ -13,6 +13,7 @@ export type SideBar = { page: "phone" | "category" | "holding" | "admin" };
 const SideBar: React.FC<SideBar> = (props) => {
   const { page } = props;
   const handleSpoilerToggle = () => {};
+  
 
 
 

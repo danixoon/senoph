@@ -12,7 +12,7 @@ type DropdownProps = OverrideProps<
   {
     input: any;
     name: string;
-    label: string;
+    label?: string;
     items: DropdownItem[];
     onChange: (event: { target: { name: string; value: any } }) => void;
   }
@@ -33,7 +33,7 @@ const Dropdown: React.FC<DropdownProps> = (props) => {
     input[name] !== undefined ? [emptyItem, ...items] : [...items];
   let selectedItem: ArrayElement<DropdownProps["items"]> =
     listItems.find((item, i) => {
-      if(item.id == null || input[name] == null) return;
+      if (item.id == null || input[name] == null) return;
       if (item.id.toString() === input[name].toString()) {
         listItems.splice(i, 1);
         return true;
@@ -50,7 +50,8 @@ const Dropdown: React.FC<DropdownProps> = (props) => {
       className: mergeClassNames(
         `dropdown`,
         isOpened && "dropdown_opened",
-        disabled && "dropdown_disabled"
+        disabled && "dropdown_disabled",
+        label && "dropdown_labeled"
       ),
     },
     rest
@@ -60,9 +61,11 @@ const Dropdown: React.FC<DropdownProps> = (props) => {
 
   return (
     <div {...mergedProps}>
-      <Label weight="medium" className="drowpown__label">
-        {label}
-      </Label>
+      {label && (
+        <Label weight="medium" className="drowpown__label">
+          {label}
+        </Label>
+      )}
       <div
         ref={(r) => (dropdownRef.current = r)}
         className="dropdown__container"
@@ -78,13 +81,16 @@ const Dropdown: React.FC<DropdownProps> = (props) => {
           }, 0);
         }}
       >
-        <Button color="invisible" className="dropdown-item">
-          <Label className="dropdown-item__label" unselectable>{selectedItem.label}</Label>
+        <Button inverted className="dropdown-item" fill>
+          <Label className="dropdown-item__label" unselectable>
+            {selectedItem.label}
+          </Label>
         </Button>
         {listItems.map((item, i) => (
           <Button
             key={item.id}
-            color="invisible"
+            fill
+            inverted
             className="dropdown-item"
             onClick={() => handleItemSelect(item)}
           >

@@ -5,9 +5,10 @@ import Model from "../db/models/phoneModel.model";
 import { prepareItems } from "@backend/utils";
 import PhoneModel from "../db/models/phoneModel.model";
 import Holder from "@backend/db/models/holder.model";
-import { Op } from "sequelize";
+import { Op, WhereOperators } from "sequelize";
 import PhoneCategory from "@backend/db/models/phoneCategory.model";
 import Department from "@backend/db/models/department.model";
+import { convertValues } from "@backend/middleware/converter";
 
 const router = Router();
 
@@ -21,90 +22,110 @@ router.get("/byId", async (req, res) => {
   else res.sendStatus(404);
 });
 
-router.get("/", async (req, res) => {
-  const {
-    sortDir: orderDir,
-    sortKey: orderKey,
-    amount = 50,
-    offset = 0,
-    category,
-    phoneModelId, 
-    departmentId,
-    phoneTypeId,
-    factoryKey,
-    inventoryKey,
-  } = req.query as any as ApiRequest.FetchPhones;
+router.get(
+  "/",
+  convertValues({
+    ids: (c) => c.toArray().toNumbers(false).value,
+    exceptIds: (c) => c.toArray().toNumbers(false).value,
+  }),
+  async (req, res) => {
+    const {
+      search,
+      sortDir: orderDir,
+      sortKey: orderKey,
+      amount = 50,
+      offset = 0,
+      category,
+      phoneModelId,
+      departmentId,
+      phoneTypeId,
+      factoryKey,
+      inventoryKey,
+      ids,
+      exceptIds,
+    } = req.query as any as ApiRequest.FetchPhones;
 
-  const order = [] as any;
-  const dir = orderDir?.toUpperCase() ?? "ASC";
+    const order = [] as any;
+    const dir = orderDir?.toUpperCase() ?? "ASC";
 
-  switch (orderKey) {
-    case "modelName":
-      order.push([{ model: PhoneModel, as: "model" }, "name", dir]);
-      break;
-    case "category":
-      order.push([{ model: PhoneCategory, as: "category" }, "category", dir]);
-      break;
-    case "department":
-      order.push([
-        { model: Holder, as: "holder" },
-        { model: Department, as: "department" },
-        "name",
-        dir,
-      ]);
-      break;
-    default:
-      if (typeof orderKey === "string") order.push([orderKey, dir]);
-      break;
-  }
+    switch (orderKey) {
+      case "modelName":
+        order.push([{ model: PhoneModel, as: "model" }, "name", dir]);
+        break;
+      case "category":
+        order.push([{ model: PhoneCategory, as: "category" }, "category", dir]);
+        break;
+      case "department":
+        order.push([
+          { model: Holder, as: "holder" },
+          { model: Department, as: "department" },
+          "name",
+          dir,
+        ]);
+        break;
+      default:
+        if (typeof orderKey === "string") order.push([orderKey, dir]);
+        break;
+    }
 
-  const offset_ = Number.parseInt(offset.toString()),
-    limit_ = Number.parseInt(amount.toString());
+    const offset_ = Number.parseInt(offset.toString()),
+      limit_ = Number.parseInt(amount.toString());
 
-  const valueOrNotNull = <T>(v: T) => v ?? { [Op.not]: null };
+    const valueOrNotNull = <T>(v: T) => v ?? { [Op.not]: null };
 
-  const phones = await Phone.findAll({
-    where: {
-      phoneModelId: valueOrNotNull(phoneModelId),
-      inventoryKey: valueOrNotNull(inventoryKey),
-      factoryKey: valueOrNotNull(factoryKey),
-    },
-    include: [
-      {
-        model: PhoneModel,
-        where: { phoneTypeId: valueOrNotNull(phoneTypeId) },
-        required: false
+    // TODO: Сделать объект позоляющий удобно опиционально фильтровать
+    const whereId = { [Op.notIn]: exceptIds ?? [] } as WhereOperators;
+    if ((ids?.length ?? 0) > 0) whereId[Op.in] = ids;
+
+    const phones = await Phone.findAll({
+      where: {
+        id: whereId,
+        phoneModelId: valueOrNotNull(phoneModelId),
+        inventoryKey: valueOrNotNull(inventoryKey),
+        factoryKey: valueOrNotNull(factoryKey),
       },
-      {
-        model: Holder,
-        where: { departmentId: valueOrNotNull(departmentId) },
-        include: [
-          {
-            model: Department,
-            required: false
+      include: [
+        {
+          model: PhoneModel,
+          where: {
+            phoneTypeId: valueOrNotNull(phoneTypeId),
+            name: search ? { [Op.substring]: search } : { [Op.not]: null },
           },
-        ],
-      },
-      {
-        model: PhoneCategory,
-        where: { category: valueOrNotNull(category) },
-        required: false
-      },
-    ],
-    order,
-    // TODO: Избавиться от преобразований данных путём валидаторов в express
-    // offset: offset_,
-    // limit: limit_,
-    // subQuery: false,
-    // distinct: true
-  }).catch((err) => console.error(err));
+          required: phoneTypeId !== undefined || search !== undefined,
+        },
+        {
+          model: Holder,
+          where: {
+            departmentId: valueOrNotNull(departmentId),
+          },
+          include: [
+            {
+              model: Department,
+              required: departmentId !== undefined,
+            },
+          ],
+        },
+        {
+          model: PhoneCategory,
+          where: { category: valueOrNotNull(category?.toString()) },
+          required: category !== undefined,
+        },
+      ],
+      order,
+      // TODO: Избавиться от преобразований данных путём валидаторов в express
+      // offset: offset_,
+      // limit: limit_,
+      // subQuery: false,
+      // distinct: true
+    }).catch((err) => console.error(err));
 
-  // TODO: Неоптимизированный костыль, но что поделать
-  const rows = (phones ?? []).slice(offset_, offset_ + limit_);
+    // TODO: Неоптимизированный костыль, но что поделать
+    const rows = (phones ?? []).slice(offset_, offset_ + limit_);
 
-  if (phones) res.send(prepareItems(rows, phones.length, offset_));
-  else res.sendStatus(500).send("error");
-});
+    if (phones) res.send(prepareItems(rows, phones.length, offset_));
+    else res.sendStatus(500).send("error");
+  }
+);
 
 router.post("/", async (req, res) => {
   // await Model.create({ color: "Чёрный", name: "Gigaset A420" });

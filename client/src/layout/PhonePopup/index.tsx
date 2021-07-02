@@ -213,6 +213,9 @@ const Content: React.FC<{ phone: NonNullable<PhonePopupProps["phone"]> }> = (
           </ListItem>
           <ListItem label="Инвентарный номер">
             <Span>{inventoryKey}</Span>
+            <Button inverted color="primary">
+              <Icon.Edit2 />
+            </Button>
           </ListItem>
           <Hr />
           <ListItem label="Дата принятия к учёту">

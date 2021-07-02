@@ -160,7 +160,7 @@ export const fillTestDatabase = async (size: number = 100) => {
       const phoneId = getRandomItem(phones).id;
       const date = randomDate();
       return PhoneCategory.bulkCreate(
-        mapGenerated(Math.floor(Math.random() * 4), (i) => ({
+        mapGenerated(Math.floor(Math.random() * 5), (i) => ({
           category: (i + 1).toString(),
           date: new Date(
             date.getFullYear() + i,

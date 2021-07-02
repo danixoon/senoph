@@ -26,18 +26,25 @@
     font-weight: fontWeight.medium
     padding: padding.md (padding.lg)
 
-  &_invisible
+  &_inverted
     background-color: transparent
     padding: 0
-    width: 100%
     border-radius: 0
+     
+  &_fill
+    width: 100%
+    flex: 1
 
   for key, value in colors
     &_{key}
-      background-color: value
+      &^[0]_inverted
+        color: value
 
-      &[disabled]
-        background-color: lighten(@background-color, 50%)
+      &:not(^[0]_inverted)  
+        background-color: value
 
-      &:active
-        background-color: darken(@background-color, 10%)
+        &[disabled]
+          background-color: lighten(@background-color, 50%)
+
+        &:active:not([disabled])
+          background-color: darken(@background-color, 10%)

@@ -27,7 +27,8 @@ const Items: React.FC<{
   };
   selection: {
     onSelect: (item: ApiResponse.Phone) => void;
-    onSelection: (all: boolean, ids: any[]) => void;
+    onSelection: (/*all: boolean, */ ids: Set<any>) => void;
+    selectionIds: Set<any>;
     selectedId: any;
   };
   mode: "edit" | "view";
@@ -41,39 +42,45 @@ const Items: React.FC<{
   let currentPage = Math.floor((offset / totalItems) * maxPage) + 1;
   if (Number.isNaN(currentPage)) currentPage = 1;
 
-  const [
-    { markedIds: markedIds, selectAll },
-    setTableSelection,
-  ] = React.useState<{
-    markedIds: Set<any>;
-    selectAll: boolean;
-  }>(() => ({
-    selectAll: false,
-    markedIds: new Set(),
-  }));
+  // const [
+  //   { markedIds: markedIds /* selectAll  */ },
+  //   setTableSelection,
+  // ] = React.useState<{
+  //   markedIds: Set<any>;
+  //   // selectAll: boolean;
+  // }>(() => ({
+  //   // selectAll: false,
+  //   markedIds: new Set(),
+  // }));
 
   const handleTableSelection = (
-    nextSelectAll: boolean,
-    nextMarkedIds?: Set<any>
+    // nextSelectAll: boolean,
+    markedIds: Set<any>
   ) => {
-    const set = new Set(nextMarkedIds);
-    setTableSelection({
-      markedIds: set,
-      selectAll: nextSelectAll,
-    });
-    if (props.mode === "edit")
-      selection.onSelection(nextSelectAll, Array.from(set));
+    // setTableSelection({
+    //   markedIds: set,
+    //   // selectAll: nextSelectAll,
+    // });
+    if (props.mode === "edit") selection.onSelection(markedIds);
   };
 
   const isSelected = (id: any) => {
-    if (selectAll) return !markedIds.has(id);
-    else return markedIds.has(id);
+    /* if (selectAll) return !markedIds.has(id);
+    else */ return selection.selectionIds.has(
+      id
+    );
   };
 
-  const tableItems = items.map((item) => ({
-    ...item,
-    selected: isSelected(item.id),
-  }));
+  let isAllSelected = totalItems !== 0;
+
+  const tableItems = items.map((item) => {
+    const selected = isSelected(item.id);
+    if (!selected) isAllSelected = false;
+    return {
+      ...item,
+      selected,
+    };
+  });
 
   const columns: TableColumn[] = [
     { key: "id", header: "Ид.", sortable: true },
@@ -110,24 +117,35 @@ const Items: React.FC<{
       header: (
         <Checkbox
           name="selectAll"
-          input={{ selectAll }}
+          input={{ selectAll: isAllSelected }}
           onChange={(e) => {
-            const next = !selectAll;
-            handleTableSelection(next);
+            const set = new Set(selection.selectionIds);
+            for (const item of items)
+              if (!isAllSelected) set.add(item.id);
+              else set.delete(item.id);
+
+            handleTableSelection(set);
           }}
         />
       ),
       type: "checkbox",
       onToggle: (state: boolean, id: any) => {
-        if (!state) {
-          if (selectAll) markedIds.add(id);
-          else markedIds.delete(id);
-        } else {
-          if (selectAll) markedIds.delete(id);
-          else markedIds.add(id);
-        }
+        // if (!state) {
+        //   if (selectAll) markedIds.add(id);
+        //   else markedIds.delete(id);
+        // } else {
+        //   if (selectAll) markedIds.delete(id);
+        //   else markedIds.add(id);
+        // }
 
-        handleTableSelection(selectAll, new Set(markedIds));
+        const set = new Set(selection.selectionIds);
+
+        if (state) set.add(id);
+        else set.delete(id);
+
+        handleTableSelection(set);
+
+        // handleTableSelection(selectAll, new Set(markedIds));
       },
     });
 

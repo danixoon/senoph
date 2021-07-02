@@ -59,7 +59,8 @@ const Switch: React.FC<SwitchProps> = (props) => {
         <li key={item.id}>
           <Button
             size={size}
-            color="invisible"
+            inverted
+            fill
             onClick={() => handleItemSelect(item)}
             className={mergeClassNames(
               "switch__item",

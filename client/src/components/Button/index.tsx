@@ -6,7 +6,9 @@ import "./styles.styl";
 export type ButtonProps = OverrideProps<
   React.PropsWithChildren<React.ButtonHTMLAttributes<HTMLButtonElement>>,
   {
-    color?: "secondary" | "primary" | "invisible";
+    color?: "secondary" | "primary";
+    inverted?: boolean;
+    fill?: boolean;
     size?: Size;
     margin?: Size;
   }
@@ -17,8 +19,10 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const {
       children,
       color = "secondary",
+      inverted,
       size = "sm",
       margin = "sm",
+      fill,
       ...rest
     } = props;
 
@@ -26,8 +30,10 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       {
         className: mergeClassNames(
           "btn",
+          inverted && "btn_inverted",
           `btn_${color}`,
           `btn_${size}`,
+          fill && "btn_fill",
           `mg_${margin}`
         ),
       },

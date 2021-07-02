@@ -60,35 +60,36 @@ const Popup: React.FC<PopupProps> = (props: PopupProps) => {
 
   return (
     <PopupContext.Provider value={ref}>
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            key="popup"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.06 }}
-            className="popup"
-           
-          >
-            <div onClick={handleOnToggle} className="popup__fade" />
-            <div {...mergedProps}>
-              {closeable && (
-                <Button
-                  color="invisible"
-                  onClick={handleOnToggle}
-                  className="popup__close"
-                  tabIndex={0}
-                >
-                  <CrossIcon />
-                </Button>
-              )}
-              <div ref={topBarRef} className="popup__header" />
-              {children}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <div className="popup-container">
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              key="popup"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.06 }}
+              className="popup"
+            >
+              <div onClick={handleOnToggle} className="popup__fade" />
+              <div {...mergedProps}>
+                {closeable && (
+                  <Button
+                    inverted
+                    onClick={handleOnToggle}
+                    className="popup__close"
+                    tabIndex={0}
+                  >
+                    <CrossIcon />
+                  </Button>
+                )}
+                <div ref={topBarRef} className="popup__header" />
+                {children}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </PopupContext.Provider>
   );
 };

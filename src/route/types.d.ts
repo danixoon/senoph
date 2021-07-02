@@ -36,6 +36,8 @@ declare namespace ApiRequest {
     category: number;
     sortKey: string;
     sortDir: "asc" | "desc";
+    exceptIds: number[];
+    ids: number[];
   }> & { offset: number; amount: number };
 
   declare type FetchPhone = {

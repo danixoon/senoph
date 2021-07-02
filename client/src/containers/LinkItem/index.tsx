@@ -9,7 +9,7 @@ const LinkItemContainer: React.FC<LinkItemContainer> = (props) => {
   const { href, ...rest } = props;
   const { pathname } = useLocation();
 
-  return <LinkItem {...props} selected={href === pathname} />;
+  return <LinkItem {...props} selected={pathname.startsWith(href ?? "")} />;
 };
 
 export default LinkItemContainer;

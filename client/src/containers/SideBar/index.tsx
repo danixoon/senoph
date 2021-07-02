@@ -12,6 +12,7 @@ type SideBarContainerProps = {};
 const SideBarContainer: React.FC<SideBarContainerProps> = (props) => {
   const { pathname } = useLocation();
   const page = pathname.split("/")[1];
+
   return <SideBar page={page as any} />;
 };
 

@@ -10,7 +10,8 @@ type InputProps = OverrideProps<
     name: string;
     label?: string;
     info?: string;
-    size?: "sm" | "md";
+    size?: Size;
+    
     inputProps?: React.InputHTMLAttributes<HTMLInputElement>;
   }
 >;
