@@ -1,17 +1,49 @@
 import axios from "axios";
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import {
+  createAction,
+  createAsyncThunk,
+  createReducer,
+  createSlice,
+  Dispatch,
+  PayloadAction,
+} from "@reduxjs/toolkit";
+import {
+  LocationChangeAction,
+  LOCATION_CHANGE,
+  push,
+} from "connected-react-router";
+import qs from "query-string";
+import { locationQueryReducer, updateQuery } from "./utils";
 
-export type PhoneState = {};
+export type QueryState = PartialNullable<
+  Required<ApiRequest.FetchPhones> & { selectedId: any; page: number }
+>;
+
+export type PhonePageMode = "edit" | "view";
+
+export type PhoneState = {
+  mode: PhonePageMode;
+  selectionIds: number[];
+  filter: QueryState;
+};
 
 const initialState: PhoneState = {
-  items: [],
+  mode: "view",
+  selectionIds: [],
   filter: {
     search: null,
     factoryKey: null,
-    holderId: null,
     inventoryKey: null,
     phoneModelId: null,
     phoneTypeId: null,
+    category: null,
+    departmentId: null,
+    exceptIds: null,
+    ids: null,
+    sortKey: null,
+    sortDir: null,
+    page: null,
+    selectedId: null,
     offset: 0,
     amount: 100,
   },
@@ -60,17 +92,32 @@ const initialState: PhoneState = {
 //   }
 // );
 
+// const filterChange = createAction<QueryState, "filter.change">("filter.change");
+
 export const phoneSlice = createSlice({
   name: "phone",
   initialState,
-  reducers: {},
-  // extraReducers: (builder) =>
-  // builder.addCase(fetchPhones.fulfilled, (state, action) => {
-  //   action;
-  // }),
+  reducers: {
+    // updateFilter: (state, action: PayloadAction<Partial<QueryState>>) => {
+    //   for (const key in action.payload) {
+    //     const k = key as keyof typeof action.payload;
+    //     if (action.payload[k] !== undefined)
+    //       state.filter[k] = action.payload[k];
+    //   }
+    // },
+  },
+  extraReducers: (builder) =>
+    locationQueryReducer("/holding", builder, (state, action) => {
+      const mode = action.payload.location.pathname.split(
+        "/"
+      )[2] as PhonePageMode;
+      state.mode = mode;
+    }),
 });
 
-// export const { increment, decrement, incrementByAmount } = phoneSlice.actions;
+export const updateFilter = (qs: Partial<QueryState>) => updateQuery(qs);
+
+export const {} = phoneSlice.actions;
 
 // The function below is called a selector and allows us to select a value from
 // the state. Selectors can also be defined inline where they're used instead of

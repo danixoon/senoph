@@ -13,12 +13,15 @@ export type PhonePopupContainerProps = {
 const PhonePopupContainer: React.FC<PhonePopupContainerProps> = (props) => {
   const { selectedId, onToggle, ...rest } = props;
   const { phone } = useFetchPhone(selectedId);
+  const { pathname } = useLocation();
   return (
     <PhonePopup
       size="lg"
       isOpen={selectedId != null}
       onToggle={onToggle}
       phone={phone}
+      isEditMode={pathname.startsWith("/phone/edit")}
+      changeEditMode={() => {}}
     />
   );
 };

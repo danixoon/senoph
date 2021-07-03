@@ -15,7 +15,7 @@ const isEqual = (a: any, b: any) => {
 
 export const useQueryInput = <T>(
   defaultInput: T,
-  prepare: InputHookPrepare<T>
+  prepare: InputHookPrepare<T> = (k, v, i) => i
 ) => {
   const dispatch = useDispatch();
   const { pathname, search } = useLocation();

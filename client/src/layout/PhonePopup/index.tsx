@@ -19,6 +19,7 @@ import Toggle from "components/Toggle";
 import LinkItemContainer from "containers/LinkItem";
 import { useFilterConfig } from "hooks/api/useFetchConfig";
 import { useInput } from "hooks/useInput";
+import PhoneEditActions from "layout/PhoneEditActions";
 import * as React from "react";
 import { Edit, Edit2, Edit3 } from "react-feather";
 import { BeforeFindAfterOptions } from "sequelize-typescript";
@@ -27,6 +28,8 @@ import "./style.styl";
 
 export type PhonePopupProps = {
   phone: ApiResponse.Phone | null;
+  isEditMode: boolean;
+  changeEditMode: (mode: boolean) => void;
 } & PopupProps;
 
 const HoldingItem: React.FC<{
@@ -94,10 +97,12 @@ const CategoryItem: React.FC<{
   );
 };
 
-const Content: React.FC<{ phone: NonNullable<PhonePopupProps["phone"]> }> = (
-  props
-) => {
-  const { phone } = props;
+const Content: React.FC<
+  Omit<PhonePopupProps, "phone"> & {
+    phone: NonNullable<PhonePopupProps["phone"]>;
+  }
+> = (props) => {
+  const { phone, isEditMode: edit, changeEditMode } = props;
   const { types, departments } = useFilterConfig();
 
   const [bind] = useInput({ search: "", tab: "category" });
@@ -146,8 +151,6 @@ const Content: React.FC<{ phone: NonNullable<PhonePopupProps["phone"]> }> = (
       <Header align="center"> Движения отсутствуют.</Header>
     );
 
-  const [edit, setEdit] = React.useState(() => false);
-
   return (
     <Layout padding="md" flex="1">
       <PopupTopBar>
@@ -157,7 +160,7 @@ const Content: React.FC<{ phone: NonNullable<PhonePopupProps["phone"]> }> = (
               margin="none"
               color="primary"
               size="xs"
-              onClick={() => setEdit(!edit)}
+              onClick={() => changeEditMode(!edit)}
             >
               {edit ? <Icon.Eye /> : <Icon.Edit3 />}
             </Button>
@@ -242,6 +245,12 @@ const Content: React.FC<{ phone: NonNullable<PhonePopupProps["phone"]> }> = (
           <Hr />
         </Layout>
         <Hr vertical />
+        <PhoneEditActions>
+          <Button color="primary" style={{ marginTop: "auto" }}>
+            Удалить
+          </Button>
+        </PhoneEditActions>
+        <Hr vertical />
         <Layout flex="0 0 250px" padding="md">
           <Input
             {...bind}
@@ -276,7 +285,7 @@ const PhonePopup: React.FC<PhonePopupProps> = (props) => {
   const { phone, ...rest } = props;
   return (
     <Popup {...rest} size="lg" closeable noPadding>
-      {phone && <Content phone={phone} />}
+      {phone && <Content phone={phone} {...rest} />}
     </Popup>
   );
 };

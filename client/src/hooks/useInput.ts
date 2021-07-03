@@ -13,27 +13,36 @@ export type InputHookPrepare<T> = <K extends keyof T>(
   input: T
 ) => T;
 
+export const handleChangeEvent = <T>(
+  input: T,
+  e: {
+    target: { name: string; type?: string; value: any };
+  }
+) => {
+  let changedInput = { ...input } as any;
+
+  changedInput[e.target.name] =
+    e.target.type === "checkbox"
+      ? !changedInput[e.target.name]
+      : e.target.value;
+
+  if (
+    typeof changedInput[e.target.name] === "string" &&
+    changedInput[e.target.name].trim() === ""
+  )
+    changedInput[e.target.name] = null;
+
+  return changedInput;
+};
+
 export const useInput = function <T = any>(
   defaultValue: T = {} as T,
   prepareValue: InputHookPrepare<T> = (key, value, input) => input
 ): InputHook<T> {
   const [input, setInput] = React.useState<T>(() => defaultValue);
 
-  const onChange = (e: {
-    target: { name: string; type?: string; value: any };
-  }) => {
-    let changedInput = { ...input } as any;
-
-    changedInput[e.target.name] =
-      e.target.type === "checkbox"
-        ? !changedInput[e.target.name]
-        : e.target.value;
-
-    if (
-      typeof changedInput[e.target.name] === "string" &&
-      changedInput[e.target.name].trim() === ""
-    )
-      changedInput[e.target.name] = null;
+  const onChange: HookOnChange = (e) => {
+    let changedInput = handleChangeEvent(input, e);
 
     changedInput = prepareValue(
       e.target.name as any,

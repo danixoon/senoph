@@ -6,6 +6,9 @@ import Layout from "components/Layout";
 import TopBarContainer from "containers/TopBar";
 import FilterPageLayout from "layout/FilterPageLayout";
 import { TopBarContext } from "providers/TopBarLayer";
+import Button from "components/Button";
+import { updateFilter } from "store/slices/phone";
+import { useDispatch } from "react-redux";
 
 export type RootLayoutProps = {};
 
@@ -25,7 +28,9 @@ const RootLayout: React.FC<RootLayoutProps> = (props) => {
             <Route path="/phone">
               <PhonePageContainer />
             </Route>
-            <Route path="/holding"></Route>
+            <Route path="/holding">
+              <></>
+            </Route>
           </Switch>
         </TopBarContext.Provider>
       </Layout>

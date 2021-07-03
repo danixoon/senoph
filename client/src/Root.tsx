@@ -15,7 +15,7 @@ const Root: React.FC<RootContainerProps> = (props) => {
   return (
     <React.StrictMode>
       <Provider store={store}>
-        <ConnectedRouter history={history}>
+        <ConnectedRouter history={history} >
           <ReactQueryCacheProvider queryCache={queryCache}>
             <PopupLayerProvider>
               <RootLayout />

@@ -25,6 +25,7 @@ import qs from "query-string";
 
 import "./style.styl";
 import Paginator from "components/Paginator";
+import PhoneEditActions from "layout/PhoneEditActions";
 
 type PhoneListItem = {
   id: any;
@@ -185,15 +186,7 @@ const PhoneSelectionPopup: React.FC<PhoneSelectionPopup> = (props) => {
             Действия с выбранным
           </Header>
           <Hr />
-          <Link size="sm" style={{ display: "flex", margin: "0.25rem" }}>
-            <Icon.User size="md" /> Сменить владельца
-          </Link>
-          <Link style={{ display: "flex", margin: "0.25rem" }}>
-            <Icon.Home size="md" /> Сменить подразделение
-          </Link>
-          <Link style={{ display: "flex", margin: "0.25rem" }}>
-            <Icon.Key size="md" /> Сменить категорию
-          </Link>
+          <PhoneEditActions />
           <Button color="primary" style={{ marginTop: "auto" }}>
             Удалить всё
           </Button>
