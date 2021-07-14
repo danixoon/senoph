@@ -6,7 +6,7 @@ import { logger } from "@backend/utils";
 
 dotenv.config();
 
-import { init as initDb, close as closeDb } from "db";
+import { init as initDb, close as closeDb } from "@backend/db/index";
 import phoneRoute from "./route/phone";
 import modelRoute from "./route/model";
 import filterRoute from "./route/filter";
@@ -15,12 +15,12 @@ import accountRoute from "./route/account";
 import testRoute from "./route/_test";
 import path from "path";
 
-import { errorHandler } from "errors";
+import { errorHandler } from "@backend/route/errors";
 
 // let app: express.Application;
 let server: http.Server | null;
 
-const init = async () => {
+export const init = async () => {
   if (server) throw new Error("server already started.");
   const app = express();
 
@@ -49,11 +49,9 @@ const init = async () => {
   });
 
   server.on("error", (err) => {
-    console.log(err);
+    logger.error(err.message, err);
   });
 };
-
-if (process.env.NODE_ENV !== "test") init();
 
 export const close = async () => {
   if (!server) throw new Error("server already closed.");
@@ -63,3 +61,5 @@ export const close = async () => {
   await closeDb();
   server = null;
 };
+
+if (process.env.NODE_ENV !== "test") init();

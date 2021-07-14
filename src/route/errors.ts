@@ -1,5 +1,5 @@
 import { ErrorRequestHandler } from "express";
-import { logger } from "./utils";
+import { logger } from "../utils";
 
 type ApiErrorConfig = {
   message: string;
@@ -36,7 +36,7 @@ export class ApiError extends Error {
     const errorName = `Api Error [${type}]`;
     super(description ? `${errorName}: ${description}` : errorName);
 
-    this.payload = { ...errorTypes[type], name: type };
+    this.payload = { ...errorTypes[type], name: type, description };
   }
 }
 
@@ -44,8 +44,16 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   if (err instanceof ApiError) {
     const e = err as ApiError;
     res.status(e.payload.code).send({ error: { ...e.payload } });
-    logger.error(e.message);
-  } else throw err;
-
-  next(err);
+    logger.error(e.message, {
+      service: "api",
+    });
+  } else {
+    const e = err as Error;
+    const p = process.env.NODE_ENV !== "production" ? { payload: e } : {};
+    res.status(500).send({
+      error: { name: "INTERNAL_ERROR", description: "Внутренняя ошибка", ...p },
+    });
+    logger.error(e.message, { service: "api", payload: e });
+    next(err);
+  }
 };

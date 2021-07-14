@@ -1,3 +1,4 @@
+import { ApiError, ErrorType } from "@backend/route/errors";
 import { RequestHandler } from "express";
 import validator from "validator";
 
@@ -110,7 +111,8 @@ export const validate: <Q = any, B = any>(
       }
       next();
     } catch (err) {
-      if (err instanceof ValidationError) next(err.message);
+      if (err instanceof ValidationError)
+        next(new ApiError(ErrorType.INVALID_QUERY, err.message));
       else throw err;
     }
   };

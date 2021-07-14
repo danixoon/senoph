@@ -3,7 +3,8 @@ import bcrypt from "bcrypt";
 import User from "@backend/db/models/user.model";
 import { tester, validate } from "@backend/middleware/validator";
 import { AppRouter } from ".";
-import { ApiError, ErrorType } from "errors";
+import { ApiError, ErrorType } from "@backend/route/errors";
+import { handler } from "@backend/utils";
 
 const router = AppRouter();
 
@@ -15,7 +16,7 @@ router.get(
       password: tester().required(),
     },
   }),
-  async (req, res) => {
+  handler(async (req, res) => {
     const { password, username } = req.query;
     const accessError = new ApiError(
       ErrorType.ACCESS_DENIED,
@@ -33,7 +34,7 @@ router.get(
       process.env.SECRET
     );
     res.send({ token, id: user.id, role: user.role });
-  }
+  })
 );
 
 router.post(
@@ -42,15 +43,16 @@ router.post(
     query: {
       username: tester().required(),
       password: tester().required(),
+      role: tester().required(),
     },
   }),
-  async (req, res) => {
+  handler(async (req, res) => {
     const { username, password, role } = req.query;
     const hash = await bcrypt.hash(password, await bcrypt.genSalt(13));
     const user = await User.create({ passwordHash: hash, username, role });
 
-    res.send();
-  }
+    res.send(user);
+  })
 );
 
 export default router;

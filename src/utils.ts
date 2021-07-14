@@ -1,3 +1,4 @@
+import { NextFunction, Request, Response, RequestHandler } from "express";
 import path from "path";
 import { inspect } from "util";
 import winston from "winston";
@@ -25,8 +26,8 @@ export const logger = winston.createLogger({
 const formatter = winston.format.printf(
   ({ level, message, timestamp, metadata }) => {
     return `[${timestamp.split("T")[1].split(".")[0]} ${level} ${
-      metadata.service
-    }] ${message} ${inspect(metadata.payload)}`;
+      metadata.service ?? "log"
+    }] ${message} ${metadata.payload ? inspect(metadata.payload) : ""}`;
   }
 );
 
@@ -43,6 +44,16 @@ logger.add(
   })
 );
 
-export const prepareItems: <T>(items: T[], total: number, offset: number) => ItemsResponse<T> = (
-  items, total, offset
-) => ({ items, total, offset });
+export const prepareItems: <T>(
+  items: T[],
+  total: number,
+  offset: number
+) => ItemsResponse<T> = (items, total, offset) => ({ items, total, offset });
+
+export const handler: <RQ, RS>(
+  cb: (req: RQ, res: RS, next: (err?: any) => void) => Promise<any>
+) => (req: RQ, res: RS, next: (err?: any) => void) => void =
+  (cb) => (req, res, next) => {
+    logger.info((req as any).url, { service: "api" });
+    cb(req, res, next).catch((err) => next(err));
+  };

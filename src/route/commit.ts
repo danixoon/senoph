@@ -1,6 +1,8 @@
 import { getChanges, getUpdater } from "@backend/db/commit";
 import { access } from "@backend/middleware/auth";
 import { convertValues } from "@backend/middleware/converter";
+import { tester, validate } from "@backend/middleware/validator";
+import { handler } from "@backend/utils";
 import { Router } from "express";
 import { AppRouter } from ".";
 
@@ -8,11 +10,16 @@ import Model from "../db/models/phoneModel.model";
 
 const router = AppRouter();
 
-router.get("/commit", async (req, res) => {
-  const { target } = req.query as any;
-  const changes = await getChanges(1, target);
-  res.send(changes);
-});
+router.get(
+  "/commit",
+  access("user"),
+  validate({ query: { target: tester().required() } }),
+  handler(async (req, res) => {
+    const { target } = req.query as any;
+    const changes = await getChanges(1, target);
+    res.send(changes);
+  })
+);
 
 router.post("/commit", async (req, res) => {
   const { target, targetId } = req.query as any;
