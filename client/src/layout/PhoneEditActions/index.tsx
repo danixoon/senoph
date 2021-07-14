@@ -1,20 +1,17 @@
 import Icon from "components/Icon";
-import Layout from "components/Layout";
+import Layout, { LayoutProps } from "components/Layout";
 import Link from "components/Link";
 import React from "react";
 
 import "./style.styl";
 
-export type PopupEditActionsProps = OverrideProps<
-  React.HTMLAttributes<HTMLElement>,
-  {}
->;
+export type PopupEditActionsProps = OverrideProps<LayoutProps, {}>;
 
 const PopupEditActions: React.FC<PopupEditActionsProps> = (props) => {
   const { children, ...rest } = props;
 
   return (
-    <Layout>
+    <Layout {...rest}>
       <Link size="sm" style={{ display: "flex", margin: "0.25rem" }}>
         <Icon.User size="md" /> Сменить владельца
       </Link>

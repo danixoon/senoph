@@ -27,7 +27,9 @@ export class ArrayConverter {
   };
 }
 
-export const convertValues: <T>(config: ConverterConfig<T>) => RequestHandler =
+export const convertValues: <T>(
+  config: ConverterConfig<T>
+) => (req: { query: any }, res: any, next: (err?: any) => void) => void =
   (config) => (req, res, next) => {
     const result = { ...(req.query as any) };
     for (const k in config)

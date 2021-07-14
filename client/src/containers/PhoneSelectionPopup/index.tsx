@@ -8,56 +8,43 @@ import { useFetchPhonesQuery } from "store/slices/api";
 import PhoneSelectionPopup from "layout/PhoneSelectionPopup";
 import { InputBind, useInput } from "hooks/useInput";
 import { clearObject } from "utils";
+import { useAppDispatch, useAppSelector } from "store";
+import { updateSelection } from "store/slices/phone";
 
 export type PhoneSelectionPopupContainerProps = {
-  queryBind: InputBind;
-
-  selectedIds: any[];
-  // isInversed: boolean;
-  query: Omit<
-    ApiRequest.FetchPhones,
-    "ids" | "exceptIds" | "offset" | "amount"
-  >;
-  onSelectionChanged: (ids: any[]) => void;
   onToggle: () => void;
-
   isOpen: boolean;
 };
+
+const PAGE_ITEMS = 10;
 
 const PhoneSelectionPopupContainer: React.FC<PhoneSelectionPopupContainerProps> = (
   props
 ) => {
   const {
-    selectedIds,
-
-    // isInversed,
-    query,
-    onSelectionChanged,
     onToggle,
     isOpen,
-    queryBind,
+
     ...rest
   } = props;
-  const idsQuery: Pick<ApiRequest.FetchPhones, "ids" | "exceptIds"> = {};
-  // if (isInversed) idsQuery.exceptIds = selectedIds;
-  /* else */ idsQuery.ids = selectedIds;
+
+  const { filter, selectionIds } = useAppSelector((state) => state.phone);
+  const dispatch = useAppDispatch();
 
   const [offset, setOffset] = React.useState(() => 0);
-  const PAGE_ITEMS = 10;
 
-  const [filterSelectionBind] = useInput({ search: null });
+  const [innerSelectionBind] = useInput({ search: null });
 
-  const q = {
-    // ...query,
-    ...idsQuery,
-    search: filterSelectionBind.input.search,
+  const query = {
+    ids: selectionIds,
+    search: innerSelectionBind.input.search,
     offset,
     amount: PAGE_ITEMS,
   };
 
-  const isNoSelection = /* !isInversed && */ selectedIds.length === 0;
+  const isNoSelection = selectionIds.length === 0;
 
-  const { data } = useFetchPhonesQuery(clearObject(q), {
+  const { data } = useFetchPhonesQuery(clearObject(query), {
     skip: isNoSelection,
   });
 
@@ -66,23 +53,27 @@ const PhoneSelectionPopupContainer: React.FC<PhoneSelectionPopupContainerProps> 
       offset={offset}
       onOffsetChange={setOffset}
       onDeselect={(id) => {
-        onSelectionChanged(
-          selectedIds.filter((selectedId) => selectedId !== id)
+        dispatch(
+          updateSelection({
+            ids: query.ids.filter((selectedId) => selectedId !== id),
+          })
         );
       }}
-      onDeselectAll={() => onSelectionChanged([])}
+      onDeselectAll={() => dispatch(updateSelection({ ids: [] }))}
       isOpen={isOpen}
       onToggle={onToggle}
       totalItems={isNoSelection ? 0 : data?.total ?? 0}
       pageItems={PAGE_ITEMS}
-      bind={filterSelectionBind}
+      bind={innerSelectionBind}
       items={
         isNoSelection
           ? []
-          : data?.items.map((item) => ({
-              id: item.id,
-              name: item.model?.name ?? "Без модели",
-            })) ?? []
+          : data?.items
+              .filter((item) => selectionIds.includes(item.id))
+              .map((item) => ({
+                id: item.id,
+                name: item.model?.name ?? "Без модели",
+              })) ?? []
       }
     />
   );

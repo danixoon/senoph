@@ -10,6 +10,8 @@ import {
   HasOne,
   HasMany,
 } from "sequelize-typescript";
+import { getChanges, getChangesById } from "../commit";
+import Change from "./change.model";
 
 import Holder from "./holder.model";
 import Holding from "./holding.model";
@@ -62,6 +64,11 @@ export default class Phone extends Model<
 
   @HasMany(() => Holding)
   holdings: Holding[];
+
+  async getChanges(userId: number) {
+    const changes = await getChangesById(userId, "Phone", this.id);
+    return changes[this.id];
+  }
 }
 
 // export default {

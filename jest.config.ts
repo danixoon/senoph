@@ -85,6 +85,7 @@ export default {
     "@backend/graphql/(.*)": ["<rootDir>/graphql/$1"],
     "@backend/bot//(.*)": ["<rootDir>/bot/$1"],
     "@backend/middleware/(.*)": ["<rootDir>/middleware/$1"],
+    "@backend/route/(.*)": ["<rootDir>/route/$1"],
   },
 
   // An array of regexp pattern strings, matched against all module paths before considered 'visible' to the module loader

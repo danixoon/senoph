@@ -32,16 +32,35 @@ export type FieldEditPopupProps = OverrideProps<
   PopupProps,
   {
     bind: InputBind;
+    name: string;
+    label?: string;
     type: FieldEditPopupType;
   }
 >;
 
-const FieldEditPopup: React.FC<FieldEditPopupProps> = (props) => {
+const TextFieldPopup: React.FC<
+  OverrideProps<Omit<FieldEditPopupProps, "type">, {}>
+> = (props) => {
   const { bind, ...rest } = props;
+  return <Input {...bind} {...rest} />;
+};
+
+const FieldEditPopup: React.FC<FieldEditPopupProps> = (props) => {
+  const { type, ...rest } = props;
+
+  const renderField = () => {
+    switch (type) {
+      case "text":
+        return <TextFieldPopup {...rest} />;
+      default:
+        return "";
+    }
+  };
 
   return (
-    <Popup {...rest} size="md" closeable noPadding>
-      HEY!!!
+    <Popup {...rest} size="sm">
+      {renderField()}
+      <Button>Применить</Button>
     </Popup>
   );
 };

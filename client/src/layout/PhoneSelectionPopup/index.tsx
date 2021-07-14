@@ -26,6 +26,8 @@ import qs from "query-string";
 import "./style.styl";
 import Paginator from "components/Paginator";
 import PhoneEditActions from "layout/PhoneEditActions";
+import FieldEditPopup from "layout/FieldEditPopup";
+import PopupLayer from "providers/PopupLayer";
 
 type PhoneListItem = {
   id: any;
@@ -105,94 +107,104 @@ const PhoneSelectionPopup: React.FC<PhoneSelectionPopup> = (props) => {
     }
   }, [items.length]);
 
+
+
   return (
-    <Popup {...rest} size="md" closeable noPadding>
-      <PopupTopBar>
-        <Header align="center" hr style={{ flex: 1 }}>
-          Выбранные средства связи
-        </Header>
-      </PopupTopBar>
-      <Layout padding="md" flow="row" flex="1">
-        <Layout flex="2">
-          <Header
-            align="left"
-            style={{ display: "flex", alignItems: "center", minHeight: "25px" }}
-          >
-            Выборка
-            <Input
-              {...bind}
-              inputProps={{ placeholder: "Фильтр.." }}
-              name="search"
-              size="xs"
-              style={{ margin: "0 0 0 1rem", flex: "1" }}
-            />
+    <>
+      
+      <Popup {...rest} size="md" closeable noPadding>
+        <PopupTopBar>
+          <Header align="center" hr style={{ flex: 1 }}>
+            Выбранные средства связи
           </Header>
-          <Hr />
-          <Layout flex="1">
-            {items.length === 0 ? (
-              bind.input.search !== null ? (
-                <Header>Результаты по запросу отсутствуют</Header>
+        </PopupTopBar>
+        <Layout padding="md" flow="row" flex="1">
+          <Layout flex="2">
+            <Header
+              align="left"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                minHeight: "25px",
+              }}
+            >
+              Выборка
+              <Input
+                {...bind}
+                inputProps={{ placeholder: "Фильтр.." }}
+                name="search"
+                size="xs"
+                style={{ margin: "0 0 0 1rem", flex: "1" }}
+              />
+            </Header>
+            <Hr />
+            <Layout flex="1">
+              {items.length === 0 ? (
+                bind.input.search !== null ? (
+                  <Header>Результаты по запросу отсутствуют</Header>
+                ) : (
+                  <Header>Выделение отсутствует</Header>
+                )
               ) : (
-                <Header>Выделение отсутствует</Header>
-              )
+                items.map((item) => {
+                  const q = { ...bind.input, selectedId: item.id };
+                  return (
+                    <PhoneItem
+                      onDelete={() => onDeselect(item.id)}
+                      href={`/phone/edit?${qs.stringify(q)}`}
+                      modelName={item.name}
+                      id={item.id}
+                      key={item.id}
+                    />
+                  );
+                })
+              )}
+            </Layout>
+            {totalItems > pageItems ? (
+              <Paginator
+                style={{ margin: "0 auto" }}
+                onChange={handlePage}
+                min={1}
+                max={maxPage}
+                current={currentPage}
+                size={5}
+              />
             ) : (
-              items.map((item) => {
-                const q = { ...bind.input, selectedId: item.id };
-                return (
-                  <PhoneItem
-                    onDelete={() => onDeselect(item.id)}
-                    href={`/phone/edit?${qs.stringify(q)}`}
-                    modelName={item.name}
-                    id={item.id}
-                    key={item.id}
-                  />
-                );
-              })
+              ""
             )}
+            <Hr />
+            <Button
+              onClick={() => {
+                onDeselectAll();
+                if (props.onToggle) props.onToggle(false);
+              }}
+            >
+              Очистить выделение
+            </Button>
           </Layout>
-          {totalItems > pageItems ? (
-            <Paginator
-              style={{ margin: "0 auto" }}
-              onChange={handlePage}
-              min={1}
-              max={maxPage}
-              current={currentPage}
-              size={5}
-            />
-          ) : (
-            ""
-          )}
-          <Hr />
-          <Button
-            onClick={() => {
-              onDeselectAll();
-              if (props.onToggle) props.onToggle(false);
-            }}
-          >
-            Очистить выделение
-          </Button>
+          <Hr vertical />
+          <Layout flex="1">
+            <Header
+              align="right"
+              style={{
+                minHeight: "25px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              Действия с выбранным
+            </Header>
+            <Hr />
+            <PhoneEditActions flex="1">
+              <Button color="primary" style={{ marginTop: "auto" }}>
+                Удалить всё
+              </Button>
+            </PhoneEditActions>
+          </Layout>
         </Layout>
-        <Hr vertical />
-        <Layout flex="1">
-          <Header
-            align="right"
-            style={{
-              minHeight: "25px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            Действия с выбранным
-          </Header>
-          <Hr />
-          <PhoneEditActions />
-          <Button color="primary" style={{ marginTop: "auto" }}>
-            Удалить всё
-          </Button>
-        </Layout>
-      </Layout>
-    </Popup>
+      </Popup>
+    </>
   );
 };
 

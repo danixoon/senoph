@@ -2,7 +2,7 @@ import AltPopup, { AltPopupProps } from "components/AltPopup";
 import * as React from "react";
 import PopupLayer from "providers/PopupLayer";
 
-type WithAltLabel = {
+export type WithAltLabel = {
   altLabel?: {
     text: string;
     isOpen?: boolean;
@@ -15,6 +15,8 @@ export const withAltLabel = function <T>(TargetComponent: React.FC<T>) {
     const handleMouseEnter = (e: React.MouseEvent<HTMLElement, MouseEvent>) => {
       const target = e.target as HTMLElement;
       setTarget(target ?? null);
+
+      // console.log("MOUSE ENTERED!");
     };
     const handleMouseLeave = (e: React.MouseEvent<HTMLElement, MouseEvent>) => {
       setTarget(null);

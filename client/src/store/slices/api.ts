@@ -17,6 +17,13 @@ export const api = createApi({
         query: (params) => ({ url: "phone", params }),
       }
     ),
+    fetchSelectedPhones: builder.query<
+      ApiResponse.FetchPhones,
+      ApiRequest.FetchPhones
+    >({
+      query: (params) => ({ url: "phone", params }),
+      
+    }),
     fetchPhone: builder.query<ApiResponse.FetchPhone, ApiRequest.FetchPhone>({
       query: (params) => ({ url: "phone/byId", params }),
       // transformResponse: (query, meta) => {

@@ -127,6 +127,11 @@ router.get(
   }
 );
 
+router.put("/", async (req, res) => {
+  const body = req.body as ApiRequest.UpdatePhone;
+  const phone = Phone.update({}, { where: { id: body.id } });
+});
+
 router.post("/", async (req, res) => {
   // await Model.create({ color: "Чёрный", name: "Gigaset A420" });
   // const result = Phone.create({

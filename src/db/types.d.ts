@@ -2,7 +2,14 @@ declare type WithId<T> = OptionalId<T>;
 declare type WithoutId<T> = Omit<T, "id">;
 declare type OptionalId<T> = WithoutId<T> & { id?: number };
 declare type RequiredId<T> = WithoutId<T> & { id: number };
-declare type Role = "admin" | "user";
+declare type Role = "admin" | "user" | "unknown";
+declare type ChangesTargetName =
+  | "Department"
+  | "Holder"
+  | "Holding"
+  | "Phone"
+  | "PhoneCategory";
+declare type ChangedDataType = "string" | "date" | "number";
 
 declare namespace Models {
   type PhoneTypeAttributes = WithId<{
@@ -60,6 +67,15 @@ declare namespace Models {
     username: string;
     passwordHash: string;
     role: Role;
+  }>;
+
+  type ChangeAttributes = WithId<{
+    target: ChangesTargetName;
+    targetId: number;
+    column: string;
+    value: string;
+    type: ChangedDataType;
+    userId: number;
   }>;
 }
 

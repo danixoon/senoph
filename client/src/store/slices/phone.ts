@@ -14,10 +14,14 @@ import {
 } from "connected-react-router";
 import qs from "query-string";
 import { locationQueryReducer, updateQuery } from "./utils";
+import { store } from "store";
 
 export type QueryState = PartialNullable<
-  Required<ApiRequest.FetchPhones> & { selectedId: any; page: number }
->;
+  Omit<Required<ApiRequest.FetchPhones>, "offset" | "amount"> & {
+    selectedId: any;
+    page: number;
+  }
+> & { offset: number; amount: number };
 
 export type PhonePageMode = "edit" | "view";
 
@@ -98,6 +102,12 @@ export const phoneSlice = createSlice({
   name: "phone",
   initialState,
   reducers: {
+    updateSelection: (state, action: PayloadAction<{ ids: number[] }>) => {
+      state.selectionIds = action.payload.ids;
+    },
+    // changeMode: (state, action: PayloadAction<{ mode: PhonePageMode }>) => {
+    //   state.mode = action.payload.mode;
+    // },
     // updateFilter: (state, action: PayloadAction<Partial<QueryState>>) => {
     //   for (const key in action.payload) {
     //     const k = key as keyof typeof action.payload;
@@ -107,7 +117,7 @@ export const phoneSlice = createSlice({
     // },
   },
   extraReducers: (builder) =>
-    locationQueryReducer("/holding", builder, (state, action) => {
+    locationQueryReducer("/phone", builder, (state, action) => {
       const mode = action.payload.location.pathname.split(
         "/"
       )[2] as PhonePageMode;
@@ -116,8 +126,12 @@ export const phoneSlice = createSlice({
 });
 
 export const updateFilter = (qs: Partial<QueryState>) => updateQuery(qs);
+export const changeMode = (mode: PhonePageMode) => {
+  const location = store.getState().router.location;
+  return push({ ...location, pathname: `/phone/${mode}` });
+};
 
-export const {} = phoneSlice.actions;
+export const { updateSelection } = phoneSlice.actions;
 
 // The function below is called a selector and allows us to select a value from
 // the state. Selectors can also be defined inline where they're used instead of

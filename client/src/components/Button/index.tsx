@@ -6,7 +6,7 @@ import "./styles.styl";
 export type ButtonProps = OverrideProps<
   React.PropsWithChildren<React.ButtonHTMLAttributes<HTMLButtonElement>>,
   {
-    color?: "secondary" | "primary";
+    color?: "secondary" | "primary" | "bgDark";
     inverted?: boolean;
     fill?: boolean;
     size?: Size;

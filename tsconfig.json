@@ -6,6 +6,7 @@
     "paths": {
       "@backend/utils": ["./utils.ts"],
       "@backend/db/*": ["./db/*"],
+      "@backend/route/*": ["./route/*"],
       "@backend/middleware/*": ["./middleware/*"]
     },
     "module": "commonjs",

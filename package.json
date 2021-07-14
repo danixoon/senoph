@@ -8,7 +8,7 @@
     "backend:watch": "TS_NODE_FILES=true nodemon --exec \"node --inspect -r ts-node/register -r tsconfig-paths/register src/index.ts\"",
     "backend:start": "NODE_ENV=production node ./build/index.js",
     "backend:build": "yarn && rm -rf ./build && NODE_ENV=production ttsc",
-    "backend:test": "jest",
+    "backend:test": "jest --runInBand",
     "backend:test:debug": "NODE_ENV=development node --inspect -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand --forceExit"
   },
   "devDependencies": {
@@ -18,6 +18,7 @@
     "@types/assert": "^1.5.2",
     "@types/jest": "^26.0.15",
     "@types/node": "^15.12.4",
+    "axios": "^0.21.1",
     "babel-jest": "^26.6.3",
     "concurrently": "^5.2.0",
     "cross-env": "^7.0.2",
@@ -29,6 +30,8 @@
     "typescript": "^4.0.5"
   },
   "dependencies": {
+    "@babel/plugin-proposal-class-properties": "^7.14.5",
+    "@babel/plugin-proposal-decorators": "^7.14.5",
     "@reduxjs/toolkit": "^1.6.0",
     "@types/bcrypt": "^3.0.0",
     "@types/body-parser": "^1.19.0",

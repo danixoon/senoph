@@ -8,7 +8,7 @@ import PhoneType from "@backend/db/models/phoneType.model";
 import User from "@backend/db/models/user.model";
 import { randomUUID } from "crypto";
 import { Router } from "express";
-import { sequelize } from "../db";
+// import { sequelize } from "../db";
 
 const randomDate = (from = 2000, length = 15) =>
   new Date(
@@ -192,7 +192,7 @@ export const fillTestDatabase = async (size: number = 100) => {
     role: "admin",
   });
 
-  console.log("fill complete.");
+  // console.log("fill complete.");
 };
 
 router.get("/db/fill", async (req, res) => {

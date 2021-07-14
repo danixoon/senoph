@@ -4,24 +4,27 @@ import LinkItem, { LinkItemProps } from "components/LinkItem";
 import { useLocation } from "react-router";
 import { useFetchPhone } from "hooks/api/useFetchPhone";
 import PhonePopup from "layout/PhonePopup";
+import { useAppDispatch, useAppSelector } from "store";
+import { changeMode, updateFilter } from "store/slices/phone";
 
-export type PhonePopupContainerProps = {
-  selectedId: number | null;
-  onToggle: () => void;
-};
+export type PhonePopupContainerProps = {};
 
 const PhonePopupContainer: React.FC<PhonePopupContainerProps> = (props) => {
-  const { selectedId, onToggle, ...rest } = props;
-  const { phone } = useFetchPhone(selectedId);
-  const { pathname } = useLocation();
+  const { ...rest } = props;
+  const { mode, filter } = useAppSelector((store) => store.phone);
+  const { phone } = useFetchPhone(filter.selectedId);
+  const dispatch = useAppDispatch();
+
   return (
     <PhonePopup
       size="lg"
-      isOpen={selectedId != null}
-      onToggle={onToggle}
+      isOpen={filter.selectedId != null}
+      onToggle={() => dispatch(updateFilter({ selectedId: null }))}
       phone={phone}
-      isEditMode={pathname.startsWith("/phone/edit")}
-      changeEditMode={() => {}}
+      isEditMode={mode === "edit"}
+      changeEditMode={() =>
+        dispatch(changeMode(mode === "edit" ? "view" : "edit"))
+      }
     />
   );
 };

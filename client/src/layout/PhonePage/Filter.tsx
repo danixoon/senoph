@@ -40,7 +40,7 @@ const Filter: React.FC<{
       </Header>
       <Form className="filter-content__form">
         <Layout>
-          <Input {...bind} name="search" label="Поиск" />
+          <Input {...bind} name="search" label="Запрос" />
           <Dropdown {...bind} name="phoneTypeId" label="Тип СС" items={types} />
           <Dropdown
             {...bind}
