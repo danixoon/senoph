@@ -25,10 +25,14 @@ export const init = async () => {
   const app = express();
 
   app.use(bodyParser.json());
-  app.use("/api/phone", phoneRoute);
   app.use("/api/model", modelRoute);
   app.use("/api/filter", filterRoute);
-  app.use("/api", commitRoute as Router, accountRoute as Router);
+  app.use(
+    "/api",
+    commitRoute as Router,
+    accountRoute as Router,
+    phoneRoute as Router
+  );
   app.use("/api/test", testRoute);
 
   app.use("/build", express.static(path.resolve(__dirname, "../client/build")));

@@ -9,6 +9,7 @@ declare global {
       readonly DB_NAME: string;
       readonly DB_PORT: string;
       readonly DB_HOST: string;
+      readonly API_TEST_TOKEN: string;
 
       readonly SECRET: string;
     }

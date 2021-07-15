@@ -20,7 +20,7 @@ export default class Holding extends Model<
 > {
   @AllowNull(false)
   @Column(DataType.DATE)
-  actDate: Date;
+  actDate: string;
 
   @AllowNull(false)
   @Column(DataType.STRING)

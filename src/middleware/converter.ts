@@ -27,17 +27,19 @@ export class ArrayConverter {
   };
 }
 
-export const convertValues: <T>(
-  config: ConverterConfig<T>
-) => (req: { query: any }, res: any, next: (err?: any) => void) => void =
-  (config) => (req, res, next) => {
-    const result = { ...(req.query as any) };
-    for (const k in config)
-      result[k] =
-        typeof result[k] !== "undefined"
-          ? config[k](new Converter(result[k]))
-          : result[k];
+export const convertValues: <
+  Q,
+  C extends ConverterConfig<Partial<Record<keyof Q, Converter>>>
+>(
+  config: C
+) => Api.Request<any, any, Q> = (config) => (req, res, next) => {
+  const result = { ...(req.query as any) };
+  for (const k in config)
+    result[k] =
+      typeof result[k] !== "undefined"
+        ? config[k](new Converter(result[k]))
+        : result[k];
 
-    req.query = result;
-    next();
-  };
+  req.query = result;
+  next();
+};

@@ -9,30 +9,48 @@ const priority: Record<Role, number> = {
 };
 
 export const access: <R extends Role>(
-  requiredRole: R
-) => RequestHandler<{
+  requiredRole: R,
+  strict?: boolean
+) => Api.Request<{
   user: R extends "unknown" ? { role: R } : { id: number; role: Role };
-}> = (requiredRole) => (req, res, next) => {
+}> = (requiredRole, strict) => (req, res, next) => {
   const token = req.header("Authorization");
-  if (requiredRole === "unknown") {
+  if (!strict && requiredRole === "unknown") {
     req.params.user = { role: "unknown" } as any;
     next();
     return;
   }
+
   if (!token)
     return next(
-      new ApiError(ErrorType.ACCESS_DENIED, "Необходим ключ доступа")
+      new ApiError(ErrorType.ACCESS_DENIED, {
+        description: "Необходим ключ доступа",
+      })
     );
 
   try {
     const { id, role } = jwt.verify(token, process.env.SECRET) as any;
-    if (priority[requiredRole] > priority[role as Role] ?? 0)
-      return next(new ApiError(ErrorType.ACCESS_DENIED, "Недостаточно прав"));
+    // Если строгий режим и роли совпадают
+
+    if (
+      ((strict && role !== requiredRole) ||
+        priority[requiredRole] > priority[role as Role]) ??
+      0
+    )
+      return next(
+        new ApiError(ErrorType.ACCESS_DENIED, {
+          description: "Недостаточно прав",
+        })
+      );
 
     req.params.user = { id, role } as any;
     next();
   } catch (err) {
-    next(new ApiError(ErrorType.ACCESS_DENIED, "Некорректный ключ доступа"));
+    next(
+      new ApiError(ErrorType.ACCESS_DENIED, {
+        description: "Некорректный ключ доступа",
+      })
+    );
     // res.status(403).send("Access denied: invalid credentials");
   }
 };

@@ -5,15 +5,19 @@ import Model from "../db/models/phoneModel.model";
 import { prepareItems } from "@backend/utils";
 import PhoneModel from "../db/models/phoneModel.model";
 import Holder from "@backend/db/models/holder.model";
-import { Op, WhereOperators } from "sequelize";
+import { Op, Order, OrderItem, WhereOperators } from "sequelize";
 import PhoneCategory from "@backend/db/models/phoneCategory.model";
 import Department from "@backend/db/models/department.model";
 import { convertValues } from "@backend/middleware/converter";
+import { AppRouter } from ".";
+import { ApiError, ErrorType } from "./errors";
+import { access } from "@backend/middleware/auth";
+import { tester, validate } from "@backend/middleware/validator";
 
-const router = Router();
+const router = AppRouter();
 
-router.get("/byId", async (req, res) => {
-  const { id } = req.query as any as ApiRequest.FetchPhone;
+router.get("/phone/byId", async (req, res) => {
+  const { id } = req.query;
   const phone = await Phone.findByPk(id, { include: [{ all: true }] });
 
   console.log(id);
@@ -23,7 +27,9 @@ router.get("/byId", async (req, res) => {
 });
 
 router.get(
-  "/",
+  "/phone",
+  access("user"),
+  // validate({ query: { ids: tester(), } }),
   convertValues({
     ids: (c) => c.toArray().toNumbers(false).value,
     exceptIds: (c) => c.toArray().toNumbers(false).value,
@@ -43,9 +49,9 @@ router.get(
       inventoryKey,
       ids,
       exceptIds,
-    } = req.query as any as ApiRequest.FetchPhones;
+    } = req.query;
 
-    const order = [] as any;
+    const order = [] as OrderItem[];
     const dir = orderDir?.toUpperCase() ?? "ASC";
 
     switch (orderKey) {
@@ -123,40 +129,34 @@ router.get(
     const rows = (phones ?? []).slice(offset_, offset_ + limit_);
 
     if (phones) res.send(prepareItems(rows, phones.length, offset_));
-    else res.sendStatus(500).send("error");
+    else
+      throw new ApiError(ErrorType.INTERNAL_ERROR, {
+        description: "Ошибка поиска",
+      });
   }
 );
 
-router.put("/", async (req, res) => {
-  const body = req.body as ApiRequest.UpdatePhone;
-  const phone = Phone.update({}, { where: { id: body.id } });
-});
+router.put(
+  "/phone",
+  access("user"),
+  validate(
+    {
+      //@ts-ignore
+      body: {
+        assemblyDate: tester().required(),
+      },
+      query: {
+        id: tester().required(),
+      },
+    },
+    true
+  ),
+  async (req, res) => {
+    const { query, body } = req;
+    const phone = Phone.update(body, { where: { id: query.id } });
 
-router.post("/", async (req, res) => {
-  // await Model.create({ color: "Чёрный", name: "Gigaset A420" });
-  // const result = Phone.create({
-  //   accountingDate: new Date(200 0 + 20 * Math.random(), 10, 23).toISOString(),
-  //   assemblyDate: new Date(2000 + 20 * Math.random(), 10, 23).toISOString(),
-  //   commissioningDate: new Date(
-  //     2000 + 20 * Math.random(),
-  //     10,
-  //     23
-  //   ).toISOString(),
-  //   factoryId: new Array(10)
-  //     .fill(0)
-  //     .map((v) =>
-  //       String.fromCharCode("0".charCodeAt(0) + Math.floor(30 * Math.random()))
-  //     )
-  //     .join(""),
-  //   inventoryId: new Array(10)
-  //     .fill(0)
-  //     .map((v) =>
-  //       String.fromCharCode("0".charCodeAt(0) + Math.floor(30 * Math.random()))
-  //     )
-  //     .join(""),
-  //   modelId: 1,
-  // });
-  // res.send(result);
-});
+    res.send();
+  }
+);
 
 export default router;

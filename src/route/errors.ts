@@ -6,6 +6,7 @@ type ApiErrorConfig = {
   code: number;
 
   description?: string;
+  payload?: any;
 };
 type ErrorTypeMap = { [T in ErrorType]: ApiErrorConfig };
 
@@ -13,9 +14,14 @@ export enum ErrorType {
   ACCESS_DENIED = "ACCESS_DENIED",
   INVALID_QUERY = "INVALID_QUERY",
   INVALID_BODY = "INVALID_BODY",
+  INTERNAL_ERROR = "INTERNAL_ERROR",
 }
 
-export const errorTypes: ErrorTypeMap = {
+export const errorMap: ErrorTypeMap = {
+  [ErrorType.INTERNAL_ERROR]: {
+    code: 500,
+    message: "Внутренняя ошибка",
+  },
   [ErrorType.ACCESS_DENIED]: {
     code: 403,
     message: "Доступ запрещён",
@@ -32,11 +38,15 @@ export const errorTypes: ErrorTypeMap = {
 
 export class ApiError extends Error {
   payload: ApiErrorConfig & { name: ErrorType };
-  constructor(type: ErrorType, description?: string) {
-    const errorName = `Api Error [${type}]`;
+  constructor(
+    type: ErrorType,
+    info: { description?: string; payload?: any } = {}
+  ) {
+    const { description, payload } = info;
+    const errorName = `${type}`;
     super(description ? `${errorName}: ${description}` : errorName);
 
-    this.payload = { ...errorTypes[type], name: type, description };
+    this.payload = { ...errorMap[type], name: type, description, payload };
   }
 }
 
@@ -51,7 +61,7 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
     const e = err as Error;
     const p = process.env.NODE_ENV !== "production" ? { payload: e } : {};
     res.status(500).send({
-      error: { name: "INTERNAL_ERROR", description: "Внутренняя ошибка", ...p },
+      error: { ...errorMap[ErrorType.INTERNAL_ERROR], ...p },
     });
     logger.error(e.message, { service: "api", payload: e });
     next(err);

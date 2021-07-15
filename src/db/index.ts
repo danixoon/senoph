@@ -33,12 +33,14 @@ export const init = async () => {
     //   filename.substring(0, filename.indexOf(".model")) === member.toLowerCase(),
   });
 
-  await sequelize
+  const result = await sequelize
     .authenticate()
-    .catch((err) => console.error("Database connection error: ", err));
+    .catch((err) => console.error("Database connection error: ", err)) as any;
+
+  if (!result) return;
 
   // Disable logging for syncing
-  if (process.env.NODE_ENV == "development") {
+  if (process.env.NODE_ENV !== "test") {
     // await sequelize.drop();
     await sequelize.sync({ logging: () => {}, force: true });
     await fillTestDatabase();

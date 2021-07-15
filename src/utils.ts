@@ -50,10 +50,10 @@ export const prepareItems: <T>(
   offset: number
 ) => ItemsResponse<T> = (items, total, offset) => ({ items, total, offset });
 
-export const handler: <RQ, RS>(
-  cb: (req: RQ, res: RS, next: (err?: any) => void) => Promise<any>
-) => (req: RQ, res: RS, next: (err?: any) => void) => void =
-  (cb) => (req, res, next) => {
-    logger.info((req as any).url, { service: "api" });
-    cb(req, res, next).catch((err) => next(err));
-  };
+// export const handler: <RQ, RS>(
+//   cb: (req: RQ, res: RS, next: (err?: any) => void) => Promise<any>
+// ) => (req: RQ, res: RS, next: (err?: any) => void) => void =
+//   (cb) => (req, res, next) => {
+//     logger.info((req as any).url, { service: "api" });
+//     cb(req, res, next);
+//   };

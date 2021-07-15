@@ -188,7 +188,7 @@ export const fillTestDatabase = async (size: number = 100) => {
 
   const user = await User.create({
     username: "admin",
-    passwordHash: "123",
+    passwordHash: process.env.API_TEST_TOKEN,
     role: "admin",
   });
 

@@ -55,7 +55,8 @@ export const tester = () => {
         test: function (v) {
           const prop = this?.property;
           return (
-            (v == null && `Value ${prop ? `'${prop}' ` : ""}required`) || true
+            (v == null && `Параметр ${prop ? `'${prop}' ` : ""}обязателен`) ||
+            true
           );
         },
       });
@@ -84,35 +85,72 @@ export const tester = () => {
   return proxy;
 };
 
+type ValidationTarget = "query" | "body";
+
 export class ValidationError extends Error {
-  constructor(msg: string = "Validaton Error") {
+  target: ValidationTarget;
+  constructor(msg: string = "Validaton Error", type: ValidationTarget) {
     super(msg);
+    this.target = type;
   }
 }
 
-export const validateSchema = <T>(schema: ValidationSchema<T>, object: any) => {
+export const validateSchema = <T>(
+  schema: ValidationSchema<T>,
+  object: any,
+  config: { strict?: boolean; target: ValidationTarget }
+) => {
+  if (config.strict) {
+    const objectKeys = Object.keys(object);
+
+    for (const k in schema) {
+      if (!objectKeys.includes(k))
+        throw new ValidationError(`Параметр '${k}' обязателен.`, config.target);
+      else objectKeys.splice(objectKeys.indexOf(k), 1);
+    }
+
+    if (objectKeys.length > 0)
+      throw new ValidationError(
+        `Неизвестный параметр '${objectKeys[0]}'.`,
+        config.target
+      );
+  }
+
   for (const key in schema) {
     const validator = schema[key];
     const value = object[key];
 
     const r = validator.test(value, key);
-    if (!r.isValid) throw new ValidationError(r.message);
+    if (!r.isValid) throw new ValidationError(r.message, config.target);
   }
 };
 
-export const validate: <Q = any, B = any>(
-  config: ValidatorConfig<Q, B>
-) => (req: { query: Q }, res: any, next: (err?: any) => void) => void =
-  (config) => (req, res, next) => {
-    const query = req.query as any;
-    try {
-      if (config.query) {
-        validateSchema(config.query, query);
-      }
-      next();
-    } catch (err) {
-      if (err instanceof ValidationError)
-        next(new ApiError(ErrorType.INVALID_QUERY, err.message));
-      else throw err;
-    }
-  };
+export const validate: <P, Q, B, CQ extends Q, CB extends B>(
+  config: ValidatorConfig<
+    Record<keyof CQ, Validator>,
+    Record<keyof CB, Validator>
+  >,
+  strict?: boolean
+) => Api.Request<P, any, Q, B> = (config, strict) => (req, res, next) => {
+  const { query, body } = req;
+  try {
+    if (config.query)
+      validateSchema(config.query, query, { strict, target: "query" });
+    if (config.body)
+      validateSchema(config.body, body, { strict, target: "body" });
+
+    next();
+  } catch (err) {
+    if (err instanceof ValidationError) {
+      const e = err as ValidationError;
+      next(
+        new ApiError(
+          e.target === "query"
+            ? ErrorType.INVALID_QUERY
+            : ErrorType.INVALID_BODY,
+          { description: err.message }
+        )
+      );
+    } else throw err;
+  }
+};

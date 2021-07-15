@@ -39,25 +39,21 @@ type ResBody<T> = T extends Req<infer _, infer RB, infer _, infer _>
   ? RB
   : never;
 
-type ApiMethods = Api.Requests[keyof Api.Requests] extends Req<infer M>
-  ? M
-  : never;
-
 declare namespace Api {
   type Error = {
     message?: string;
     code: number;
   };
-  type Request<RB = any, Q = any, B = any> = import("express").RequestHandler<
-    {},
-    RB | Api.Error,
-    B,
-    Q
-  >;
+  type Request<
+    P,
+    RB = any,
+    Q = any,
+    B = any
+  > = import("express").RequestHandler<P, RB | Api.Error, B, Q>;
 
-  type RouteHandler<R, RB, Q, B> = (
+  type RouteHandler<R, RB, Q, B> = <P>(
     route: R,
-    ...handlers: Request<RB, Q, B>[]
+    ...handlers: Request<P, RB, Q, B>[]
   ) => void;
 
   type Requests = {
@@ -67,7 +63,26 @@ declare namespace Api {
       { username: string; password: string },
       {}
     > &
-      RouteHandler<"/commit", {}, { target: ChangesTargetName }, {}>;
+      RouteHandler<"/commit", {}, { target: ChangesTargetName }, {}> &
+      RouteHandler<"/phone/byId", Models.PhoneAttributes, { id: number }, {}> &
+      RouteHandler<
+        "/phone",
+        ItemsResponse<Models.PhoneAttributes>,
+        Partial<{
+          search: string;
+          inventoryKey: string;
+          factoryKey: string;
+          phoneModelId: number;
+          phoneTypeId: number;
+          departmentId: number;
+          category: number;
+          sortKey: string;
+          sortDir: "asc" | "desc";
+          exceptIds: number[];
+          ids: number[];
+        }> & { offset: number; amount: number },
+        {}
+      >;
 
     post: RouteHandler<
       "/commit",
@@ -77,10 +92,26 @@ declare namespace Api {
     > &
       RouteHandler<
         "/account",
-        {},
+        Models.UserAttributes,
         { username: string; password: string; role: Role },
         {}
       >;
+
+    put: RouteHandler<
+      "/phone",
+      {},
+      { id: number },
+      Partial<
+        Pick<
+          Models.PhoneAttributes,
+          | "accountingDate"
+          | "assemblyDate"
+          | "commissioningDate"
+          | "factoryKey"
+          | "inventoryKey"
+        >
+      >
+    >;
 
     delete: RouteHandler<
       "/commit",
@@ -91,38 +122,11 @@ declare namespace Api {
   };
 }
 
-declare namespace ApiRequest {
-  type Login = Req<
-    { id: number; role: Role; token: string },
-    { username: string; password: string }
-  >;
+// declare namespace ApiRequest {
+//   type Login = Req<
+//     { id: number; role: Role; token: string },
+//     { username: string; password: string }
+//   >;
 
-  type FetchPhones = Partial<{
-    search: string;
-    inventoryKey: string;
-    factoryKey: string;
-    phoneModelId: number;
-    phoneTypeId: number;
-    departmentId: number;
-    category: number;
-    sortKey: string;
-    sortDir: "asc" | "desc";
-    exceptIds: number[];
-    ids: number[];
-  }> & { offset: number; amount: number };
-
-  type FetchPhone = {
-    id: number;
-  };
-
-  type UpdatePhone = Partial<
-    Pick<
-      Models.PhoneAttributes,
-      | "accountingDate"
-      | "assemblyDate"
-      | "commissioningDate"
-      | "factoryKey"
-      | "inventoryKey"
-    >
-  > & { id: number };
-}
+//   // type UpdatePhone =
+// }

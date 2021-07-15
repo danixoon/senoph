@@ -5,6 +5,7 @@ import {
   Model,
   Table,
   DataType,
+  Unique,
 } from "sequelize-typescript";
 import { Optional } from "sequelize/types";
 
@@ -13,6 +14,7 @@ export default class User extends Model<
   Models.UserAttributes,
   OptionalId<Models.UserAttributes>
 > {
+  @Unique
   @AllowNull(false)
   @Column(DataType.STRING)
   username!: string;
