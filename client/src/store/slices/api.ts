@@ -1,4 +1,10 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import {
+  Api,
+  ApiModules,
+  CreateApi,
+  createApi,
+  fetchBaseQuery,
+} from "@reduxjs/toolkit/query/react";
 
 const convertItem = (item: any) => {
   const converted = { ...item };
@@ -8,21 +14,25 @@ const convertItem = (item: any) => {
   return converted;
 };
 
+// type AppApi = Api<ReturnType<typeof fetchBaseQuery>, {}, "hey", "owo">;
+
+// type T = Api.RequestsMap["get"];
+// type R = Api.Routes<"get">;
 export const api = createApi({
   reducerPath: "api",
   baseQuery: fetchBaseQuery({ baseUrl: "/api" }),
   endpoints: (builder) => ({
-    fetchPhones: builder.query<ApiResponse.FetchPhones, ApiRequest.FetchPhones>(
-      {
-        query: (params) => ({ url: "phone", params }),
-      }
-    ),
+    fetchPhones: builder.query<
+      Api.GetResponse<"get", "/phone">,
+      Api.GetQuery<"get", "/phone">
+    >({
+      query: (params) => ({ url: "phone", params }),
+    }),
     fetchSelectedPhones: builder.query<
       ApiResponse.FetchPhones,
       ApiRequest.FetchPhones
     >({
       query: (params) => ({ url: "phone", params }),
-      
     }),
     fetchPhone: builder.query<ApiResponse.FetchPhone, ApiRequest.FetchPhone>({
       query: (params) => ({ url: "phone/byId", params }),

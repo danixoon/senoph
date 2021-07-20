@@ -26,8 +26,10 @@ import { IRouter, RequestHandler, Router } from "express";
 
 // type B = "c" | "b" in "c" ? true : false;
 
-type B<T1, T2> = [T1, T2];
-type O = B<"hey", 1> | B<"hey2", 2>;
+type REsp = Api.GetResponse<"get", "/commit">;
+
+// type B<T1, T2> = [T1, T2];
+// type O = B<"hey", 1> | B<"hey2", 2>;
 // type F = {
 //   [K in keyof O]: O[keyof O] extends B<infer K, infer V>
 //     ? { (key: K, v: V): void }
@@ -160,7 +162,15 @@ export const AppRouter = () => {
   return Router() as any as ApiRouter;
 };
 
+type Rs = Api.RequestsMap["delete"] extends Api.RouteHandler<infer _R, any, any, any> ? _R : never;
+
 const r = AppRouter();
+
+type R = Api.RequestsMap["get"];
+type RS = Api.Routes<"get">;
+// r.get("/phone", (req, res) => {
+
+// });
 
 // r.get("/commit", (req, res, next) => {});
 

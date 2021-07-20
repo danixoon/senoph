@@ -1,17 +1,30 @@
 {
-  "include": ["./src/**/*", "../src/route/types.d.ts", "../src/db/types.d.ts"],
+  "include": [
+    "./src/**/*",
+    // "../src/**/*.d.ts"
+    // "../src/route/types.d.ts",
+    "../src/db/types.d.ts",
+    // "../node_modules/@types/express/index.d.ts",
+    // "../node_modules/@types/express-serve-static-core/index.d.ts"
+  ],
   "exclude": ["node_modules", "**/*.test.ts"],
   "compilerOptions": {
     "target": "ES6",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
-    "skipLibCheck": true,
-    "esModuleInterop": true,
+
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "module": "esnext",
     "moduleResolution": "node",
+
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "skipLibCheck": true,
+    "strictNullChecks": true,
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
     "sourceMap": true,
     "noImplicitAny": true,
     "isolatedModules": true,

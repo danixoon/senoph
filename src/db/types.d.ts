@@ -10,11 +10,14 @@ declare type ChangesTargetName =
   | "Phone"
   | "PhoneCategory";
 declare type ChangedDataType = "string" | "date" | "number";
-declare type Attributify<T> = {
-  [K in keyof T]: T[K] extends import("sequelize").Model<infer A>
-    ? A
-    : Attributify<T[K]>;
-};
+type SeqModel<A, B> = import("sequelize").Model<A, B>;
+
+declare type Attributify<T> = T extends SeqModel<
+  infer A,
+  infer _
+>
+  ? A
+  : never;
 
 declare namespace Models {
   type PhoneTypeAttributes = WithId<{

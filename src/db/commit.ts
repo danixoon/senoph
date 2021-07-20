@@ -78,13 +78,20 @@ const promisifyObject = async <T>(
   return result;
 };
 
-const models: { [K in ChangesTargetName]: Model } = {
+type ModelMap = {
+  Phone: typeof Phone;
+  PhoneCategory: typeof PhoneCategory;
+  Department: typeof Department;
+  Holder: typeof Holder;
+  Holding: typeof Holding;
+};
+const models: ModelMap = {
   Phone,
   PhoneCategory,
   Department,
   Holder,
   Holding,
-} as any;
+};
 
 export class Commit {
   // userId: number;
@@ -152,7 +159,7 @@ export class Commit {
       const elements = key.split(".");
 
       const [table, id] = elements;
-      const model = models[table as keyof typeof models];
+      const model = models[table as keyof typeof models] as any as Model;
 
       return model.update({ ...value }, { where: { id } });
     });
@@ -169,22 +176,33 @@ export class Commit {
   };
 }
 
-export const getChanges = async (userId: number, target: ChangesTargetName) => {
+// type ClassType<T extends { new (...p: any[]): any }> = T extends {
+//   new (...p: any[]): infer R;
+// }
+//   ? R
+//   : never;
+
+export const getChanges = async <T extends ChangesTargetName>(
+  userId: number,
+  target: T
+) => {
   const where = { target, userId } as any;
 
   const changes = await Change.findAll({
     where,
     raw: true,
   });
-  return convertChangesList(changes);
+  // type Model = typeof models[keyof typeof models extends T ? T : never];
+  // TODO: Выразить аттрибуты
+  return convertChangesList(changes) as InstanceType<ModelMap[T]>[];
 };
 
-export const getChangesById = async (
+export const getChangesById = async <T extends ChangesTargetName>(
   userId: number,
-  target: ChangesTargetName,
+  target: T,
   targetId: number
 ) => {
-  const changes = await getChanges(userId, target);
+  const changes = await getChanges<T>(userId, target);
   return changes[targetId];
 };
 
@@ -222,8 +240,8 @@ export const convertChangesList = (changes: Models.ChangeAttributes[]) => {
 };
 
 // const createCommit =
-export const getUpdater = (
-  target: ChangesTargetName,
+export const getUpdater = <T extends ChangesTargetName>(
+  target: T,
   targetId: number,
   userId: number
 ) => {
@@ -250,7 +268,10 @@ export const getUpdater = (
 
     const changes = convertChangesList(changesList);
 
-    await models[target].update(changes[targetId], { where: { id: targetId } });
+    // TODO: Any typing
+    await (models as any)[target].update(changes[targetId], {
+      where: { id: targetId },
+    });
     await clear();
   };
   return {

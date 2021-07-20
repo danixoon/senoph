@@ -1,48 +1,47 @@
-declare type ItemsResponse<T> = {
-  items: T[];
-  total: number;
-  offset: number;
-};
+// declare type ItemsResponse<T> = {
+//   items: T[];
+//   total: number;
+//   offset: number;
+// };
 
 // Converting all response Date types to string type
 // type ApiModel<T, K = RequiredId<T>> = {
 //   [P in keyof K]: K[P] extends Date ? string : K[P];
 // };
 
-declare namespace ApiResponse {
-  type Phone = RequiredId<Models.PhoneAttributes>;
-  type PhoneType = RequiredId<Models.PhoneTypeAttributes>;
-  type PhoneModel = RequiredId<Models.PhoneModelAttributes>;
-  type Department = RequiredId<Models.DepartmentAttributes>;
+// declare namespace ApiResponse {
+//   type Phone = RequiredId<Models.PhoneAttributes>;
+//   type PhoneType = RequiredId<Models.PhoneTypeAttributes>;
+//   type PhoneModel = RequiredId<Models.PhoneModelAttributes>;
+//   type Department = RequiredId<Models.DepartmentAttributes>;
 
-  type FetchModels = ItemsResponse<PhoneModel>;
-  type FetchFilterConfig = {
-    models: Pick<PhoneModel, "id" | "name" | "phoneTypeId">[];
-    types: Pick<PhoneType, "id" | "name">[];
-    departments: Pick<Department, "id" | "name">[];
-  };
-  type FetchPhones = ItemsResponse<Phone>;
-  type FetchPhone = Phone;
-}
+//   type FetchModels = ItemsResponse<PhoneModel>;
+//   type FetchFilterConfig = {
+//     models: Pick<PhoneModel, "id" | "name" | "phoneTypeId">[];
+//     types: Pick<PhoneType, "id" | "name">[];
+//     departments: Pick<Department, "id" | "name">[];
+//   };
+//   type FetchPhones = ItemsResponse<Phone>;
+//   type FetchPhone = Phone;
+// }
 
-// type AllowedMethods = "get" | "post" | "put" | "delete" | "patch";
-type Req<M, RB = {}, Q = {}, B = {}> = [M, RB, Q, B];
-type ApiReq<R> = R extends Req<infer _, infer RB, infer Q, infer B>
-  ? import("express").Request<{}, RB, B, Q>
-  : never;
+// // type AllowedMethods = "get" | "post" | "put" | "delete" | "patch";
+// type Req<M, RB = {}, Q = {}, B = {}> = [M, RB, Q, B];
+// type ApiReq<R> = R extends Req<infer _, infer RB, infer Q, infer B>
+//   ? import("express").Request<{}, RB, B, Q>
+//   : never;
 
-type ReqQuery<T> = T extends Req<infer _, infer _, infer Q, infer _>
-  ? Q
-  : never;
-type ReqBody<T> = T extends Req<infer _, infer _, infer _, infer B> ? B : never;
-type ResBody<T> = T extends Req<infer _, infer RB, infer _, infer _>
-  ? RB
-  : never;
+// type ReqQuery<T> = T extends Req<infer _, infer _, infer Q, infer _>
+//   ? Q
+//   : never;
+// type ReqBody<T> = T extends Req<infer _, infer _, infer _, infer B> ? B : never;
+// type ResBody<T> = T extends Req<infer _, infer RB, infer _, infer _>
+//   ? RB
+//   : never;
 
-// type ExtendsWithKey<T, K extends keyof T, V> = T extends { [key: K]: any } ? T : never;
+// // type ExtendsWithKey<T, K extends keyof T, V> = T extends { [key: K]: any } ? T : never;
 
 // type res = Api.GetResponse<"post", "/account">;
-type Rout = Api.Routes<"get">
 
 // type
 // type Fn<P> = (v: P) => void;
@@ -56,6 +55,8 @@ type Rout = Api.Routes<"get">
 //   | { (arg: infer V2): void; (arg: infer V3): void }
 //   ? V1 | V2 | V3
 //   : never;
+
+type Rout = Api.Routes<"get">
 
 declare namespace Api {
   // type ExpressHandler = import("express").Request;
@@ -86,21 +87,19 @@ declare namespace Api {
     ? B
     : never;
 
-  type Routes<M extends keyof RequestsMap> =
-    RequestsMap[M] extends RouteHandler<infer R, any, any, any> ? R : never;
-
-  
+  type Routes<
+    M extends keyof RequestsMap
+  > = RequestsMap[M] extends RouteHandler<infer R, any, any, any> ? R : never;
 
   type Error = {
     message?: string;
     code: number;
   };
-  type Request<
-    P,
-    RB = any,
-    Q = any,
-    B = any
-  > = import("express").RequestHandler<P, RB | Api.Error, B, Q>;
+  type Request<P, RB = any, Q = any, B = any> = (
+    req: { query: Q; params: P; body: B },
+    res: { send: (body?: RB) => any },
+    next: (err?: any) => void
+  ) => any;
 
   type RouteHandler<R extends string, RB, Q, B> = <P>(
     route: R,

@@ -67,7 +67,7 @@ export default class Phone extends Model<
 
   async getChanges(userId: number) {
     const changes = await getChangesById(userId, "Phone", this.id);
-    return changes[this.id];
+    return changes;
   }
 }
 
