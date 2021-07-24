@@ -1,23 +1,16 @@
 import http from "http";
+import path from "path";
 import express, { Router } from "express";
 import dotenv from "dotenv";
 import * as bodyParser from "body-parser";
-import { logger } from "@backend/utils";
+import { logger } from "@backend/utils/index";
 
 dotenv.config();
 
 import { init as initDb, close as closeDb } from "@backend/db/index";
-import phoneRoute from "./route/phone";
-import modelRoute from "./route/model";
-import filterRoute from "./route/filter";
-import commitRoute from "./route/commit";
-import accountRoute from "./route/account";
-import testRoute from "./route/_test";
-import path from "path";
+import { errorHandler } from "@backend/middleware/error";
+import { routers } from "./route";
 
-import { errorHandler } from "@backend/route/errors";
-
-// let app: express.Application;
 let server: http.Server | null;
 
 export const init = async () => {
@@ -25,15 +18,7 @@ export const init = async () => {
   const app = express();
 
   app.use(bodyParser.json());
-  app.use("/api/model", modelRoute);
-  app.use("/api/filter", filterRoute);
-  app.use(
-    "/api",
-    commitRoute as Router,
-    accountRoute as Router,
-    phoneRoute as Router
-  );
-  app.use("/api/test", testRoute);
+  app.use("/api", ...routers);
 
   app.use("/build", express.static(path.resolve(__dirname, "../client/build")));
   app.use("*", express.static(path.resolve(__dirname, "../client/build")));

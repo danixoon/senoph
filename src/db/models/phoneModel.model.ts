@@ -18,8 +18,8 @@ import PhoneType from "./phoneType.model";
 }))
 @Table
 export default class PhoneModel extends Model<
-  Models.PhoneModelAttributes,
-  OptionalId<Models.PhoneModelAttributes>
+  DB.PhoneModelAttributes,
+  OptionalId<DB.PhoneModelAttributes>
 > {
   @AllowNull(false)
   @Column(DataType.STRING)

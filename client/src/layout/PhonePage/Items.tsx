@@ -13,7 +13,7 @@ import * as React from "react";
 import { PhoneState } from "store/slices/phone";
 
 const Items: React.FC<{
-  items: ApiResponse.Phone[];
+  items: Api.Models.Phone[];
   paging: {
     totalItems: number;
     pageItems: number;
@@ -26,7 +26,7 @@ const Items: React.FC<{
     key: string | null;
   };
   selection: {
-    onSelect: (item: ApiResponse.Phone) => void;
+    onSelect: (item: Api.Models.Phone) => void;
     onSelection: (/*all: boolean, */ ids: Set<any>) => void;
     selectionIds: Set<any>;
     selectedId: any;
@@ -151,8 +151,22 @@ const Items: React.FC<{
 
   return (
     <>
-      <Header hr align="right" className="margin_md">
-        Результаты поиска ({totalItems})
+      <Header
+        hr
+        align="right"
+        className="margin_md"
+        style={{ display: "flex", alignItems: "center" }}
+      >
+        <Paginator
+          onChange={(page) => onOffsetChanged((page - 1) * pageItems)}
+          min={1}
+          max={maxPage}
+          size={5}
+          current={currentPage}
+        />
+        <span style={{ marginLeft: "auto" }}>
+          Результаты поиска ({totalItems})
+        </span>
       </Header>
       <PopupLayer>
         <Popup size="lg" closeable onToggle={() => {}}>
@@ -172,13 +186,6 @@ const Items: React.FC<{
           modelName: item.model?.name,
         }))}
         columns={columns}
-      />
-      <Paginator
-        onChange={(page) => onOffsetChanged((page - 1) * pageItems)}
-        min={1}
-        max={maxPage}
-        size={5}
-        current={currentPage}
       />
     </>
   );

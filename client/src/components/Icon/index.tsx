@@ -2,8 +2,10 @@ import React from "react";
 import * as Feather from "react-feather";
 import { mergeClassNames, mergeProps } from "utils";
 import { ReactComponent } from "icons/toggle.svg";
+import { ReactComponent as Loader } from "icons/loader.svg";
 import "./styles.styl";
 import { withAltLabel, WithAltLabel } from "hoc/withAltLabel";
+import { GetProps } from "react-redux";
 
 export type IconProps = OverrideProps<
   Feather.IconProps,
@@ -29,7 +31,7 @@ const Icon: {
 
       const IconWithLabel = withAltLabel(IconComponent);
 
-      return <IconWithLabel {...mergedProps} width="auto" />;
+      return <IconWithLabel {...mergedProps} />;
     };
   },
 });
@@ -47,4 +49,10 @@ const Icon: {
 //   return;
 // };
 
+export const LoaderIcon: React.FC<GetProps<typeof Loader>> = (props) => {
+  const { className, ...rest } = props;
+  return (
+    <Loader {...rest} className={mergeClassNames(className, "loader-icon")} />
+  );
+};
 export default Icon;

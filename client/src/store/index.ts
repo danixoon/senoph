@@ -8,6 +8,7 @@ import {
   Reducer,
 } from "@reduxjs/toolkit";
 import { phoneSlice } from "./slices/phone";
+import { appSlice } from "./slices/app";
 
 import { connectRouter, routerMiddleware } from "connected-react-router";
 import { useDispatch, useSelector } from "react-redux";
@@ -16,6 +17,7 @@ import { setupListeners } from "@reduxjs/toolkit/dist/query";
 
 export const history = createBrowserHistory();
 export const reducers = {
+  app: appSlice.reducer,
   phone: phoneSlice.reducer,
   api: api.reducer,
   router: connectRouter<any>(history),

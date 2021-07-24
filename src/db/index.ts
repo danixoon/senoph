@@ -1,6 +1,6 @@
 import path from "path";
 import fs from "fs/promises";
-import { fillTestDatabase } from "@backend/route/_test";
+import { fillTestDatabase } from "@backend/utils/db";
 import { Sequelize } from "sequelize-typescript";
 
 let sequelize: Sequelize;

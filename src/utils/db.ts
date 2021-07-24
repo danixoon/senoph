@@ -7,7 +7,7 @@ import PhoneModel from "@backend/db/models/phoneModel.model";
 import PhoneType from "@backend/db/models/phoneType.model";
 import User from "@backend/db/models/user.model";
 import { randomUUID } from "crypto";
-import { Router } from "express";
+
 // import { sequelize } from "../db";
 
 const randomDate = (from = 2000, length = 15) =>
@@ -25,8 +25,6 @@ const getRandomItems = <T>(count: number, items: T[]) =>
 
 const mapGenerated = <T = any>(size: number, f: (i: number) => T) =>
   new Array(size).fill(0).map((_, i) => f(i));
-
-const router = Router();
 
 export const fillTestDatabase = async (size: number = 100) => {
   const depsNames = [
@@ -186,18 +184,13 @@ export const fillTestDatabase = async (size: number = 100) => {
 
   const holdings = await Holding.bulkCreate(holdingData);
 
+  
+
   const user = await User.create({
     username: "admin",
-    passwordHash: process.env.API_TEST_TOKEN,
+    passwordHash: "$2b$13$PwLX48c7HTCmRfqbsd8pq.f6BCkNYnQcyfYg95hx7p2jgLCd2jkqC",
     role: "admin",
   });
 
   // console.log("fill complete.");
 };
-
-router.get("/db/fill", async (req, res) => {
-  await fillTestDatabase();
-  res.send("filled.");
-});
-
-export default router;

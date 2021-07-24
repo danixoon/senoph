@@ -22,8 +22,8 @@ const validDataTypes: readonly ChangedDataType[] = ["date", "number", "string"];
 
 @Table
 export default class Change extends Model<
-  Models.ChangeAttributes,
-  OptionalId<Models.ChangeAttributes>
+  DB.ChangeAttributes,
+  OptionalId<DB.ChangeAttributes>
 > {
   @Validate({ isIn: [validTableNames] })
   @AllowNull(false)

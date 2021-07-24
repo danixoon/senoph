@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import { RequestHandler } from "express";
-import { ApiError, ErrorType } from "@backend/route/errors";
+import { ApiError, errorType } from "@backend/utils/errors";
 
 const priority: Record<Role, number> = {
   admin: 2,
@@ -23,7 +23,7 @@ export const access: <R extends Role>(
 
   if (!token)
     return next(
-      new ApiError(ErrorType.ACCESS_DENIED, {
+      new ApiError(errorType.ACCESS_DENIED, {
         description: "Необходим ключ доступа",
       })
     );
@@ -38,7 +38,7 @@ export const access: <R extends Role>(
       0
     )
       return next(
-        new ApiError(ErrorType.ACCESS_DENIED, {
+        new ApiError(errorType.ACCESS_DENIED, {
           description: "Недостаточно прав",
         })
       );
@@ -47,7 +47,7 @@ export const access: <R extends Role>(
     next();
   } catch (err) {
     next(
-      new ApiError(ErrorType.ACCESS_DENIED, {
+      new ApiError(errorType.ACCESS_DENIED, {
         description: "Некорректный ключ доступа",
       })
     );

@@ -1,3 +1,6 @@
+import Button from "components/Button";
+import Header from "components/Header";
+import Hr from "components/Hr";
 import Layout from "components/Layout";
 import Link from "components/Link";
 import LinkItem from "components/LinkItem";
@@ -8,14 +11,14 @@ import { useInput } from "hooks/useInput";
 import * as React from "react";
 import "./style.styl";
 
-export type SideBar = { page: "phone" | "category" | "holding" | "admin" };
+export type SideBar = {
+  page: "phone" | "category" | "holding" | "admin";
+  logout: () => void;
+};
 
 const SideBar: React.FC<SideBar> = (props) => {
-  const { page } = props;
+  const { page, logout } = props;
   const handleSpoilerToggle = () => {};
-  
-
-
 
   return (
     <Layout className="sidebar">
@@ -45,9 +48,7 @@ const SideBar: React.FC<SideBar> = (props) => {
         label="Категорирование"
       >
         <Layout className="sidebar__group">
-          <LinkItemContainer href="/category/view">
-            Просмотр
-          </LinkItemContainer>
+          <LinkItemContainer href="/category/view">Просмотр</LinkItemContainer>
           <LinkItemContainer href="/category/edit">
             Управление
           </LinkItemContainer>
@@ -62,7 +63,11 @@ const SideBar: React.FC<SideBar> = (props) => {
           <LinkItemContainer href="/admin/panel">Управление</LinkItemContainer>
         </Layout>
       </Spoiler>
-     
+      <Hr />
+      <Header align="center">Аккаунт</Header>
+
+      <Button onClick={() => logout()}> Выйти </Button>
+      <Hr />
     </Layout>
   );
 };

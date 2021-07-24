@@ -12,14 +12,9 @@ declare type ChangesTargetName =
 declare type ChangedDataType = "string" | "date" | "number";
 type SeqModel<A, B> = import("sequelize").Model<A, B>;
 
-declare type Attributify<T> = T extends SeqModel<
-  infer A,
-  infer _
->
-  ? A
-  : never;
+declare type Attributify<T> = T extends SeqModel<infer A, infer _> ? A : never;
 
-declare namespace Models {
+declare namespace DB {
   type PhoneTypeAttributes = WithId<{
     name: string;
   }>;

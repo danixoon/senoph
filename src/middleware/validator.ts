@@ -1,4 +1,4 @@
-import { ApiError, ErrorType } from "@backend/route/errors";
+import { ApiError, errorType } from "@backend/utils/errors";
 import { RequestHandler } from "express";
 import validator from "validator";
 
@@ -146,8 +146,8 @@ export const validate: <P, Q, B, CQ extends Q, CB extends B>(
       next(
         new ApiError(
           e.target === "query"
-            ? ErrorType.INVALID_QUERY
-            : ErrorType.INVALID_BODY,
+            ? errorType.INVALID_QUERY
+            : errorType.INVALID_BODY,
           { description: err.message }
         )
       );

@@ -3,7 +3,7 @@ import { access } from "@backend/middleware/auth";
 import { convertValues } from "@backend/middleware/converter";
 import { tester, validate } from "@backend/middleware/validator";
 import { Router } from "express";
-import { AppRouter } from ".";
+import { AppRouter } from "../router";
 
 import Model from "../db/models/phoneModel.model";
 
@@ -14,8 +14,9 @@ router.get(
   access("user"),
   validate({ query: { target: tester().required() } }),
   async (req, res) => {
+    const { id } = req.params.user;
     const { target } = req.query;
-    const changes = await getChanges(1, target);
+    const changes = await getChanges(id, target);
     res.send(changes);
   }
 );
@@ -27,10 +28,11 @@ router.post(
     query: { target: tester().required(), targetId: tester().required() },
   }),
   async (req, res) => {
+    const { id } = req.params.user;
     const { target, targetId } = req.query;
     const changes = req.body;
 
-    const updater = getUpdater(target, targetId, 1);
+    const updater = getUpdater(target, targetId, id);
     await updater.push(changes);
 
     res.send();
@@ -49,10 +51,11 @@ router.delete(
   }),
   convertValues({ keys: (c) => c.toArray().value }),
   async (req, res) => {
+    const { id } = req.params.user;
     const { target, targetId, keys } = req.query;
 
-    const updater = getUpdater(target, targetId, 1);
-    updater.clear(...keys);
+    const updater = getUpdater(target, targetId, id);
+    await updater.clear(...keys);
 
     res.send();
   }

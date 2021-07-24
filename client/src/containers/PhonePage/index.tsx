@@ -25,21 +25,22 @@ import PhoneSelectionPopupContainer from "containers/PhoneSelectionPopup";
 import { usePopup } from "hooks/usePopup";
 import FieldEditPopup from "layout/FieldEditPopup";
 import { useInput } from "hooks/useInput";
-import { PhonePageContext } from "./context";
+// import { PhonePageContext } from "./context";
 import { useStoreQueryInput } from "hooks/useStoreQueryInput";
 import { useAppDispatch, useAppSelector } from "store";
 import { updateFilter, updateSelection } from "store/slices/phone";
 import Switch from "components/Switch";
 
 export type FilterQuery = Omit<
-  PartialNullable<Required<ApiRequest.FetchPhones>>,
+  PartialNullable<Required<Api.GetQuery<"get", "/filter">>>,
   "amount" | "offset"
 > & { selectedId: any };
 
 type PhonePageContainerProps = {};
+const PAGE_ITEMS = 15;
 
 const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
-  const PAGE_ITEMS = 20;
+  
 
   const dispatch = useAppDispatch();
   const { filter, mode, ...rest } = useAppSelector((state) => state.phone);
@@ -98,7 +99,6 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
 
   // const { ids, exceptIds, ...selectionQuery } = query;
 
-
   return (
     <>
       {/* // <PhonePageContext.Provider> */}
@@ -108,7 +108,6 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
           onToggle={handleSelectionPopup}
         />
         <PhonePopupContainer />
-       
       </PopupLayer>
       <TopBarLayer>
         {/* <Layout flow="row"> */}

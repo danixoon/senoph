@@ -35,9 +35,6 @@ const Filter: React.FC<{
 
   return (
     <>
-      <Header hr align="right">
-        Фильтрация
-      </Header>
       <Form className="filter-content__form">
         <Layout>
           <Input {...bind} name="search" label="Запрос" />

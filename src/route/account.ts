@@ -2,32 +2,46 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import User from "@backend/db/models/user.model";
 import { tester, validate } from "@backend/middleware/validator";
-import { AppRouter } from ".";
-import { ApiError, ErrorType } from "@backend/route/errors";
+import { AppRouter } from "../router";
+import { ApiError, errorType } from "@backend/utils/errors";
 import { access } from "@backend/middleware/auth";
 
 const router = AppRouter();
 
+router.get("/account", access("user"), async (req, res, next) => {
+  const { id } = req.params.user;
+  const user = await User.findByPk(id, { attributes: ["role", "username"] });
+
+  if (!user)
+    return next(
+      new ApiError(errorType.NOT_FOUND, {
+        description: "Пользователь не найден",
+      })
+    );
+
+  res.send({ id, role: user.role, username: user.username });
+});
+
 router.get(
   "/account/login",
-  access("unknown", true),
+  // access("unknown", true),
   validate({
     query: {
       username: tester().required(),
       password: tester().required(),
     },
   }),
-  async (req, res) => {
+  async (req, res, next) => {
     const { password, username } = req.query;
-    const accessError = new ApiError(ErrorType.ACCESS_DENIED, {
+    const accessError = new ApiError(errorType.ACCESS_DENIED, {
       description: "Неверное имя пользователя или пароль.",
     });
 
     const user = await User.findOne({ where: { username } });
-    if (!user) throw accessError;
+    if (!user) return next(accessError);
 
     const isCorrect = await bcrypt.compare(password, user.passwordHash);
-    if (!isCorrect) throw accessError;
+    if (!isCorrect) return next(accessError);
 
     const token = jwt.sign(
       { role: user.role, id: user.id },
@@ -56,8 +70,13 @@ router.post(
   async (req, res) => {
     const { username, password, role } = req.query;
     const hash = await bcrypt.hash(password, await bcrypt.genSalt(13));
-    const user = await User.create({ passwordHash: hash, username, role });
+    const user = (await User.create({
+      passwordHash: hash,
+      username,
+      role,
+    })) as Api.Models.User;
 
+    console.log(hash);
     res.send(user);
   }
 );

@@ -11,13 +11,22 @@ type InputProps = OverrideProps<
     label?: string;
     info?: string;
     size?: Size;
-    
+
     inputProps?: React.InputHTMLAttributes<HTMLInputElement>;
   }
 >;
 
-const Input: React.FC<InputProps> = (props) => {
-  const { label, info, size = "sm", input, name, inputProps = {}, onChange, ...rest } = props;
+const Input = React.forwardRef<HTMLInputElement, InputProps>((props, ref) => {
+  const {
+    label,
+    info,
+    size = "sm",
+    input,
+    name,
+    inputProps = {},
+    onChange,
+    ...rest
+  } = props;
 
   const mergedProps = mergeProps({ className: mergeClassNames(`input`) }, rest);
 
@@ -29,6 +38,7 @@ const Input: React.FC<InputProps> = (props) => {
         </Label>
       )}
       <input
+        ref={ref}
         className={mergeClassNames(`input__element input_${size}`)}
         value={input[name] ?? ""}
         name={name}
@@ -38,6 +48,6 @@ const Input: React.FC<InputProps> = (props) => {
       {info && <small className="input__info">{info}</small>}
     </div>
   );
-};
+});
 
 export default Input;

@@ -15,8 +15,8 @@ import PhoneType from "./phoneType.model";
 
 @Table
 export default class PhoneCategory extends Model<
-  Models.PhoneCategoryAttributes,
-  OptionalId<Models.PhoneCategoryAttributes>
+  DB.PhoneCategoryAttributes,
+  OptionalId<DB.PhoneCategoryAttributes>
 > {
   @AllowNull(false)
   @Column(DataType.DATE)

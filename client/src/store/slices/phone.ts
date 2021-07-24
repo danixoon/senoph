@@ -13,11 +13,11 @@ import {
   push,
 } from "connected-react-router";
 import qs from "query-string";
-import { locationQueryReducer, updateQuery } from "./utils";
+import { locationQueryReducer, updateQuery } from "../utils";
 import { store } from "store";
 
 export type QueryState = PartialNullable<
-  Omit<Required<ApiRequest.FetchPhones>, "offset" | "amount"> & {
+  Omit<Required<Api.GetQuery<"get", "/phone">>, "offset" | "amount"> & {
     selectedId: any;
     page: number;
   }
@@ -117,7 +117,7 @@ export const phoneSlice = createSlice({
     // },
   },
   extraReducers: (builder) =>
-    locationQueryReducer("/phone", builder, (state, action) => {
+    locationQueryReducer("/phone", builder, initialState.filter, (state, action) => {
       const mode = action.payload.location.pathname.split(
         "/"
       )[2] as PhonePageMode;

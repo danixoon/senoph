@@ -2,15 +2,15 @@ import { Router } from "express";
 
 import Phone from "../db/models/phone.model";
 import Model from "../db/models/phoneModel.model";
-import { prepareItems } from "@backend/utils";
+import { prepareItems } from "@backend/utils/index";
 import PhoneModel from "../db/models/phoneModel.model";
 import Holder from "@backend/db/models/holder.model";
 import { Op, Order, OrderItem, WhereOperators } from "sequelize";
 import PhoneCategory from "@backend/db/models/phoneCategory.model";
 import Department from "@backend/db/models/department.model";
 import { convertValues } from "@backend/middleware/converter";
-import { AppRouter } from ".";
-import { ApiError, ErrorType } from "./errors";
+import { AppRouter } from "../router";
+import { ApiError, errorType } from "../utils/errors";
 import { access } from "@backend/middleware/auth";
 import { tester, validate } from "@backend/middleware/validator";
 
@@ -18,9 +18,7 @@ const router = AppRouter();
 
 router.get("/phone/byId", async (req, res) => {
   const { id } = req.query;
-  const phone = await Phone.findByPk(id, { include: [{ all: true }] });
-
-  console.log(id);
+  const phone = await Phone.findByPk(id, { include: [{ all: true }] }) as Api.Models.Phone;
 
   if (phone != null) res.send(phone);
   else res.sendStatus(404);
@@ -126,11 +124,11 @@ router.get(
     }).catch((err) => console.error(err));
 
     // TODO: Неоптимизированный костыль, но что поделать
-    const rows = (phones ?? []).slice(offset_, offset_ + limit_);
+    const rows = (phones ?? []).slice(offset_, offset_ + limit_) as Api.Models.Phone[];
 
     if (phones) res.send(prepareItems(rows, phones.length, offset_));
     else
-      throw new ApiError(ErrorType.INTERNAL_ERROR, {
+      throw new ApiError(errorType.INTERNAL_ERROR, {
         description: "Ошибка поиска",
       });
   }

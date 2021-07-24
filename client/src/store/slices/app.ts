@@ -1,35 +1,122 @@
 import axios from "axios";
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import api from "../../api";
+import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-const initialState: { config: ApiResponse.FetchFilterConfig } = {
-  config: {
-    departments: [],
-    models: [],
-    types: [],
-  },
+
+
+export type AppState = {
+  token: string | null;
+  user: Api.Models.User;
+} & WithStatus;
+
+const initialState: AppState = {
+  token: null,
+  user: { id: -1, username: "...", role: "unknown" },
+  status: "idle",
 };
 
-export const appSlice = createSlice({
-  name: "app",
-  initialState,
-  reducers: {},
-  // extraReducers: (builder) =>
-  // builder.addCase(fetchPhones.fulfilled, (state, action) => {
-  //   action;
-  // }),
-});
+// export const fetchAccount = createAsyncThunk(
+//   "app/fetchAccount",
+//   async (params: Api.GetQuery<"get", "/account">, thunk) => {
+//     const { app } = thunk.getState() as StoreType;
+//     const response = await axios.get("/api/account", {
+//       headers: { Authorization: app.token },
+//     });
 
-export const createPhone = createAsyncThunk(
-  "app/fetchConfig",
-  async (_, thunk) => {
-    const response = await axios.get("/phone");
+//     const data = response.data as Api.GetResponse<"get", "/account">;
 
-    // thunk.dispatch(fetchPhones());
+//     thunk.dispatch(appSlice.actions.setAccount(data));
 
-    return response.data;
+//     return data;
+//   }
+// );
+
+// export const fetchAccount = createAsyncThunk(
+//   "app/fetchAccount",
+//   async (params: Api.GetQuery<"get", "/account">, thunk) => {
+//     const { app } = thunk.getState() as StoreType;
+//     const response = await axios.get("/api/account", {
+//       headers: { Authorization: app.token },
+//     });
+
+//     const data = response.data as Api.GetResponse<"get", "/account">;
+
+//     return data;
+//   }
+// );
+
+export const login = createAsyncThunk(
+  "app/login",
+  async (params: string | Api.GetQuery<"get", "/account/login">, thunk) => {
+    try {
+      let token = params as string;
+      if (typeof params !== "string") {
+        const response = await api.request("get", "/account/login", {
+          params,
+          body: {},
+        });
+        token = response.token;
+      }
+
+      const account = await api.request("get", "/account", {
+        params: {},
+        body: {},
+        token,
+      });
+
+      // thunk.dispatch(appSlice.actions.setAccount(account));
+
+      return { token, account };
+    } catch (err) {
+      throw thunk.rejectWithValue(err.error);
+    }
   }
 );
 
+export const appSlice = createSlice({
+  name: "app",
+  initialState: {
+    ...initialState,
+    token: localStorage.getItem("token") ?? null,
+  },
+  reducers: {
+    logout: (state, { payload }: PayloadAction) => {
+      window.localStorage.removeItem("token");
+
+      return initialState;
+    },
+  },
+  extraReducers: (builder) =>
+    builder
+      .addCase(login.pending, (state, { payload }) => {
+        state.status = "loading";
+      })
+      .addCase(login.rejected, (state, { payload }) => {
+        state.status = payload as Api.Error;
+
+        window.localStorage.removeItem("token");
+      })
+      .addCase(login.fulfilled, (state, { payload }) => {
+        const { token, account } = payload;
+
+        state.user = { ...initialState.user, ...account };
+        state.token = token;
+        state.status = "success";
+
+        window.localStorage.setItem("token", token);
+      }),
+  // .addCase(fetchAccount.pending, (state, { payload }) => {
+  //   state.user.status = "loading";
+  // })
+  // // .addCase(fetchAccount.rejected, (state, { payload }) => {
+  // //   state.user.status = (payload as Api.WithError).error;
+  // // })
+  // .addCase(fetchAccount.fulfilled, (state, { payload }) => {
+  //   state.user.status = "success";
+  // }),
+});
+
+export const { logout } = appSlice.actions;
 export default appSlice.reducer;
 
 // export const createPhone = createAsyncThunk(
@@ -57,8 +144,6 @@ export default appSlice.reducer;
 //     },
 //   },
 // });
-
-// // export const { increment, decrement, incrementByAmount } = phoneSlice.actions;
 
 // // The function below is called a selector and allows us to select a value from
 // // the state. Selectors can also be defined inline where they're used instead of

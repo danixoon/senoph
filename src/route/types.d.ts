@@ -4,45 +4,35 @@ declare type ItemsResponse<T> = {
   offset: number;
 };
 
+declare type UnionToIntersection<U> = (
+  U extends any ? (k: U) => void : never
+) extends (k: infer I) => void
+  ? I
+  : never;
+
 // Converting all response Date types to string type
 // type ApiModel<T, K = RequiredId<T>> = {
 //   [P in keyof K]: K[P] extends Date ? string : K[P];
 // };
 
-declare namespace ApiResponse {
-  type Phone = RequiredId<Models.PhoneAttributes>;
-  type PhoneType = RequiredId<Models.PhoneTypeAttributes>;
-  type PhoneModel = RequiredId<Models.PhoneModelAttributes>;
-  type Department = RequiredId<Models.DepartmentAttributes>;
+// // type AllowedMethods = "get" | "post" | "put" | "delete" | "patch";
+// type Req<M, RB = {}, Q = {}, B = {}> = [M, RB, Q, B];
+// type ApiReq<R> = R extends Req<infer _, infer RB, infer Q, infer B>
+//   ? import("express").Request<{}, RB, B, Q>
+//   : never;
 
-  type FetchModels = ItemsResponse<PhoneModel>;
-  type FetchFilterConfig = {
-    models: Pick<PhoneModel, "id" | "name" | "phoneTypeId">[];
-    types: Pick<PhoneType, "id" | "name">[];
-    departments: Pick<Department, "id" | "name">[];
-  };
-  type FetchPhones = ItemsResponse<Phone>;
-  type FetchPhone = Phone;
-}
-
-// type AllowedMethods = "get" | "post" | "put" | "delete" | "patch";
-type Req<M, RB = {}, Q = {}, B = {}> = [M, RB, Q, B];
-type ApiReq<R> = R extends Req<infer _, infer RB, infer Q, infer B>
-  ? import("express").Request<{}, RB, B, Q>
-  : never;
-
-type ReqQuery<T> = T extends Req<infer _, infer _, infer Q, infer _>
-  ? Q
-  : never;
-type ReqBody<T> = T extends Req<infer _, infer _, infer _, infer B> ? B : never;
-type ResBody<T> = T extends Req<infer _, infer RB, infer _, infer _>
-  ? RB
-  : never;
+// type ReqQuery<T> = T extends Req<infer _, infer _, infer Q, infer _>
+//   ? Q
+//   : never;
+// type ReqBody<T> = T extends Req<infer _, infer _, infer _, infer B> ? B : never;
+// type ResBody<T> = T extends Req<infer _, infer RB, infer _, infer _>
+//   ? RB
+//   : never;
 
 // type ExtendsWithKey<T, K extends keyof T, V> = T extends { [key: K]: any } ? T : never;
 
 // type res = Api.GetResponse<"post", "/account">;
-type Rout = Api.Routes<"get">
+// type Rout = Api.Routes<"get">;
 
 // type
 // type Fn<P> = (v: P) => void;
@@ -58,49 +48,73 @@ type Rout = Api.Routes<"get">
 //   : never;
 
 declare namespace Api {
+  type Router = Omit<import("express").Router, keyof Api.Requests> &
+    Api.Requests;
   // type ExpressHandler = import("express").Request;
-  type UnionToIntersection<U> = (
-    U extends any ? (k: U) => void : never
-  ) extends (k: infer I) => void
-    ? I
-    : never;
+  namespace Models {
+    // declare namespace Api.Model {
+    type Phone = RequiredId<DB.PhoneAttributes>;
+    type PhoneType = RequiredId<DB.PhoneTypeAttributes>;
+    type PhoneModel = RequiredId<DB.PhoneModelAttributes>;
+    type Department = RequiredId<DB.DepartmentAttributes>;
+    type User = Omit<RequiredId<DB.UserAttributes>, "passwordHash">;
+    // }
+  }
 
-  type GetResponse<M extends keyof RequestsMap, R extends Routes<M>> = Extract<
+  type Methods = keyof RequestsMap;
+
+  type GetResponse<M extends Methods, R extends Routes<M>> = Extract<
     RequestsMap[M],
     RouteHandler<R, any, any, any>
   > extends RouteHandler<any, infer RB, any, any>
     ? RB
     : never;
 
-  type GetQuery<M extends keyof RequestsMap, R extends Routes<M>> = Extract<
+  type GetQuery<M extends Methods, R extends Routes<M>> = Extract<
     RequestsMap[M],
     RouteHandler<R, any, any, any>
   > extends RouteHandler<any, any, infer Q, any>
     ? Q
     : never;
 
-  type GetBody<M extends keyof RequestsMap, R extends Routes<M>> = Extract<
+  type GetBody<M extends Methods, R extends Routes<M>> = Extract<
     RequestsMap[M],
     RouteHandler<R, any, any, any>
   > extends RouteHandler<any, any, any, infer B>
     ? B
     : never;
 
-  type Routes<M extends keyof RequestsMap> =
-    RequestsMap[M] extends RouteHandler<infer R, any, any, any> ? R : never;
+  type Routes<M extends Methods> = RequestsMap[M] extends RouteHandler<
+    infer R,
+    any,
+    any,
+    any
+  >
+    ? R
+    : never;
 
-  
+  type WithError = { error: Error };
+
+  // type ErrorNames<T = import("../utils/errors").ErrorType> = Extract<T[keyof T], any>
+
+  // type T = ErrorNames;
+  type ErrorType =
+    typeof import("../utils/errors").errorType[keyof typeof import("../utils/errors").errorType];
 
   type Error = {
-    message?: string;
+    name: ErrorType;
+    message: string;
     code: number;
+
+    description?: string;
+    payload?: any;
   };
   type Request<
     P,
     RB = any,
     Q = any,
     B = any
-  > = import("express").RequestHandler<P, RB | Api.Error, B, Q>;
+  > = import("express").RequestHandler<P, RB | WithError, B, Q>;
 
   type RouteHandler<R extends string, RB, Q, B> = <P>(
     route: R,
@@ -108,22 +122,28 @@ declare namespace Api {
   ) => void;
 
   type Requests = {
-    [K in keyof RequestsMap]: UnionToIntersection<RequestsMap[K]>;
+    [K in Methods]: UnionToIntersection<RequestsMap[K]>;
   };
 
   type RequestsMap = {
     get:
+      | RouteHandler<"/account", Api.Models.User, {}, {}>
       | RouteHandler<
           "/account/login",
           { id: number; role: Role; token: string },
           { username: string; password: string },
           {}
         >
-      | RouteHandler<"/commit", {}, { target: ChangesTargetName }, {}>
-      | RouteHandler<"/phone/byId", Models.PhoneAttributes, { id: number }, {}>
+      | RouteHandler<
+          "/commit",
+          Record<number, any>,
+          { target: ChangesTargetName },
+          {}
+        >
+      | RouteHandler<"/phone/byId", Api.Models.Phone, { id: number }, {}>
       | RouteHandler<
           "/phone",
-          ItemsResponse<Models.PhoneAttributes>,
+          ItemsResponse<Api.Models.Phone>,
           Partial<{
             search: string;
             inventoryKey: string;
@@ -138,22 +158,34 @@ declare namespace Api {
             ids: number[];
           }> & { offset: number; amount: number },
           {}
+        >
+      | RouteHandler<
+          "/filter",
+          {
+            models: Pick<
+              Api.Models.PhoneModel,
+              "id" | "name" | "phoneTypeId"
+            >[];
+            types: Pick<Api.Models.PhoneType, "id" | "name">[];
+            departments: Pick<Api.Models.Department, "id" | "name">[];
+          },
+          {},
+          {}
         >;
 
-    post: UnionToIntersection<
+    post:
       | RouteHandler<
           "/commit",
           {},
           { target: ChangesTargetName; targetId: number },
-          {}
+          any
         >
       | RouteHandler<
           "/account",
-          Models.UserAttributes,
+          Api.Models.User,
           { username: string; password: string; role: Role },
           {}
-        >
-    >;
+        >;
 
     put: RouteHandler<
       "/phone",
@@ -161,7 +193,7 @@ declare namespace Api {
       { id: number },
       Partial<
         Pick<
-          Models.PhoneAttributes,
+          Api.Models.Phone,
           | "accountingDate"
           | "assemblyDate"
           | "commissioningDate"

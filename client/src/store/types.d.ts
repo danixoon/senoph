@@ -9,3 +9,14 @@ declare type WithItems<I> = {
 declare type PartialNullable<T> = { [P in keyof T]: T[P] | null };
 
 declare type StoreType = ReturnType<typeof import("./index").store.getState>;
+
+declare type ActionStatus = "idle" | "loading" | "success" | Api.Error;
+declare type WithStatus<K extends string = "status"> = {
+  [k in K]: ActionStatus;
+};
+declare type SplitStatus = (
+  | {
+      isError: false;
+    }
+  | { isError: true; error: Api.Error }
+) & { isLoading: boolean; isIdle: boolean; isSuccess: boolean };

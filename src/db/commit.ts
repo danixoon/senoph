@@ -117,13 +117,13 @@ export class Commit {
   undo = async () => {};
 
   push = async <T>(targetId: number, changes: T) => {
-    const changesList: Models.ChangeAttributes[] = [];
+    const changesList: DB.ChangeAttributes[] = [];
     for (const key in changes) {
       let type: ChangedDataType = "string";
       if (key.endsWith("Date")) type = "date";
       if (key.endsWith("Id")) type = "number";
 
-      const change: Models.ChangeAttributes = {
+      const change: DB.ChangeAttributes = {
         targetId,
         userId: this.userId,
         target: this.target,
@@ -194,7 +194,15 @@ export const getChanges = async <T extends ChangesTargetName>(
   });
   // type Model = typeof models[keyof typeof models extends T ? T : never];
   // TODO: Выразить аттрибуты
-  return convertChangesList(changes) as InstanceType<ModelMap[T]>[];
+
+  // const grouped = changes.reduce(
+  //   (a, v) => ({ ...a, [v.targetId]: [...(a.targetId ?? []), v] }),
+  //   {} as any
+  // ) as Record<number, Change[]>;
+
+  const result = convertChangesList(changes);
+
+  return result;
 };
 
 export const getChangesById = async <T extends ChangesTargetName>(
@@ -211,14 +219,14 @@ const getChangesList: (
   targetId: number,
   userId: number,
   changes: any
-) => Models.ChangeAttributes[] = (target, targetId, userId, changes) => {
-  const changesList: Models.ChangeAttributes[] = [];
+) => DB.ChangeAttributes[] = (target, targetId, userId, changes) => {
+  const changesList: DB.ChangeAttributes[] = [];
   for (const key in changes) {
     let type: ChangedDataType = "string";
     if (key.endsWith("Date")) type = "date";
     if (key.endsWith("Id")) type = "number";
 
-    const change: Models.ChangeAttributes = {
+    const change: DB.ChangeAttributes = {
       targetId,
       userId,
       target,
@@ -232,7 +240,7 @@ const getChangesList: (
   return changesList;
 };
 
-export const convertChangesList = (changes: Models.ChangeAttributes[]) => {
+export const convertChangesList = (changes: DB.ChangeAttributes[]) => {
   return changes.reduce((a, v) => {
     a[v.targetId] = { ...(a[v.targetId] ?? {}), [v.column]: v.value };
     return a;
