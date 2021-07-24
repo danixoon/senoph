@@ -3,14 +3,15 @@ import * as React from "react";
 import { mergeClassNames, mergeProps } from "utils";
 import "./styles.styl";
 
-type InputProps = OverrideProps<
+type InputProps<T = any> = OverrideProps<
   React.InputHTMLAttributes<HTMLInputElement>,
   {
-    input: any;
-    name: string;
+    input: T;
+    name: keyof T;
     label?: string;
     info?: string;
     size?: Size;
+    mapper?: (value: any) => any;
 
     inputProps?: React.InputHTMLAttributes<HTMLInputElement>;
   }
@@ -23,12 +24,21 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>((props, ref) => {
     size = "sm",
     input,
     name,
+    mapper,
     inputProps = {},
     onChange,
     ...rest
   } = props;
 
   const mergedProps = mergeProps({ className: mergeClassNames(`input`) }, rest);
+  const value = input[name] ?? "";
+
+  const handleOnChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
+    if (mapper) {
+      e.target.value = value;
+    }
+    if (onChange) onChange(e);
+  };
 
   return (
     <div {...mergedProps}>
@@ -40,9 +50,9 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>((props, ref) => {
       <input
         ref={ref}
         className={mergeClassNames(`input__element input_${size}`)}
-        value={input[name] ?? ""}
-        name={name}
-        onChange={onChange}
+        value={mapper ? mapper(value) : value}
+        name={name as string}
+        onChange={handleOnChange}
         {...inputProps}
       />
       {info && <small className="input__info">{info}</small>}

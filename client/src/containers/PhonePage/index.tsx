@@ -30,6 +30,7 @@ import { useStoreQueryInput } from "hooks/useStoreQueryInput";
 import { useAppDispatch, useAppSelector } from "store";
 import { updateFilter, updateSelection } from "store/slices/phone";
 import Switch from "components/Switch";
+import PhoneCreatePopupContainer from "containers/PhoneCreatePopup";
 
 export type FilterQuery = Omit<
   PartialNullable<Required<Api.GetQuery<"get", "/filter">>>,
@@ -40,7 +41,6 @@ type PhonePageContainerProps = {};
 const PAGE_ITEMS = 15;
 
 const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
-  
   const dispatch = useAppDispatch();
   const { filter, mode, ...rest } = useAppSelector((state) => state.phone);
   const bindFilter = useStoreQueryInput(filter, (q) =>
@@ -66,6 +66,11 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
     setSelectionPopup(!isSelectionPopup);
   };
 
+  const [isCreatePopup, setCreatePopup] = React.useState(() => false);
+  const handleCreatePopup = () => {
+    setCreatePopup(!isCreatePopup);
+  };
+
   return (
     <>
       <PopupLayer>
@@ -74,6 +79,10 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
           onToggle={handleSelectionPopup}
         />
         <PhonePopupContainer />
+        <PhoneCreatePopupContainer
+          isOpen={isCreatePopup && mode === "edit"}
+          onToggle={handleCreatePopup}
+        />
       </PopupLayer>
       <TopBarLayer>
         <RouterSwitch>
@@ -90,7 +99,7 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
           </Route>
           <Route path={`${path}/edit`}>
             <Hr vertical />
-            <Button margin="none" color="primary">
+            <Button margin="none" color="primary" onClick={handleCreatePopup}>
               <Icon.Plus size="md" />
             </Button>
             <Hr vertical />

@@ -20,7 +20,7 @@ export const useQueryInput = <T>(
   const dispatch = useDispatch();
   const { pathname, search } = useLocation();
 
-  const dispatchQuery = (input: T) => {
+  const dispatchQuery = (input: PartialNullable<T>) => {
     const urlSearch = { ...input };
     for (const key in urlSearch)
       if (urlSearch[key] === null) delete urlSearch[key];

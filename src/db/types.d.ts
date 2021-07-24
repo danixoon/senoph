@@ -15,6 +15,10 @@ type SeqModel<A, B> = import("sequelize").Model<A, B>;
 declare type Attributify<T> = T extends SeqModel<infer A, infer _> ? A : never;
 
 declare namespace DB {
+  interface Attributes {
+    id: number;
+  }
+
   type PhoneTypeAttributes = WithId<{
     name: string;
   }>;
@@ -25,11 +29,11 @@ declare namespace DB {
     phoneTypeId: number;
   }>;
 
-  type PhoneCategoryAttributes = WithId<{
+  interface PhoneCategoryAttributes extends Attributes {
     date: string;
     category: string;
     phoneId: number;
-  }>;
+  }
 
   type HoldingAttributes = WithId<{
     actDate: string;
@@ -66,11 +70,11 @@ declare namespace DB {
     holdings?: HoldingAttributes[];
   }>;
 
-  type UserAttributes = WithId<{
+  interface UserAttributes extends Attributes {
     username: string;
     passwordHash: string;
     role: Role;
-  }>;
+  }
 
   type ChangeAttributes = WithId<{
     target: ChangesTargetName;

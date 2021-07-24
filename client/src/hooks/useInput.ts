@@ -7,7 +7,10 @@ export type InputBind<T = any> = {
 
 export type InputHook<T = any> = [InputBind<T>, (input: T) => void];
 
-export type InputHookPrepare<T> = <K extends keyof T>(
+export type InputHookPrepare<P> = <
+  T extends PartialNullable<P>,
+  K extends keyof T
+>(
   key: K,
   value: T[K],
   input: T
@@ -35,7 +38,7 @@ export const handleChangeEvent = <T>(
   return changedInput;
 };
 
-export const useInput = function <T = any>(
+export const useInput = function <P = any, T = PartialNullable<P>>(
   defaultValue: T = {} as T,
   prepareValue: InputHookPrepare<T> = (key, value, input) => input
 ): InputHook<T> {

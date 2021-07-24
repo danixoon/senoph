@@ -171,6 +171,12 @@ declare namespace Api {
           },
           {},
           {}
+        >
+      | RouteHandler<
+          "/model",
+          ItemsResponse<Api.Models.PhoneModel>,
+          { name?: string; id?: number },
+          {}
         >;
 
     post:
