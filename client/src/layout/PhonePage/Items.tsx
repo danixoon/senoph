@@ -42,33 +42,12 @@ const Items: React.FC<{
   let currentPage = Math.floor((offset / totalItems) * maxPage) + 1;
   if (Number.isNaN(currentPage)) currentPage = 1;
 
-  // const [
-  //   { markedIds: markedIds /* selectAll  */ },
-  //   setTableSelection,
-  // ] = React.useState<{
-  //   markedIds: Set<any>;
-  //   // selectAll: boolean;
-  // }>(() => ({
-  //   // selectAll: false,
-  //   markedIds: new Set(),
-  // }));
-
-  const handleTableSelection = (
-    // nextSelectAll: boolean,
-    markedIds: Set<any>
-  ) => {
-    // setTableSelection({
-    //   markedIds: set,
-    //   // selectAll: nextSelectAll,
-    // });
+  const handleTableSelection = (markedIds: Set<any>) => {
     if (props.mode === "edit") selection.onSelection(markedIds);
   };
 
   const isSelected = (id: any) => {
-    /* if (selectAll) return !markedIds.has(id);
-    else */ return selection.selectionIds.has(
-      id
-    );
+    return selection.selectionIds.has(id);
   };
 
   let isAllSelected = totalItems !== 0;
@@ -130,22 +109,12 @@ const Items: React.FC<{
       ),
       type: "checkbox",
       onToggle: (state: boolean, id: any) => {
-        // if (!state) {
-        //   if (selectAll) markedIds.add(id);
-        //   else markedIds.delete(id);
-        // } else {
-        //   if (selectAll) markedIds.delete(id);
-        //   else markedIds.add(id);
-        // }
-
         const set = new Set(selection.selectionIds);
 
         if (state) set.add(id);
         else set.delete(id);
 
         handleTableSelection(set);
-
-        // handleTableSelection(selectAll, new Set(markedIds));
       },
     });
 

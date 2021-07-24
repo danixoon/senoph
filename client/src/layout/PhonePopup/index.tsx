@@ -3,7 +3,7 @@ import Button from "components/Button";
 import ButtonGroup from "components/ButtonGroup";
 import Header from "components/Header";
 import Hr from "components/Hr";
-import Icon from "components/Icon";
+import Icon, { LoaderIcon } from "components/Icon";
 import Input from "components/Input";
 import Label, { LabelProps } from "components/Label";
 import Layout from "components/Layout";
@@ -12,6 +12,7 @@ import ListItem, { ListItemProps } from "components/ListItem";
 import Popup, { PopupProps, PopupTopBar } from "components/Popup";
 import Span from "components/Span";
 import Switch from "components/Switch";
+import WithLoader from "components/WithLoader";
 import { useChanges } from "hooks/api/useChanges";
 import { useFilterConfig } from "hooks/api/useFetchConfig";
 import { useMakeChanges } from "hooks/api/useMakeChanges";
@@ -22,6 +23,9 @@ import PhoneEditActions from "layout/PhoneEditActions";
 import PopupLayer from "providers/PopupLayer";
 import * as React from "react";
 import { mergeClassNames } from "utils";
+import CategoryItem from "./CategoryItem";
+import EditableListItem from "./EditableListItem";
+import HoldingItem from "./HoldingItem";
 
 import "./style.styl";
 
@@ -29,143 +33,24 @@ export type PhonePopupProps = {
   phone: Api.Models.Phone | null;
   isEditMode: boolean;
   changeEditMode: (mode: boolean) => void;
+  makeChanges: (targetId: number, changes: any) => void;
+  undoChanges: (targetId: number, keys: string[]) => void;
+  changes: Record<number, any>;
 } & PopupProps;
-
-const HoldingItem: React.FC<{
-  prevHolder: string;
-  nextHolder: string;
-  actKey: string;
-  actDate: Date;
-}> = (props) => {
-  return (
-    <Layout className="holding-item">
-      <ListItem label="От">
-        <Link>{props.prevHolder}</Link>
-      </ListItem>
-      <ListItem label="Кому">
-        <Link>{props.nextHolder}</Link>
-      </ListItem>
-      <ListItem label="Акт">
-        <Link size="sm">№{props.actKey}</Link>
-        <Label weight="bold" style={{ margin: "0 0.5rem" }}>
-          от
-        </Label>
-        <Link>{props.actDate.toLocaleDateString()}</Link>
-      </ListItem>
-    </Layout>
-  );
-};
-
-const CategoryItem: React.FC<{
-  category: number;
-  actKey: string;
-  actDate: Date;
-}> = (props) => {
-  const { category, actKey, actDate } = props;
-  let cat = "?";
-  switch (category) {
-    case 1:
-      cat = "I";
-      break;
-    case 2:
-      cat = "II";
-      break;
-    case 3:
-      cat = "III";
-      break;
-    case 4:
-      cat = "IV";
-      break;
-  }
-
-  const labelStyle = { style: { margin: "0 0.25rem" }, weight: "bold" } as Pick<
-    LabelProps,
-    "style" | "weight"
-  >;
-
-  return (
-    <Layout flow="row" className="category-item">
-      <Badge onClick={() => {}} className="category-item__level">
-        {cat}
-      </Badge>
-      <Label {...labelStyle}>Акт </Label>
-      <Link> №{actKey}</Link>
-      <Label {...labelStyle}>от</Label>
-      <Link>{actDate.toLocaleDateString()}</Link>
-    </Layout>
-  );
-};
-
-const EditableListItem: React.FC<
-  OverrideProps<
-    ListItemProps,
-    {
-      targetId: number;
-      changes: any;
-      propertyKey: string;
-      target: ChangesTargetName;
-      onOpen: (
-        target: ChangesTargetName,
-        targetId: number,
-        key: string
-      ) => void;
-      editable?: boolean;
-    }
-  >
-> = (props) => {
-  const {
-    onOpen,
-    changes,
-    target,
-    targetId,
-    propertyKey: key,
-    editable,
-    children,
-    ...rest
-  } = props;
-  const isEdited = (changes[targetId] ?? {})[key] !== undefined;
-
-  const Container: React.FC<{}> = ({ children }) =>
-    editable ? <Button inverted>{children}</Button> : <> {children} </>;
-
-  const content = isEdited ? changes[targetId][key] : children;
-
-  return (
-    <ListItem {...rest}>
-      <Layout
-        flow="row"
-        style={{ alignItems: "center" }}
-        onClick={editable ? () => onOpen(target, targetId, key) : undefined}
-      >
-        <Container>
-          <Span
-            className={mergeClassNames(
-              "edit-item",
-              editable && "edit-item_editable"
-            )}
-          >
-            {content}
-          </Span>
-        </Container>
-        {isEdited && (
-          <Icon.Edit2
-            color="bgDark"
-            size="xs"
-            style={{ marginLeft: "0.5rem" }}
-            altLabel={{ text: "Изменён", position: "right", zIndex: "popup" }}
-          />
-        )}
-      </Layout>
-    </ListItem>
-  );
-};
 
 const Content: React.FC<
   Omit<PhonePopupProps, "phone"> & {
     phone: NonNullable<PhonePopupProps["phone"]>;
   }
 > = (props) => {
-  const { phone, isEditMode: edit, changeEditMode } = props;
+  const {
+    phone,
+    changes,
+    isEditMode: edit,
+    changeEditMode,
+    makeChanges,
+    undoChanges,
+  } = props;
   const { types, departments } = useFilterConfig();
 
   const [bind] = useInput({ search: "", tab: "category" });
@@ -219,61 +104,39 @@ const Content: React.FC<
     type: "text";
     key: string;
     label: null | string;
-    target: ChangesTargetName;
     targetId: number;
   }>(() => ({
     isEdit: false,
     type: "text",
     key: "no_key",
     label: null,
-    target: "Phone",
     targetId: -1,
   }));
 
-  const handleFieldEdit = (change: {
-    type: "text";
-    key: string;
-    label?: string;
-    targetId: number;
-    target: ChangesTargetName;
-  }) => {
+  const handleFieldEdit = (label = field.label, type = "text" as const) => (
+    targetId: number,
+    key: string
+  ) =>
     setFieldEdit({
-      type: change.type,
+      type,
       isEdit: true,
-      label: change.label ?? field.label,
-      key: change.key,
-      target: change.target,
-      targetId: change.targetId,
+      label,
+      key,
+      targetId,
     });
-  };
-  const [makeChanges] = useMakeChanges();
-  const [undoChanges] = useUndoChanges();
-
-  const [changes] = useChanges("Phone");
 
   // TODO: Контекст формы для Input-объектов
 
   const changedValue = (changes[field.targetId] ?? {})[field.key];
-  // const isChanged = (changes[field.targetId] ?? {})[key] !== undefined;
 
   return (
     <>
       <PopupLayer>
         <FieldEditPopup
-          onSubmit={(value) => {
-            makeChanges({
-              target: field.target,
-              targetId: field.targetId,
-              changes: { [field.key]: value },
-            });
-          }}
-          onReset={() => {
-            undoChanges({
-              target: field.target,
-              targetId: field.targetId,
-              keys: [field.key],
-            });
-          }}
+          onSubmit={(value) =>
+            makeChanges(field.targetId, { [field.key]: value })
+          }
+          onReset={() => undoChanges(field.targetId, [field.key])}
           defaultValue={changedValue}
           name={field.key || "field"}
           isOpen={field.isEdit}
@@ -348,18 +211,7 @@ const Content: React.FC<
             </ListItem>
             <EditableListItem
               label="Заводской номер"
-              onOpen={(target, targetId, key) =>
-                handleFieldEdit({
-                  type: "text",
-                  label: "Новый заводской номер",
-                  key,
-                  target,
-                  targetId,
-                })
-              }
-              changes={changes}
-              target="Phone"
-              targetId={phone.id}
+              onOpen={handleFieldEdit("Новый заводской номер")}
               propertyKey="factoryKey"
               editable={edit}
             >
@@ -367,18 +219,7 @@ const Content: React.FC<
             </EditableListItem>
             <EditableListItem
               label="Инвентарный номер"
-              onOpen={(target, targetId, key) =>
-                handleFieldEdit({
-                  type: "text",
-                  label: "Новый инвентарный номер",
-                  key,
-                  target,
-                  targetId,
-                })
-              }
-              changes={changes}
-              target="Phone"
-              targetId={phone.id}
+              onOpen={handleFieldEdit("Новый инвентарный номер")}
               propertyKey="inventoryKey"
               editable={edit}
             >
@@ -387,18 +228,7 @@ const Content: React.FC<
             <Hr />
             <EditableListItem
               label="Дата ввода в эксплуатацию"
-              onOpen={(target, targetId, key) =>
-                handleFieldEdit({
-                  type: "text",
-                  label: "Новая дата ввода в эксплуатацию",
-                  key,
-                  target,
-                  targetId,
-                })
-              }
-              changes={changes}
-              target="Phone"
-              targetId={phone.id}
+              onOpen={handleFieldEdit("Новая дата ввода в эксплуатацию")}
               propertyKey="assemblyDate"
               editable={edit}
             >
@@ -407,18 +237,7 @@ const Content: React.FC<
             <Hr />
             <EditableListItem
               label="Дата принятия к учёту"
-              onOpen={(target, targetId, key) =>
-                handleFieldEdit({
-                  type: "text",
-                  label: "Новая дата принятия к учёту",
-                  key,
-                  target,
-                  targetId,
-                })
-              }
-              changes={changes}
-              target="Phone"
-              targetId={phone.id}
+              onOpen={handleFieldEdit("Новая дата принятия к учёту")}
               propertyKey="accountingDate"
               editable={edit}
             >
@@ -426,18 +245,7 @@ const Content: React.FC<
             </EditableListItem>
             <EditableListItem
               label="Дата ввода в эксплуатацию"
-              onOpen={(target, targetId, key) =>
-                handleFieldEdit({
-                  type: "text",
-                  label: "Новая дата ввода в эксплуатацию",
-                  key,
-                  target,
-                  targetId,
-                })
-              }
-              changes={changes}
-              target="Phone"
-              targetId={phone.id}
+              onOpen={handleFieldEdit("Новая дата ввода в эксплуатацию")}
               propertyKey="commissioningDate"
               editable={edit}
             >
@@ -476,21 +284,6 @@ const Content: React.FC<
               : renderHoldings()}
           </Layout>
         </Layout>
-
-        {/* <Dropdown
-        {...bind}
-        items={types.map((type) => ({
-          label: type.name,
-          id: type.id,
-          payload: type,
-        }))}
-        label="Тип"
-        name="phoneTypeId"
-        disabled
-      /> */}
-        {/* </Layout> */}
-        {/* <Layout flow="row"> */}
-        {/* </Layout> */}
       </Layout>
     </>
   );
@@ -498,16 +291,19 @@ const Content: React.FC<
 
 const PhonePopup: React.FC<PhonePopupProps> = (props) => {
   const { phone, isEditMode, changeEditMode, ...rest } = props;
+
   return (
     <Popup {...rest} size="lg" closeable noPadding>
-      {phone && (
+      <WithLoader
+        isLoading={!phone}
+      >
         <Content
-          phone={phone}
+          phone={phone as Api.Models.Phone}
           isEditMode={isEditMode}
           changeEditMode={changeEditMode}
           {...rest}
         />
-      )}
+      </WithLoader>
     </Popup>
   );
 };

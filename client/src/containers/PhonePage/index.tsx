@@ -41,7 +41,6 @@ const PAGE_ITEMS = 15;
 
 const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
   
-
   const dispatch = useAppDispatch();
   const { filter, mode, ...rest } = useAppSelector((state) => state.phone);
   const bindFilter = useStoreQueryInput(filter, (q) =>
@@ -50,20 +49,6 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
 
   const { path, url, params } = useRouteMatch();
   const selectionIdsSet = new Set(rest.selectionIds);
-  // const { pathname, search } = useLocation();
-
-  // const [offset, setOffset] = React.useState(() => 0);
-
-  // const query = qs.parse(search) as FilterQuery;
-  // const [bindFilter, setFilter] = useQueryInput<FilterQuery>(
-  //   { ...query },
-  //   (key, value, input) => {
-  //     setOffset(0);
-
-  //     if (key === "phoneTypeId") input.phoneModelId = null;
-  //     return input;
-  //   }
-  // );
 
   const filterData = useFilterConfig();
   const { data: itemsData } = useFetchPhonesQuery({
@@ -76,32 +61,13 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
 
   const totalItems = itemsData?.total ?? PAGE_ITEMS;
 
-  // const handlePhonePopup = (id: any = null) => {
-  //   updateFilter({ selectedId: id });
-  // };
-
-  // const [{ selectedIds /*, isAllSelected  */ }, setSelected] = React.useState(
-  //   () => ({
-  //     selectedIds: new Set<any>(),
-  //     // isAllSelected: false,
-  //   })
-  // );
-
-  // const selectedCount =
-  //   /* isAllSelected
-  //   ? totalItems - selectedIds.length
-  //   : */ selectedIds.size;
-
   const [isSelectionPopup, setSelectionPopup] = React.useState(() => false);
   const handleSelectionPopup = () => {
     setSelectionPopup(!isSelectionPopup);
   };
 
-  // const { ids, exceptIds, ...selectionQuery } = query;
-
   return (
     <>
-      {/* // <PhonePageContext.Provider> */}
       <PopupLayer>
         <PhoneSelectionPopupContainer
           isOpen={isSelectionPopup && mode === "edit"}
@@ -110,7 +76,6 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
         <PhonePopupContainer />
       </PopupLayer>
       <TopBarLayer>
-        {/* <Layout flow="row"> */}
         <RouterSwitch>
           <Route path={`${path}/view`}>
             <Switch
@@ -143,7 +108,6 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
             </ButtonGroup>
           </Route>
         </RouterSwitch>
-        {/* </Layout> */}
       </TopBarLayer>
       <Layout flow="row">
         <Layout flex="1" style={{ marginLeft: "0.25rem" }}>
@@ -181,7 +145,6 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
         </Layout>
       </Layout>
     </>
-    // </PhonePageContext.Provider>
   );
 };
 

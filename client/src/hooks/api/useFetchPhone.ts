@@ -6,9 +6,9 @@ import {
 } from "store/slices/api";
 
 export const useFetchPhone = (id: number | null) => {
-  const { data } = useFetchPhoneQuery(
+  const { data, isFetching } = useFetchPhoneQuery(
     { id: id as number },
     { skip: id == null }
   );
-  return { phone: data ?? null };
+  return { phone: isFetching ? null : data ?? null };
 };
