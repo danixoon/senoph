@@ -1,3 +1,6 @@
+import { logger } from "@backend/utils/index";
+import { Sequelize } from "sequelize";
+import { Op } from "sequelize";
 import {
   AllowNull,
   ForeignKey,
@@ -9,24 +12,57 @@ import {
   BelongsTo,
   HasOne,
   HasMany,
+  Default,
+  DefaultScope,
+  setHooks,
+  AfterCreate,
+  AfterBulkCreate,
+  Validate,
+  Unique,
 } from "sequelize-typescript";
+
 import { getChanges, getChangesById } from "../commit";
 import Change from "./change.model";
+import Commit from "./commit.model";
 
 import Holder from "./holder.model";
 import Holding from "./holding.model";
 import PhoneCategory from "./phoneCategory.model";
 import PhoneModel from "./phoneModel.model";
+import User from "./user.model";
 
+// class CommitedModel<T, K> extends Model<T, K> {
+//   @ForeignKey(() => Commit)
+//   @AllowNull(true)
+//   @Column(DataType.INTEGER)
+//   commitId: number | null;
+
+//   @BelongsTo(() => Commit)
+//   commit: Commit | null;
+
+//   onInit = () => {
+//     // bindHooks()
+//   };
+// }
+
+// CommitedModel.addHook("beforeBulkCreate", )
+
+@DefaultScope(() => ({
+  where: {
+    status: null,
+  },
+}))
 @Table
 export default class Phone extends Model<
   DB.PhoneAttributes,
   OptionalId<DB.PhoneAttributes>
 > {
+  @Unique
   @AllowNull(false)
   @Column(DataType.STRING)
   inventoryKey: string;
 
+  @Unique
   @AllowNull(false)
   @Column(DataType.STRING)
   factoryKey: string;
@@ -53,6 +89,17 @@ export default class Phone extends Model<
   @Column(DataType.INTEGER)
   holderId: number;
 
+  @AllowNull(true)
+  @Validate({ isIn: [["create-pending", "delete-pending"]] })
+  @Default("create-pending")
+  @Column(DataType.STRING)
+  status?: CommitStatus | null;
+
+  @AllowNull(false)
+  @ForeignKey(() => User)
+  @Column(DataType.INTEGER)
+  authorId: number;
+
   @BelongsTo(() => Holder)
   holder: Holder;
 
@@ -65,12 +112,27 @@ export default class Phone extends Model<
   @HasMany(() => Holding)
   holdings: Holding[];
 
+  // getStatus = () => {
+  //   const status: CommitStatus = this.isCommited
+  //     ? this.isSoftDeleted()
+  //       ? "deleted"
+  //       : "idle"
+  //     : "commited";
+
+  //   return status;
+  // };
+
   async getChanges(userId: number) {
-    const changes = await getChangesById(userId, "Phone", this.id);
+    const changes = await getChangesById(userId, "phone", this.id);
     return changes;
   }
 }
 
+// bindHooks("phone", Phone as any);
+
+// Phone.beforeBulkCreate("hey", (inst) => {});
+
+// setHooks(Phone, [{ hookType: "afterCreate", methodName: "onCreate" }]);
 // export default {
 //   create: async (phone: WithoutId<Database.Phone>) =>
 //     insertObject(pool.request(), "Phone", phone),

@@ -12,7 +12,7 @@ import * as React from "react";
 import "./style.styl";
 
 export type SideBar = {
-  page: "phone" | "category" | "holding" | "admin";
+  page: "phone" | "category" | "holding" | "admin" | "commit";
   logout: () => void;
 };
 
@@ -25,11 +25,20 @@ const SideBar: React.FC<SideBar> = (props) => {
       <Spoiler
         opened={page === "phone"}
         onToggle={page === "phone" ? handleSpoilerToggle : undefined}
-        label="Модели ТА"
+        label="Средства связи"
       >
         <Layout className="sidebar__group">
           <LinkItemContainer href="/phone/view">Просмотр</LinkItemContainer>
           <LinkItemContainer href="/phone/edit">Управление</LinkItemContainer>
+        </Layout>
+      </Spoiler>
+      <Spoiler
+        opened={page === "commit"}
+        onToggle={page === "commit" ? handleSpoilerToggle : undefined}
+        label="Изменения"
+      >
+        <Layout className="sidebar__group">
+          <LinkItemContainer href="/commit">Внесение</LinkItemContainer>
         </Layout>
       </Spoiler>
       <Spoiler

@@ -2,14 +2,19 @@ import * as React from "react";
 import { mergeProps } from "utils";
 import "./styles.styl";
 
-type FormProps = OverrideProps<
+export type FormError = Record<string, { message: string }>;
+
+export type FormProps = OverrideProps<
   React.HTMLAttributes<HTMLFormElement>,
   {
     onSubmit?: (data: FormData) => void;
     preventDefault?: boolean;
     input?: any;
+    inputError?: FormError;
   }
 >;
+
+export const InputErrorContext = React.createContext<FormError>({});
 
 const Form: React.FC<React.PropsWithChildren<FormProps>> = (
   props: FormProps
@@ -18,6 +23,7 @@ const Form: React.FC<React.PropsWithChildren<FormProps>> = (
     children,
     preventDefault = true,
     input = {},
+    inputError,
     onSubmit,
     ...rest
   } = props;
@@ -42,9 +48,11 @@ const Form: React.FC<React.PropsWithChildren<FormProps>> = (
   );
 
   return (
-    <form {...mergedProps} onSubmit={handleOnSubmit}>
-      {children}
-    </form>
+    <InputErrorContext.Provider value={inputError ?? {}}>
+      <form {...mergedProps} onSubmit={handleOnSubmit}>
+        {children}
+      </form>
+    </InputErrorContext.Provider>
   );
 };
 

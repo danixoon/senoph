@@ -55,11 +55,25 @@ declare namespace Api {
     // declare namespace Api.Model {
     type Phone = RequiredId<DB.PhoneAttributes>;
     type PhoneType = RequiredId<DB.PhoneTypeAttributes>;
+    type PhoneCategory = RequiredId<DB.PhoneCategoryAttributes>;
     type PhoneModel = RequiredId<DB.PhoneModelAttributes>;
     type Department = RequiredId<DB.DepartmentAttributes>;
     type User = Omit<RequiredId<DB.UserAttributes>, "passwordHash">;
+    type Holder = RequiredId<DB.HolderAttributes>;
+    type Holding = RequiredId<DB.HoldingAttributes>;
     // }
   }
+
+  type ModelMap = {
+    phone: Models.Phone;
+    phoneType: Models.PhoneType;
+    phoneModel: Models.PhoneModel;
+    department: Models.Department;
+    phoneCategory: Models.PhoneCategory;
+    user: Models.User;
+    holder: Models.Holder;
+    holding: Models.Holder;
+  };
 
   type Methods = keyof RequestsMap;
 
@@ -126,22 +140,48 @@ declare namespace Api {
   };
 
   type RequestsMap = {
+    [K in keyof FnRequestsMap]: FnRequestsMap[K] extends (
+      ...args: any[]
+    ) => infer R
+      ? R
+      : never;
+  };
+
+  type ExcludeType<T, E, P = { [K in keyof T]: K }> = Pick<
+    T,
+    P extends {
+      [K in keyof P]: infer V;
+    }
+      ? V extends keyof T
+        ? E extends T[V]
+          ? never
+          : V
+        : never
+      : never
+  >;
+
+  type FnRequestsMap = {
     get:
-      | RouteHandler<"/account", Api.Models.User, {}, {}>
-      | RouteHandler<
+      | (() => RouteHandler<"/account", Api.Models.User, {}, {}>)
+      | (() => RouteHandler<
           "/account/login",
           { id: number; role: Role; token: string },
           { username: string; password: string },
           {}
-        >
-      | RouteHandler<
+        >)
+      | (() => RouteHandler<
           "/commit",
           Record<number, any>,
           { target: ChangesTargetName },
           {}
-        >
-      | RouteHandler<"/phone/byId", Api.Models.Phone, { id: number }, {}>
-      | RouteHandler<
+        >)
+      | (() => RouteHandler<
+          "/phone/byId",
+          Api.Models.Phone,
+          { id: number },
+          {}
+        >)
+      | (() => RouteHandler<
           "/phone",
           ItemsResponse<Api.Models.Phone>,
           Partial<{
@@ -158,8 +198,8 @@ declare namespace Api {
             ids: number[];
           }> & { offset: number; amount: number },
           {}
-        >
-      | RouteHandler<
+        >)
+      | (() => RouteHandler<
           "/filter",
           {
             models: Pick<
@@ -171,45 +211,93 @@ declare namespace Api {
           },
           {},
           {}
-        >
-      | RouteHandler<
+        >)
+      | (() => RouteHandler<
           "/model",
           ItemsResponse<Api.Models.PhoneModel>,
           { name?: string; id?: number },
           {}
-        >;
+        >)
+      | (() => RouteHandler<
+          "/holder",
+          ItemsResponse<Api.Models.Holder>,
+          {
+            id?: number;
+            name?: string;
+            departmentId?: number;
+          },
+          {}
+        >);
+    // | (() => RouteHandler<
+    //     "/commit/entity",
+    //     ItemsResponse<{
+    //       action: CommitActionType;
+    //       id: number;
+    //       target: CommitTargetName;
+    //     }>,
+    //     {},
+    //     {}
+    //   >);
 
     post:
-      | RouteHandler<
+      | (() => RouteHandler<
           "/commit",
           {},
           { target: ChangesTargetName; targetId: number },
           any
-        >
-      | RouteHandler<
+        >)
+      | (() => RouteHandler<
           "/account",
           Api.Models.User,
           { username: string; password: string; role: Role },
           {}
-        >;
+        >)
+      | (() => RouteHandler<
+          "/phone",
+          {},
+          {},
+          {
+            data: Omit<
+              ExcludeType<Api.Models.Phone, undefined>,
+              "authorId" | "id"
+            >[];
+          }
+        >);
 
-    put: RouteHandler<
-      "/phone",
-      {},
-      { id: number },
-      Partial<
-        Pick<
-          Api.Models.Phone,
-          | "accountingDate"
-          | "assemblyDate"
-          | "commissioningDate"
-          | "factoryKey"
-          | "inventoryKey"
-        >
-      >
-    >;
+    put:
+      | (() => RouteHandler<
+          "/phone",
+          {},
+          { id: number },
+          Partial<
+            Pick<
+              Api.Models.Phone,
+              | "accountingDate"
+              | "assemblyDate"
+              | "commissioningDate"
+              | "factoryKey"
+              | "inventoryKey"
+            >
+          >
+        >)
+      | (() => RouteHandler<
+          "/commit/phone" | "/commit/holder",
+          {},
+          { id: number; action: "approve" | "decline" },
+          {}
+        >);
+    // | (() => RouteHandler<
+    //     "/commit/entity",
+    //     {},
+    //     {
+    //       target: CommitTargetName;
+    //       targetId: number;
+    //       action: CommitActionType;
+    //     },
+    //     any
+    //   >);
 
-    delete: RouteHandler<
+    delete: () => RouteHandler<
       "/commit",
       {},
       { target: ChangesTargetName; targetId: number; keys: string[] },

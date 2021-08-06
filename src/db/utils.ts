@@ -10,7 +10,7 @@ export const insertObject = (req: Request, table: string, object: any) => {
     .map((k) => `@${k}`)
     .join(", ")})`;
 
-  console.log(q);
+  // console.log(q);
 
   return req.query(q);
 

@@ -14,9 +14,12 @@ declare type ActionStatus = "idle" | "loading" | "success" | Api.Error;
 declare type WithStatus<K extends string = "status"> = {
   [k in K]: ActionStatus;
 };
-declare type SplitStatus = (
-  | {
-      isError: false;
-    }
-  | { isError: true; error: Api.Error }
-) & { isLoading: boolean; isIdle: boolean; isSuccess: boolean };
+declare type SplitStatus =
+  // | { isError: true; error: Api.Error }
+  {
+    error: Api.Error | null;
+    isLoading: boolean;
+    isIdle: boolean;
+    isSuccess: boolean;
+    isError: boolean;
+  };

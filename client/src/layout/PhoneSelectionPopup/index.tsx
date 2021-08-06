@@ -98,7 +98,7 @@ const PhoneSelectionPopup: React.FC<PhoneSelectionPopup> = (props) => {
   };
 
   React.useEffect(() => {
-    console.log(totalItems);
+    // console.log(totalItems);
     // if (bind.input.search === null && totalItems === 0 && props.isOpen && props.onToggle)
     //   props.onToggle(false);
     if (currentPage > maxPage) {

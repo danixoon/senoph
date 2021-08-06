@@ -20,9 +20,11 @@
   &__label
     @extend .focusable, .unselectable
 
+    padding-left: 12px
+
     &:after
       content: url('icons/spoilerArrow.svg')
-      margin-left: margin.sm
+      // margin-left: margin.sm
       transition: transform 0.1s ease-in-out
       transform: scaleY(1)
       height: 19px

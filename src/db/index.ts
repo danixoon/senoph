@@ -2,13 +2,17 @@ import path from "path";
 import fs from "fs/promises";
 import { fillTestDatabase } from "@backend/utils/db";
 import { Sequelize } from "sequelize-typescript";
+import { logger } from "@backend/utils/index";
 
 let sequelize: Sequelize;
-let logger: fs.FileHandle;
+let dbLogger: fs.FileHandle;
+
+export const getModel = (name: string) => 
+sequelize.models[name];
 
 export const init = async () => {
   // console.log(process.env);
-  logger = await fs.open("./db.log", "a+");
+  dbLogger = await fs.open("./db.log", "a+");
   sequelize = new Sequelize({
     dialect: "mssql",
     username: process.env.DB_USERNAME,
@@ -27,17 +31,22 @@ export const init = async () => {
     logging: (sql) => {
       const t = new Date();
       const log = `[${t.toLocaleDateString()} ${t.toLocaleTimeString()}] ${sql}\n`;
-      logger.write(log);
+      dbLogger.write(log);
     },
     // modelMatch: (filename, member) =>
     //   filename.substring(0, filename.indexOf(".model")) === member.toLowerCase(),
   });
 
-  const result = await sequelize
-    .authenticate()
-    .catch((err) => console.error("Database connection error: ", err)) as any;
-
-  if (!result) return;
+  try {
+    await sequelize.authenticate();
+  } catch (err) {
+    logger.error(`Ошибка подключения к базе данных: ${err.message}`, {
+      service: "db",
+      payload: err,
+    });
+    throw err;
+    // return close();
+  }
 
   // Disable logging for syncing
   if (process.env.NODE_ENV !== "test") {

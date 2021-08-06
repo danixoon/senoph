@@ -1,4 +1,8 @@
+import AltPopup from "components/AltPopup";
+import { InputErrorContext } from "components/Form";
 import Label from "components/Label";
+import { useIsFirstEffect } from "hooks/useIsFirstEffect";
+import { useTimeout } from "hooks/useTimeout";
 import * as React from "react";
 import { mergeClassNames, mergeProps } from "utils";
 import "./styles.styl";
@@ -40,6 +44,22 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>((props, ref) => {
     if (onChange) onChange(e);
   };
 
+  const errorContext = React.useContext(InputErrorContext);
+
+  const infoText = info ?? errorContext[name as string]?.message;
+
+  const inputRef = React.useRef<HTMLInputElement | null>(null);
+  const [show, message, toggleMessage] = useTimeout<string | null>(null, 2000);
+
+  const isFirst = useIsFirstEffect();
+
+  React.useEffect(() => {
+    // TODO: Make error context nullable
+    if (isFirst) return;
+    const msg = errorContext[name as string]?.message;
+    toggleMessage(msg);
+  }, [errorContext]);
+
   return (
     <div {...mergedProps}>
       {label && (
@@ -48,14 +68,20 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>((props, ref) => {
         </Label>
       )}
       <input
-        ref={ref}
+        ref={(r) => (inputRef.current = r) && ref}
         className={mergeClassNames(`input__element input_${size}`)}
         value={mapper ? mapper(value) : value}
         name={name as string}
         onChange={handleOnChange}
         {...inputProps}
       />
-      {info && <small className="input__info">{info}</small>}
+      <AltPopup
+        target={show && message ? inputRef.current : null}
+        position="bottom"
+      >
+        {message}
+      </AltPopup>
+      {/* {infoText && <small className="input__info">{infoText}</small>} */}
     </div>
   );
 });

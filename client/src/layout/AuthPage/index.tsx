@@ -45,7 +45,7 @@ const AuthPage: React.FC<AuthPageProps> = (props) => {
   React.useEffect(() => {
     if (!status.isError) return;
     const { error } = status;
-    setValue(error.description ?? error.message);
+    setValue(error?.description ?? error?.message ?? "Ошибка");
   }, [status]);
 
   return (

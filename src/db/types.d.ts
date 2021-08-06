@@ -1,18 +1,36 @@
-declare type WithId<T> = OptionalId<T>;
+declare type WithId<T, I = number> = OptionalId<T, I>;
 declare type WithoutId<T> = Omit<T, "id">;
-declare type OptionalId<T> = WithoutId<T> & { id?: number };
-declare type RequiredId<T> = WithoutId<T> & { id: number };
+declare type OptionalId<T, I = number> = WithoutId<T> & { id?: I };
+declare type RequiredId<T, I = number> = WithoutId<T> & { id: I };
 declare type Role = "admin" | "user" | "unknown";
 declare type ChangesTargetName =
-  | "Department"
-  | "Holder"
-  | "Holding"
-  | "Phone"
-  | "PhoneCategory";
-declare type ChangedDataType = "string" | "date" | "number";
-type SeqModel<A, B> = import("sequelize").Model<A, B>;
+  | "department"
+  | "holder"
+  | "holding"
+  | "phone"
+  | "phoneCategory";
 
-declare type Attributify<T> = T extends SeqModel<infer A, infer _> ? A : never;
+declare type CommitTargetName = keyof Pick<
+  Api.ModelMap,
+  "phone" | "phoneCategory" | "phoneModel" | "holding"
+>;
+
+declare type ChangedDataType = "string" | "date" | "number";
+declare type CommitActionType = "create" | "delete";
+declare type CommitStatus = "delete-pending" | "create-pending";
+
+declare type WithCommit = {
+  status?: CommitStatus | null;
+};
+
+// declare type WithCommitStatus = { status: CommitStatus };
+declare type WithAuthor = { authorId: number };
+
+// type SeqModel<A, B> = import("sequelize").Model<A, B>;
+
+declare type HookContext = { context?: { userId: number } };
+
+// declare type Attributify<T> = T extends SeqModel<infer A, infer _> ? A : never;
 
 declare namespace DB {
   interface Attributes {
@@ -68,7 +86,9 @@ declare namespace DB {
     model?: PhoneModelAttributes;
     categories?: PhoneCategoryAttributes[];
     holdings?: HoldingAttributes[];
-  }>;
+  }> &
+    WithCommit &
+    WithAuthor;
 
   interface UserAttributes extends Attributes {
     username: string;
@@ -82,6 +102,13 @@ declare namespace DB {
     column: string;
     value: string;
     type: ChangedDataType;
+    userId: number;
+  }>;
+
+  type CommitAttributes = WithId<{
+    target: CommitTargetName;
+    targetId: number;
+    action: CommitActionType;
     userId: number;
   }>;
 }

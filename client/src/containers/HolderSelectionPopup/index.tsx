@@ -14,35 +14,36 @@ import ItemSelectionPopup, {
   ItemSelectionPopupProps,
 } from "layout/ItemSelectionPopup";
 import { useFilterConfig } from "hooks/api/useFetchConfig";
+import { useFetchHolder } from "hooks/api/useFetchHolder";
 
-export type ModelSelectionPopupContainerProps = {
+export type HolderSelectionPopupContainerProps = {
   onToggle: () => void;
   isOpen: boolean;
 } & Pick<ItemSelectionPopupProps, "name" | "bind">;
 
-const ModelSelectionPopupContainer: React.FC<ModelSelectionPopupContainerProps> = (
+const HolderSelectionPopupContainer: React.FC<HolderSelectionPopupContainerProps> = (
   props
 ) => {
   const { bind, ...rest } = props;
 
-  const { models } = useFilterConfig();
+  const name = bind.input.search;
+  const query = clearObject({ name });
 
-  const isIncludes = (str: string) =>
-    bind.input.search
-      ? str
-          .trim()
-          .toLowerCase()
-          .includes(bind.input.search.trim().toLowerCase())
-      : true;
+  const { holders } = useFetchHolder(query);
 
   return (
     <ItemSelectionPopup
       {...rest}
       bind={bind}
-      items={models.filter((item) => isIncludes(item.name))}
-      header="Выбор модели"
+      items={
+        holders?.items.map((item) => ({
+          name: `${item.firstName} ${item.lastName} ${item.middleName}`,
+          ...item,
+        })) ?? []
+      }
+      header="Выбор владельца"
     />
   );
 };
 
-export default ModelSelectionPopupContainer;
+export default HolderSelectionPopupContainer;

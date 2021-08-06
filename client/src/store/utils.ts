@@ -1,5 +1,9 @@
 import qs from "query-string";
-import { ActionReducerMapBuilder, Draft } from "@reduxjs/toolkit";
+import {
+  ActionReducerMapBuilder,
+  Draft,
+  SerializedError,
+} from "@reduxjs/toolkit";
 import {
   LocationChangeAction,
   LOCATION_CHANGE,
@@ -43,8 +47,31 @@ export const updateQuery = <T>(query: Partial<T>) => {
 };
 
 export function isApiError(type: any): type is Api.Error {
-  return typeof type.name === "string" && typeof type.code === "number";
+  return (
+    type !== undefined &&
+    typeof type.name === "string" &&
+    typeof type.code === "number"
+  );
 }
+
+// export const getStatus = ()
+
+export const getError: (
+  e?: SerializedError | FetchBaseQueryError
+) => Api.Error | null = (e) => {
+  const error = (e as any)?.data?.error;
+  return (error as Api.Error) ?? null;
+};
+
+export const getErrorMessage = (
+  e?: SerializedError | FetchBaseQueryError | Api.Error
+) => {
+  let err: Api.Error | null = null;
+  if (isApiError(e)) err = e;
+  else err = getError(e);
+
+  return err?.description ?? err?.message ?? "Ошибка";
+};
 
 export const splitStatus: (status: ActionStatus) => SplitStatus = (status) => {
   if (isApiError(status))
@@ -63,6 +90,7 @@ export const splitStatus: (status: ActionStatus) => SplitStatus = (status) => {
           isIdle: true,
           isSuccess: false,
           isError: false,
+          error: null,
         };
       case "loading":
         return {
@@ -70,6 +98,7 @@ export const splitStatus: (status: ActionStatus) => SplitStatus = (status) => {
           isIdle: false,
           isSuccess: false,
           isError: false,
+          error: null,
         };
 
       case "success":
@@ -78,8 +107,31 @@ export const splitStatus: (status: ActionStatus) => SplitStatus = (status) => {
           isIdle: false,
           isSuccess: true,
           isError: false,
+          error: null,
         };
     }
+};
+
+export class EmptyError extends Error {
+  key: string;
+  constructor(key: string) {
+    super(`${key} is empty`);
+    this.key = key;
+  }
+}
+
+export const checkEmptiness = <T>(obj: T) => {
+  for (const key in obj) if (obj[key] == null) throw new EmptyError(key);
+  return obj as { [K in keyof T]: NonNullable<T[K]> };
+};
+
+export const convertDate = (date: string) => {
+  const [day, month, year] = date.split(".");
+  try {
+    return new Date(Number(year), Number(month), Number(day));
+  } catch (err) {
+    throw new Error("Invalid date");
+  }
 };
 
 // type EndpointCreator<

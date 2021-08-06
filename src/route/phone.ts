@@ -5,7 +5,13 @@ import Model from "../db/models/phoneModel.model";
 import { prepareItems } from "@backend/utils/index";
 import PhoneModel from "../db/models/phoneModel.model";
 import Holder from "@backend/db/models/holder.model";
-import { Op, Order, OrderItem, WhereOperators } from "sequelize";
+import {
+  Op,
+  Order,
+  OrderItem,
+  UniqueConstraintError,
+  WhereOperators,
+} from "sequelize";
 import PhoneCategory from "@backend/db/models/phoneCategory.model";
 import Department from "@backend/db/models/department.model";
 import { convertValues } from "@backend/middleware/converter";
@@ -18,7 +24,9 @@ const router = AppRouter();
 
 router.get("/phone/byId", async (req, res) => {
   const { id } = req.query;
-  const phone = await Phone.findByPk(id, { include: [{ all: true }] }) as Api.Models.Phone;
+  const phone = (await Phone.findByPk(id, {
+    include: [{ all: true }],
+  })) as Api.Models.Phone;
 
   if (phone != null) res.send(phone);
   else res.sendStatus(404);
@@ -77,7 +85,7 @@ router.get(
 
     const valueOrNotNull = <T>(v: T) => v ?? { [Op.not]: null };
 
-    // TODO: Сделать объект позоляющий удобно опиционально фильтровать
+    // TODO: Использовать объект позоляющий удобно опиционально фильтровать
     const whereId = { [Op.notIn]: exceptIds ?? [] } as WhereOperators;
     if ((ids?.length ?? 0) > 0) whereId[Op.in] = ids;
 
@@ -124,7 +132,10 @@ router.get(
     }).catch((err) => console.error(err));
 
     // TODO: Неоптимизированный костыль, но что поделать
-    const rows = (phones ?? []).slice(offset_, offset_ + limit_) as Api.Models.Phone[];
+    const rows = (phones ?? []).slice(
+      offset_,
+      offset_ + limit_
+    ) as Api.Models.Phone[];
 
     if (phones) res.send(prepareItems(rows, phones.length, offset_));
     else
@@ -134,26 +145,41 @@ router.get(
   }
 );
 
-router.put(
+router.post(
   "/phone",
   access("user"),
-  validate(
-    {
-      //@ts-ignore
-      body: {
-        assemblyDate: tester().required(),
-      },
-      query: {
-        id: tester().required(),
-      },
-    },
-    true
-  ),
-  async (req, res) => {
-    const { query, body } = req;
-    const phone = Phone.update(body, { where: { id: query.id } });
+  validate({
+    body: {
+      data: tester().array({
+        assemblyDate: tester().isISO8601().required(),
+        accountingDate: tester().isISO8601().required(),
+        commissioningDate: tester().isISO8601().required(),
 
-    res.send();
+        factoryKey: tester().required(),
+        inventoryKey: tester().required(),
+
+        holderId: tester().isNumber().required(),
+        phoneModelId: tester().isNumber().required(),
+      }),
+    },
+  }),
+  async (req, res, next) => {
+    const { body, params } = req;
+    const { user } = params;
+
+    try {
+      const phone = await Phone.create({ ...body.data[0], authorId: user.id });
+
+      res.send(phone);
+    } catch (err) {
+      if (err instanceof UniqueConstraintError) {
+        return next(
+          new ApiError("INVALID_BODY", {
+            description: "Проверьте уникальность полей",
+          })
+        );
+      }
+    }
   }
 );
 

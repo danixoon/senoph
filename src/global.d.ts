@@ -19,3 +19,16 @@ declare global {
     interface Request {}
   }
 }
+
+declare module "winston" {
+  interface LeveledLogMethod {
+    (
+      message: string,
+      meta: { service: "api" | "db" | "server"; payload?: any }
+    ): void;
+  }
+}
+
+declare module "sequelize" {
+  interface Hookable extends HookContext {}
+}

@@ -4,6 +4,7 @@ import express, { Router } from "express";
 import dotenv from "dotenv";
 import * as bodyParser from "body-parser";
 import { logger } from "@backend/utils/index";
+import { logger as logRequest } from "@backend/middleware/logger";
 
 dotenv.config();
 
@@ -18,6 +19,7 @@ export const init = async () => {
   const app = express();
 
   app.use(bodyParser.json());
+  app.use(logRequest());
   app.use("/api", ...routers);
 
   app.use("/build", express.static(path.resolve(__dirname, "../client/build")));
@@ -31,7 +33,7 @@ export const init = async () => {
 
   server.listen(port, async () => {
     await Promise.all([initDb()]);
-    logger.info(`server is listening`, {
+    logger.info(`Сервер запущен`, {
       service: "server",
       payload: { port },
     });

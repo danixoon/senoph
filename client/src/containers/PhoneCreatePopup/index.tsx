@@ -10,6 +10,8 @@ import { InputBind, useInput } from "hooks/useInput";
 import { clearObject } from "utils";
 import { useAppDispatch, useAppSelector } from "store";
 import { updateSelection } from "store/slices/phone";
+import { useCreatePhones } from "hooks/api/useCreatePhones";
+import { getError, getErrorMessage, isApiError } from "store/utils";
 
 export type PhoneCreatePopupContainerProps = {
   onToggle: () => void;
@@ -22,8 +24,22 @@ const PhoneCreatePopupContainer: React.FC<PhoneCreatePopupContainerProps> = (
   const { ...rest } = props;
 
   const dispatch = useAppDispatch();
+  const [createPhones, info] = useCreatePhones();
 
-  return <PhoneCreatePopup {...rest} />;
+  return (
+    <PhoneCreatePopup
+      {...rest}
+      createPhones={createPhones}
+      error={getErrorMessage(info.error)}
+      status={{
+        error: getError(info.error),
+        isIdle: info.isUninitialized,
+        isError: info.isError,
+        isLoading: info.isLoading,
+        isSuccess: info.isSuccess,
+      }}
+    />
+  );
 };
 
 export default PhoneCreatePopupContainer;

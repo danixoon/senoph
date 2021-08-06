@@ -11,6 +11,8 @@ type ValidatorExtensions = {
   test: (value: string, key: string) => ValidationResult;
   message: (str: string) => Validator;
   required: () => Validator;
+  array: (schema: ValidationSchema<any>) => Validator;
+  isNumber: () => Validator;
 };
 type Validator = ValidatorExtensions &
   {
@@ -24,13 +26,50 @@ type ValidatorConfig<Q = any, B = any> = {
 
 type TesterContext = { property: string };
 type Tester = {
-  test: (this: TesterContext, str: string) => boolean | string;
+  test: (this: TesterContext, value: any) => boolean | string;
   message?: string;
 };
 
 export const tester = () => {
+  let isRequired: boolean = false;
   const testers: Tester[] = [];
   const extensions: ValidatorExtensions = {
+    isNumber: () => {
+      testers.push({
+        test: function (v) {
+          return typeof v === "number"
+            ? true
+            : `Значение параметра '${this.property}' не является числовым.`;
+        },
+      });
+      return proxy;
+    },
+    array: (schema) => {
+      testers.push({
+        test: function (v) {
+          if (!Array.isArray(v))
+            return `Значение параметра '${this.property}' не является массивом.`;
+
+          if (v.length === 0)
+            return `Параметром '${this.property}' был передан пустой массив.`;
+
+          try {
+            for (const value of v) {
+              validateSchema(schema, value, { target: "query", strict: true });
+            }
+
+            return true;
+          } catch (err) {
+            if (err instanceof ValidationError) {
+              return err.message;
+            }
+            return false;
+          }
+        },
+      });
+
+      return proxy;
+    },
     test: (value, key) => {
       const result: ValidationResult = { isValid: true };
       for (const t of testers) {
@@ -60,6 +99,7 @@ export const tester = () => {
           );
         },
       });
+      isRequired = true;
       return proxy;
     },
   };
@@ -71,6 +111,8 @@ export const tester = () => {
       return (...args: any[]) => {
         testers.push({
           test: (v: string) => {
+            if (v === undefined) return !isRequired;
+
             const isValid = target[property](v, ...args);
 
             return isValid;
@@ -104,9 +146,10 @@ export const validateSchema = <T>(
     const objectKeys = Object.keys(object);
 
     for (const k in schema) {
-      if (!objectKeys.includes(k))
-        throw new ValidationError(`Параметр '${k}' обязателен.`, config.target);
-      else objectKeys.splice(objectKeys.indexOf(k), 1);
+      // НЕ нужно, ибо метод required выполняет эту функцию
+      // if (!objectKeys.includes(k))
+      // throw new ValidationError(`Параметр '${k}' обязателен.`, config.target);
+      objectKeys.splice(objectKeys.indexOf(k), 1);
     }
 
     if (objectKeys.length > 0)
@@ -131,26 +174,28 @@ export const validate: <P, Q, B, CQ extends Q, CB extends B>(
     Record<keyof CB, Validator>
   >,
   strict?: boolean
-) => Api.Request<P, any, Q, B> = (config, strict) => (req, res, next) => {
-  const { query, body } = req;
-  try {
-    if (config.query)
-      validateSchema(config.query, query, { strict, target: "query" });
-    if (config.body)
-      validateSchema(config.body, body, { strict, target: "body" });
+) => Api.Request<P, any, Q, B> =
+  (config, strict = true) =>
+  (req, res, next) => {
+    const { query, body } = req;
+    try {
+      if (config.query)
+        validateSchema(config.query, query, { strict, target: "query" });
+      if (config.body)
+        validateSchema(config.body, body, { strict, target: "body" });
 
-    next();
-  } catch (err) {
-    if (err instanceof ValidationError) {
-      const e = err as ValidationError;
-      next(
-        new ApiError(
-          e.target === "query"
-            ? errorType.INVALID_QUERY
-            : errorType.INVALID_BODY,
-          { description: err.message }
-        )
-      );
-    } else throw err;
-  }
-};
+      next();
+    } catch (err) {
+      if (err instanceof ValidationError) {
+        const e = err as ValidationError;
+        next(
+          new ApiError(
+            e.target === "query"
+              ? errorType.INVALID_QUERY
+              : errorType.INVALID_BODY,
+            { description: err.message }
+          )
+        );
+      } else throw err;
+    }
+  };

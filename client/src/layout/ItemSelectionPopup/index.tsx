@@ -15,20 +15,17 @@ import "./style.styl";
 import Paginator from "components/Paginator";
 import PhoneEditActions from "layout/PhoneEditActions";
 
-export type ModelSelectionPopupProps = OverrideProps<
+export type ItemSelectionPopupProps = OverrideProps<
   PopupProps,
   {
-    bind: InputBind;
+    bind: InputBind<{ value: string; search: string }>;
     name: string;
-    items: { id: any; name: string }[];
+    items: { id: any; name: string; href?: string }[];
+    header: string;
   }
 >;
 
-// const Content: React.FC<{}> = (props) => {
-
-// };
-
-const ModelItem: React.FC<{
+const Item: React.FC<{
   id: any;
   name: string;
   href: string;
@@ -37,9 +34,15 @@ const ModelItem: React.FC<{
   const { id, name, href, onSelect } = props;
   return (
     <Layout flow="row">
-      <Label> #{id}</Label>
+      <Link isMonospace href={href}>
+        #{id}
+      </Link>
       <Hr vertical />
-      <Link isMonospace href={href} style={{ marginRight: "2rem" }}>
+      <Link
+        isMonospace
+        onClick={() => onSelect(id)}
+        style={{ marginRight: "2rem" }}
+      >
         {name}
       </Link>
       <Button
@@ -54,44 +57,35 @@ const ModelItem: React.FC<{
   );
 };
 
-const ModelSelectionPopup: React.FC<ModelSelectionPopupProps> = (props) => {
-  const { items, bind, name, ...rest } = props;
-  const [searchBind] = useInput({ search: null });
-
-  // TODO: Регистронезависимая регулярка через флаги
-  const tester = new RegExp(
-    (searchBind.input.search ?? "").toLowerCase().replaceAll("\\", "\\\\"),
-    "gm"
-  );
+const ItemSelectionPopup: React.FC<ItemSelectionPopupProps> = (props) => {
+  const { items, bind, name, header, ...rest } = props;
+  // const [searchBind] = useInput<{ search: string }>({ search: null });
 
   return (
     <Popup {...rest} size="sm" closeable noPadding>
       <PopupTopBar>
         <Layout flex="1">
           <Header align="center" hr style={{ flex: 1 }}>
-            Выборка модели
+            {header}
           </Header>
           <Input
             name="search"
-            {...searchBind}
+            {...bind}
             inputProps={{ placeholder: "Запрос.." }}
           />
         </Layout>
       </PopupTopBar>
-      <Layout padding="md" flex="1" className="model-list">
+      <Layout padding="md" flex="1" className="items-list">
         {items
-          .filter((item) =>
-            searchBind.input.search
-              ? tester.test(item.name.toLowerCase())
-              : true
-          )
+          // .filter((item) => isIncludes(item.name))
           .map((item) => (
-            <ModelItem
-              href={`/model?selectedId=${item.id}`}
+            <Item
+              key={item.id}
+              href={item.href ?? "#"}
               {...item}
               onSelect={(id) => {
                 bind.onChange({ target: { name, value: id } });
-                if(rest.onToggle) rest.onToggle(false);
+                if (rest.onToggle) rest.onToggle(false);
               }}
             />
           ))}
@@ -100,4 +94,4 @@ const ModelSelectionPopup: React.FC<ModelSelectionPopupProps> = (props) => {
   );
 };
 
-export default ModelSelectionPopup;
+export default ItemSelectionPopup;

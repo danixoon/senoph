@@ -16,7 +16,7 @@ const convertItem = (item: any) => {
 
 export const api = createApi({
   reducerPath: "api",
-  tagTypes: ["commit"],
+  tagTypes: ["commit", "holder", "phone"],
   baseQuery: fetchBaseQuery({
     baseUrl: "/api",
     prepareHeaders: (headers, { getState }) => {
@@ -42,6 +42,8 @@ export const api = createApi({
       Api.GetQuery<"get", "/phone">
     >({
       query: (params) => ({ url: "phone", params }),
+      providesTags: (r, e, a) =>
+        (r?.items ?? []).map((item) => ({ type: "phone", id: item.id })),
     }),
     fetchSelectedPhones: builder.query<
       Api.GetResponse<"get", "/phone">,
@@ -54,6 +56,7 @@ export const api = createApi({
       Api.GetQuery<"get", "/phone/byId">
     >({
       query: (params) => ({ url: "phone/byId", params }),
+      providesTags: (r, e, a) => [{ type: "phone", id: a.id }],
     }),
     fetchFilterConfig: builder.query<
       Api.GetResponse<"get", "/filter">,
@@ -102,6 +105,26 @@ export const api = createApi({
       }),
       invalidatesTags: (r, e, a) => [{ type: "commit", id: a.target }],
     }),
+    fetchHolders: builder.query<
+      Api.GetResponse<"get", "/holder">,
+      Api.GetQuery<"get", "/holder">
+    >({
+      query: (params) => ({
+        url: "holder",
+        params,
+      }),
+    }),
+    createPhones: builder.mutation<
+      Api.GetResponse<"post", "/phone">,
+      Api.GetBody<"post", "/phone">["data"]
+    >({
+      query: (params) => ({
+        url: "phone",
+        body: { data: params },
+        method: "POST"
+      }),
+      invalidatesTags: ["phone"],
+    }),
   }),
 });
 
@@ -113,5 +136,7 @@ export const {
   useUserLoginMutation,
   useFetchChangesQuery,
   useMakeChangesMutation,
-  useUndoChangesMutation
+  useUndoChangesMutation,
+  useFetchHoldersQuery,
+  useCreatePhonesMutation,
 } = api;

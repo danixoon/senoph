@@ -78,7 +78,7 @@ declare type StateCreator<T extends object> = () => T;
 
 declare type ContainerProps<
   T
-> = T extends import("react-redux").ConnectedComponent<_, infer P> ? P : never;
+> = T extends import("react-redux").ConnectedComponent<infer _, infer P> ? P : never;
 
 declare type QueryError = {
   message: string;

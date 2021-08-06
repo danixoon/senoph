@@ -7,6 +7,7 @@ import { ReactComponent as ArrowIcon } from "icons/popupArrow.svg";
 import { AnimatePresence, motion, HTMLMotionProps } from "framer-motion";
 import PopupLayout from "layout/PopupLayout";
 import PopupLayer from "providers/PopupLayer";
+import { PopupLayerContext } from "providers/PopupLayerProvider";
 
 export type AltPopupProps = OverrideProps<
   React.PropsWithChildren<HTMLMotionProps<"div">>,
@@ -20,6 +21,9 @@ export type AltPopupProps = OverrideProps<
 const AltPopup: React.FC<AltPopupProps> = (props: AltPopupProps) => {
   const positions = ["top", "right", "bottom", "left"];
   const { children, target, position = "left", zIndex, ...rest } = props;
+
+  const popupContext = React.useContext(PopupLayerContext);
+  const popupZIndex = zIndex ?? popupContext ? "popup" : "normal";
 
   const inversePosition = (position: AltPopupProps["position"]) => {
     const id = positions.findIndex((p) => p === position);
@@ -65,7 +69,7 @@ const AltPopup: React.FC<AltPopupProps> = (props: AltPopupProps) => {
 
   const mergedProps = mergeProps(
     {
-      className: mergeClassNames("alt-popup", zIndex && `alt-popup_z-${zIndex}`),
+      className: mergeClassNames("alt-popup", `alt-popup_z-${popupZIndex}`),
       style: {
         [`margin${inversedPos[0].toUpperCase() + inversedPos.slice(1)}`]: "9px",
         ...getPosition(),

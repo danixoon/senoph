@@ -76,7 +76,6 @@ router.post(
       role,
     })) as Api.Models.User;
 
-    console.log(hash);
     res.send(user);
   }
 );

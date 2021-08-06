@@ -7,8 +7,98 @@ import PhoneModel from "@backend/db/models/phoneModel.model";
 import PhoneType from "@backend/db/models/phoneType.model";
 import User from "@backend/db/models/user.model";
 import { randomUUID } from "crypto";
+import { Op, WhereOperators, WhereOptions } from "sequelize";
 
 // import { sequelize } from "../db";
+
+interface AddFilter<T> {}
+
+export interface Filter<T> {
+  add: (
+    key: keyof T,
+    ...conditions: (keyof WhereOperators | WhereOperators)[]
+  ) => this;
+  addWith: (
+    key: keyof T,
+    value: any,
+    ...conditions: (keyof WhereOperators | WhereOperators)[]
+  ) => this;
+}
+
+export class Filter<T extends object = any> {
+  added: [symbol | string | number, any][] = [];
+  source: T;
+  private conditions: Partial<Record<keyof T, any>> = {};
+  constructor(source: T) {
+    this.source = source;
+  }
+
+  or = (filter: (filter: Filter) => Filter) => {
+    const filtered = filter(new Filter(this.source));
+    const value = Object.entries(filtered.where).map(([k, e]) => ({ [k]: e }));
+
+    if (value.length !== 0) {
+      this.conditions = {
+        ...this.conditions,
+        [Op.or]: value,
+      };
+
+      this.added.push([Op.or, value]);
+    }
+
+    return this;
+  };
+
+  addWith = (
+    key: keyof T,
+    value: any,
+    ...conditions: (keyof WhereOperators | WhereOperators)[]
+  ) => {
+    if (value === undefined) return this;
+
+    const f = new Filter({ [key]: value });
+    f.add(key as string, ...conditions);
+
+    this.conditions = { ...this.conditions, ...f.where };
+    this.added = [...this.added, ...f.added];
+
+    return this;
+  };
+
+  add = (
+    key: keyof T,
+    ...conditions: (keyof WhereOperators | WhereOperators)[]
+  ) => {
+    const target = this.source[key];
+    if (conditions.length === 0 && typeof target !== "undefined") {
+      this.conditions = { ...this.conditions, [key]: target };
+      this.added.push([key, target]);
+    } else
+      for (const condition of conditions) {
+        if (typeof target !== "undefined") {
+          const value =
+            typeof condition === "symbol"
+              ? {
+                  ...(this.conditions[key] ?? {}),
+                  [condition]: target,
+                }
+              : condition;
+
+          this.conditions = {
+            ...this.conditions,
+            [key]: value,
+          };
+
+          this.added.push([key, value]);
+        }
+      }
+
+    return this;
+  };
+  get where() {
+    return this.conditions;
+  }
+}
 
 const randomDate = (from = 2000, length = 15) =>
   new Date(
@@ -27,6 +117,13 @@ const mapGenerated = <T = any>(size: number, f: (i: number) => T) =>
   new Array(size).fill(0).map((_, i) => f(i));
 
 export const fillTestDatabase = async (size: number = 100) => {
+  const user = await User.create({
+    username: "admin",
+    passwordHash:
+      "$2b$13$PwLX48c7HTCmRfqbsd8pq.f6BCkNYnQcyfYg95hx7p2jgLCd2jkqC",
+    role: "admin",
+  });
+
   const depsNames = [
     "Кардиологическое отделение",
     "Отделение информационных технологий",
@@ -150,6 +247,8 @@ export const fillTestDatabase = async (size: number = 100) => {
 
     phoneModelId: getRandomItem(models).id,
     holderId: getRandomItem(holders).id,
+    authorId: user.id,
+    status: null,
   }));
 
   const phones = await Phone.bulkCreate(phonesData);
@@ -183,14 +282,6 @@ export const fillTestDatabase = async (size: number = 100) => {
   });
 
   const holdings = await Holding.bulkCreate(holdingData);
-
-  
-
-  const user = await User.create({
-    username: "admin",
-    passwordHash: "$2b$13$PwLX48c7HTCmRfqbsd8pq.f6BCkNYnQcyfYg95hx7p2jgLCd2jkqC",
-    role: "admin",
-  });
 
   // console.log("fill complete.");
 };

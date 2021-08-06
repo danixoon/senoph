@@ -27,6 +27,72 @@ describe("route testing", () => {
     await init();
   });
 
+  it("api commit approve", async (ok) => {
+    const { data } = await axios.put(
+      `${host}/commit/phone`,
+      {},
+      {
+        headers: authHeader,
+        params: { id: 1, action: "approve" },
+      }
+    );
+    ok();
+  });
+
+  it("api commit decline", async (ok) => {
+    const { data } = await axios.put(
+      `${host}/commit/phone`,
+      {},
+      {
+        headers: authHeader,
+        params: { id: 1, action: "decline" },
+      }
+    );
+    ok();
+  });
+
+  it("api phone post", async (ok) => {
+    const { data } = await axios.post(
+      `${host}/phone`,
+      {
+        data: [
+          {
+            assemblyDate: new Date().toISOString(),
+            accountingDate: new Date().toISOString(),
+            commissioningDate: new Date().toISOString(),
+
+            factoryKey: "123",
+            inventoryKey: "123",
+
+            holderId: 1,
+            phoneModelId: 1,
+          },
+        ],
+      },
+      {
+        headers: authHeader,
+        // params: {},
+      }
+    );
+    // .catch((err) =>
+    //  console.log(err));
+
+    ok();
+  });
+
+  it("holder fetching", async (ok) => {
+    const { data } = await axios.get(
+      `${host}/holder`,
+      {},
+      {
+        headers: authHeader,
+        params: { username: "test", password: "test", role: "user" },
+      }
+    );
+    expect(data).toBeDefined();
+    ok();
+  });
+
   it("account create without token", async (ok) => {
     await expectError(axios.post(`${host}/account`), 403, "ACCESS_DENIED");
     ok();

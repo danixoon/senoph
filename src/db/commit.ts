@@ -1,11 +1,39 @@
 import { Model } from "sequelize-typescript";
-import { Op } from "sequelize";
+import { ModelDefined, ModelStatic, Op } from "sequelize";
 import Change from "./models/change.model";
 import Department from "./models/department.model";
 import Holder from "./models/holder.model";
 import Holding from "./models/holding.model";
 import Phone from "./models/phone.model";
+import CommitModel from "./models/commit.model";
 import PhoneCategory from "./models/phoneCategory.model";
+import { models } from "./models";
+import { logger } from "../utils";
+
+// export const bindHooks = (
+//   name: CommitTargetName,
+//   target: ModelDefined<any, any>
+// ) => {
+//   target.addHook("beforeBulkCreate", (instances, options) => {
+//     const { context } = options;
+//     if (!context) {
+//       logger.info("Создание без коммита", {
+//         service: "db",
+//         payload: { target: name },
+//       });
+//       return;
+//     }
+
+//     const commits: DB.CommitAttributes[] = instances.map((instance) => ({
+//       action: "create",
+//       targetId: (instance as any).id,
+//       target: name,
+//       userId: context.userId,
+//     }));
+
+//     CommitModel.bulkCreate(commits);
+//   });
+// };
 
 const mapObject = (
   obj: any,
@@ -68,30 +96,23 @@ const promisifyObject = async <T>(
   );
 
   const result = {} as any;
-  console.log(resolved);
+  // console.log(resolved);
 
   for (const [key, value] of resolved) {
     setByPath(result, key, value);
-    console.log(value);
+    // console.log(value);
   }
 
   return result;
 };
 
-type ModelMap = {
-  Phone: typeof Phone;
-  PhoneCategory: typeof PhoneCategory;
-  Department: typeof Department;
-  Holder: typeof Holder;
-  Holding: typeof Holding;
-};
-const models: ModelMap = {
-  Phone,
-  PhoneCategory,
-  Department,
-  Holder,
-  Holding,
-};
+// type ModelMap = {
+//   Phone: typeof Phone;
+//   PhoneCategory: typeof PhoneCategory;
+//   Department: typeof Department;
+//   Holder: typeof Holder;
+//   Holding: typeof Holding;
+// };
 
 export class Commit {
   // userId: number;

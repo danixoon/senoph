@@ -13,7 +13,7 @@ import ChangesContext from "providers/ChangesContext";
 
 export type PhonePopupContainerProps = {};
 
-const CHANGES_TARGET: ChangesTargetName = "Phone";
+const CHANGES_TARGET: ChangesTargetName = "phone";
 
 const PhonePopupContainer: React.FC<PhonePopupContainerProps> = (props) => {
   const { ...rest } = props;
