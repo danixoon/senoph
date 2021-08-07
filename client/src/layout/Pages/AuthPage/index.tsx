@@ -23,7 +23,7 @@ import { useFilterConfig } from "hooks/api/useFetchConfig";
 
 import { useInput } from "hooks/useInput";
 import { useTimeout } from "hooks/useTimeout";
-import FieldEditPopup from "layout/FieldEditPopup";
+import FieldEditPopup from "layout/Popups/FieldEditPopup";
 import PhoneEditActions from "layout/PhoneEditActions";
 import PopupLayer from "providers/PopupLayer";
 import * as React from "react";

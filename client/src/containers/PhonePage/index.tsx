@@ -7,7 +7,7 @@ import {
 } from "react-router";
 
 import Layout from "components/Layout";
-import PhonePage from "layout/PhonePage";
+import PhonePage from "layout/Pages/PhonePage";
 import { useFetchPhonesQuery } from "store/slices/api";
 import TopBarLayer from "providers/TopBarLayer";
 import qs from "query-string";
@@ -23,7 +23,7 @@ import Hr from "components/Hr";
 import Badge from "components/Badge";
 import PhoneSelectionPopupContainer from "containers/PhoneSelectionPopup";
 import { usePopup } from "hooks/usePopup";
-import FieldEditPopup from "layout/FieldEditPopup";
+import FieldEditPopup from "layout/Popups/FieldEditPopup";
 import { useInput } from "hooks/useInput";
 // import { PhonePageContext } from "./context";
 import { useStoreQueryInput } from "hooks/useStoreQueryInput";

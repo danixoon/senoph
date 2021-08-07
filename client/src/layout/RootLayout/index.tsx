@@ -64,7 +64,7 @@ const RootLayout: React.FC<{}> = (props) => {
                   <Route path="/phone">
                     <PhonePageContainer />
                   </Route>
-                  <Route path="/holding">
+                  <Route path="/commit">
                     <></>
                   </Route>
                 </Switch>

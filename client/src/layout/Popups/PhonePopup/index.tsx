@@ -18,7 +18,7 @@ import { useFilterConfig } from "hooks/api/useFetchConfig";
 import { useMakeChanges } from "hooks/api/useMakeChanges";
 import { useUndoChanges } from "hooks/api/useUndoChanges";
 import { useInput } from "hooks/useInput";
-import FieldEditPopup from "layout/FieldEditPopup";
+import FieldEditPopup from "layout/Popups/FieldEditPopup";
 import PhoneEditActions from "layout/PhoneEditActions";
 import PopupLayer from "providers/PopupLayer";
 import * as React from "react";

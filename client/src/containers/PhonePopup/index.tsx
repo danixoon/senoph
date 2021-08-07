@@ -3,7 +3,7 @@ import React from "react";
 import LinkItem, { LinkItemProps } from "components/LinkItem";
 import { useLocation } from "react-router";
 import { useFetchPhone } from "hooks/api/useFetchPhone";
-import PhonePopup from "layout/PhonePopup";
+import PhonePopup from "layout/Popups/PhonePopup";
 import { useAppDispatch, useAppSelector } from "store";
 import { changeMode, updateFilter } from "store/slices/phone";
 import { useChanges } from "hooks/api/useChanges";

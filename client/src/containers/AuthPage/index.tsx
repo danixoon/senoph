@@ -1,4 +1,4 @@
-import AuthPage from "layout/AuthPage";
+import AuthPage from "layout/Pages/AuthPage";
 import React from "react";
 import { useAppDispatch, useAppSelector } from "store";
 import { login } from "store/slices/app";

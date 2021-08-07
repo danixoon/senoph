@@ -26,7 +26,7 @@ import qs from "query-string";
 import "./style.styl";
 import Paginator from "components/Paginator";
 import PhoneEditActions from "layout/PhoneEditActions";
-import FieldEditPopup from "layout/FieldEditPopup";
+import FieldEditPopup from "layout/Popups/FieldEditPopup";
 import PopupLayer from "providers/PopupLayer";
 
 type PhoneListItem = {
