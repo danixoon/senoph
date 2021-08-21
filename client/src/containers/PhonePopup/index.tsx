@@ -2,7 +2,7 @@ import React from "react";
 
 import LinkItem, { LinkItemProps } from "components/LinkItem";
 import { useLocation } from "react-router";
-import { useFetchPhone } from "hooks/api/useFetchPhone";
+
 import PhonePopup from "layout/Popups/PhonePopup";
 import { useAppDispatch, useAppSelector } from "store";
 import { changeMode, updateFilter } from "store/slices/phone";
@@ -10,6 +10,8 @@ import { useChanges } from "hooks/api/useChanges";
 import { useMakeChanges } from "hooks/api/useMakeChanges";
 import { useUndoChanges } from "hooks/api/useUndoChanges";
 import ChangesContext from "providers/ChangesContext";
+
+import { api } from "store/slices/api";
 
 export type PhonePopupContainerProps = {};
 
@@ -19,10 +21,19 @@ const PhonePopupContainer: React.FC<PhonePopupContainerProps> = (props) => {
   const { ...rest } = props;
 
   const { mode, filter } = useAppSelector((store) => store.phone);
-  const { phone } = useFetchPhone(filter.selectedId);
+  const { data: phone, error } = api.useFetchPhoneQuery(
+    {
+      id: filter.selectedId,
+    },
+    { skip: filter.selectedId == null }
+  );
 
   const dispatch = useAppDispatch();
   const [changes, makeChanges, undoChanges] = useChanges(CHANGES_TARGET);
+
+  const [deletePhone] = api.usePhoneDeleteMutation();
+
+  if (error) dispatch(updateFilter({ selectedId: null }));
 
   return (
     <ChangesContext.Provider
@@ -34,10 +45,11 @@ const PhonePopupContainer: React.FC<PhonePopupContainerProps> = (props) => {
         size="lg"
         isOpen={filter.selectedId != null}
         onToggle={() => dispatch(updateFilter({ selectedId: null }))}
-        phone={phone}
+        phone={phone ?? null}
         changes={changes}
         makeChanges={makeChanges}
         undoChanges={undoChanges}
+        onDelete={() => (phone ? deletePhone({ id: phone.id }) : null)}
         isEditMode={mode === "edit"}
         changeEditMode={() =>
           dispatch(changeMode(mode === "edit" ? "view" : "edit"))

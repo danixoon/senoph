@@ -7,16 +7,16 @@ import Phone from "./phone.model";
 import PhoneCategory from "./phoneCategory.model";
 import PhoneModel from "./phoneModel.model";
 
-export const models = {
-  phone: Phone,
-  phoneModel: PhoneModel,
-  commit: Commit,
-  phoneCategory: PhoneCategory,
-  department: Department,
-  holder: Holder,
-  holding: Holding,
-};
+// export const models = {
+//   phone: Phone,
+//   phoneModel: PhoneModel,
+//   commit: Commit,
+//   phoneCategory: PhoneCategory,
+//   department: Department,
+//   holder: Holder,
+//   holding: Holding,
+// };
 
-export const getModel = (name: keyof typeof models) => {
-  return models[name] as any as typeof Model;
-};
+// export const getModel = (name: keyof typeof models) => {
+//   return models[name] as any as typeof Model;
+// };

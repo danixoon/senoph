@@ -1,7 +1,7 @@
 import React from "react";
 
 type ChangesContextState = {
-  changes: Record<number, any>;
+  changes: any[];
   target: ChangesTargetName;
   targetId: number;
 };

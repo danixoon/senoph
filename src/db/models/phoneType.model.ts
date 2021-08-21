@@ -16,7 +16,7 @@ import { Optional } from "sequelize/types";
 @Table
 export default class PhoneType extends Model<
   DB.PhoneTypeAttributes,
-  OptionalId<DB.PhoneTypeAttributes>
+  DB.CreateAttributes<DB.PhoneTypeAttributes>
 > {
   @AllowNull(false)
   @Column(DataType.STRING)

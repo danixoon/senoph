@@ -248,10 +248,15 @@ export const fillTestDatabase = async (size: number = 100) => {
     phoneModelId: getRandomItem(models).id,
     holderId: getRandomItem(holders).id,
     authorId: user.id,
-    status: null,
+    status:
+      Math.random() > 0.5
+        ? null
+        : Math.random() > 0.5
+        ? ("create-pending" as const)
+        : ("delete-pending" as const),
   }));
 
-  const phones = await Phone.bulkCreate(phonesData);
+  const phones = await Phone.bulkCreate(phonesData);  
   const categories = Promise.all(
     mapGenerated(size - 5, () => {
       const phoneId = getRandomItem(phones).id;

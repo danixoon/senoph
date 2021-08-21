@@ -48,3 +48,57 @@ export const clearObject = function <T>(obj: T) {
 
   return filtered as { [K in keyof T]: Exclude<T[K], null> };
 };
+
+type ExtractOnly<T, P> = UnionToIntersection<
+  { [K in keyof T]: K } extends {
+    [key: string]: infer V;
+  }
+    ? V extends keyof T
+      ? T[V] extends P
+        ? { [K in V]: T[V] }
+        : never
+      : never
+    : never
+>;
+
+// type Ex = ExtractOnly<{ owo: string; name: number }, string>;
+// type keys = keyof Ex;
+
+export const groupBy = <T, K extends keyof T>(
+  list: T[],
+  getKey: (value: T) => any
+) => {
+  const map = new Map<any, T[]>();
+  for (const item of list) {
+    const key = getKey(item);
+    map.set(key, [...(map.get(key) ?? []), item]);
+  }
+
+  return map;
+};
+
+// export const groupBy = <
+//   T,
+//   K extends keyof ExtractOnly<T, string | boolean | number>,
+//   P extends K extends keyof T ? K : never
+// >(
+//   list: T[],
+//   key: K
+// ) =>
+//   list.reduce(
+//     (p, c) => ({
+//       ...p,
+//       [(c as any)[key]]: [...((p as any)[(p as any)[key]] ?? []), c],
+//     }),
+//     {} as Record<T[P], T[]>
+//   );
+
+// export const t = groupBy(
+//   [
+//     { owo: true, foo: "sv" },
+//     { owo: false, foo: "sf" },
+//   ],
+//   "owo"
+// );
+
+// console.log(t);

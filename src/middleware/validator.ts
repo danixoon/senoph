@@ -37,7 +37,9 @@ export const tester = () => {
     isNumber: () => {
       testers.push({
         test: function (v) {
-          return typeof v === "number"
+          const value = parseInt(v);
+
+          return !isNaN(value)
             ? true
             : `Значение параметра '${this.property}' не является числовым.`;
         },
@@ -72,6 +74,9 @@ export const tester = () => {
     },
     test: (value, key) => {
       const result: ValidationResult = { isValid: true };
+      // TODO: Доделать этот валидатор ААА
+      if (!isRequired && value === undefined) return result;
+
       for (const t of testers) {
         const isValid = t.test.call({ property: key }, value) as ReturnType<
           Tester["test"]
@@ -164,7 +169,11 @@ export const validateSchema = <T>(
     const value = object[key];
 
     const r = validator.test(value, key);
-    if (!r.isValid) throw new ValidationError(r.message, config.target);
+    if (!r.isValid)
+      throw new ValidationError(
+        r.message ?? `Неверный параметр '${key}'`,
+        config.target
+      );
   }
 };
 

@@ -20,10 +20,15 @@ export const validTableNames: readonly ChangesTargetName[] = [
 ];
 export const validDataTypes: readonly ChangedDataType[] = ["date", "number", "string"];
 
+
+class DbModel<T, K> extends Model<T, K>  {
+  createdAt: string;
+}
+
 @Table
-export default class Change extends Model<
+export default class Change extends DbModel<
   DB.ChangeAttributes,
-  OptionalId<DB.ChangeAttributes>
+  DB.CreateAttributes<DB.ChangeAttributes>
 > {
   @Validate({ isIn: [validTableNames] })
   @AllowNull(false)

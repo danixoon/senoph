@@ -8,7 +8,7 @@ import {
 
 import Layout from "components/Layout";
 import PhonePage from "layout/Pages/PhonePage";
-import { useFetchPhonesQuery } from "store/slices/api";
+import { api } from "store/slices/api";
 import TopBarLayer from "providers/TopBarLayer";
 import qs from "query-string";
 import { useQueryInput } from "hooks/useQueryInput";
@@ -51,7 +51,7 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
   const selectionIdsSet = new Set(rest.selectionIds);
 
   const filterData = useFilterConfig();
-  const { data: itemsData } = useFetchPhonesQuery({
+  const { data: itemsData } = api.useFetchPhonesQuery({
     ...denullObject(filter),
     amount: PAGE_ITEMS,
     offset: filter.offset < 0 ? 0 : filter.offset,

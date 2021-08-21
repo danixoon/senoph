@@ -114,6 +114,16 @@ export const api = createApi({
         params,
       }),
     }),
+    fetchPhonesCommit: builder.query<
+      Api.GetResponse<"get", "/phone/commit">,
+      Api.GetQuery<"get", "/phone/commit">
+    >({
+      query: (params) => ({
+        url: "phone/commit",
+        params,
+      }),
+      providesTags: ["phone", "commit"],
+    }),
     createPhones: builder.mutation<
       Api.GetResponse<"post", "/phone">,
       Api.GetBody<"post", "/phone">["data"]
@@ -121,22 +131,66 @@ export const api = createApi({
       query: (params) => ({
         url: "phone",
         body: { data: params },
-        method: "POST"
+        method: "POST",
       }),
       invalidatesTags: ["phone"],
+    }),
+    commitPhone: builder.mutation<
+      Api.GetResponse<"put", "/commit/phone">,
+      Api.GetBody<"put", "/commit/phone">
+    >({
+      query: (params) => ({
+        url: "commit/phone",
+        body: params,
+        method: "PUT",
+      }),
+      invalidatesTags: (r, e, a) => ["phone", "commit"],
+    }),
+    commitChangesApprove: builder.mutation<
+      Api.GetResponse<"post", "/commit">,
+      Api.GetQuery<"post", "/commit">
+    >({
+      query: (params) => ({
+        url: "commit",
+        params,
+        method: "PUT",
+      }),
+      invalidatesTags: (r, e, a) => ["phone", "commit"],
+    }),
+    commitChangesDecline: builder.mutation<
+      Api.GetResponse<"delete", "/commit">,
+      Api.GetQuery<"delete", "/commit">
+    >({
+      query: (params) => ({
+        url: "commit",
+        params,
+        method: "DELETE",
+      }),
+      invalidatesTags: (r, e, a) => ["phone", "commit"],
+    }),
+    phoneDelete: builder.mutation<
+      Api.GetResponse<"delete", "/phone">,
+      Api.GetQuery<"delete", "/phone">
+    >({
+      query: (params) => ({
+        url: "phone",
+        params,
+        method: "DELETE",
+      }),
+      invalidatesTags: (r, e, a) => ["phone", "commit"],
     }),
   }),
 });
 
 // TODO: Learn how names generated in typescript with prefix from user-defined object
-export const {
-  useFetchPhonesQuery,
-  useFetchFilterConfigQuery,
-  useFetchPhoneQuery,
-  useUserLoginMutation,
-  useFetchChangesQuery,
-  useMakeChangesMutation,
-  useUndoChangesMutation,
-  useFetchHoldersQuery,
-  useCreatePhonesMutation,
-} = api;
+// export const {
+//   useFetchPhonesQuery,
+//   useFetchFilterConfigQuery,
+//   useFetchPhoneQuery,
+//   useUserLoginMutation,
+//   useFetchChangesQuery,
+//   useMakeChangesMutation,
+//   useUndoChangesMutation,
+//   useFetchHoldersQuery,
+//   useCreatePhonesMutation,
+// } = api;

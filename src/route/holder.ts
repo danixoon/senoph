@@ -9,7 +9,7 @@ import Model from "../db/models/phoneModel.model";
 import { Filter } from "@backend/utils/db";
 import { Op } from "sequelize";
 import Holder from "@backend/db/models/holder.model";
-import { prepareItems } from "../utils";
+import { handler, prepareItems } from "../utils";
 
 const router = AppRouter();
 
@@ -23,7 +23,7 @@ router.get(
       departmentId: tester().isNumeric(),
     },
   }),
-  async (req, res, next) => {
+  handler(async (req, res, next) => {
     const { name } = req.query;
     const filter = new Filter(req.query);
 
@@ -48,7 +48,7 @@ router.get(
     res.send(
       prepareItems(holders.rows as Api.Models.Holder[], holders.count, 0)
     );
-  }
+  })
 );
 
 export default router;

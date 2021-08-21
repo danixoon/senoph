@@ -20,6 +20,6 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
       service: "api",
       payload: { ...e, url: req.url },
     });
-    next(err);
+    // next(err);
   }
 };

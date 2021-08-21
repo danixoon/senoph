@@ -9,7 +9,8 @@
     "backend:start": "NODE_ENV=production node ./build/index.js",
     "backend:build": "yarn && rm -rf ./build && NODE_ENV=production ttsc",
     "backend:test": "NODE_ENV=test jest --runInBand --forceExit",
-    "backend:test:debug": "NODE_ENV=test node --inspect -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand --forceExit"
+    "backend:test:debug": "NODE_ENV=test node --inspect -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand --forceExit",
+    "test": "node --inspect -r ts-node/register -r tsconfig-paths/register src/parser.ts"
   },
   "devDependencies": {
     "@babel/core": "^7.12.3",

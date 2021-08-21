@@ -16,11 +16,12 @@ declare type CommitTargetName = keyof Pick<
 >;
 
 declare type ChangedDataType = "string" | "date" | "number";
-declare type CommitActionType = "create" | "delete";
+declare type CommitActionType = "approve" | "decline";
 declare type CommitStatus = "delete-pending" | "create-pending";
 
 declare type WithCommit = {
   status?: CommitStatus | null;
+  statusAt?: string;
 };
 
 // declare type WithCommitStatus = { status: CommitStatus };
@@ -33,45 +34,44 @@ declare type HookContext = { context?: { userId: number } };
 // declare type Attributify<T> = T extends SeqModel<infer A, infer _> ? A : never;
 
 declare namespace DB {
-  interface Attributes {
-    id: number;
-  }
+  type CreateAttributes<T> = Omit<OptionalId<T>, "createdAt">;
+  type Attributes<T> = WithId<T> & { createdAt?: string };
 
-  type PhoneTypeAttributes = WithId<{
+  type PhoneTypeAttributes = Attributes<{
     name: string;
   }>;
 
-  type PhoneModelAttributes = WithId<{
+  type PhoneModelAttributes = Attributes<{
     name: string;
     accountingDate: string;
     phoneTypeId: number;
   }>;
 
-  interface PhoneCategoryAttributes extends Attributes {
+  type PhoneCategoryAttributes = Attributes<{
     date: string;
     category: string;
     phoneId: number;
-  }
+  }>;
 
-  type HoldingAttributes = WithId<{
+  type HoldingAttributes = Attributes<{
     actDate: string;
     actKey: string;
     holderId: number;
     phoneId: number;
   }>;
 
-  type HolderAttributes = WithId<{
+  type HolderAttributes = Attributes<{
     firstName: string;
     lastName: string;
     middleName: string;
     departmentId: number;
   }>;
 
-  type DepartmentAttributes = WithId<{
+  type DepartmentAttributes = Attributes<{
     name: string;
   }>;
 
-  type PhoneAttributes = WithId<{
+  type PhoneAttributes = Attributes<{
     inventoryKey: string;
     factoryKey: string;
 
@@ -90,13 +90,13 @@ declare namespace DB {
     WithCommit &
     WithAuthor;
 
-  interface UserAttributes extends Attributes {
+  type UserAttributes = Attributes<{
     username: string;
     passwordHash: string;
     role: Role;
-  }
+  }>;
 
-  type ChangeAttributes = WithId<{
+  type ChangeAttributes = Attributes<{
     target: ChangesTargetName;
     targetId: number;
     column: string;
@@ -105,7 +105,7 @@ declare namespace DB {
     userId: number;
   }>;
 
-  type CommitAttributes = WithId<{
+  type CommitAttributes = Attributes<{
     target: CommitTargetName;
     targetId: number;
     action: CommitActionType;

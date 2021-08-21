@@ -19,7 +19,7 @@ import PhoneType from "./phoneType.model";
 @Table
 export default class PhoneModel extends Model<
   DB.PhoneModelAttributes,
-  OptionalId<DB.PhoneModelAttributes>
+  DB.CreateAttributes<DB.PhoneModelAttributes>
 > {
   @AllowNull(false)
   @Column(DataType.STRING)

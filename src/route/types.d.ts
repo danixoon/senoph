@@ -48,6 +48,7 @@ declare type UnionToIntersection<U> = (
 //   : never;
 
 declare namespace Api {
+  type Attributes<T> = RequiredId<T> & { createdAt: string };
   type Router = Omit<import("express").Router, keyof Api.Requests> &
     Api.Requests;
   // type ExpressHandler = import("express").Request;
@@ -171,7 +172,7 @@ declare namespace Api {
         >)
       | (() => RouteHandler<
           "/commit",
-          Record<number, any>,
+          ItemsResponse<{ id: number; createdAt?: string; [key: string]: any }>,
           { target: ChangesTargetName },
           {}
         >)
@@ -227,17 +228,13 @@ declare namespace Api {
             departmentId?: number;
           },
           {}
+        >)
+      | (() => RouteHandler<
+          "/phone/commit",
+          ItemsResponse<Api.Models.Phone>,
+          { status?: CommitStatus },
+          {}
         >);
-    // | (() => RouteHandler<
-    //     "/commit/entity",
-    //     ItemsResponse<{
-    //       action: CommitActionType;
-    //       id: number;
-    //       target: CommitTargetName;
-    //     }>,
-    //     {},
-    //     {}
-    //   >);
 
     post:
       | (() => RouteHandler<
@@ -266,6 +263,12 @@ declare namespace Api {
 
     put:
       | (() => RouteHandler<
+          "/commit",
+          {},
+          { targetId: number; target: ChangesTargetName },
+          {}
+        >)
+      | (() => RouteHandler<
           "/phone",
           {},
           { id: number },
@@ -283,8 +286,8 @@ declare namespace Api {
       | (() => RouteHandler<
           "/commit/phone" | "/commit/holder",
           {},
-          { id: number; action: "approve" | "decline" },
-          {}
+          {},
+          { ids: number[]; action: CommitActionType }
         >);
     // | (() => RouteHandler<
     //     "/commit/entity",
@@ -297,12 +300,14 @@ declare namespace Api {
     //     any
     //   >);
 
-    delete: () => RouteHandler<
-      "/commit",
-      {},
-      { target: ChangesTargetName; targetId: number; keys: string[] },
-      {}
-    >;
+    delete:
+      | (() => RouteHandler<
+          "/commit",
+          {},
+          { target: ChangesTargetName; targetId: number; keys?: string[] },
+          {}
+        >)
+      | (() => RouteHandler<"/phone", {}, { id: number }, {}>);
   };
 }
 

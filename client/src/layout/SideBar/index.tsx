@@ -1,6 +1,7 @@
 import Button from "components/Button";
 import Header from "components/Header";
 import Hr from "components/Hr";
+import Icon from "components/Icon";
 import Layout from "components/Layout";
 import Link from "components/Link";
 import LinkItem from "components/LinkItem";
@@ -28,17 +29,31 @@ const SideBar: React.FC<SideBar> = (props) => {
         label="Средства связи"
       >
         <Layout className="sidebar__group">
-          <LinkItemContainer href="/phone/view">Просмотр</LinkItemContainer>
-          <LinkItemContainer href="/phone/edit">Управление</LinkItemContainer>
+          <LinkItemContainer href="/phone/view">
+            Просмотр
+            <Icon.Eye style={{ marginLeft: "auto" }} />
+          </LinkItemContainer>
+          <LinkItemContainer href="/phone/edit">
+            Управление
+            <Icon.Settings style={{ marginLeft: "auto" }} />
+          </LinkItemContainer>
         </Layout>
       </Spoiler>
       <Spoiler
         opened={page === "commit"}
         onToggle={page === "commit" ? handleSpoilerToggle : undefined}
-        label="Изменения"
+        label="Действия"
       >
         <Layout className="sidebar__group">
-          <LinkItemContainer href="/commit">Внесение</LinkItemContainer>
+          <LinkItemContainer href="/commit/create">
+            Внесения <Icon.Check style={{ marginLeft: "auto" }} />
+          </LinkItemContainer>
+          <LinkItemContainer href="/commit/delete">
+            Удаления <Icon.X style={{ marginLeft: "auto" }} />
+          </LinkItemContainer>
+          <LinkItemContainer href="/commit/edit">
+            Изменения <Icon.Edit3 style={{ marginLeft: "auto" }} />
+          </LinkItemContainer>
         </Layout>
       </Spoiler>
       <Spoiler

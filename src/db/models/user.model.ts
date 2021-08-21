@@ -12,7 +12,7 @@ import { Optional } from "sequelize/types";
 @Table
 export default class User extends Model<
   DB.UserAttributes,
-  OptionalId<DB.UserAttributes>
+  DB.CreateAttributes<DB.UserAttributes>
 > {
   @Unique
   @AllowNull(false)

@@ -9,12 +9,11 @@ import {
 } from "sequelize-typescript";
 import { Optional } from "sequelize/types";
 
-
 @Scopes(() => ({ names: {} }))
 @Table
 export default class Department extends Model<
   DB.DepartmentAttributes,
-  OptionalId<DB.DepartmentAttributes>
+  DB.CreateAttributes<DB.DepartmentAttributes>
 > {
   @AllowNull(false)
   @Column(DataType.STRING)

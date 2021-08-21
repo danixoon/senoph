@@ -7,8 +7,9 @@ import Holding from "./models/holding.model";
 import Phone from "./models/phone.model";
 import CommitModel from "./models/commit.model";
 import PhoneCategory from "./models/phoneCategory.model";
-import { models } from "./models";
+// import { models } from "./models";
 import { logger } from "../utils";
+import { getModel } from ".";
 
 // export const bindHooks = (
 //   name: CommitTargetName,
@@ -138,13 +139,13 @@ export class Commit {
   undo = async () => {};
 
   push = async <T>(targetId: number, changes: T) => {
-    const changesList: DB.ChangeAttributes[] = [];
+    const changesList: DB.CreateAttributes<DB.ChangeAttributes>[] = [];
     for (const key in changes) {
       let type: ChangedDataType = "string";
       if (key.endsWith("Date")) type = "date";
       if (key.endsWith("Id")) type = "number";
 
-      const change: DB.ChangeAttributes = {
+      const change: DB.CreateAttributes<DB.ChangeAttributes> = {
         targetId,
         userId: this.userId,
         target: this.target,
@@ -158,10 +159,7 @@ export class Commit {
 
     // this.changes = [...this.changes, ...changesList];
 
-    let updates = {} as Record<
-      keyof typeof models,
-      Record<string, Record<string, any>>
-    >;
+    let updates = {} as Record<string, Record<string, Record<string, any>>>;
     // await Change.bulkCreate(this.changes);
     for (const change of changesList) {
       const tableUpdates = updates[change.target] ?? {};
@@ -180,7 +178,7 @@ export class Commit {
       const elements = key.split(".");
 
       const [table, id] = elements;
-      const model = models[table as keyof typeof models] as any as Model;
+      const model = getModel(table);
 
       return model.update({ ...value }, { where: { id } });
     });
@@ -240,14 +238,19 @@ const getChangesList: (
   targetId: number,
   userId: number,
   changes: any
-) => DB.ChangeAttributes[] = (target, targetId, userId, changes) => {
-  const changesList: DB.ChangeAttributes[] = [];
+) => DB.CreateAttributes<DB.ChangeAttributes>[] = (
+  target,
+  targetId,
+  userId,
+  changes
+) => {
+  const changesList: DB.CreateAttributes<DB.ChangeAttributes>[] = [];
   for (const key in changes) {
     let type: ChangedDataType = "string";
     if (key.endsWith("Date")) type = "date";
     if (key.endsWith("Id")) type = "number";
 
-    const change: DB.ChangeAttributes = {
+    const change: DB.CreateAttributes<DB.ChangeAttributes> = {
       targetId,
       userId,
       target,
@@ -263,7 +266,11 @@ const getChangesList: (
 
 export const convertChangesList = (changes: DB.ChangeAttributes[]) => {
   return changes.reduce((a, v) => {
-    a[v.targetId] = { ...(a[v.targetId] ?? {}), [v.column]: v.value };
+    a[v.targetId] = {
+      ...(a[v.targetId] ?? {}),
+      [v.column]: v.value,
+      createdAt: v.createdAt,
+    };
     return a;
   }, {} as { [key: number]: any });
 };
@@ -289,6 +296,14 @@ export const getUpdater = <T extends ChangesTargetName>(
       where,
     });
   };
+
+  const clearAll = async () => {
+    const where = { target, userId, targetId } as any;
+    await Change.destroy({
+      where,
+    });
+  };
+
   const commit = async () => {
     const changesList = await Change.findAll({
       where: { targetId, target, userId },
@@ -297,8 +312,14 @@ export const getUpdater = <T extends ChangesTargetName>(
 
     const changes = convertChangesList(changesList);
 
+    const upperCase = (str: string) => {
+      return str[0].toUpperCase() + str.slice(1);
+    };
+
     // TODO: Any typing
-    await (models as any)[target].update(changes[targetId], {
+    const model = getModel(upperCase(target));
+    console.log("whjat");
+    await model.update(changes[targetId], {
       where: { id: targetId },
     });
     await clear();
@@ -306,6 +327,7 @@ export const getUpdater = <T extends ChangesTargetName>(
   return {
     push,
     clear,
+    clearAll,
     commit,
   };
 };

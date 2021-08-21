@@ -1,19 +1,9 @@
 import React from "react";
 
-import LinkItem, { LinkItemProps } from "components/LinkItem";
-import { useLocation } from "react-router";
-import { useFetchPhone } from "hooks/api/useFetchPhone";
-import PhonePopup from "layout/Popups/PhonePopup";
-import { useFetchPhonesQuery } from "store/slices/api";
-import PhoneSelectionPopup from "layout/Popups/PhoneSelectionPopup";
-import { InputBind, useInput } from "hooks/useInput";
 import { clearObject } from "utils";
-import { useAppDispatch, useAppSelector } from "store";
-import { updateSelection } from "store/slices/phone";
 import ItemSelectionPopup, {
   ItemSelectionPopupProps,
 } from "layout/Popups/ItemSelectionPopup";
-import { useFilterConfig } from "hooks/api/useFetchConfig";
 import { useFetchHolder } from "hooks/api/useFetchHolder";
 
 export type HolderSelectionPopupContainerProps = {

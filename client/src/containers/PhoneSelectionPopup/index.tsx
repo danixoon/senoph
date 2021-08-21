@@ -2,9 +2,9 @@ import React from "react";
 
 import LinkItem, { LinkItemProps } from "components/LinkItem";
 import { useLocation } from "react-router";
-import { useFetchPhone } from "hooks/api/useFetchPhone";
+// import { useFetchPhone } from "hooks/api/useFetchPhone";
 import PhonePopup from "layout/Popups/PhonePopup";
-import { useFetchPhonesQuery } from "store/slices/api";
+import { api } from "store/slices/api";
 import PhoneSelectionPopup from "layout/Popups/PhoneSelectionPopup";
 import { InputBind, useInput } from "hooks/useInput";
 import { clearObject } from "utils";
@@ -44,7 +44,7 @@ const PhoneSelectionPopupContainer: React.FC<PhoneSelectionPopupContainerProps> 
 
   const isNoSelection = selectionIds.length === 0;
 
-  const { data } = useFetchPhonesQuery(clearObject(query), {
+  const { data } = api.useFetchPhonesQuery(clearObject(query), {
     skip: isNoSelection,
   });
 

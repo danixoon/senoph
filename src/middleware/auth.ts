@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import { RequestHandler } from "express";
 import { ApiError, errorType } from "@backend/utils/errors";
 import { getModel } from "../db";
+import { Op } from "sequelize";
 
 const priority: Record<Role, number> = {
   admin: 2,
@@ -15,12 +16,12 @@ export type WithUser<R extends Role> = {
 };
 export type WithOwner<P extends keyof Api.ModelMap> = Record<
   P,
-  Api.ModelMap[P]
+  Api.ModelMap[P][]
 >;
 
 export const owner: <RB, Q, B, T extends keyof Api.ModelMap, P = any>(
   target: T,
-  reqFn: (q: Arg<Api.Request<P, RB, Q, B>>) => number,
+  reqFn: (q: Arg<Api.Request<P, RB, Q, B>>) => number | number[],
   testFn?: (model: Api.ModelMap[T]) => any | Promise<any>
 ) => Api.Request<P, RB, Q, B> =
   (target, reqFn, testFn) => async (req, res, next) => {
@@ -30,16 +31,23 @@ export const owner: <RB, Q, B, T extends keyof Api.ModelMap, P = any>(
     );
     const id = reqFn(req);
 
-    const table = await model.findByPk(id, { raw: true });
+    const tables = await model.unscoped().findAll({
+      where: { id: { [Op.in]: Array.isArray(id) ? id : [id] } },
+      raw: true,
+    });
 
-    if (!table)
+    if (tables.length === 0)
       return next(
         new ApiError(errorType.NOT_FOUND, {
           description: `Не найден объект #${id}`,
         })
       );
 
-    if ((table as any).authorId?.toString() !== user.id.toString())
+    if (
+      !tables.every(
+        (table) => (table as any)?.authorId?.toString() === user.id.toString()
+      )
+    )
       return next(
         new ApiError(errorType.ACCESS_DENIED, {
           description: "Доступ ограничен",
@@ -47,10 +55,12 @@ export const owner: <RB, Q, B, T extends keyof Api.ModelMap, P = any>(
       );
 
     try {
-      if (testFn) await testFn(table as any);
+      if (testFn) await testFn(tables as any);
     } catch (err) {
       return next(err);
     }
+
+    (req.params as any)[target] = tables;
 
     next();
   };

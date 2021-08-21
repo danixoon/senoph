@@ -2,7 +2,7 @@ import { Router } from "express";
 
 import Phone from "../db/models/phone.model";
 import Model from "../db/models/phoneModel.model";
-import { prepareItems } from "@backend/utils/index";
+import { handler, prepareItems } from "@backend/utils/index";
 import PhoneModel from "../db/models/phoneModel.model";
 import Holder from "@backend/db/models/holder.model";
 import {
@@ -17,30 +17,90 @@ import Department from "@backend/db/models/department.model";
 import { convertValues } from "@backend/middleware/converter";
 import { AppRouter } from "../router";
 import { ApiError, errorType } from "../utils/errors";
-import { access } from "@backend/middleware/auth";
+import { access, owner, withOwner } from "@backend/middleware/auth";
 import { tester, validate } from "@backend/middleware/validator";
+import { Filter } from "@backend/utils/db";
 
 const router = AppRouter();
 
-router.get("/phone/byId", async (req, res) => {
-  const { id } = req.query;
-  const phone = (await Phone.findByPk(id, {
-    include: [{ all: true }],
-  })) as Api.Models.Phone;
+router.delete(
+  "/phone",
+  access("user"),
+  validate({ query: { id: tester() } }),
+  owner("phone", (q) => q.query.id),
+  handler(async (req, res) => {
+    const { params } = req;
+    if (!withOwner(params, "phone")) return res.sendStatus(500);
 
-  if (phone != null) res.send(phone);
-  else res.sendStatus(404);
-});
+    const { phone } = params;
+    await Phone.update(
+      { status: "delete-pending" },
+      { where: { id: phone[0].id } }
+    );
+
+    res.send();
+  })
+);
+
+router.get(
+  "/phone/byId",
+  access("user"),
+  validate({ query: { id: tester().required().isNumber() } }),
+  handler(async (req, res) => {
+    const { id } = req.query;
+    const phone = (await Phone.findByPk(id, {
+      include: [{ all: true }],
+    })) as Api.Models.Phone;
+
+    // TODO: Сделать проверку на статус правильной
+    if (phone != null && phone.status === null) res.send(phone);
+    else res.sendStatus(404);
+  })
+);
+
+router.get(
+  "/phone/commit",
+  access("user"),
+  validate({
+    query: { status: tester().isIn(["delete-pending", "create-pending"]) },
+  }),
+  handler(async (req, res, next) => {
+    const { status } = req.query;
+
+    const filter = new Filter(req.query);
+    filter.add("status");
+
+    const phones = await Phone.scope("commit").findAll({ where: filter.where });
+
+    res.send(prepareItems(phones as Api.Models.Phone[], phones.length, 0));
+  })
+);
 
 router.get(
   "/phone",
   access("user"),
-  // validate({ query: { ids: tester(), } }),
+  validate({
+    query: {
+      ids: tester(),
+      exceptIds: tester(),
+      amount: tester().isNumber(),
+      factoryKey: tester(),
+      category: tester(),
+      departmentId: tester(),
+      inventoryKey: tester(),
+      offset: tester().isNumber(),
+      phoneModelId: tester().isNumber(),
+      phoneTypeId: tester().isNumber(),
+      search: tester(),
+      sortDir: tester().isIn(["asc", "desc"]),
+      sortKey: tester(),
+    },
+  }),
   convertValues({
     ids: (c) => c.toArray().toNumbers(false).value,
     exceptIds: (c) => c.toArray().toNumbers(false).value,
   }),
-  async (req, res) => {
+  handler(async (req, res) => {
     const {
       search,
       sortDir: orderDir,
@@ -89,6 +149,33 @@ router.get(
     const whereId = { [Op.notIn]: exceptIds ?? [] } as WhereOperators;
     if ((ids?.length ?? 0) > 0) whereId[Op.in] = ids;
 
+    const include = [
+      {
+        model: Holder,
+        where: {
+          departmentId: valueOrNotNull(departmentId),
+        },
+      },
+    ] as any;
+
+    // if (phoneTypeId !== undefined || search !== undefined)
+    include.push({
+      model: PhoneModel,
+      where: {
+        phoneTypeId: valueOrNotNull(phoneTypeId),
+        name: search ? { [Op.substring]: search } : { [Op.not]: null },
+      },
+      required: phoneTypeId !== undefined || search !== undefined,
+    });
+
+    if (departmentId !== undefined) include.push({ model: Department });
+
+    if (category !== undefined)
+      include.push({
+        model: PhoneCategory,
+        where: { category: valueOrNotNull(category?.toString()) },
+      });
+
     const phones = await Phone.findAll({
       where: {
         id: whereId,
@@ -96,33 +183,7 @@ router.get(
         inventoryKey: valueOrNotNull(inventoryKey),
         factoryKey: valueOrNotNull(factoryKey),
       },
-      include: [
-        {
-          model: PhoneModel,
-          where: {
-            phoneTypeId: valueOrNotNull(phoneTypeId),
-            name: search ? { [Op.substring]: search } : { [Op.not]: null },
-          },
-          required: phoneTypeId !== undefined || search !== undefined,
-        },
-        {
-          model: Holder,
-          where: {
-            departmentId: valueOrNotNull(departmentId),
-          },
-          include: [
-            {
-              model: Department,
-              required: departmentId !== undefined,
-            },
-          ],
-        },
-        {
-          model: PhoneCategory,
-          where: { category: valueOrNotNull(category?.toString()) },
-          required: category !== undefined,
-        },
-      ],
+      include,
       order,
       // TODO: Избавиться от преобразований данных путём валидаторов в express
       // offset: offset_,
@@ -142,7 +203,7 @@ router.get(
       throw new ApiError(errorType.INTERNAL_ERROR, {
         description: "Ошибка поиска",
       });
-  }
+  })
 );
 
 router.post(
@@ -163,7 +224,7 @@ router.post(
       }),
     },
   }),
-  async (req, res, next) => {
+  handler(async (req, res, next) => {
     const { body, params } = req;
     const { user } = params;
 
@@ -180,7 +241,7 @@ router.post(
         );
       }
     }
-  }
+  })
 );
 
 export default router;

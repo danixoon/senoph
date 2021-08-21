@@ -19,6 +19,10 @@ import {
   AfterBulkCreate,
   Validate,
   Unique,
+  Scopes,
+  BeforeUpdate,
+  BeforeCreate,
+  BeforeBulkUpdate,
 } from "sequelize-typescript";
 
 import { getChanges, getChangesById } from "../commit";
@@ -47,15 +51,45 @@ import User from "./user.model";
 
 // CommitedModel.addHook("beforeBulkCreate", )
 
-@DefaultScope(() => ({
-  where: {
-    status: null,
+// @DefaultScope(() => ({
+//   ,
+// }))
+
+@Table({
+  scopes: {
+    commit: {
+      where: {
+        status: {
+          [Op.not]: null,
+        },
+      },
+      include: [
+        {
+          model: PhoneModel,
+          as: "model",
+        },
+        {
+          model: Holder,
+          as: "holder",
+        },
+        // {
+        //   model: PhoneModel,
+        // },
+        // {
+        //   model: PhoneModel,
+        // },
+      ],
+    },
   },
-}))
-@Table
+  defaultScope: {
+    where: {
+      status: null,
+    },
+  },
+})
 export default class Phone extends Model<
   DB.PhoneAttributes,
-  OptionalId<DB.PhoneAttributes>
+  DB.CreateAttributes<DB.PhoneAttributes>
 > {
   @Unique
   @AllowNull(false)
@@ -95,6 +129,11 @@ export default class Phone extends Model<
   @Column(DataType.STRING)
   status?: CommitStatus | null;
 
+  //TODO: Auto set status
+  @AllowNull(true)
+  @Column(DataType.DATE)
+  statusAt?: string;
+
   @AllowNull(false)
   @ForeignKey(() => User)
   @Column(DataType.INTEGER)
@@ -111,6 +150,12 @@ export default class Phone extends Model<
 
   @HasMany(() => Holding)
   holdings: Holding[];
+
+  @BeforeBulkUpdate
+  static onBeforeUpdate(args: any) {
+    args.fields.push("statusAt");
+    args.attributes.statusAt = new Date().toISOString();
+  }
 
   // getStatus = () => {
   //   const status: CommitStatus = this.isCommited

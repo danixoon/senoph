@@ -17,14 +17,14 @@ export const validTargetNames: readonly CommitTargetName[] = [
   "phoneCategory",
 ];
 export const validActionTypes: readonly CommitActionType[] = [
-  "create",
-  "delete",
+  "approve",
+  "decline",
 ];
 
 @Table
 export default class Commit extends Model<
   DB.CommitAttributes,
-  OptionalId<DB.CommitAttributes>
+  DB.CreateAttributes<DB.CommitAttributes>
 > {
   @Validate({ isIn: [validTargetNames] })
   @AllowNull(false)

@@ -1,8 +1,8 @@
 import * as React from "react";
-import { useCreatePhonesMutation } from "store/slices/api";
+import { api } from "store/slices/api";
 
 export const useCreatePhones = () => {
-  const hook = useCreatePhonesMutation();
+  const hook = api.useCreatePhonesMutation();
 
   return hook;
 };

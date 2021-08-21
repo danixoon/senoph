@@ -1,8 +1,8 @@
 import * as React from "react";
-import { useFetchFilterConfigQuery } from "store/slices/api";
+import { api } from "store/slices/api";
 
 export const useFilterConfig = () => {
-  const { data } = useFetchFilterConfigQuery({});
+  const { data } = api.useFetchFilterConfigQuery({});
 
   const types = data?.types ?? [];
   const models = data?.models ?? [];

@@ -24,12 +24,14 @@ const EditableListItem: React.FC<
 
   const { targetId, changes } = changesContext;
 
-  const isEdited = (changes[targetId] ?? {})[key] !== undefined;
+  const targetChange = changes.find((c) => c.id === targetId);
+
+  const isEdited = targetChange && targetChange[key] !== undefined;
 
   const Container: React.FC<{}> = ({ children }) =>
     editable ? <Button inverted>{children}</Button> : <> {children} </>;
 
-  const content = isEdited ? changes[targetId][key] : children;
+  const content = isEdited ? targetChange[key] : children;
 
   return (
     <ListItem {...rest}>

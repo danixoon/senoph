@@ -35,7 +35,8 @@ export type PhonePopupProps = {
   changeEditMode: (mode: boolean) => void;
   makeChanges: (targetId: number, changes: any) => void;
   undoChanges: (targetId: number, keys: string[]) => void;
-  changes: Record<number, any>;
+  onDelete: () => void;
+  changes: any[];
 } & PopupProps;
 
 const Content: React.FC<
@@ -50,6 +51,7 @@ const Content: React.FC<
     changeEditMode,
     makeChanges,
     undoChanges,
+    onDelete,
   } = props;
   const { types, departments } = useFilterConfig();
 
@@ -127,7 +129,9 @@ const Content: React.FC<
 
   // TODO: Контекст формы для Input-объектов
 
-  const changedValue = (changes[field.targetId] ?? {})[field.key];
+  const changedValue = (changes.find(
+    (c) => c.id.toString() === field.targetId.toString()
+  ) ?? {})[field.key];
 
   return (
     <>
@@ -266,12 +270,18 @@ const Content: React.FC<
             </ListItem>
             <Hr />
           </Layout>
-          <Hr vertical />
-          <PhoneEditActions>
-            <Button color="primary" style={{ marginTop: "auto" }}>
-              Удалить
-            </Button>
-          </PhoneEditActions>
+          {edit ? (
+            <>
+              <Hr vertical />
+              <PhoneEditActions>
+                <Button color="primary" style={{ marginTop: "auto" }} onClick={onDelete}>
+                  Удалить
+                </Button>
+              </PhoneEditActions>
+            </>
+          ) : (
+            ""
+          )}
           <Hr vertical />
           <Layout flex="0 0 250px" padding="md">
             <Input
@@ -294,9 +304,7 @@ const PhonePopup: React.FC<PhonePopupProps> = (props) => {
 
   return (
     <Popup {...rest} size="lg" closeable noPadding>
-      <WithLoader
-        isLoading={!phone}
-      >
+      <WithLoader isLoading={!phone}>
         <Content
           phone={phone as Api.Models.Phone}
           isEditMode={isEditMode}

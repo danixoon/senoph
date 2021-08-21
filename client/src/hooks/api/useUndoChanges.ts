@@ -1,9 +1,7 @@
 import * as React from "react";
-import {
-  useUndoChangesMutation,
-} from "store/slices/api";
+import { api } from "store/slices/api";
 
 export const useUndoChanges = <T extends ChangesTargetName>() => {
-  const mutation = useUndoChangesMutation();
+  const mutation = api.useUndoChangesMutation();
   return mutation;
 };

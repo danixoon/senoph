@@ -5,22 +5,27 @@ import { tester, validate } from "@backend/middleware/validator";
 import { AppRouter } from "../router";
 import { ApiError, errorType } from "@backend/utils/errors";
 import { access } from "@backend/middleware/auth";
+import { handler } from "../utils";
 
 const router = AppRouter();
 
-router.get("/account", access("user"), async (req, res, next) => {
-  const { id } = req.params.user;
-  const user = await User.findByPk(id, { attributes: ["role", "username"] });
+router.get(
+  "/account",
+  access("user"),
+  handler(async (req, res, next) => {
+    const { id } = req.params.user;
+    const user = await User.findByPk(id, { attributes: ["role", "username"] });
 
-  if (!user)
-    return next(
-      new ApiError(errorType.NOT_FOUND, {
-        description: "Пользователь не найден",
-      })
-    );
+    if (!user)
+      return next(
+        new ApiError(errorType.NOT_FOUND, {
+          description: "Пользователь не найден",
+        })
+      );
 
-  res.send({ id, role: user.role, username: user.username });
-});
+    res.send({ id, role: user.role, username: user.username });
+  })
+);
 
 router.get(
   "/account/login",
@@ -31,7 +36,7 @@ router.get(
       password: tester().required(),
     },
   }),
-  async (req, res, next) => {
+  handler(async (req, res, next) => {
     const { password, username } = req.query;
     const accessError = new ApiError(errorType.ACCESS_DENIED, {
       description: "Неверное имя пользователя или пароль.",
@@ -48,7 +53,7 @@ router.get(
       process.env.SECRET
     );
     res.send({ token, id: user.id, role: user.role });
-  }
+  })
 );
 
 // TODO: Передвинуть енто в модель пользователя
@@ -67,7 +72,7 @@ router.post(
         .message(`Разрешённые роли: ${ALLOWED_ROLES.join()}`),
     },
   }),
-  async (req, res) => {
+  handler(async (req, res) => {
     const { username, password, role } = req.query;
     const hash = await bcrypt.hash(password, await bcrypt.genSalt(13));
     const user = (await User.create({
@@ -77,7 +82,7 @@ router.post(
     })) as Api.Models.User;
 
     res.send(user);
-  }
+  })
 );
 
 export default router;

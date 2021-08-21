@@ -16,7 +16,7 @@ import PhoneType from "./phoneType.model";
 @Table
 export default class Holding extends Model<
   DB.HoldingAttributes,
-  OptionalId<DB.HoldingAttributes>
+  DB.CreateAttributes<DB.HoldingAttributes>
 > {
   @AllowNull(false)
   @Column(DataType.DATE)

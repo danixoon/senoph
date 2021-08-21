@@ -13,7 +13,7 @@ import Commit, {
 import { Filter } from "@backend/utils/db";
 import { Op } from "sequelize";
 import { getModel } from "../db";
-import { prepareItems } from "../utils";
+import { handler, prepareItems } from "../utils";
 import Phone from "@backend/db/models/phone.model";
 import { ApiError, errorType } from "@backend/utils/errors";
 
@@ -26,9 +26,34 @@ router.get(
   async (req, res) => {
     const { id } = req.params.user;
     const { target } = req.query;
-    const changes = await getChanges(id, target);
-    res.send(changes);
+    const changes = Object.entries(await getChanges(id, target)).reduce(
+      (acc, [key, value]) => [...acc, { id: Number(key), ...value }],
+      [] as any[]
+    );
+
+    res.send(prepareItems(changes, changes.length, 0));
   }
+);
+
+router.put(
+  "/commit",
+  access("user"),
+  validate({
+    query: {
+      target: tester().required(),
+      targetId: tester().isNumber().required(),
+    },
+  }),
+  // TODO: Сделать проверку на владельца изменений
+  handler(async (req, res, next) => {
+    const { target, targetId } = req.query;
+    const { id } = req.params.user;
+
+    const updater = getUpdater(target, targetId, id);
+    await updater.commit();
+
+    res.send();
+  })
 );
 
 // router.get(
@@ -61,7 +86,7 @@ router.post(
     query: { target: tester().required(), targetId: tester().required() },
   }),
   owner("phone", (r) => r.query.targetId),
-  async (req, res) => {
+  handler(async (req, res) => {
     const { id } = req.params.user;
     const { target, targetId } = req.query;
     const changes = req.body;
@@ -70,7 +95,7 @@ router.post(
     await updater.push(changes);
 
     res.send();
-  }
+  })
 );
 
 // router.put(
@@ -105,14 +130,14 @@ router.put(
   "/commit/phone",
   access("user"),
   validate({
-    query: {
+    body: {
       action: tester().isIn(["approve", "decline"]).required(),
-      id: tester().isNumeric().required(),
+      ids: tester().array({}),
     },
   }),
   owner(
     "phone",
-    (req) => req.query.id,
+    (req) => req.body.ids,
     (model) => {
       if (model.status === null)
         throw new ApiError(errorType.INVALID_QUERY, {
@@ -120,31 +145,45 @@ router.put(
         });
     }
   ),
-  async (req, res, next) => {
-    const { id, action } = req.query;
+  handler(async (req, res, next) => {
+    const { ids, action } = req.body;
     const { params } = req;
 
     if (!withOwner(params, "phone") || !withUser(params))
       return next(new ApiError(errorType.INTERNAL_ERROR));
 
-    const { phone } = params;
+    const { phone: phones } = params;
 
-    switch (action) {
-      case "approve":
-        if (phone.status === "create-pending")
-          await Phone.update({ status: null }, { where: { id } });
-        else if (phone.status === "delete-pending")
-          await Phone.destroy({ where: { id } });
-        break;
+    await Promise.all(
+      phones.map(async (phone) => {
+        switch (action) {
+          case "approve":
+            if (phone.status === "create-pending")
+              await Phone.unscoped().update(
+                { status: null },
+                { where: { id: phone.id } }
+              );
+            else if (phone.status === "delete-pending")
+              await Phone.unscoped().destroy({ where: { id: phone.id } });
+            break;
 
-      case "decline":
-        if (phone.status === "create-pending")
-          await Phone.destroy({ where: { id } });
-        else if (phone.status === "delete-pending")
-          await Phone.update({ status: null }, { where: { id } });
-        break;
-    }
-  }
+          case "decline":
+            if (phone.status === "create-pending")
+              await Phone.unscoped().destroy({
+                where: { id: phone.id },
+              });
+            else if (phone.status === "delete-pending")
+              await Phone.unscoped().update(
+                { status: null },
+                { where: { id: phone.id } }
+              );
+            break;
+        }
+      })
+    );
+
+    res.send();
+  })
 );
 
 router.delete(
@@ -152,22 +191,23 @@ router.delete(
   access("user"),
   validate({
     query: {
-      keys: tester().required(),
+      keys: tester(),
       targetId: tester().required(),
       target: tester().required(),
     },
   }),
   owner("phone", (r) => r.query.targetId),
   convertValues({ keys: (c) => c.toArray().value }),
-  async (req, res) => {
+  handler(async (req, res) => {
     const { id } = req.params.user;
     const { target, targetId, keys } = req.query;
 
     const updater = getUpdater(target, targetId, id);
-    await updater.clear(...keys);
+    if (!Array.isArray(keys)) await updater.clearAll();
+    else await updater.clear(...keys);
 
     res.send();
-  }
+  })
 );
 
 export default router;
