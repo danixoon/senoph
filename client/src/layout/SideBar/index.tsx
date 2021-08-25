@@ -62,8 +62,7 @@ const SideBar: React.FC<SideBar> = (props) => {
         label="Движения"
       >
         <Layout className="sidebar__group">
-          <LinkItemContainer href="/holding/view">Просмотр</LinkItemContainer>
-          <LinkItemContainer href="/holding/edit">Управление</LinkItemContainer>
+          <LinkItemContainer href="/holding/create">Создание</LinkItemContainer>
         </Layout>
       </Spoiler>
       <Spoiler

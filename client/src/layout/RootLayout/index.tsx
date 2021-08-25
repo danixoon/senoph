@@ -15,6 +15,7 @@ import { useIsFirstEffect } from "hooks/useIsFirstEffect";
 import { login } from "store/slices/app";
 import { replace } from "connected-react-router";
 import CommitPageContainer from "containers/CommitPage";
+import HoldingPageContainer from "containers/HoldingPage";
 
 // export type RootLayoutProps = {
 //   isLogin?: boolean;
@@ -67,6 +68,9 @@ const RootLayout: React.FC<{}> = (props) => {
                   </Route>
                   <Route path="/commit">
                     <CommitPageContainer />
+                  </Route>
+                  <Route path="/holding">
+                    <HoldingPageContainer />
                   </Route>
                 </Switch>
               </TopBarContext.Provider>
