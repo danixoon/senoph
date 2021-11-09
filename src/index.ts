@@ -22,8 +22,8 @@ export const init = async () => {
   app.use(logRequest());
   app.use("/api", ...routers);
 
-  app.use("/build", express.static(path.resolve(__dirname, "../client/build")));
-  app.use("*", express.static(path.resolve(__dirname, "../client/build")));
+  app.use("/public", express.static(path.resolve(__dirname, "../client/public")));
+  app.use("*", express.static(path.resolve(__dirname, "../client/public")));
 
   app.use(errorHandler);
 

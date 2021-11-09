@@ -56,7 +56,7 @@ module.exports = {
   output: {
     filename: "bundle.js",
     path: path.resolve(__dirname, "build"),
-    publicPath: "/build/",
+    publicPath: "/public/",
   },
   plugins: [
     new HtmlWebpackPlugin({
@@ -65,7 +65,7 @@ module.exports = {
     }),
   ],
   devServer: {
-    contentBase: path.resolve(__dirname, "build"),
+    contentBase: path.resolve(__dirname, "public"),
     compress: true,
     port: 3000,
     writeToDisk: true,
