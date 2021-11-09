@@ -6,10 +6,10 @@ import React from "react";
 
 const CategoryItem: React.FC<{
   category: number;
-  actKey: string;
+  // actKey: string;
   actDate: Date;
 }> = (props) => {
-  const { category, actKey, actDate } = props;
+  const { category, actDate } = props;
   let cat = "?";
   switch (category) {
     case 1:
@@ -37,7 +37,7 @@ const CategoryItem: React.FC<{
         {cat}
       </Badge>
       <Label {...labelStyle}>Акт </Label>
-      <Link> №{actKey}</Link>
+      {/* <Link> №{actKey}</Link> */}
       <Label {...labelStyle}>от</Label>
       <Link>{actDate.toLocaleDateString()}</Link>
     </Layout>

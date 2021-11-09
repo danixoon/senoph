@@ -6,7 +6,7 @@ import "./styles.styl";
 export type ButtonProps = OverrideProps<
   React.PropsWithChildren<React.ButtonHTMLAttributes<HTMLButtonElement>>,
   {
-    color?: "secondary" | "primary" | "bgDark";
+    color?: "secondary" | "primary" | "bgDark" | "muted" | "light";
     inverted?: boolean;
     fill?: boolean;
     size?: Size;
@@ -23,6 +23,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       size = "sm",
       margin = "sm",
       fill,
+      type = "button",
       ...rest
     } = props;
 
@@ -41,7 +42,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     );
 
     return (
-      <button ref={ref} {...mergedProps}>
+      <button ref={ref} {...mergedProps} type={type}>
         {children}
       </button>
     );

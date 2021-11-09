@@ -7,8 +7,7 @@ import { logger } from "@backend/utils/index";
 let sequelize: Sequelize;
 let dbLogger: fs.FileHandle;
 
-export const getModel = (name: string) => 
-sequelize.models[name];
+export const getModel = (name: string) => sequelize.models[name];
 
 export const init = async () => {
   // console.log(process.env);
@@ -50,7 +49,7 @@ export const init = async () => {
 
   // Disable logging for syncing
   if (process.env.NODE_ENV !== "test") {
-    // await sequelize.drop();
+    await sequelize.drop({});
     await sequelize.sync({ logging: () => {}, force: true });
     await fillTestDatabase();
   }

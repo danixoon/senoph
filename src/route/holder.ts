@@ -10,11 +10,12 @@ import { Filter } from "@backend/utils/db";
 import { Op } from "sequelize";
 import Holder from "@backend/db/models/holder.model";
 import { handler, prepareItems } from "../utils";
+import Log from "@backend/db/models/log.model";
 
 const router = AppRouter();
 
 router.get(
-  "/holder",
+  "/holders",
   access("user"),
   validate({
     query: {
@@ -48,6 +49,54 @@ router.get(
     res.send(
       prepareItems(holders.rows as Api.Models.Holder[], holders.count, 0)
     );
+  })
+);
+
+router.post(
+  "/holder",
+  access("admin"),
+  validate({
+    query: {
+      firstName: tester().required(),
+      lastName: tester().required(),
+      middleName: tester().required(),
+      departmentId: tester().required().isNumber(),
+    },
+  }),
+  handler(async (req, res) => {
+    const { user } = req.params;
+    const { firstName, lastName, middleName, departmentId } = req.query;
+
+    const holder = await Holder.create({
+      firstName,
+      lastName,
+      middleName,
+      departmentId,
+    });
+
+    Log.log("holder", [holder.id], "create", user.id);
+
+    res.send({ id: holder.id });
+  })
+);
+
+router.delete(
+  "/holder",
+  access("admin"),
+  validate({
+    query: {
+      id: tester().required().isNumber(),
+    },
+  }),
+  handler(async (req, res) => {
+    const { user } = req.params;
+    const { id } = req.query;
+
+    const holder = await Holder.destroy({ where: { id } });
+
+    Log.log("holder", [id], "delete", user.id);
+
+    res.send();
   })
 );
 

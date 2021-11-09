@@ -6,24 +6,29 @@ import {
   Table,
   DataType,
   Unique,
+  DefaultScope,
 } from "sequelize-typescript";
 import { Optional } from "sequelize/types";
 
-@Table
+@Table({ defaultScope: { attributes: ["id", "name", "username", "role"] } })
 export default class User extends Model<
   DB.UserAttributes,
   DB.CreateAttributes<DB.UserAttributes>
 > {
+  @AllowNull(false)
+  @Column(DataType.STRING)
+  name: string;
+
   @Unique
   @AllowNull(false)
   @Column(DataType.STRING)
-  username!: string;
+  username: string;
 
   @AllowNull(false)
   @Column(DataType.STRING)
-  passwordHash!: string;
+  passwordHash: string;
 
   @AllowNull(false)
   @Column(DataType.STRING)
-  role!: Role;
+  role: Role;
 }

@@ -4,6 +4,7 @@ import {
   AsyncThunkPayloadCreator,
   configureStore,
   createAsyncThunk,
+  createSerializableStateInvariantMiddleware,
   EnhancedStore,
   Reducer,
 } from "@reduxjs/toolkit";
@@ -14,20 +15,27 @@ import { connectRouter, routerMiddleware } from "connected-react-router";
 import { useDispatch, useSelector } from "react-redux";
 import { api } from "./slices/api";
 import { setupListeners } from "@reduxjs/toolkit/dist/query";
+import { noticeSlice } from "./slices/notice";
 
 export const history = createBrowserHistory();
 export const reducers = {
   app: appSlice.reducer,
+  notice: noticeSlice.reducer,
   phone: phoneSlice.reducer,
   api: api.reducer,
   router: connectRouter<any>(history),
 };
+
+// const serializeMiddleware = createSerializableStateInvariantMiddleware({
+//   ignoredPaths: ["/api/holding"],
+// });
 
 export const store = configureStore({
   reducer: reducers,
   middleware: (middleware) => [
     ...middleware(),
     api.middleware,
+    // serializeMiddleware,
     routerMiddleware(history),
   ],
 });

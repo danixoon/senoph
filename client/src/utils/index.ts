@@ -17,14 +17,14 @@ export const mergeProps = <P extends MergingProps, T>(
 ): T & P => {
   return {
     ...ownProps,
-    ...newProps,
+    ...(newProps ?? {} as any),
     className: mergeClassNames(
       ownProps.className,
-      (newProps as MergingProps).className
+      (newProps as MergingProps)?.className
     ),
     style: {
-      ...(ownProps.style ?? {}),
-      ...((newProps as MergingProps).style ?? {}),
+      ...(ownProps.style ?? {} as any),
+      ...((newProps as MergingProps)?.style ?? {}),
     },
   };
 };

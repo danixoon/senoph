@@ -7,9 +7,13 @@ import {
   DataType,
   HasOne,
   BelongsTo,
+  BelongsToMany,
 } from "sequelize-typescript";
-import { Optional } from "sequelize/types";
+import { Op, Optional } from "sequelize";
 import Department from "./department.model";
+import Holding from "./holding.model";
+import HoldingPhone from "./holdingPhone.model";
+import Phone from "./phone.model";
 import PhoneType from "./phoneType.model";
 
 @Table
@@ -36,4 +40,21 @@ export default class Holder extends Model<
 
   @BelongsTo(() => Department)
   department: Department;
+
+  static async getByPhones(ids: number[]) {
+    const phoneHolderMap = new Map<number, Holder>();
+    const holders = (
+      await HoldingPhone.findAll({
+        where: { phoneId: { [Op.in]: ids } },
+        include: [{ model: Holding, include: [Holder] }],
+        attributes: ["phoneId"],
+      })
+    ).forEach((holding) =>
+      phoneHolderMap.set(holding.phoneId, holding.holding.holder)
+    );
+
+    return phoneHolderMap;
+  }
+
+  // @BelongsToMany(() =>  Phone, )
 }

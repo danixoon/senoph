@@ -4,6 +4,7 @@ import Hr from "components/Hr";
 import Icon from "components/Icon";
 import Span from "components/Span";
 import Input from "components/Input";
+import ClickInput from "components/ClickInput";
 import Label from "components/Label";
 import Layout from "components/Layout";
 import Link from "components/Link";
@@ -15,7 +16,7 @@ import "./style.styl";
 import Form, { FormError } from "components/Form";
 import ModelSelectionPopupContainer from "containers/ModelSelectionPopup";
 import { useFilterConfig } from "hooks/api/useFetchConfig";
-import HolderSelectionPopupContainer from "containers/HolderSelectionPopup";
+import DepartmentSelectionPopupContainer from "containers/HolderSelectionPopup";
 import { useFetchHolder } from "hooks/api/useFetchHolder";
 import ListItem from "components/ListItem";
 import { randomUUID } from "crypto";
@@ -28,7 +29,7 @@ export type PhoneCreatePopupProps = OverrideProps<
   {
     createPhones: (phones: Api.GetBody<"post", "/phone">["data"]) => any;
     error: string | null;
-    status: SplitStatus;
+    status: ApiStatus;
   }
 >;
 
@@ -69,11 +70,13 @@ const AddedItem: React.FC<{
   );
 };
 
-type InputType = Omit<Api.Models.Phone, "id" | "commitId" | "authorId">;
+type InputType = Omit<Api.Models.Phone, "id" | "commitId" | "authorId"> & {
+  holderId: number;
+};
 const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
   const { createPhones, error, ...rest } = props;
 
-  const [bind] = useInput<InputType & { search: string; value: string }>({
+  const [bind] = useInput<InputType>({
     accountingDate: null,
     inventoryKey: null,
     factoryKey: null,
@@ -81,9 +84,6 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
     assemblyDate: null,
     commissioningDate: null,
     phoneModelId: null,
-
-    search: null,
-    value: null,
   });
 
   const [isModelPopup, setModelPopup] = React.useState(() => false);
@@ -121,7 +121,7 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
   const [formError, setFormError] = React.useState<FormError>(() => ({}));
 
   const handleSubmit = () => {
-    const { search, value, ...rest } = bind.input;
+    const { ...rest } = bind.input;
     try {
       const attributes = checkEmptiness(rest);
 
@@ -188,7 +188,11 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
           </Header>
         </PopupTopBar>
         <Layout padding="md" flow="row" flex="1">
-          <Form onSubmit={() => handleSubmit()} inputError={formError}>
+          <Form
+            onSubmit={() => handleSubmit()}
+            inputError={formError}
+            input={bind.input}
+          >
             <Layout flow="row">
               <Layout>
                 <Input
@@ -197,13 +201,12 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
                   label="Инвентарный номер"
                 />
                 <Input {...bind} name="factoryKey" label="Заводской номер" />
-                <Input
+                <ClickInput
                   {...bind}
                   name="phoneModelId"
                   label="Модель"
                   mapper={mapModelName}
-                  inputProps={{ onClick: handleModelPopup }}
-                  onChange={void 0}
+                  onClick={handleModelPopup}
                 />
               </Layout>
               <Layout>
@@ -216,13 +219,12 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
                 <Input {...bind} name="accountingDate" label="Дата учёта" />
               </Layout>
             </Layout>
-            <Input
+            <ClickInput
               {...bind}
               name="holderId"
               label="Владелец"
               mapper={mapHolderName}
-              inputProps={{ onClick: handleHolderPopup }}
-              onChange={void 0}
+              onClick={handleHolderPopup}
             />
             <Hr style={{ marginTop: "auto" }} />
             <Layout>
@@ -272,13 +274,13 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
       <ModelSelectionPopupContainer
         isOpen={isModelPopup}
         onToggle={handleModelPopup}
-        bind={bind}
+        targetBind={bind}
         name="phoneModelId"
       />
-      <HolderSelectionPopupContainer
+      <DepartmentSelectionPopupContainer
         isOpen={isHolderPopup}
         onToggle={handleHolderPopup}
-        bind={bind}
+        targetBind={bind}
         name="holderId"
       />
     </>

@@ -4,31 +4,34 @@ import ItemSelectionPopup, {
   ItemSelectionPopupProps,
 } from "layout/Popups/ItemSelectionPopup";
 import { useFilterConfig } from "hooks/api/useFetchConfig";
+import { useInput } from "hooks/useInput";
 
 export type ModelSelectionPopupContainerProps = {
   onToggle: () => void;
   isOpen: boolean;
-} & Pick<ItemSelectionPopupProps, "name" | "bind">;
+} & Pick<ItemSelectionPopupProps, "name" | "targetBind">;
 
 const ModelSelectionPopupContainer: React.FC<ModelSelectionPopupContainerProps> = (
   props
 ) => {
-  const { bind, ...rest } = props;
+  const { targetBind, ...rest } = props;
 
   const { models } = useFilterConfig();
+  const [searchBind] = useInput({ search: "" });
 
   const isIncludes = (str: string) =>
-    bind.input.search
+    searchBind.input.search
       ? str
           .trim()
           .toLowerCase()
-          .includes(bind.input.search.trim().toLowerCase())
+          .includes(searchBind.input.search.trim().toLowerCase())
       : true;
 
   return (
     <ItemSelectionPopup
       {...rest}
-      bind={bind}
+      searchBind={searchBind}
+      targetBind={targetBind}
       items={models.filter((item) => isIncludes(item.name))}
       header="Выбор модели"
     />

@@ -1,21 +1,23 @@
 @require 'stylus/theme.styl'
 
 .span
-  
-  margin: margin.sm
-  padding: 0 padding.md
-  
-  // background-color: colors.white
-  // border-radius: radius.sm
-  display: flex
-  justify-content: center
-  align-items: center
+  &:not(&_inline)
+    display: flex
+    // justify-content: center
+    // align-items: center
+    // margin: margin.sm
+    // padding: 0 padding.md
 
+  &_center
+    justify-content: center
+    align-items: center
 
   &_sm
     font-size: fontSize.sm
   &_xs
     font-size: fontSize.xs
+
+ 
 
   &_monospace
     @extend .monospace
@@ -28,3 +30,7 @@
   &_primary
     color: colors.primary
     // border: 1px solid colors.primary
+
+   &_strike
+    color: colors.primary;
+    text-decoration: line-through

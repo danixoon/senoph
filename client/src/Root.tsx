@@ -6,6 +6,7 @@ import { Provider } from "react-redux";
 import { ConnectedRouter } from "connected-react-router";
 import "./stylus/default.styl";
 import { store, history } from "store";
+import NoticeLayerProvider from "providers/NoticeProvider";
 
 export type RootContainerProps = {};
 
@@ -15,10 +16,12 @@ const Root: React.FC<RootContainerProps> = (props) => {
   return (
     <React.StrictMode>
       <Provider store={store}>
-        <ConnectedRouter history={history} >
+        <ConnectedRouter history={history}>
           <ReactQueryCacheProvider queryCache={queryCache}>
             <PopupLayerProvider>
-              <RootLayout />
+              <NoticeLayerProvider>
+                <RootLayout />
+              </NoticeLayerProvider>
             </PopupLayerProvider>
           </ReactQueryCacheProvider>
         </ConnectedRouter>

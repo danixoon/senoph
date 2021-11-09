@@ -4,7 +4,15 @@
   @extend .unselectable
   display: flex
   position: absolute
-  background-color: colors.bgDark
+  if darkTheme
+    background-color: colors.white
+    color: colors.light
+    border: 1px solid colors.light
+
+  else
+    background-color: colors.bgDark
+    color: colors.white
+
   border-radius: radius.sm
   text-align: center
   padding: padding.md (padding.lg)
@@ -17,7 +25,7 @@
     z-index: zIndex.alt + zIndex.popup
 
   &__label
-    color: colors.white
+    color: inherit
     margin: auto
 
   &__icon

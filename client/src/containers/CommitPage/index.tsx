@@ -1,20 +1,47 @@
 import { useChanges } from "hooks/api/useChanges";
 // import { useFetchPhone } from "hooks/api/useFetchPhone";
 import { useFetchPhoneCommits } from "hooks/api/useFetchPhoneCommits";
-import CommitPage from "layout/Pages/CommitPage";
+import PhoneCommitPage, {
+  PhoneCommitPageTab,
+} from "layout/Pages/PhoneCommitPage";
 import React from "react";
-import { useLocation } from "react-router";
+import { Route, Switch, useLocation, useRouteMatch } from "react-router";
 import { useAppDispatch, useAppSelector } from "store";
 import { api } from "store/slices/api";
 import { login } from "store/slices/app";
 import { splitStatus } from "store/utils";
 
 type Props = {};
+
 const CommitPageContainer: React.FC<Props> = (props) => {
-  const { pathname } = useLocation();
+  const { path } = useRouteMatch();
 
-  const tab = pathname.split("/").pop();
+  return (
+    <Switch>
+      <Route path={`${path}/phone/create`}>
+        <PhoneCommitPageContainer tab="create" />
+      </Route>
+      <Route path={`${path}/phone/edit`}>
+        <PhoneCommitPageContainer tab="edit" />
+      </Route>
+      <Route path={`${path}/phone/delete`}>
+        <PhoneCommitPageContainer tab="delete" />
+      </Route>
+      <Route path={`${path}/holding/create`}>
+        <HoldingCommitContainer />
+      </Route>
+    </Switch>
+  );
+};
 
+const HoldingCommitContainer: React.FC<{}> = (props) => {
+  return <></>;
+};
+
+const PhoneCommitPageContainer: React.FC<{ tab: PhoneCommitPageTab }> = (
+  props
+) => {
+  const { tab } = props;
   const { data } = useFetchPhoneCommits();
 
   const fetchedCommits = data ?? { items: [], total: 0, offset: 0 };
@@ -48,8 +75,8 @@ const CommitPageContainer: React.FC<Props> = (props) => {
   const [declineCommitChanges] = api.useCommitChangesDeclineMutation();
 
   return (
-    <CommitPage
-      tab={tab as any}
+    <PhoneCommitPage
+      tab={tab}
       commits={{
         created: createdCommits,
         deleted: deletedCommits,

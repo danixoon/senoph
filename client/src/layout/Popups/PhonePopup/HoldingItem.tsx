@@ -5,25 +5,19 @@ import ListItem from "components/ListItem";
 import React from "react";
 
 const HoldingItem: React.FC<{
-  prevHolder: string;
-  nextHolder: string;
-  actKey: string;
-  actDate: Date;
+  holder: string;
+  orderDate: Date;
 }> = (props) => {
   return (
     <Layout className="holding-item">
-      <ListItem label="От">
-        <Link>{props.prevHolder}</Link>
+      <ListItem label="Владелец">
+        <Link>{props.holder}</Link>
       </ListItem>
-      <ListItem label="Кому">
-        <Link>{props.nextHolder}</Link>
-      </ListItem>
-      <ListItem label="Акт">
-        <Link size="sm">№{props.actKey}</Link>
+      <ListItem label="Приказ">
         <Label weight="bold" style={{ margin: "0 0.5rem" }}>
           от
         </Label>
-        <Link>{props.actDate.toLocaleDateString()}</Link>
+        <Link>{props.orderDate.toLocaleDateString()}</Link>
       </ListItem>
     </Layout>
   );

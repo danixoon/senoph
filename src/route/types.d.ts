@@ -54,14 +54,15 @@ declare namespace Api {
   // type ExpressHandler = import("express").Request;
   namespace Models {
     // declare namespace Api.Model {
-    type Phone = RequiredId<DB.PhoneAttributes>;
+    type Phone = RequiredId<DB.PhoneAttributes> & { holder?: Holder };
     type PhoneType = RequiredId<DB.PhoneTypeAttributes>;
     type PhoneCategory = RequiredId<DB.PhoneCategoryAttributes>;
     type PhoneModel = RequiredId<DB.PhoneModelAttributes>;
     type Department = RequiredId<DB.DepartmentAttributes>;
     type User = Omit<RequiredId<DB.UserAttributes>, "passwordHash">;
     type Holder = RequiredId<DB.HolderAttributes>;
-    type Holding = RequiredId<DB.HoldingAttributes>;
+    type Holding = RequiredId<DB.HoldingAttributes> & { phoneIds: number[] };
+    type Log = RequiredId<DB.LogAttributes>;
     // }
   }
 
@@ -220,7 +221,7 @@ declare namespace Api {
           {}
         >)
       | (() => RouteHandler<
-          "/holder",
+          "/holders",
           ItemsResponse<Api.Models.Holder>,
           {
             id?: number;
@@ -234,7 +235,63 @@ declare namespace Api {
           ItemsResponse<Api.Models.Phone>,
           { status?: CommitStatus },
           {}
-        >);
+        >)
+      | (() => RouteHandler<
+          "/phone/holdings",
+          ItemsResponse<Api.Models.Holding>,
+          { phoneIds: number[] },
+          {}
+        >)
+      | (() => RouteHandler<
+          "/holdings",
+          ItemsResponse<Api.Models.Holding>,
+          {
+            ids?: number[];
+            status?: CommitStatus;
+          },
+          {}
+        >)
+      | (() => RouteHandler<
+          "/categories",
+          ItemsResponse<Api.Models.PhoneCategory>,
+          {
+            ids?: number[];
+            status?: CommitStatus;
+          },
+          {}
+        >)
+      | (() => RouteHandler<
+          "/accounts",
+          ItemsResponse<Api.Models.User>,
+          {},
+          {}
+        >)
+      | (() => RouteHandler<
+          "/departments",
+          ItemsResponse<Api.Models.Department>,
+          {
+            ids?: number[];
+          },
+          {}
+        >)
+      | (() => RouteHandler<
+          "/phone/types",
+          ItemsResponse<Api.Models.PhoneType>,
+          {
+            ids?: number[];
+          },
+          {}
+        >)
+      | (() => RouteHandler<
+          "/phone/models",
+          ItemsResponse<Api.Models.PhoneModel>,
+          {
+            ids?: number[];
+            name?: string;
+          },
+          {}
+        >)
+      | (() => RouteHandler<"/logs", ItemsResponse<Api.Models.Log>, {}, {}>);
 
     post:
       | (() => RouteHandler<
@@ -246,7 +303,7 @@ declare namespace Api {
       | (() => RouteHandler<
           "/account",
           Api.Models.User,
-          { username: string; password: string; role: Role },
+          Omit<Api.Models.User, "id" | "createdAt"> & { password: string },
           {}
         >)
       | (() => RouteHandler<
@@ -259,6 +316,74 @@ declare namespace Api {
               "authorId" | "id"
             >[];
           }
+        >)
+      | (() => RouteHandler<
+          "/holding",
+          { holdingId: number },
+          {},
+          {
+            orderFile: FileList;
+            phoneIds: number[];
+            holderId: number;
+
+            reasonId: HoldingReason;
+            description?: string;
+
+            orderDate: Date;
+          }
+        >)
+      | (() => RouteHandler<
+          "/category",
+          {},
+          {},
+          {
+            categoryKey: string;
+            actFile: FileList;
+            actDate: Date;
+            phoneIds: number[];
+
+            description?: string;
+          }
+        >)
+      | (() => RouteHandler<
+          "/department",
+          { id: number },
+          { name: string; description?: string },
+          {}
+        >)
+      | (() => RouteHandler<
+          "/phone/type",
+          { id: number },
+          { name: string; description?: string },
+          {}
+        >)
+      | (() => RouteHandler<
+          "/phone/model",
+          { id: number },
+          {},
+          {
+            name: string;
+            phoneTypeId: number;
+            accountingDate: Date;
+            description?: string;
+            details: {
+              type: DB.PhoneModelDetailType;
+              name: string;
+              amount: number;
+              units: string;
+            }[];
+          }
+        >)
+      | (() => RouteHandler<
+          "/holder",
+          { id: number },
+          {
+            firstName: string;
+            lastName: string;
+            middleName: string;
+            departmentId: number;
+          },
+          {}
         >);
 
     put:
@@ -284,11 +409,20 @@ declare namespace Api {
           >
         >)
       | (() => RouteHandler<
-          "/commit/phone" | "/commit/holder",
+          | "/commit/phone"
+          | "/commit/holder"
+          | "/commit/holding"
+          | "/commit/category",
           {},
           {},
           { ids: number[]; action: CommitActionType }
         >);
+    // | (() => RouteHandler<
+    // "/commit/holding",
+    // {},
+    // { holdingId: number; action: CommitActionType },
+    // {}
+    // >);
     // | (() => RouteHandler<
     //     "/commit/entity",
     //     {},
@@ -307,7 +441,12 @@ declare namespace Api {
           { target: ChangesTargetName; targetId: number; keys?: string[] },
           {}
         >)
-      | (() => RouteHandler<"/phone", {}, { id: number }, {}>);
+      | (() => RouteHandler<"/phone", {}, { id: number }, {}>)
+      | (() => RouteHandler<"/account", {}, { id: number }, {}>)
+      | (() => RouteHandler<"/department", {}, { id: number }, {}>)
+      | (() => RouteHandler<"/phone/type", {}, { id: number }, {}>)
+      | (() => RouteHandler<"/phone/model", {}, { id: number }, {}>)
+      | (() => RouteHandler<"/holder", {}, { id: number }, {}>);
   };
 }
 

@@ -31,6 +31,7 @@ import Commit from "./commit.model";
 
 import Holder from "./holder.model";
 import Holding from "./holding.model";
+import HoldingPhone from "./holdingPhone.model";
 import PhoneCategory from "./phoneCategory.model";
 import PhoneModel from "./phoneModel.model";
 import User from "./user.model";
@@ -68,10 +69,10 @@ import User from "./user.model";
           model: PhoneModel,
           as: "model",
         },
-        {
-          model: Holder,
-          as: "holder",
-        },
+        // {
+        //   model: Holder,
+        //   as: "holder",
+        // },
         // {
         //   model: PhoneModel,
         // },
@@ -118,10 +119,10 @@ export default class Phone extends Model<
   @Column(DataType.INTEGER)
   phoneModelId: number;
 
-  @ForeignKey(() => Holder)
-  @AllowNull(false)
-  @Column(DataType.INTEGER)
-  holderId: number;
+  // @ForeignKey(() => Holder)
+  // @AllowNull(false)
+  // @Column(DataType.INTEGER)
+  // holderId: number;
 
   @AllowNull(true)
   @Validate({ isIn: [["create-pending", "delete-pending"]] })
@@ -139,8 +140,8 @@ export default class Phone extends Model<
   @Column(DataType.INTEGER)
   authorId: number;
 
-  @BelongsTo(() => Holder)
-  holder: Holder;
+  @BelongsToMany(() => Holding, () => HoldingPhone)
+  holdings: Holding[];
 
   @BelongsTo(() => PhoneModel)
   model: PhoneModel;
@@ -148,8 +149,8 @@ export default class Phone extends Model<
   @HasMany(() => PhoneCategory)
   categories: PhoneCategory[];
 
-  @HasMany(() => Holding)
-  holdings: Holding[];
+  // @HasMany(() => HoldingPhone)
+  // holdings: HoldingPhone[];
 
   @BeforeBulkUpdate
   static onBeforeUpdate(args: any) {
@@ -157,15 +158,15 @@ export default class Phone extends Model<
     args.attributes.statusAt = new Date().toISOString();
   }
 
-  // getStatus = () => {
-  //   const status: CommitStatus = this.isCommited
-  //     ? this.isSoftDeleted()
-  //       ? "deleted"
-  //       : "idle"
-  //     : "commited";
+  static async withHolders(phones: Phone[]) {
+    const holders = await Holder.getByPhones(phones.map((phone) => phone.id));
+    const mappedPhones = phones.map((phone) => ({
+      ...phone.toJSON(),
+      holder: holders.get(phone.id)?.toJSON(),
+    })) as Api.Models.Phone[];
 
-  //   return status;
-  // };
+    return mappedPhones;
+  }
 
   async getChanges(userId: number) {
     const changes = await getChangesById(userId, "phone", this.id);

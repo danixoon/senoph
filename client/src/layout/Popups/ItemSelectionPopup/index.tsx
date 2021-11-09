@@ -18,7 +18,8 @@ import PhoneEditActions from "layout/PhoneEditActions";
 export type ItemSelectionPopupProps = OverrideProps<
   PopupProps,
   {
-    bind: InputBind<{ value: string; search: string }>;
+    searchBind: InputBind<{ search: string }>;
+    targetBind: InputBind;
     name: string;
     items: { id: any; name: string; href?: string }[];
     header: string;
@@ -28,7 +29,7 @@ export type ItemSelectionPopupProps = OverrideProps<
 const Item: React.FC<{
   id: any;
   name: string;
-  href: string;
+  href?: string;
   onSelect: (id: any) => void;
 }> = (props) => {
   const { id, name, href, onSelect } = props;
@@ -58,8 +59,8 @@ const Item: React.FC<{
 };
 
 const ItemSelectionPopup: React.FC<ItemSelectionPopupProps> = (props) => {
-  const { items, bind, name, header, ...rest } = props;
   // const [searchBind] = useInput<{ search: string }>({ search: null });
+  const { items, searchBind, targetBind, name, header, ...rest } = props;
 
   return (
     <Popup {...rest} size="sm" closeable noPadding>
@@ -70,7 +71,7 @@ const ItemSelectionPopup: React.FC<ItemSelectionPopupProps> = (props) => {
           </Header>
           <Input
             name="search"
-            {...bind}
+            {...searchBind}
             inputProps={{ placeholder: "Запрос.." }}
           />
         </Layout>
@@ -81,10 +82,10 @@ const ItemSelectionPopup: React.FC<ItemSelectionPopupProps> = (props) => {
           .map((item) => (
             <Item
               key={item.id}
-              href={item.href ?? "#"}
+              href={item.href }
               {...item}
               onSelect={(id) => {
-                bind.onChange({ target: { name, value: id } });
+                targetBind.onChange({ target: { name, value: id } });
                 if (rest.onToggle) rest.onToggle(false);
               }}
             />

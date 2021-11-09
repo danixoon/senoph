@@ -5,26 +5,31 @@ import ItemSelectionPopup, {
   ItemSelectionPopupProps,
 } from "layout/Popups/ItemSelectionPopup";
 import { useFetchHolder } from "hooks/api/useFetchHolder";
+import { useInput } from "hooks/useInput";
 
 export type HolderSelectionPopupContainerProps = {
   onToggle: () => void;
+  departmentId?: any;
   isOpen: boolean;
-} & Pick<ItemSelectionPopupProps, "name" | "bind">;
+} & Pick<ItemSelectionPopupProps, "name" | "targetBind">;
 
 const HolderSelectionPopupContainer: React.FC<HolderSelectionPopupContainerProps> = (
   props
 ) => {
-  const { bind, ...rest } = props;
+  const { targetBind, departmentId, ...rest } = props;
 
-  const name = bind.input.search;
-  const query = clearObject({ name });
+  const [searchBind] = useInput({ search: "" });
+
+  const name = searchBind.input.search;
+  const query = clearObject({ name, departmentId });
 
   const { holders } = useFetchHolder(query);
 
   return (
     <ItemSelectionPopup
       {...rest}
-      bind={bind}
+      searchBind={searchBind}
+      targetBind={targetBind}
       items={
         holders?.items.map((item) => ({
           name: `${item.firstName} ${item.lastName} ${item.middleName}`,

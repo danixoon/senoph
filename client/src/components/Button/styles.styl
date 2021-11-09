@@ -5,7 +5,7 @@
   cursor: pointer
   border: none
   font-family: inherit
-  color: colors.white
+  
   display: flex
   justify-content: center
   align-items: center
@@ -45,6 +45,8 @@
 
       &:not(^[0]_inverted)  
         background-color: value
+        
+        color: lightness(value) > 1 ? colors.white : colors.dark
 
         &[disabled]
           background-color: lighten(@background-color, 50%)

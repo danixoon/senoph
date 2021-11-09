@@ -35,7 +35,7 @@ const Filter: React.FC<{
 
   return (
     <>
-      <Form className="filter-content__form">
+      <Form className="filter-content__form" input={bind.input}>
         <Layout>
           <Input {...bind} name="search" label="Запрос" />
           <Dropdown {...bind} name="phoneTypeId" label="Тип СС" items={types} />

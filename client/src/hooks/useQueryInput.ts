@@ -5,6 +5,7 @@ import { InputHook, InputHookPrepare, useInput } from "./useInput";
 import qs from "query-string";
 import { useLocation } from "react-router";
 import assert from "assert";
+import { clearObject } from "utils";
 
 type QueryInputHook = {};
 
@@ -14,7 +15,7 @@ const isEqual = (a: any, b: any) => {
 };
 
 export const useQueryInput = <T>(
-  defaultInput: T,
+  defaultInput: PartialNullable<T>,
   prepare: InputHookPrepare<T> = (k, v, i) => i
 ) => {
   const dispatch = useDispatch();
@@ -22,10 +23,15 @@ export const useQueryInput = <T>(
 
   const dispatchQuery = (input: PartialNullable<T>) => {
     const urlSearch = { ...input };
-    for (const key in urlSearch)
-      if (urlSearch[key] === null) delete urlSearch[key];
+    const search = clearObject(urlSearch);
 
-    dispatch(push(`${pathname}?${qs.stringify(urlSearch)}`));
+    dispatch(
+      push(
+        Object.keys(search).length === 0
+          ? pathname
+          : `${pathname}?${qs.stringify(search)}`
+      )
+    );
   };
 
   const [bind, setInput] = useInput<T>(defaultInput, (k, v, i) => {
@@ -36,10 +42,7 @@ export const useQueryInput = <T>(
 
   React.useEffect(() => {
     const q = qs.parse(search) as any;
-    if (!isEqual(q, bind.input)) {
-      console.log("oh..");
-      setInput({ ...q });
-    }
+    if (!isEqual(q, bind.input)) setInput({ ...q });
   }, [pathname, search]);
 
   return [

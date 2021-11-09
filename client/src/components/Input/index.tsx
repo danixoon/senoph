@@ -1,21 +1,23 @@
 import AltPopup from "components/AltPopup";
-import { InputErrorContext } from "components/Form";
+import { FormContext } from "components/Form";
 import Label from "components/Label";
+import Span from "components/Span";
 import { useIsFirstEffect } from "hooks/useIsFirstEffect";
 import { useTimeout } from "hooks/useTimeout";
 import * as React from "react";
 import { mergeClassNames, mergeProps } from "utils";
 import "./styles.styl";
 
-type InputProps<T = any> = OverrideProps<
+export type InputProps<T = any> = OverrideProps<
   React.InputHTMLAttributes<HTMLInputElement>,
   {
     input: T;
-    name: keyof T;
+    name: string; //keyof T;
     label?: string;
     info?: string;
     size?: Size;
     mapper?: (value: any) => any;
+    required?: boolean;
 
     inputProps?: React.InputHTMLAttributes<HTMLInputElement>;
   }
@@ -26,15 +28,19 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>((props, ref) => {
     label,
     info,
     size = "sm",
+    disabled,
     input,
     name,
+    required,
+    placeholder,
+    type,
     mapper,
     inputProps = {},
     onChange,
     ...rest
   } = props;
 
-  const mergedProps = mergeProps({ className: mergeClassNames(`input`) }, rest);
+  const mergedProps = mergeProps({ className: `input` }, rest);
   const value = input[name] ?? "";
 
   const handleOnChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
@@ -44,9 +50,27 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>((props, ref) => {
     if (onChange) onChange(e);
   };
 
-  const errorContext = React.useContext(InputErrorContext);
+  const formContext = React.useContext(FormContext);
 
-  const infoText = info ?? errorContext[name as string]?.message;
+  if (required)
+    formContext.addCheck(input, name, (v) =>
+      v == null ? "Значение обязательно" : false
+    );
+
+  if (type === "date")
+    formContext.addCheck(input, name, (v) => {
+      try {
+        if (!v) return false;
+
+        const date = new Date(v);
+        // date.
+        return false;
+      } catch (err) {
+        return "Некорректная дата";
+      }
+    });
+
+  // const infoText = info ?? formContext.error[name as string]?.message;
 
   const inputRef = React.useRef<HTMLInputElement | null>(null);
   const [show, message, toggleMessage] = useTimeout<string | null>(null, 2000);
@@ -56,24 +80,49 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>((props, ref) => {
   React.useEffect(() => {
     // TODO: Make error context nullable
     if (isFirst) return;
-    const msg = errorContext[name as string]?.message;
+    const msg = formContext.error[name]?.message;
     toggleMessage(msg);
-  }, [errorContext]);
+  }, [formContext.error[name]]);
 
   return (
     <div {...mergedProps}>
       {label && (
         <Label className="input__label" weight="medium" size={size}>
           {label}
+          {required ? (
+            <Span inline color="primary">
+              *
+            </Span>
+          ) : (
+            ""
+          )}
         </Label>
+      )}
+      {type === "file" ? (
+        <div
+          tabIndex={0}
+          onClick={() => inputRef.current?.click()}
+          className={mergeClassNames(
+            `input__element input_${size} input__element_file`
+          )}
+        >
+          {value == "" ? "Файл не выбран" : mapper ? mapper(value) : value}
+        </div>
+      ) : (
+        ""
       )}
       <input
         ref={(r) => (inputRef.current = r) && ref}
         className={mergeClassNames(`input__element input_${size}`)}
-        value={mapper ? mapper(value) : value}
         name={name as string}
         onChange={handleOnChange}
-        {...inputProps}
+        {...{
+          ...inputProps,
+          disabled,
+          placeholder,
+          type,
+          ...(type === "file" ? {} : { value: mapper ? mapper(value) : value }),
+        }}
       />
       <AltPopup
         target={show && message ? inputRef.current : null}
