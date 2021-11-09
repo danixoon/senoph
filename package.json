@@ -1,6 +1,6 @@
 {
   "name": "senoph",
-  "version": "0.0.1",
+  "version": "0.7.1",
   "main": "build/index.js",
   "author": "Daniil Bombenkov <danixoon@gmail.com>",
   "license": "MIT",
@@ -11,7 +11,7 @@
     "backend:test": "NODE_ENV=test jest --runInBand --forceExit",
     "backend:test:debug": "NODE_ENV=test node --inspect -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand --forceExit",
     "build": "yarn backend:build && mkdir ./build/public && cd client && yarn build && mv ./build/* ../build/public",
-    "start": "node ./build/index.js",
+    "start": "NODE_ENV=production node ./build/index.js",
     "test": "node --inspect -r ts-node/register -r tsconfig-paths/register src/parser.ts"
   },
   "devDependencies": {

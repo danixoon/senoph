@@ -20,7 +20,14 @@ export const init = async () => {
     host: process.env.DB_HOST,
     port: Number.parseInt(process.env.DB_PORT),
 
-    models: [path.resolve(__dirname, "./models/*.model.ts")],
+    models: [
+      path.resolve(
+        __dirname,
+        `./models/*.model.${
+          process.env.NODE_ENV === "production" ? "js" : "ts"
+        }`
+      ),
+    ],
     dialectOptions: {
       options: {
         encrypt: false,

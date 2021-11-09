@@ -22,8 +22,19 @@ export const init = async () => {
   app.use(logRequest());
   app.use("/api", ...routers);
 
-  app.use("/public", express.static(path.resolve(__dirname, "../client/public")));
-  app.use("*", express.static(path.resolve(__dirname, "../client/public")));
+  if (process.env.NODE_ENV === "production") {
+    app.use(
+      "/public",
+      express.static(path.resolve(__dirname, "./public"))
+    );
+    app.use("*", express.static(path.resolve(__dirname, "./public")));
+  } else {
+    app.use(
+      "/public",
+      express.static(path.resolve(__dirname, "../client/public"))
+    );
+    app.use("*", express.static(path.resolve(__dirname, "../client/public")));
+  }
 
   app.use(errorHandler);
 
