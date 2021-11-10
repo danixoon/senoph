@@ -117,7 +117,17 @@ const getRandomItems = <T>(count: number, items: T[]) =>
 const mapGenerated = <T = any>(size: number, f: (i: number) => T) =>
   new Array(size).fill(0).map((_, i) => f(i));
 
-export const fillTestDatabase = async (size: number = 100) => {
+export const fillProdDatabase = async () => {
+  const user = await User.create({
+    name: "Администратор",
+    username: "admin",
+    passwordHash:
+      "$2b$13$PwLX48c7HTCmRfqbsd8pq.f6BCkNYnQcyfYg95hx7p2jgLCd2jkqC",
+    role: "admin",
+  });
+};
+
+export const fillDevDatabase = async (size: number = 100) => {
   const user = await User.create({
     name: "Админушка",
     username: "admin",

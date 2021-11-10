@@ -1,6 +1,6 @@
 import path from "path";
 import fs from "fs/promises";
-import { fillTestDatabase } from "@backend/utils/db";
+import { fillDevDatabase, fillProdDatabase } from "@backend/utils/db";
 import { Sequelize } from "sequelize-typescript";
 import { logger } from "@backend/utils/index";
 
@@ -61,7 +61,8 @@ export const init = async () => {
   if (process.env.NODE_ENV !== "test") {
     await sequelize.drop({});
     await sequelize.sync({ logging: () => {}, force: true });
-    await fillTestDatabase();
+    if (process.env.NODE_ENV === "production") await fillProdDatabase();
+    else await fillDevDatabase();
   }
 };
 
