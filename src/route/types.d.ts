@@ -202,19 +202,6 @@ declare namespace Api {
           {}
         >)
       | (() => RouteHandler<
-          "/filter",
-          {
-            models: Pick<
-              Api.Models.PhoneModel,
-              "id" | "name" | "phoneTypeId"
-            >[];
-            types: Pick<Api.Models.PhoneType, "id" | "name">[];
-            departments: Pick<Api.Models.Department, "id" | "name">[];
-          },
-          {},
-          {}
-        >)
-      | (() => RouteHandler<
           "/model",
           ItemsResponse<Api.Models.PhoneModel>,
           { name?: string; id?: number },

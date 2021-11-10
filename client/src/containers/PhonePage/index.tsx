@@ -32,11 +32,6 @@ import { updateFilter, updateSelection } from "store/slices/phone";
 import Switch from "components/Switch";
 import PhoneCreatePopupContainer from "containers/PhoneCreatePopup";
 
-export type FilterQuery = Omit<
-  PartialNullable<Required<Api.GetQuery<"get", "/filter">>>,
-  "amount" | "offset"
-> & { selectedId: any };
-
 type PhonePageContainerProps = {};
 const PAGE_ITEMS = 15;
 

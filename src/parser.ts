@@ -1,5 +1,5 @@
 import { ReadStream } from "fs";
-import fs from "fs/promises";
+import { promises as fs } from "fs";
 import path from "path";
 
 type CallMap = { from: string; to: string; time: string; log: string };

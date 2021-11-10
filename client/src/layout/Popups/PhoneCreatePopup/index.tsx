@@ -19,7 +19,7 @@ import { useFilterConfig } from "hooks/api/useFetchConfig";
 import DepartmentSelectionPopupContainer from "containers/HolderSelectionPopup";
 import { useFetchHolder } from "hooks/api/useFetchHolder";
 import ListItem from "components/ListItem";
-import { randomUUID } from "crypto";
+import { v4 as uuid } from "uuid";
 import { EmptyError, checkEmptiness, convertDate } from "store/utils";
 import AltPopup from "components/AltPopup";
 import { useTimeout } from "hooks/useTimeout";

@@ -2,11 +2,13 @@ import * as React from "react";
 import { api } from "store/slices/api";
 
 export const useFilterConfig = () => {
-  const { data } = api.useFetchFilterConfigQuery({});
+  const { data: types } = api.useFetchPhoneTypesQuery({});
+  const { data: models } = api.useFetchPhoneModelQuery({});
+  const { data: departments } = api.useFetchDepartmentsQuery({});
 
-  const types = data?.types ?? [];
-  const models = data?.models ?? [];
-  const departments = data?.departments ?? [];
-
-  return { types, models, departments };
+  return {
+    types: types?.items ?? [],
+    models: models?.items ?? [],
+    departments: departments?.items ?? [],
+  };
 };
