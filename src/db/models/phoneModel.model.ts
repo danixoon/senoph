@@ -6,8 +6,10 @@ import {
   Table,
   DataType,
   Scopes,
+  HasMany,
 } from "sequelize-typescript";
 import { Optional } from "sequelize/types";
+import PhoneModelDetail from "./phoneModelDetail.model";
 
 import PhoneType from "./phoneType.model";
 
@@ -33,4 +35,11 @@ export default class PhoneModel extends Model<
   @AllowNull(false)
   @Column(DataType.INTEGER)
   phoneTypeId: number;
+
+  @HasMany(() => PhoneModelDetail)
+  details: PhoneModelDetail[];
+
+  @AllowNull(true)
+  @Column(DataType.STRING)
+  description?: string;
 }

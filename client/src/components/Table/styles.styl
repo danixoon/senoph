@@ -32,10 +32,13 @@ tr
         border-left-color: transparent
 
 td
-  @extend .border, .padding_md
+  @extend .b_t, .padding_md
+  
   
   // width: 1px;
-  // white-space: nowrap
+  white-space: nowrap
+  text-overflow: ellipsis
+  overflow: hidden
 
   &.cell_sortable
     cursor: pointer
@@ -69,8 +72,9 @@ td
     
 
 thead
-  @extend .weight_medium, .monospace
-  text-align: center
+  @extend .weight_bold, .monospace
+  // text-align: center
+  
 
   & > tr > td
     border: none
@@ -81,6 +85,7 @@ thead
   table-layout: fixed
   width: 100%
   word-wrap: break-word
+  color: colors.bgDark
 
   & > tbody > tr > td
     word-wrap: normal

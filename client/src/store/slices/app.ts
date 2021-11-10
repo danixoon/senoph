@@ -2,8 +2,6 @@ import axios from "axios";
 import api from "../../api";
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-
-
 export type AppState = {
   token: string | null;
   user: Api.Models.User;
@@ -11,7 +9,7 @@ export type AppState = {
 
 const initialState: AppState = {
   token: null,
-  user: { id: -1, username: "...", role: "unknown" },
+  user: { id: -1, username: "...", role: "unknown", name: "..." },
   status: "idle",
 };
 

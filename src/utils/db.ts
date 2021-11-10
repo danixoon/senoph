@@ -1,6 +1,7 @@
 import Department from "@backend/db/models/department.model";
 import Holder from "@backend/db/models/holder.model";
 import Holding from "@backend/db/models/holding.model";
+import HoldingPhone from "@backend/db/models/holdingPhone.model";
 import Phone from "@backend/db/models/phone.model";
 import PhoneCategory from "@backend/db/models/phoneCategory.model";
 import PhoneModel from "@backend/db/models/phoneModel.model";
@@ -116,8 +117,19 @@ const getRandomItems = <T>(count: number, items: T[]) =>
 const mapGenerated = <T = any>(size: number, f: (i: number) => T) =>
   new Array(size).fill(0).map((_, i) => f(i));
 
-export const fillTestDatabase = async (size: number = 100) => {
+export const fillProdDatabase = async () => {
   const user = await User.create({
+    name: "Администратор",
+    username: "admin",
+    passwordHash:
+      "$2b$13$PwLX48c7HTCmRfqbsd8pq.f6BCkNYnQcyfYg95hx7p2jgLCd2jkqC",
+    role: "admin",
+  });
+};
+
+export const fillDevDatabase = async (size: number = 100) => {
+  const user = await User.create({
+    name: "Админушка",
     username: "admin",
     passwordHash:
       "$2b$13$PwLX48c7HTCmRfqbsd8pq.f6BCkNYnQcyfYg95hx7p2jgLCd2jkqC",
@@ -246,7 +258,6 @@ export const fillTestDatabase = async (size: number = 100) => {
     commissioningDate: randomDate().toString(),
 
     phoneModelId: getRandomItem(models).id,
-    holderId: getRandomItem(holders).id,
     authorId: user.id,
     status:
       Math.random() > 0.5
@@ -256,37 +267,59 @@ export const fillTestDatabase = async (size: number = 100) => {
         : ("delete-pending" as const),
   }));
 
-  const phones = await Phone.bulkCreate(phonesData);  
+  const phones = await Phone.bulkCreate(phonesData);
+  const holding = await Holding.create({
+    holderId: getRandomItem(holders).id,
+    orderUrl: "sample.pdf",
+    orderDate: new Date().toISOString(),
+    reasonId: "initial" as const,
+    status: null,
+  });
+
+  const holdingPhones = await HoldingPhone.bulkCreate(
+    phones.map((phone) => ({ phoneId: phone.id, holdingId: holding.id }))
+  );
+
   const categories = Promise.all(
-    mapGenerated(size - 5, () => {
-      const phoneId = getRandomItem(phones).id;
+    mapGenerated(size - 5, (i) => {
+      const phoneId = phones[i].id;
       const date = randomDate();
-      return PhoneCategory.bulkCreate(
-        mapGenerated(Math.floor(Math.random() * 5), (i) => ({
-          category: (i + 1).toString(),
-          date: new Date(
-            date.getFullYear() + i,
-            date.getMonth(),
-            date.getDay()
-          ).toString(),
-          phoneId,
-        }))
-      );
+      return PhoneCategory.create({
+        categoryKey: "1",
+        actDate: date,
+        phoneId,
+        actUrl: "test.pdf",
+        status: null,
+      });
+      // return PhoneCategory.bulkCreate(
+      //   mapGenerated(Math.floor(Math.random() * 5), (i) => ({
+      //     categoryKey: (i + 1).toString(),
+      //     date: new Date(
+      //       date.getFullYear() + i,
+      //       date.getMonth(),
+      //       date.getDay()
+      //     ).toString(),
+      //     phoneId,
+      //     actKey: "12",
+      //     actUrl: "test.pdf",
+      //     status: null,
+      //   }))
+      // );
     })
   );
 
-  const holdingData = mapGenerated(size - 10, () => {
-    const randomHolders = getRandomItems(size - 10, holders);
-    const randomPhones = getRandomItems(size - 10, phones);
-    return {
-      actKey: `#${Math.floor(10 + Math.random() * 100)}`,
-      actDate: randomDate().toString(),
-      holderId: getRandomItem(randomHolders).id,
-      phoneId: getRandomItem(randomPhones).id,
-    };
-  });
+  // const holdingData = mapGenerated(size - 10, () => {
+  //   const randomHolders = getRandomItems(size - 10, holders);
+  //   const randomPhones = getRandomItems(size - 10, phones);
+  //   return {
+  //     actKey: `#${Math.floor(10 + Math.random() * 100)}`,
+  //     actDate: randomDate().toString(),
+  //     holderId: getRandomItem(randomHolders).id,
+  //     phoneId: getRandomItem(randomPhones).id,
+  //   };
+  // });
 
-  const holdings = await Holding.bulkCreate(holdingData);
+  // const holdings = await Holding.bulkCreate(holdingData);
 
   // console.log("fill complete.");
 };

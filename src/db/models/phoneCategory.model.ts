@@ -1,10 +1,13 @@
 import {
   AllowNull,
+  BeforeBulkUpdate,
   Column,
   DataType,
+  Default,
   ForeignKey,
   Model,
   Table,
+  Validate,
 } from "sequelize-typescript";
 import { Optional } from "sequelize/types";
 
@@ -20,14 +23,39 @@ export default class PhoneCategory extends Model<
 > {
   @AllowNull(false)
   @Column(DataType.DATE)
-  date: string;
+  actDate: string;
 
   @AllowNull(false)
   @Column(DataType.STRING)
-  category: string;
+  categoryKey: string;
+
+  @AllowNull(false)
+  @Column(DataType.STRING)
+  actUrl: string;
+
+  @AllowNull(true)
+  @Validate({ isIn: [["create-pending", "delete-pending"]] })
+  @Default("create-pending")
+  @Column(DataType.STRING)
+  status?: CommitStatus | null;
+
+  //TODO: Auto set status
+  @AllowNull(true)
+  @Column(DataType.DATE)
+  statusAt?: string;
+
+  @BeforeBulkUpdate
+  static onBeforeUpdate(args: any) {
+    args.fields.push("statusAt");
+    args.attributes.statusAt = new Date().toISOString();
+  }
 
   @ForeignKey(() => Phone)
   @AllowNull(false)
   @Column(DataType.INTEGER)
   phoneId: number;
+
+  @AllowNull(true)
+  @Column(DataType.STRING)
+  description?: string;
 }

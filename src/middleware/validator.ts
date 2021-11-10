@@ -2,17 +2,23 @@ import { ApiError, errorType } from "@backend/utils/errors";
 import { RequestHandler } from "express";
 import validator from "validator";
 
-type ValidationResult = { message?: string; isValid: boolean };
+type ValidationResult = { message?: string; isValid: boolean; value: any };
 type RemapValidator<T, S = any> = T extends (str: S, ...args: infer A) => any
   ? (...args: A) => Validator
   : never;
 
 type ValidatorExtensions = {
-  test: (value: string, key: string) => ValidationResult;
+  test: (
+    value: string,
+    key: string,
+    target: ValidationTarget
+  ) => ValidationResult;
   message: (str: string) => Validator;
   required: () => Validator;
-  array: (schema: ValidationSchema<any>) => Validator;
+  array: (schema?: ValidationSchema<any> | "int" | "float") => Validator;
   isNumber: () => Validator;
+  isBoolean: () => Validator;
+  isDate: () => Validator;
 };
 type Validator = ValidatorExtensions &
   {
@@ -24,8 +30,9 @@ type ValidatorConfig<Q = any, B = any> = {
   body?: ValidationSchema<B>;
 };
 
-type TesterContext = { property: string };
+type TesterContext = { property: string; target: ValidationTarget };
 type Tester = {
+  mapper?: (this: TesterContext, value: string) => any;
   test: (this: TesterContext, value: any) => boolean | string;
   message?: string;
 };
@@ -34,12 +41,45 @@ export const tester = () => {
   let isRequired: boolean = false;
   const testers: Tester[] = [];
   const extensions: ValidatorExtensions = {
+    isDate: () => {
+      testers.push({
+        mapper: function (v) {
+          try {
+            return new Date(v);
+          } catch (err) {
+            return null;
+          }
+        },
+        test: function (v) {
+          return v === null
+            ? `Некорректная дата передана парамтером '${this.property}'`
+            : true;
+        },
+      });
+
+      return proxy;
+    },
+    isBoolean: () => {
+      testers.push({
+        mapper: function (v) {
+          return v === "true" ? true : v === "false" ? false : null;
+        },
+        test: function (v) {
+          return v === null
+            ? `Значение параметра '${this.property}' может быть либо 'true' либо 'false'`
+            : true;
+        },
+      });
+
+      return proxy;
+    },
     isNumber: () => {
       testers.push({
+        mapper: function (v) {
+          return parseInt(v);
+        },
         test: function (v) {
-          const value = parseInt(v);
-
-          return !isNaN(value)
+          return !isNaN(v)
             ? true
             : `Значение параметра '${this.property}' не является числовым.`;
         },
@@ -55,10 +95,23 @@ export const tester = () => {
           if (v.length === 0)
             return `Параметром '${this.property}' был передан пустой массив.`;
 
+          if (!schema) return true;
+
           try {
-            for (const value of v) {
-              validateSchema(schema, value, { target: "query", strict: true });
-            }
+            if (typeof schema === "string") {
+              for (const value of v) {
+                if (isNaN(value))
+                  return schema === "float"
+                    ? `В массиве '${this.property}' поддерживаются только числовые значения`
+                    : `В массиве '${this.property}' поддерживаются только целочисленные значения`;
+              }
+            } else
+              for (const value of v) {
+                validateSchema(schema, value, {
+                  target: "query",
+                  strict: true,
+                });
+              }
 
             return true;
           } catch (err) {
@@ -68,19 +121,38 @@ export const tester = () => {
             return false;
           }
         },
+        mapper: function (v) {
+          if (Array.isArray(v)) return v;
+          
+          const value = v.toString() as string;
+          const values = value.split(",");
+          return typeof schema === "string"
+            ? values.map((value) =>
+                schema === "float" ? parseFloat(value) : parseInt(value)
+              )
+            : values;
+        },
       });
 
       return proxy;
     },
-    test: (value, key) => {
-      const result: ValidationResult = { isValid: true };
+    test: (value, key, target) => {
+      const result: ValidationResult = { isValid: true, value };
       // TODO: Доделать этот валидатор ААА
       if (!isRequired && value === undefined) return result;
 
       for (const t of testers) {
-        const isValid = t.test.call({ property: key }, value) as ReturnType<
+        const self = { property: key, target };
+        // TODO: Make mapper error handling
+        const mappedValue = !t.mapper
+          ? result.value
+          : t.mapper.call(self, result.value);
+        const isValid = t.test.call(self, mappedValue) as ReturnType<
           Tester["test"]
         >;
+
+        result.value = mappedValue;
+
         if (typeof isValid === "string" || !isValid) {
           result.isValid = false;
           result.message =
@@ -164,17 +236,34 @@ export const validateSchema = <T>(
       );
   }
 
+  const validatedObject = { ...object };
+
   for (const key in schema) {
     const validator = schema[key];
     const value = object[key];
 
-    const r = validator.test(value, key);
+    // const mapper = validator.
+    // let r: ValidationResult;
+    // try {
+    const r = validator.test(value, key, config.target);
+    // } catch (err) {
+    //   r = {
+    //     isValid: false,
+    //     value,
+    //     message: `Ошибка валидации параметра '${key}'`,
+    //   };
+    // }
+
     if (!r.isValid)
       throw new ValidationError(
         r.message ?? `Неверный параметр '${key}'`,
         config.target
       );
+
+    validatedObject[key] = r.value;
   }
+
+  return validatedObject;
 };
 
 export const validate: <P, Q, B, CQ extends Q, CB extends B>(
@@ -186,12 +275,18 @@ export const validate: <P, Q, B, CQ extends Q, CB extends B>(
 ) => Api.Request<P, any, Q, B> =
   (config, strict = true) =>
   (req, res, next) => {
-    const { query, body } = req;
+    let { query, body } = req;
     try {
       if (config.query)
-        validateSchema(config.query, query, { strict, target: "query" });
+        query = validateSchema(config.query, query, {
+          strict,
+          target: "query",
+        });
       if (config.body)
-        validateSchema(config.body, body, { strict, target: "body" });
+        body = validateSchema(config.body, body, { strict, target: "body" });
+
+      req.query = query;
+      req.body = body;
 
       next();
     } catch (err) {

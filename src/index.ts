@@ -6,7 +6,9 @@ import * as bodyParser from "body-parser";
 import { logger } from "@backend/utils/index";
 import { logger as logRequest } from "@backend/middleware/logger";
 
-dotenv.config();
+dotenv.config(
+  process.env.NODE_ENV === "production" ? { path: ".production.env" } : {}
+);
 
 import { init as initDb, close as closeDb } from "@backend/db/index";
 import { errorHandler } from "@backend/middleware/error";
@@ -22,8 +24,16 @@ export const init = async () => {
   app.use(logRequest());
   app.use("/api", ...routers);
 
-  app.use("/build", express.static(path.resolve(__dirname, "../client/build")));
-  app.use("*", express.static(path.resolve(__dirname, "../client/build")));
+  if (process.env.NODE_ENV === "production") {
+    app.use("/public", express.static(path.resolve(__dirname, "./public")));
+    app.use("*", express.static(path.resolve(__dirname, "./public")));
+  } else {
+    app.use(
+      "/public",
+      express.static(path.resolve(__dirname, "../client/public"))
+    );
+    app.use("*", express.static(path.resolve(__dirname, "../client/public")));
+  }
 
   app.use(errorHandler);
 

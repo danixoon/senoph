@@ -3,7 +3,7 @@
 .dropdown
   margin: margin.md
   position: relative
-  
+  min-height: 20px
 
   &_labeled
     height: 40px  
@@ -25,7 +25,7 @@
 
     ^[0]_opened > &
       @extend .shadow
-      z-index: zIndex.focused
+      z-index: zIndex.focused + 1
 
     & > .dropdown-item
       align-items: center

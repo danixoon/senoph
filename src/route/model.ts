@@ -13,22 +13,11 @@ import { AppRouter } from "../router";
 import { ApiError, errorType } from "../utils/errors";
 import { access } from "@backend/middleware/auth";
 import { tester, validate } from "@backend/middleware/validator";
+import PhoneModelDetail from "@backend/db/models/phoneModelDetail.model";
 
 const router = AppRouter();
 
-router.get(
-  "/model",
-  access("user"),
-  validate({ query: { id: tester().isNumeric(), name: tester() } }),
-  handler(async (req, res, next) => {
-    const { name } = req.query;
 
-    const where: any = name ? { name: { [Op.like]: name } } : undefined;
-    const models = await PhoneModel.findAll({ where });
-
-    res.send(prepareItems(models as Api.Models.PhoneModel[], models.length, 0));
-  })
-);
 
 // router.post(
 //   "/model",

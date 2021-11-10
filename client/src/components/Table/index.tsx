@@ -12,10 +12,12 @@ type TableItem<T> = {
   >;
 } & T;
 
-export type TableColumn = {
+export type TableColumn<T = any> = {
   key: string;
   header: React.ReactChild;
+  size?: string;
   sortable?: boolean;
+  mapper?: (v: any, row: T) => any;
 } & (
   | { type?: "date" }
   | { type?: "checkbox"; onToggle: (state: boolean, id: any) => void }
@@ -95,6 +97,8 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
     item: TableItem<any>,
     value: any
   ) => {
+    const mapper = column.mapper ?? ((v: any) => v);
+
     switch (column.type) {
       case "date":
         return new Date(value).toLocaleDateString();
@@ -109,7 +113,7 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
           />
         );
     }
-    return value;
+    return mapper(value, item);
   };
 
   // console.log(sortDir);
@@ -120,6 +124,7 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
         <tr>
           {columns.map((column) => (
             <TableCell
+              title={column.header.toString()}
               className={mergeClassNames(
                 column.type === "checkbox" && "cell_checkbox",
                 column.sortable && "cell_sortable",
@@ -131,6 +136,7 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
                 onSort(column.key, sortDir === "asc" ? "desc" : "asc")
               }
               key={column.key}
+              style={{ width: column.size }}
             >
               {column.header}
             </TableCell>

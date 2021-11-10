@@ -16,6 +16,9 @@ import { getModel } from "../db";
 import { handler, prepareItems } from "../utils";
 import Phone from "@backend/db/models/phone.model";
 import { ApiError, errorType } from "@backend/utils/errors";
+import Holding from "@backend/db/models/holding.model";
+import PhoneCategory from "@backend/db/models/phoneCategory.model";
+import Log from "@backend/db/models/log.model";
 
 const router = AppRouter();
 
@@ -35,6 +38,7 @@ router.get(
   }
 );
 
+// ???
 router.put(
   "/commit",
   access("user"),
@@ -51,6 +55,8 @@ router.put(
 
     const updater = getUpdater(target, targetId, id);
     await updater.commit();
+
+    // Log.log("phone", [targetId], "change", id);
 
     res.send();
   })
@@ -93,6 +99,64 @@ router.post(
 
     const updater = getUpdater(target, targetId, id);
     await updater.push(changes);
+
+    // Log.log("phone", [targetId], "commit", id);
+
+    res.send();
+  })
+);
+
+router.put(
+  "/commit/holding",
+  access("user"),
+  validate({
+    body: {
+      action: tester().isIn(["approve", "decline"]).required(),
+      ids: tester().array("int"),
+    },
+  }),
+  /* owner("") ,*/ handler(async (req, res) => {
+    const { user } = req.params;
+    const { action, ids } = req.body;
+    if (action === "approve")
+      await Holding.unscoped().update(
+        { status: null },
+        { where: { id: { [Op.in]: ids }, status: "create-pending" } }
+      );
+    else
+      await Holding.unscoped().destroy({
+        where: { id: { [Op.in]: ids }, status: "create-pending" },
+      });
+
+    Log.log("holding", ids, "commit", user.id, { action });
+
+    res.send();
+  })
+);
+
+router.put(
+  "/commit/category",
+  access("user"),
+  validate({
+    body: {
+      action: tester().isIn(["approve", "decline"]).required(),
+      ids: tester().array("int"),
+    },
+  }),
+  /* owner("") ,*/ handler(async (req, res) => {
+    const { user } = req.params;
+    const { action, ids } = req.body;
+    if (action === "approve")
+      await PhoneCategory.unscoped().update(
+        { status: null },
+        { where: { phoneId: { [Op.in]: ids }, status: "create-pending" } }
+      );
+    else
+      await PhoneCategory.unscoped().destroy({
+        where: { phoneId: { [Op.in]: ids }, status: "create-pending" },
+      });
+
+    Log.log("category", ids, "commit", user.id, { action });
 
     res.send();
   })
@@ -152,7 +216,7 @@ router.put(
     if (!withOwner(params, "phone") || !withUser(params))
       return next(new ApiError(errorType.INTERNAL_ERROR));
 
-    const { phone: phones } = params;
+    const { phone: phones, user } = params;
 
     await Promise.all(
       phones.map(async (phone) => {
@@ -180,6 +244,14 @@ router.put(
             break;
         }
       })
+    );
+
+    Log.log(
+      "phone",
+      phones.map((phone) => phone.id),
+      "commit",
+      user.id,
+      { action }
     );
 
     res.send();

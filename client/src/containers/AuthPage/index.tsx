@@ -9,7 +9,7 @@ const AuthPageContainer: React.FC<Props> = (props) => {
   const dispatch = useAppDispatch();
   const status = useAppSelector((state) => state.app.status);
   const handleOnLogin = (username: string, password: string) => {
-    dispatch(login({ password, username }));
+    dispatch(login({ password, username }) as any);
   };
   return <AuthPage status={splitStatus(status)} onLogin={handleOnLogin} />;
 };

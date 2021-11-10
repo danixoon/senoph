@@ -81,7 +81,7 @@ const FieldEditPopup: React.FC<FieldEditPopupProps> = (props) => {
 
   return (
     <Popup {...rest} size="sm">
-      <Form>
+      <Form input={bind.input}>
         {renderField()}
         <Button
           onClick={isReset ? handleReset : handleSubmit}

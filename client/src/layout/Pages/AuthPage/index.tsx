@@ -33,7 +33,7 @@ import "./style.styl";
 
 export type AuthPageProps = {
   onLogin: (username: string, password: string) => void;
-  status: SplitStatus;
+  status: ApiStatus;
 };
 
 const AuthPage: React.FC<AuthPageProps> = (props) => {
@@ -50,7 +50,7 @@ const AuthPage: React.FC<AuthPageProps> = (props) => {
 
   return (
     <Layout flex="1" className="auth-page">
-      <Form>
+      <Form input={bind.input}>
         <Header hr style={{ marginBottom: "1rem" }} align="center">
           Войдите в аккаунт
         </Header>
@@ -59,14 +59,16 @@ const AuthPage: React.FC<AuthPageProps> = (props) => {
           size="lg"
           label="Имя пользователя"
           name="username"
-          inputProps={{ type: "username", disabled: status.isLoading }}
+          type="username"
+          disabled={status.isLoading}
         />
         <Input
           {...bind}
           size="lg"
           label="Пароль"
           name="password"
-          inputProps={{ type: "password", disabled: status.isLoading }}
+          disabled={status.isLoading}
+          type="password"
         />
         <Button
           disabled={status.isLoading}

@@ -62,7 +62,7 @@ const Items: React.FC<{
   });
 
   const columns: TableColumn[] = [
-    { key: "id", header: "Ид.", sortable: true },
+    { key: "id", header: "ID", sortable: true, size: "30px" },
     {
       key: "inventoryKey",
       header: "Инвентарный номер",
@@ -74,18 +74,21 @@ const Items: React.FC<{
       type: "date",
       header: "Дата сборки",
       sortable: true,
+      size: "50px",
     },
     {
       key: "accountingDate",
       type: "date",
       header: "Дата учёта",
       sortable: true,
+      size: "50px",
     },
     {
       key: "commissioningDate",
       type: "date",
       header: "Дата ввода в эксплуатацию",
       sortable: true,
+      size: "50px",
     },
     { key: "modelName", header: "Модель", sortable: true },
   ];

@@ -107,11 +107,8 @@ const PhoneSelectionPopup: React.FC<PhoneSelectionPopup> = (props) => {
     }
   }, [items.length]);
 
-
-
   return (
     <>
-      
       <Popup {...rest} size="md" closeable noPadding>
         <PopupTopBar>
           <Header align="center" hr style={{ flex: 1 }}>
@@ -196,7 +193,7 @@ const PhoneSelectionPopup: React.FC<PhoneSelectionPopup> = (props) => {
               Действия с выбранным
             </Header>
             <Hr />
-            <PhoneEditActions flex="1">
+            <PhoneEditActions flex="1" phoneIds={items.map((item) => item.id)}>
               <Button color="primary" style={{ marginTop: "auto" }}>
                 Удалить всё
               </Button>

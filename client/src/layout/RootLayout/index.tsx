@@ -16,6 +16,9 @@ import { login } from "store/slices/app";
 import { replace } from "connected-react-router";
 import CommitPageContainer from "containers/CommitPage";
 import HoldingPageContainer from "containers/HoldingPage";
+import CategoryPageContainer from "containers/CategoryPage";
+import AdminPage from "layout/Pages/AdminPage";
+import "./style.styl";
 
 // export type RootLayoutProps = {
 //   isLogin?: boolean;
@@ -36,7 +39,7 @@ const RootLayout: React.FC<{}> = (props) => {
 
   // if (isFirstRender && token) dispatch(fetchAccount({}));
   React.useEffect(() => {
-    if (token) dispatch(login(token));
+    if (token) dispatch(login(token) as any);
   }, []);
 
   React.useEffect(() => {
@@ -59,7 +62,7 @@ const RootLayout: React.FC<{}> = (props) => {
         ) : (
           <>
             <SideBarContainer />
-            <Layout flow="column" flex="1">
+            <Layout flow="column" flex="1" className="page-content">
               <TopBarContainer ref={topBarRef} />
               <TopBarContext.Provider value={ref}>
                 <Switch>
@@ -71,6 +74,16 @@ const RootLayout: React.FC<{}> = (props) => {
                   </Route>
                   <Route path="/holding">
                     <HoldingPageContainer />
+                  </Route>
+                  <Route path="/category">
+                    <CategoryPageContainer />
+                  </Route>
+                  <Route path="/admin">
+                    {user.role === "admin" ? (
+                      <AdminPage />
+                    ) : (
+                      <Redirect to="/" />
+                    )}
                   </Route>
                 </Switch>
               </TopBarContext.Provider>

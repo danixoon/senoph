@@ -1,14 +1,50 @@
-colors = {
-  primary: #FB6376,
-  secondary: #FCB1A6,
-  bgDark: #5D2A42,
-  bgLight: #FFDCCC,
-  light: #EEEEEE,
-  dark: #1F1F1F,
-  muted: #616161,
-  disabled: #C5C5C5,
-  white: white
-}
+darkTheme = true
+
+if darkTheme
+  colors = {
+    primary: #FB6376,
+    secondary: #FCB1A6,
+    bgDark: #eeeeee,
+    bgLight: #FFDCCC,
+    light: #616161,
+    dark: white,
+    muted: #eeeeee,
+    disabled: #616161,
+    white: #303030
+    // ****
+    // primary: #FB6376,
+    // secondary: #FCB1A6,
+    // bgDark: #5D2A42,
+    // bgLight: #FFDCCC,
+    // light: #EEEEEE,
+    // dark: #1F1F1F,
+    // muted: #616161,
+    // disabled: #C5C5C5,
+    // white: white
+  }
+else
+  colors = {
+    // primary: #FB6376,
+    // secondary: #FCB1A6,
+    // bgDark: #eeeeee,
+    // bgLight: #FFDCCC,
+    // light: #616161,
+    // dark: white,
+    // muted: #eeeeee,
+    // disabled: #616161,
+    // white: #303030
+    // ****
+    primary: #FB6376,
+    secondary: #FCB1A6,
+    bgDark: #5D2A42,
+    bgLight: #FFDCCC,
+    light: #EEEEEE,
+    dark: #1F1F1F,
+    muted: #616161,
+    disabled: #C5C5C5,
+    white: white
+  }
+
 fontWeight = {
   normal: 400,
   medium: 500,
@@ -39,7 +75,7 @@ directions = {
 }
 zIndex = {
   zero: 0,
-  focused: 10,
+  focused: 0, // ???
   alt: 20,
   popup: 30
 }

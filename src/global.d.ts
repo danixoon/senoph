@@ -7,6 +7,7 @@ declare global {
       readonly DB_USERNAME: string;
       readonly DB_PASSWORD: string;
       readonly DB_NAME: string;
+      readonly DB_DIALECT: "mysql" | "postgres" | "mssql";
       readonly DB_PORT: string;
       readonly DB_HOST: string;
       readonly API_TEST_TOKEN: string;

@@ -82,4 +82,20 @@ storiesOf("Components/Inputs/Input", module)
         {...bind}
       />
     );
+  })
+  .add("file", () => {
+    const [bind] = useInput({
+      simple: "hello",
+    });
+    return (
+      <Input
+        size="md"
+        label="Введите текст"
+        name="simple"
+        type="file"
+        info="неверно"
+        placeholder="текст"
+        {...bind}
+      />
+    );
   });

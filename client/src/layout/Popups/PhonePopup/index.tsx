@@ -28,6 +28,8 @@ import EditableListItem from "./EditableListItem";
 import HoldingItem from "./HoldingItem";
 
 import "./style.styl";
+import { useFetchHolder, useLastHolder } from "hooks/api/useFetchHolder";
+import { useHolderName } from "hooks/misc/useHolderName";
 
 export type PhonePopupProps = {
   phone: Api.Models.Phone | null;
@@ -57,8 +59,17 @@ const Content: React.FC<
 
   const [bind] = useInput({ search: "", tab: "category" });
 
+  // const holder = useFetchHolder({ id:  })
+  // const holder =
+
+  // const holding = u
+
+  // const { holder } = useLastHolder(
+  //   (phone.holdings as Api.Models.Holding[]) ?? []
+  // );
   const typeName = types.find((t) => phone.model?.phoneTypeId === t.id)?.name;
   const modelName = phone.model?.name;
+  // const departmentName = departments.find(
   const departmentName = departments.find(
     (d) => phone.holder?.departmentId == d.id
   )?.name;
@@ -77,24 +88,23 @@ const Content: React.FC<
       phone.categories?.map((cat) => (
         <CategoryItem
           key={cat.id}
-          actDate={new Date(cat.date)}
-          actKey="13"
-          category={Number.parseInt(cat.category)}
+          actDate={new Date(cat.actDate)}
+          category={Number.parseInt(cat.categoryKey)}
         />
       ))
     ) : (
       <Header align="center">Категории отсутствуют.</Header>
     );
 
+  const getHolderName = useHolderName();
+
   const renderHoldings = () =>
     (phone.holdings?.length ?? 0) > 0 ? (
       phone.holdings?.map((hold) => (
         <HoldingItem
           key={hold.id}
-          actDate={new Date(hold.actDate)}
-          actKey={hold.actKey}
-          nextHolder="Пупа Лупа Пупович"
-          prevHolder="Попов Иван Анатольевич"
+          orderDate={new Date(hold.orderDate ?? Date.now())}
+          holder={getHolderName(hold.holder)}
         />
       ))
     ) : (
@@ -115,17 +125,16 @@ const Content: React.FC<
     targetId: -1,
   }));
 
-  const handleFieldEdit = (label = field.label, type = "text" as const) => (
-    targetId: number,
-    key: string
-  ) =>
-    setFieldEdit({
-      type,
-      isEdit: true,
-      label,
-      key,
-      targetId,
-    });
+  const handleFieldEdit =
+    (label = field.label, type = "text" as const) =>
+    (targetId: number, key: string) =>
+      setFieldEdit({
+        type,
+        isEdit: true,
+        label,
+        key,
+        targetId,
+      });
 
   // TODO: Контекст формы для Input-объектов
 
@@ -273,8 +282,12 @@ const Content: React.FC<
           {edit ? (
             <>
               <Hr vertical />
-              <PhoneEditActions>
-                <Button color="primary" style={{ marginTop: "auto" }} onClick={onDelete}>
+              <PhoneEditActions phoneIds={[phone.id]}>
+                <Button
+                  color="primary"
+                  style={{ marginTop: "auto" }}
+                  onClick={onDelete}
+                >
                   Удалить
                 </Button>
               </PhoneEditActions>

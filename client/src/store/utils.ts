@@ -73,7 +73,27 @@ export const getErrorMessage = (
   return err?.description ?? err?.message ?? "Ошибка";
 };
 
-export const splitStatus: (status: ActionStatus) => SplitStatus = (status) => {
+export const extractStatus = ({
+  isError,
+  isLoading,
+  isIdle,
+  isSuccess,
+  error,
+}: {
+  isError?: boolean;
+  isLoading?: boolean;
+  isIdle?: boolean;
+  isSuccess?: boolean;
+  error?: any;
+}) =>
+  ({
+    isLoading: isLoading === true,
+    isSuccess: isSuccess === true,
+    isError: isError === true,
+    isIdle: isIdle === true,
+    error: isApiError(error) ? error : null,
+  } as ApiStatus);
+export const splitStatus: (status: ActionStatus) => ApiStatus = (status) => {
   if (isApiError(status))
     return {
       isError: true,

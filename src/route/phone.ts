@@ -20,6 +20,11 @@ import { ApiError, errorType } from "../utils/errors";
 import { access, owner, withOwner } from "@backend/middleware/auth";
 import { tester, validate } from "@backend/middleware/validator";
 import { Filter } from "@backend/utils/db";
+import Holding from "@backend/db/models/holding.model";
+import HoldingPhone from "@backend/db/models/holdingPhone.model";
+import PhoneType from "@backend/db/models/phoneType.model";
+import PhoneModelDetail from "@backend/db/models/phoneModelDetail.model";
+import Log from "@backend/db/models/log.model";
 
 const router = AppRouter();
 
@@ -48,13 +53,67 @@ router.get(
   validate({ query: { id: tester().required().isNumber() } }),
   handler(async (req, res) => {
     const { id } = req.query;
-    const phone = (await Phone.findByPk(id, {
-      include: [{ all: true }],
-    })) as Api.Models.Phone;
+    const phone = await Phone.findByPk(id, {
+      include: [
+        PhoneModel,
+        PhoneCategory,
+        { model: Holding, include: [Holder] },
+      ],
+    });
 
     // TODO: Сделать проверку на статус правильной
-    if (phone != null && phone.status === null) res.send(phone);
-    else res.sendStatus(404);
+    if (phone != null && phone.status === null) {
+      const withHolder = await Phone.withHolders([phone]);
+      res.send(withHolder[0]);
+    } else res.sendStatus(404);
+  })
+);
+
+router.get(
+  "/phone/holdings",
+  access("user"),
+  validate({
+    query: {
+      // status: tester(),
+      // ids: tester().array("int"),
+      phoneIds: tester().array("int"),
+      // latest: tester().isBoolean(),
+    },
+  }),
+  handler(async (req, res) => {
+    // const { latest, phoneIds } = req.query;
+
+    // const filter = new Filter(req.query).add("status");
+    const filter = new Filter({ id: req.query.phoneIds }).add("id", Op.in);
+
+    const holdings = await Holding.findAll({
+      include: [
+        {
+          model: Phone,
+          where: filter.where,
+          attributes: ["id"],
+          // required: (req.query.phoneIds ?? []).length > 0,
+        },
+        Holder,
+      ],
+      // where: filter.where,
+    });
+
+    res.send(
+      prepareItems(
+        holdings.map((holding) => ({
+          id: holding.id,
+          holderId: holding.holderId,
+          phoneIds: holding.phones?.map((phone) => phone.id) ?? [],
+          reasonId: holding.reasonId,
+          orderDate: holding.orderDate,
+          orderUrl: holding.orderUrl,
+          holder: holding.holder,
+        })),
+        holdings.length,
+        0
+      )
+    );
   })
 );
 
@@ -70,9 +129,11 @@ router.get(
     const filter = new Filter(req.query);
     filter.add("status");
 
-    const phones = await Phone.scope("commit").findAll({ where: filter.where });
+    const phones = await Phone.withHolders(
+      await Phone.scope("commit").findAll({ where: filter.where })
+    );
 
-    res.send(prepareItems(phones as Api.Models.Phone[], phones.length, 0));
+    res.send(prepareItems(phones, phones.length, 0));
   })
 );
 
@@ -107,7 +168,7 @@ router.get(
       sortKey: orderKey,
       amount = 50,
       offset = 0,
-      category,
+      category: categoryKey,
       phoneModelId,
       departmentId,
       phoneTypeId,
@@ -150,39 +211,49 @@ router.get(
     if ((ids?.length ?? 0) > 0) whereId[Op.in] = ids;
 
     const include = [
-      {
-        model: Holder,
-        where: {
-          departmentId: valueOrNotNull(departmentId),
-        },
-      },
+      // {
+      // model: Holding,
+      // include: [Holder], // where: {
+      // departmentId: valueOrNotNull(departmentId),
+      // },
+      // },
     ] as any;
+    // ] as any;
 
     // if (phoneTypeId !== undefined || search !== undefined)
     include.push({
       model: PhoneModel,
-      where: {
-        phoneTypeId: valueOrNotNull(phoneTypeId),
-        name: search ? { [Op.substring]: search } : { [Op.not]: null },
-      },
-      required: phoneTypeId !== undefined || search !== undefined,
+      where: new Filter({ phoneTypeId, search })
+        .add("phoneTypeId")
+        .add("search", Op.substring).where,
+      //  {
+      //   phoneTypeId: valueOrNotNull(phoneTypeId),
+      //   name: search ? { [Op.substring]: search } : { [Op.not]: null },
+      // },
+      // required: phoneTypeId !== undefined || search !== undefined,
     });
 
-    if (departmentId !== undefined) include.push({ model: Department });
-
-    if (category !== undefined)
+    if (departmentId !== undefined)
       include.push({
-        model: PhoneCategory,
-        where: { category: valueOrNotNull(category?.toString()) },
+        model: Department,
+        where: new Filter({ id: departmentId }).add("id").where,
       });
 
+    if (categoryKey !== undefined)
+      include.push({
+        model: PhoneCategory,
+        where: new Filter({ categoryKey }).add("categoryKey").where, // { category: valueOrNotNull(category?.toString()) },
+      });
+
+    const filter = new Filter({
+      id: whereId,
+      phoneModelId,
+      inventoryKey,
+      factoryKey,
+    });
+
     const phones = await Phone.findAll({
-      where: {
-        id: whereId,
-        phoneModelId: valueOrNotNull(phoneModelId),
-        inventoryKey: valueOrNotNull(inventoryKey),
-        factoryKey: valueOrNotNull(factoryKey),
-      },
+      where: filter.where,
       include,
       order,
       // TODO: Избавиться от преобразований данных путём валидаторов в express
@@ -193,10 +264,9 @@ router.get(
     }).catch((err) => console.error(err));
 
     // TODO: Неоптимизированный костыль, но что поделать
-    const rows = (phones ?? []).slice(
-      offset_,
-      offset_ + limit_
-    ) as Api.Models.Phone[];
+    const rows = await Phone.withHolders(
+      (phones ?? []).slice(offset_, offset_ + limit_)
+    );
 
     if (phones) res.send(prepareItems(rows, phones.length, offset_));
     else
@@ -231,6 +301,9 @@ router.post(
     try {
       const phone = await Phone.create({ ...body.data[0], authorId: user.id });
 
+      // TODO: Сделать логгирование более строгим (через хуки?)
+      Log.log("phone", [phone.id], "create", user.id);
+
       res.send(phone);
     } catch (err) {
       if (err instanceof UniqueConstraintError) {
@@ -241,6 +314,155 @@ router.post(
         );
       }
     }
+  })
+);
+
+router.get(
+  "/phone/models",
+  access("user"),
+  validate({ query: { ids: tester().array("int"), name: tester() } }),
+  handler(async (req, res) => {
+    const { name } = req.query;
+
+    const filter = new Filter({ name });
+    filter.add("name", Op.like);
+
+    const models = await PhoneModel.findAll({
+      where: filter.where,
+      include: [PhoneModelDetail],
+    });
+
+    res.send(prepareItems(models as Api.Models.PhoneModel[], models.length, 0));
+  })
+);
+
+router.post(
+  "/phone/model",
+  access("admin"),
+  validate({
+    body: {
+      accountingDate: tester().required().isDate(),
+      phoneTypeId: tester().required().isNumber(),
+      name: tester().required(),
+      details: tester().array({
+        name: tester().required(),
+        units: tester().required(),
+        amount: tester().required().isNumber(),
+        // modelId: tester().required().isNumber(),
+        type: tester().required().isIn(["preciousMetal"]),
+      }),
+      description: tester(),
+    },
+  }),
+  handler(async (req, res) => {
+    const { user } = req.params;
+    const { accountingDate, phoneTypeId, name, details, description } =
+      req.body;
+
+    const model = await PhoneModel.create({
+      accountingDate: accountingDate.toISOString(),
+      phoneTypeId,
+      name,
+      description,
+    });
+
+    Log.log("model", [model.id], "create", user.id);
+
+    if (details) {
+      await PhoneModelDetail.bulkCreate(
+        details.map((detail) => ({
+          name: detail.name,
+          amount: detail.amount,
+          type: detail.type,
+          units: detail.units,
+          modelId: model.id,
+        }))
+      );
+    }
+
+    res.send({ id: model.id });
+  })
+);
+
+router.delete(
+  "/phone/model",
+  access("admin"),
+  validate({
+    query: {
+      id: tester().required().isNumber(),
+    },
+  }),
+  handler(async (req, res) => {
+    const { user } = req.params;
+    const { id } = req.query;
+
+    const model = await PhoneModel.destroy({ where: { id } });
+    Log.log("model", [id], "delete", user.id);
+
+    res.send();
+  })
+);
+
+router.get(
+  "/phone/types",
+  access("user"),
+  validate({
+    query: {
+      ids: tester().array("int"),
+    },
+  }),
+  handler(async (req, res) => {
+    const filter = new Filter({ id: req.query.ids }).add("id", Op.in);
+    const phoneTypes = await PhoneType.findAll({
+      where: filter.where,
+    });
+
+    res.send(
+      prepareItems(
+        phoneTypes.map((type) => type as Api.Models.PhoneType),
+        phoneTypes.length,
+        0
+      )
+    );
+  })
+);
+
+router.post(
+  "/phone/type",
+  access("admin"),
+  validate({
+    query: {
+      description: tester(),
+      name: tester().required(),
+    },
+  }),
+  handler(async (req, res) => {
+    const { user } = req.params;
+    const { description, name } = req.query;
+
+    const type = await PhoneType.create({ name, description });
+    Log.log("phoneType", [type.id], "create", user.id);
+
+    res.send({ id: type.id });
+  })
+);
+
+router.delete(
+  "/phone/type",
+  access("admin"),
+  validate({
+    query: {
+      id: tester().required().isNumber(),
+    },
+  }),
+  handler(async (req, res) => {
+    const { user } = req.params;
+    const { id } = req.query;
+
+    const phoneType = await PhoneType.destroy({ where: { id } });
+    Log.log("phoneType", [id], "delete", user.id);
+
+    res.send();
   })
 );
 
