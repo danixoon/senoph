@@ -12,7 +12,11 @@ export type InputFileBind<T = any> = {
 };
 
 export type InputHook<T = any> = [InputBind<T>, (input: T) => void];
-export type InputFileHook<T = any> = [InputFileBind<T>, (input: T) => void];
+export type InputFileHook<T = any> = [
+  InputFileBind<T> & { ref: (el: HTMLInputElement) => void },
+  (input: T) => void,
+  React.RefObject<HTMLInputElement | null>
+];
 
 export type InputHookPrepare<P> = <
   T extends PartialNullable<P>,
@@ -81,9 +85,9 @@ export const useInput = function <P = any, T = PartialNullable<P>>(
 
 export const useFileInput = function <
   P = any,
-  T extends PartialNullable<
-    { [K in keyof P]: FileList | null }
-  > = PartialNullable<{ [K in keyof P]: FileList | null }>
+  T extends PartialNullable<{
+    [K in keyof P]: FileList | null;
+  }> = PartialNullable<{ [K in keyof P]: FileList | null }>
 >(): InputFileHook<T> {
   const [input, setInput] = React.useState<T>(() => ({} as any));
 
@@ -99,5 +103,11 @@ export const useFileInput = function <
     textInput[prop] = (input[prop] as any)[0].name ?? "Не выбрано";
   }
 
-  return [{ input: textInput, files: input, onChange }, setInput];
+  const ref = React.useRef<HTMLInputElement | null>(null);
+
+  return [
+    { input: textInput, files: input, onChange, ref: (r) => (ref.current = r) },
+    setInput,
+    ref,
+  ];
 };

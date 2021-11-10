@@ -9,7 +9,7 @@ import Label from "components/Label";
 import Layout from "components/Layout";
 import Link from "components/Link";
 import Popup, { PopupProps, PopupTopBar } from "components/Popup";
-import { InputBind, useInput } from "hooks/useInput";
+import { InputBind, useFileInput, useInput } from "hooks/useInput";
 import * as React from "react";
 import qs from "query-string";
 import "./style.styl";
@@ -179,6 +179,10 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
 
   const submitRef = React.useRef<HTMLButtonElement | null>(null);
 
+  const [bindImport, _, ref] = useFileInput();
+
+  console.log(bindImport);
+
   return (
     <>
       <Popup {...rest} size="lg" closeable noPadding>
@@ -196,12 +200,14 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
               size="sm"
               color="primary"
               inverted
+              onClick={() => ref.current?.click()}
             >
               Импорт <Icon.Database />
-            </Button> 
+            </Button>
             <Button size="sm" color="primary" inverted>
               Шаблон <Icon.Download />
             </Button>
+            <Input hidden name="import" type="file" {...bindImport} />
           </Header>
         </PopupTopBar>
         <Layout padding="md" flow="row" flex="1">

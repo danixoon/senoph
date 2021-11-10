@@ -22,4 +22,19 @@ export const upload = (...ext: string[]) =>
     },
   }) as MapUpload<any, any, any, any>;
 
+export const uploadMemory = (...ext: string[]) =>
+  multer({
+    // dest: path.resolve(__dirname, "../../uploads/"),
+
+    fileFilter: (req, file, cb) => {
+      if (!ext.find((e) => file.originalname.endsWith(e)))
+        cb(
+          new ApiError(errorType.INVALID_BODY, {
+            description: `Расширение загружаемого файла должно быть одним из ${ext.join()}`,
+          })
+        );
+      else cb(null, true);
+    },
+  }) as MapUpload<any, any, any, any>;
+
 // export const upload;

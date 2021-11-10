@@ -164,6 +164,7 @@ declare namespace Api {
 
   type FnRequestsMap = {
     get:
+      | (() => RouteHandler<"/import", {}, { entity: "phone" }, {}>)
       | (() => RouteHandler<"/account", Api.Models.User, {}, {}>)
       | (() => RouteHandler<
           "/account/login",
@@ -281,6 +282,12 @@ declare namespace Api {
       | (() => RouteHandler<"/logs", ItemsResponse<Api.Models.Log>, {}, {}>);
 
     post:
+      | (<T extends "phone" | "model">() => RouteHandler<
+          `/import/${T}`,
+          {},
+          {},
+          { file: FileList }
+        >)
       | (() => RouteHandler<
           "/commit",
           {},

@@ -23,7 +23,7 @@ type ValidatorExtensions = {
   isBoolean: () => Validator;
   isDate: () => Validator;
 };
-type Validator = ValidatorExtensions & {
+export type Validator = ValidatorExtensions & {
   [K in keyof typeof validator]: RemapValidator<typeof validator[K]>;
 };
 type ValidationSchema<T> = Record<keyof T, Validator>;
