@@ -23,6 +23,7 @@ import { v4 as uuid } from "uuid";
 import { EmptyError, checkEmptiness, convertDate } from "store/utils";
 import AltPopup from "components/AltPopup";
 import { useTimeout } from "hooks/useTimeout";
+import { importPhone } from "api/import";
 
 export type PhoneCreatePopupProps = OverrideProps<
   PopupProps,
@@ -146,9 +147,9 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
     createPhones(
       addedPhones.map(({ payload, id, ...rest }) => ({
         ...rest,
-        accountingDate: convertDate(rest.accountingDate).toISOString(),
-        assemblyDate: convertDate(rest.assemblyDate).toISOString(),
-        commissioningDate: convertDate(rest.commissioningDate).toISOString(),
+        accountingDate: new Date(rest.accountingDate).toISOString(),
+        assemblyDate: new Date(rest.assemblyDate).toISOString(),
+        commissioningDate: new Date(rest.commissioningDate).toISOString(),
       }))
     );
   };
@@ -178,10 +179,13 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
   }, [rest.status.isSuccess]);
 
   const submitRef = React.useRef<HTMLButtonElement | null>(null);
+  // const importRef = React.useRef<HTMLInputElement | null>(null);
 
   const [bindImport, _, ref] = useFileInput();
 
-  console.log(bindImport);
+  React.useEffect(() => {
+    if (bindImport.files.file) importPhone(bindImport.files.file[0]);
+  }, [bindImport.files.file]);
 
   return (
     <>
@@ -195,19 +199,35 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
             <Span style={{ margin: "auto" }}>
               Добавление нового средства связи
             </Span>
-            <Button
-              style={{ marginLeft: "auto" }}
+            <Link
+              style={{ marginLeft: "auto", marginRight: "0.5rem" }}
               size="sm"
               color="primary"
-              inverted
-              onClick={() => ref.current?.click()}
+              // inverted
+              onClick={() => {
+                // console.log(importRef);
+                ref?.click();
+                // alert('lol');
+              }}
             >
-              Импорт <Icon.Database />
-            </Button>
-            <Button size="sm" color="primary" inverted>
-              Шаблон <Icon.Download />
-            </Button>
-            <Input hidden name="import" type="file" {...bindImport} />
+              Импорт <Icon.Database color="primary" />
+            </Link>
+            <Link
+              native
+              size="sm"
+              color="primary"
+              href="/api/import?entity=phone"
+            >
+              Шаблон <Icon.Download color="primary" />
+            </Link>
+            <Input
+              hidden
+              name="file"
+              type="file"
+              inputProps={{ accept: ".xlsx" }}
+              {...bindImport}
+              // ref={(r) => (importRef.current = r)}
+            />
           </Header>
         </PopupTopBar>
         <Layout padding="md" flow="row" flex="1">

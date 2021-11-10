@@ -8,6 +8,8 @@ type MapUpload<P, RB = any, Q = any, B = any, T = ReturnType<typeof multer>> = {
     : never;
 };
 
+const memoryStorage = multer.memoryStorage();
+
 export const upload = (...ext: string[]) =>
   multer({
     dest: path.resolve(__dirname, "../../uploads/"),
@@ -24,8 +26,7 @@ export const upload = (...ext: string[]) =>
 
 export const uploadMemory = (...ext: string[]) =>
   multer({
-    // dest: path.resolve(__dirname, "../../uploads/"),
-
+    storage: memoryStorage,
     fileFilter: (req, file, cb) => {
       if (!ext.find((e) => file.originalname.endsWith(e)))
         cb(

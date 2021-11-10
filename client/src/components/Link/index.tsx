@@ -10,9 +10,17 @@ export interface LinkProps
   > {
   isMonospace?: boolean;
   size?: "xs" | "sm";
+  native?: boolean;
 }
 const Link: React.FC<LinkProps> = ({ href, ...props }: LinkProps) => {
-  const { children, isMonospace, size = "sm", onClick, ...rest } = props;
+  const {
+    children,
+    isMonospace,
+    native,
+    size = "sm",
+    onClick,
+    ...rest
+  } = props;
 
   const mergedProps = mergeProps(
     {
@@ -25,12 +33,12 @@ const Link: React.FC<LinkProps> = ({ href, ...props }: LinkProps) => {
     rest
   );
 
-  return href ? (
+  return href && !native ? (
     <RouterLink to={href} tabIndex={0} {...mergedProps} onClick={onClick}>
       {children}
     </RouterLink>
   ) : (
-    <a href="#" tabIndex={0} {...mergedProps} onClick={onClick}>
+    <a href={href ?? "#"} tabIndex={0} {...mergedProps} onClick={onClick}>
       {children}
     </a>
   );

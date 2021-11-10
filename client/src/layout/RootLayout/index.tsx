@@ -19,6 +19,7 @@ import HoldingPageContainer from "containers/HoldingPage";
 import CategoryPageContainer from "containers/CategoryPage";
 import AdminPage from "layout/Pages/AdminPage";
 import "./style.styl";
+import Span from "components/Span";
 
 // export type RootLayoutProps = {
 //   isLogin?: boolean;
@@ -66,6 +67,17 @@ const RootLayout: React.FC<{}> = (props) => {
               <TopBarContainer ref={topBarRef} />
               <TopBarContext.Provider value={ref}>
                 <Switch>
+                  <Route exact path="/">
+                    <Layout
+                      style={{
+                        flex: 1,
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Span> Добро пожаловать, {user.name}! </Span>
+                    </Layout>
+                  </Route>
                   <Route path="/phone">
                     <PhonePageContainer />
                   </Route>

@@ -34,7 +34,16 @@ module.exports = {
           // Translates CSS into CommonJS
           "css-loader",
           // Compiles Styl to CSS
-          "stylus-loader",
+          {
+            loader: "stylus-loader",
+            options: {
+              stylusOptions: {
+                define: [
+                  ["$development", process.env.NODE_ENV === "development"],
+                ],
+              },
+            },
+          },
         ],
         exclude: /node_modules/,
       },
@@ -71,6 +80,9 @@ module.exports = {
     writeToDisk: true,
     historyApiFallback: true,
     open: true,
+    host: "0.0.0.0",
+    disableHostCheck: true,
+    public: require("child_process").execSync("gp url 3000").toString().trim(),
     proxy: {
       "/api": {
         target: "http://localhost:5000/",

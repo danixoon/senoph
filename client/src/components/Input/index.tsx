@@ -112,7 +112,12 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>((props, ref) => {
         ""
       )}
       <input
-        ref={(r) => (inputRef.current = r) && ref}
+        ref={(r) => {
+          inputRef.current = r;
+          // if (ref) return ref;
+          // console.log(ref);
+          if (typeof ref === "function") ref(r);
+        }}
         className={mergeClassNames(`input__element input_${size}`)}
         name={name as string}
         onChange={handleOnChange}

@@ -51,14 +51,14 @@ export const login = createAsyncThunk(
       if (typeof params !== "string") {
         const response = await api.request("get", "/account/login", {
           params,
-          body: {},
+          data: {},
         });
         token = response.token;
       }
 
       const account = await api.request("get", "/account", {
         params: {},
-        body: {},
+        data: {},
         token,
       });
 

@@ -15,7 +15,7 @@ import { access } from "@backend/middleware/auth";
 import { tester, validate, Validator } from "@backend/middleware/validator";
 import exceljs from "exceljs";
 import multer from "multer";
-import { uploadMemory } from "@backend/middleware/upload";
+import { upload, uploadMemory } from "@backend/middleware/upload";
 
 type Template = { label: string; id: string; validator?: Validator };
 
@@ -52,8 +52,12 @@ router.get(
     sheet.columns = template.map((t) => ({
       header: t.label,
       key: t.id,
-      style: { font: { bold: true }, alignment: { horizontal: "center" } },
     }));
+
+    const row = sheet.getRow(1);
+    
+    row.font = { bold: true };
+    row.alignment = { horizontal: "center" };
 
     sheet.columns.forEach(
       (col) => (col.width = (col.header as string).length * 1.4)
@@ -74,7 +78,7 @@ router.get(
 router.post(
   "/import/phone",
   access("user"),
-  validate({ body: { file: tester().required() } }),
+  // validate({ body: { file: tester().required() } }),
   uploadMemory(".xlsx").single("file"),
   handler(async (req, res, next) => {
     const {} = req.query;
@@ -88,9 +92,11 @@ router.post(
     const workbook = new exceljs.Workbook();
     await workbook.xlsx.load(file.buffer);
 
-		const cell = workbook.worksheets[0].getCell(2, 1); 
+    const cell = workbook.worksheets[0].getCell(2, 1);
 
-		res.send(cell.text);
+    console.log(cell.text);
+
+    res.send(cell.text);
   })
 );
 

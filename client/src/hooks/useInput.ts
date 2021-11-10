@@ -13,9 +13,9 @@ export type InputFileBind<T = any> = {
 
 export type InputHook<T = any> = [InputBind<T>, (input: T) => void];
 export type InputFileHook<T = any> = [
-  InputFileBind<T> & { ref: (el: HTMLInputElement) => void },
+  InputFileBind<T> & { ref: (e: HTMLInputElement) => void },
   (input: T) => void,
-  React.RefObject<HTMLInputElement | null>
+  HTMLInputElement | null
 ];
 
 export type InputHookPrepare<P> = <
@@ -106,8 +106,13 @@ export const useFileInput = function <
   const ref = React.useRef<HTMLInputElement | null>(null);
 
   return [
-    { input: textInput, files: input, onChange, ref: (r) => (ref.current = r) },
+    {
+      input: textInput,
+      files: input,
+      onChange,
+      ref: (e: HTMLInputElement) => (ref.current = e),
+    },
     setInput,
-    ref,
+    ref.current,
   ];
 };
