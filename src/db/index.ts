@@ -28,11 +28,14 @@ export const init = async () => {
         }`
       ),
     ],
-    dialectOptions: {
-      options: {
-        encrypt: false,
-      },
-    },
+    dialectOptions:
+      process.env.DB_DIALECT === "mssql"
+        ? {
+            options: {
+              encrypt: false,
+            },
+          }
+        : {},
 
     logging: (sql) => {
       const t = new Date();
