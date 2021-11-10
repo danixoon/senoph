@@ -183,8 +183,25 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
     <>
       <Popup {...rest} size="lg" closeable noPadding>
         <PopupTopBar>
-          <Header align="center" hr style={{ flex: 1 }}>
-            Добавление нового средства связи
+          <Header
+            align="center"
+            hr
+            style={{ flex: 1, display: "flex", alignItems: "center" }}
+          >
+            <Span style={{ margin: "auto" }}>
+              Добавление нового средства связи
+            </Span>
+            <Button
+              style={{ marginLeft: "auto" }}
+              size="sm"
+              color="primary"
+              inverted
+            >
+              Импорт <Icon.Database />
+            </Button> 
+            <Button size="sm" color="primary" inverted>
+              Шаблон <Icon.Download />
+            </Button>
           </Header>
         </PopupTopBar>
         <Layout padding="md" flow="row" flex="1">
@@ -210,13 +227,24 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
                 />
               </Layout>
               <Layout>
-                <Input {...bind} name="assemblyDate" label="Дата сборки" />
                 <Input
                   {...bind}
+                  type="date"
+                  name="assemblyDate"
+                  label="Дата сборки"
+                />
+                <Input
+                  {...bind}
+                  type="date"
                   name="commissioningDate"
                   label="Дата ввода в эксплуатацию"
                 />
-                <Input {...bind} name="accountingDate" label="Дата учёта" />
+                <Input
+                  {...bind}
+                  type="date"
+                  name="accountingDate"
+                  label="Дата учёта"
+                />
               </Layout>
             </Layout>
             <ClickInput
