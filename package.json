@@ -11,7 +11,8 @@
     "backend:test": "NODE_ENV=test jest --runInBand --forceExit",
     "backend:test:debug": "NODE_ENV=test node --inspect -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand --forceExit",
     "watch": "concurrently --names 'server,client' 'yarn backend:watch' 'cd client && yarn watch'",
-    "build": "yarn backend:build && mkdir ./build/public && cd client && yarn build && mv ./build/* ../build/public",
+    "build": "bash ./build.sh",
+    "build:zip": "rm ./app.zip || yarn build && zip -r app.zip ./ -x ./client/*",
     "start": "NODE_ENV=production node ./build/index.js",
     "test": "node --inspect -r ts-node/register -r tsconfig-paths/register src/parser.ts"
   },

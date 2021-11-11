@@ -4,7 +4,7 @@
   "main": "./build/index.js",
   "author": "Daniil Bombenkov <danixoon@gmail.com>",
   "scripts": {
-    "build": "yarn && NODE_ENV=production  yarn webpack",
+    "build": "yarn && NODE_ENV=production yarn webpack",
     "watch": "NODE_ENV=development webpack serve",
     "analize": "ANALIZE=true yarn && NODE_ENV=production webpack",
     "storybook": "BROWSER=none start-storybook",

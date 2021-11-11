@@ -71,7 +71,7 @@ const config = {
   output: {
     filename: "bundle.js",
     path: path.resolve(__dirname, "build"),
-    publicPath: "/",
+    publicPath: "/content/",
   },
   optimization: {
     minimizer: [new CssMinimizerPlugin()],

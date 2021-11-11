@@ -23,19 +23,18 @@ export const init = async () => {
   app.use(bodyParser.json());
   app.use(logRequest());
 
-  app.use("/api", ...routers);
+  app.use("/api", ...routers, notFoundHandler, errorHandler);
   app.use("/upload", express.static(path.resolve(__dirname, "../uploads")))
 
-  if (process.env.NODE_ENV === "production")
-    app.use("*", express.static(path.resolve(__dirname, "./public")));
+  if (process.env.NODE_ENV === "production") {
+    app.use("/content", express.static(path.resolve(__dirname, "./public")));
+    app.use("*", (r, res, n) => res.sendFile(path.resolve(__dirname, "./public/index.html")));
+  }
 
-  app.use(notFoundHandler);
-  app.use(errorHandler);
-
-  server = http.createServer(app);
 
   const port = Number(process.env.PORT) || 5000;
 
+  server = http.createServer(app);
   server.listen(port, async () => {
     await Promise.all([initDb()]);
     logger.info(`Сервер запущен`, {
