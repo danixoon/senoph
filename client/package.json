@@ -4,8 +4,9 @@
   "main": "./build/index.js",
   "author": "Daniil Bombenkov <danixoon@gmail.com>",
   "scripts": {
-    "build": "yarn && NODE_ENV=production webpack",
+    "build": "NODE_ENV=production yarn && webpack",
     "watch": "NODE_ENV=development webpack serve",
+    "analize": "NODE_ENV=production ANALIZE=true yarn && webpack",
     "storybook": "BROWSER=none start-storybook",
     "start": "node ./build/index.js"
   },
@@ -22,8 +23,10 @@
     "@types/uuid": "^8.3.1",
     "axios": "^0.21.0",
     "connected-react-router": "^6.9.1",
-    "framer-motion": "^4.1.17",
+    "css-minimizer-webpack-plugin": "^1",
+    "framer-motion": "^5.2.1",
     "history": "^4",
+    "mini-css-extract-plugin": "^1.6.2",
     "query-string": "^7.0.1",
     "react": "^17.0.2",
     "react-docgen-typescript": "^2.1.0",
