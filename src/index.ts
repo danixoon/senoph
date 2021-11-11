@@ -24,20 +24,10 @@ export const init = async () => {
   app.use(logRequest());
 
   app.use("/api", ...routers);
-  app.use("/upload", express.static(path.resolve(__dirname, "/uploads/")))
+  app.use("/upload", express.static(path.resolve(__dirname, "../uploads")))
 
-  if (process.env.NODE_ENV === "production") {
-    app.use(express.static(path.resolve(__dirname, "./public")));
-    // app.use("*", express.static(path.resolve(__dirname, "./public")));
-  } else {
-    // app.use(
-    //   "/public",
-    //   express.static(path.resolve(__dirname, "../client/build"))
-    // );
-    app.use("/", express.static(path.resolve(__dirname, "../build/public")));
-  }
-
-
+  if (process.env.NODE_ENV === "production")
+    app.use("*", express.static(path.resolve(__dirname, "./public")));
 
   app.use(notFoundHandler);
   app.use(errorHandler);

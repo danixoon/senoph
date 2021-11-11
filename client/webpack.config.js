@@ -11,7 +11,7 @@ const isDevelopment = process.env.NODE_ENV === "development";
 const config = {
   mode: isDevelopment ? "development" : "production",
   entry: path.resolve(__dirname, "src/index.tsx"),
-  devtool: "inline-source-map",
+  devtool: isDevelopment ? "inline-source-map" : undefined,
   module: {
     rules: [
       {
@@ -101,6 +101,9 @@ const config = {
     public: require("child_process").execSync("gp url 3000").toString().trim(),
     proxy: {
       "/api": {
+        target: "http://localhost:5000/",
+      },
+      "/upload": {
         target: "http://localhost:5000/",
       },
     },

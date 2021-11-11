@@ -142,8 +142,8 @@ router.get(
   access("user"),
   validate({
     query: {
-      ids: tester(),
-      exceptIds: tester(),
+      ids: tester().array("int"),
+      exceptIds: tester().array("int"),
       amount: tester().isNumber(),
       factoryKey: tester(),
       category: tester(),
@@ -157,10 +157,7 @@ router.get(
       sortKey: tester(),
     },
   }),
-  convertValues({
-    ids: (c) => c.toArray().toNumbers(false).value,
-    exceptIds: (c) => c.toArray().toNumbers(false).value,
-  }),
+
   handler(async (req, res) => {
     const {
       search,
@@ -252,15 +249,15 @@ router.get(
       factoryKey,
     });
 
+    filter.add("id");
+    filter.add("phoneModelId");
+    filter.add("inventoryKey", Op.substring);
+    filter.add("factoryKey", Op.substring);
+
     const phones = await Phone.findAll({
       where: filter.where,
       include,
       order,
-      // TODO: Избавиться от преобразований данных путём валидаторов в express
-      // offset: offset_,
-      // limit: limit_,
-      // subQuery: false,
-      // distinct: true
     }).catch((err) => console.error(err));
 
     // TODO: Неоптимизированный костыль, но что поделать
