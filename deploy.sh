@@ -25,6 +25,7 @@ echo "SET NODE_ENV=production node ./build/index.js" > ./deploy/start.bat
 echo -e '#!/usr/bin/env bash\nNODE_ENV=production node ./build/index.js' > ./deploy/start.sh
 
 cp .production.env ./deploy
+cp package.json ./deploy
 
 if $zip; then
 
