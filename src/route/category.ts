@@ -69,9 +69,9 @@ router.post(
     body: {
       description: tester(),
       categoryKey: tester().required(),
-      phoneIds: tester().array().required(),
-      actFile: tester().required(),
-      actDate: tester().isISO8601().required(),
+      phoneIds: tester().array("int").required(),
+      actFile: tester(),
+      actDate: tester().isDate().required(),
     },
   }),
   owner("phone", (req) => req.body.phoneIds),

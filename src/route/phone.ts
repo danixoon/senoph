@@ -232,8 +232,13 @@ router.get(
 
     if (departmentId !== undefined)
       include.push({
-        model: Department,
-        where: new Filter({ id: departmentId }).add("id").where,
+        model: Holding,
+        order: [[Holding, "orderDate", "ASC"]],
+        limit: 1,
+        // required: true,
+        include: [{
+          model: Holder, where: { departmentId },
+        }]
       });
 
     if (categoryKey !== undefined)

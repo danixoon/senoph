@@ -86,6 +86,7 @@ const HoldingPageContainer: React.FC<Props> = (props) => {
       phones={phones?.items ?? []}
       holdings={holdings?.items ?? []}
       phonesStatus={phonesStatus}
+      holdingCreationStatus={holdingCreationStatus}
       holdingsStatus={holdingsStatus}
       holdingHistory={holdingMap}
     />

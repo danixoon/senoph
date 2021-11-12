@@ -34,6 +34,7 @@ import { Route, Switch, useRouteMatch } from "react-router";
 import { useLastHolder } from "hooks/api/useFetchHolder";
 import Badge from "components/Badge";
 import SpoilerPopup, { SpoilerPopupButton } from "components/SpoilerPopup";
+import InfoBanner from "components/InfoBanner";
 
 export type HoldingPageProps = {
   phones: Api.Models.Phone[];
@@ -41,6 +42,7 @@ export type HoldingPageProps = {
   holdingHistory: Map<number, Api.Models.Holding[]>;
   phonesStatus: ApiStatus;
   holdingsStatus: ApiStatus;
+  holdingCreationStatus: ApiStatus;
 
   onSubmitHolding: (data: any) => void;
 };
@@ -60,7 +62,7 @@ export type HoldingPageProps = {
 // };
 
 const CreateContent: React.FC<HoldingPageProps> = (props) => {
-  const { phones, onSubmitHolding: onSubmit } = props;
+  const { phones, holdingCreationStatus, onSubmitHolding: onSubmit } = props;
   const columns: TableColumn[] = [
     {
       key: "id",
@@ -107,8 +109,6 @@ const CreateContent: React.FC<HoldingPageProps> = (props) => {
   const handleDepartmentPopup = () => {
     setDepartmentPopup(!isDepartmentPopup);
   };
-
-
 
   // const mapDepartmentName = (value: any) =>
   //   value === ""
@@ -213,11 +213,12 @@ const CreateContent: React.FC<HoldingPageProps> = (props) => {
                 marginLeft: "auto",
                 padding: "0 4rem",
               }}
+              disabled={holdingCreationStatus.isLoading}
               margin="md"
               type="submit"
               color="primary"
             >
-              Создать
+              {holdingCreationStatus.isLoading ? <LoaderIcon /> : "Создать"}
             </Button>
           </Layout>
         </Form>
@@ -382,21 +383,20 @@ const ViewContent: React.FC<HoldingPageProps> = (props) => {
 
   return (
     <>
-      <Table columns={columns} items={tableItems} />
+      {tableItems.length === 0 ? (
+        <InfoBanner
+          href="/phone/edit"
+          hrefContent="средство связи"
+          text="Движения для потдверждения отсутствуют. Создайте их, выбрав"
+        />
+      ) : (
+        <Table columns={columns} items={tableItems} />
+      )}
     </>
   );
 };
 
-const Info: React.FC<{ text: string; href: string; hrefContent: string }> = (
-  props
-) => (
-  <Label style={{ margin: "auto" }}>
-    <Span>{props.text}</Span>
-    <Link href={`${props.href}`} style={{ marginLeft: "0.2rem" }}>
-      {props.hrefContent}
-    </Link>
-  </Label>
-);
+
 
 const HoldingPage: React.FC<HoldingPageProps> = (props) => {
   const { phones } = props;
@@ -408,10 +408,10 @@ const HoldingPage: React.FC<HoldingPageProps> = (props) => {
       <Switch>
         <Route path={`${path}/create`}>
           {phones.length === 0 ? (
-            <Info
+            <InfoBanner
               href="/phone/edit"
               hrefContent="средство связи"
-              text="Для создания движения"
+              text="Для создания движения выберите"
             />
           ) : (
             <CreateContent {...props} />

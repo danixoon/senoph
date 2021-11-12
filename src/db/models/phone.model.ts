@@ -143,6 +143,8 @@ export default class Phone extends Model<
   @BelongsToMany(() => Holding, () => HoldingPhone)
   holdings: Holding[];
 
+  // INNER JOIN Holdings ... SORT BY DATE
+
   @BelongsTo(() => PhoneModel)
   model: PhoneModel;
 

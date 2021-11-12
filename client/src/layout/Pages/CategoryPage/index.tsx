@@ -34,11 +34,13 @@ import { Route, Switch, useRouteMatch } from "react-router";
 import { useLastHolder } from "hooks/api/useFetchHolder";
 import Badge from "components/Badge";
 import SpoilerPopup, { SpoilerPopupButton } from "components/SpoilerPopup";
+import InfoBanner from "components/InfoBanner";
 
 export type CategoryPageProps = {
   phones: Api.Models.Phone[];
   categories: Api.Models.PhoneCategory[];
   categoriesPhones: Map<number, Api.Models.Phone>;
+  categoryCreationStatus: ApiStatus;
   phonesStatus: ApiStatus;
   categoriesStatus: ApiStatus;
 
@@ -46,7 +48,7 @@ export type CategoryPageProps = {
 };
 
 const CreateContent: React.FC<CategoryPageProps> = (props) => {
-  const { phones, onSubmitCategory: onSubmit } = props;
+  const { phones, categoryCreationStatus, onSubmitCategory: onSubmit } = props;
   const columns: TableColumn[] = [
     {
       key: "id",
@@ -77,7 +79,7 @@ const CreateContent: React.FC<CategoryPageProps> = (props) => {
     departmentName: getDepartmentName(phone.holder?.departmentId),
   }));
 
-  const noticeContext = React.useContext(NoticeContext);
+
 
   // TODO: Make proper typing for POST request params & form inputs
   return (
@@ -92,7 +94,7 @@ const CreateContent: React.FC<CategoryPageProps> = (props) => {
           }}
           onSubmit={(data) => {
             onSubmit(data);
-            noticeContext.createNotice("Категория создана");
+            // noticeContext.createNotice("Категория создана");
           }}
         >
           <Layout flow="row">
@@ -137,8 +139,9 @@ const CreateContent: React.FC<CategoryPageProps> = (props) => {
               margin="md"
               type="submit"
               color="primary"
+              disabled={categoryCreationStatus.isLoading}
             >
-              Создать
+              {categoryCreationStatus.isLoading ? <LoaderIcon /> : "Создать"}
             </Button>
           </Layout>
         </Form>
@@ -246,7 +249,7 @@ const ViewContent: React.FC<CategoryPageProps> = (props) => {
 };
 
 const CategoryPage: React.FC<CategoryPageProps> = (props) => {
-  const { phones } = props;
+  const { phones, categories } = props;
 
   const { path } = useRouteMatch();
 
@@ -255,18 +258,25 @@ const CategoryPage: React.FC<CategoryPageProps> = (props) => {
       <Switch>
         <Route path={`${path}/create`}>
           {phones.length === 0 ? (
-            <Label style={{ margin: "auto" }}>
-              <Span>Для смены категории выберите</Span>
-              <Link href="/phone/edit" style={{ marginLeft: "0.2rem" }}>
-                средство связи
-              </Link>
-            </Label>
+            <InfoBanner
+              text="Для смены категории выберите"
+              hrefContent="средство связи"
+              href="/phone/edit"
+            />
           ) : (
             <CreateContent {...props} />
           )}
         </Route>
         <Route path={`${path}/view`}>
-          <ViewContent {...props} />
+          {categories.length === 0 ? (
+            <InfoBanner
+              text="Категории для подтверждения отсутствуют. Добавьте их, выбрав"
+              hrefContent="средство связи"
+              href="/phone/edit"
+            />
+          ) : (
+            <ViewContent {...props} />
+          )}
         </Route>
       </Switch>
     </Layout>
