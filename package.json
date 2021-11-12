@@ -7,7 +7,7 @@
   "scripts": {
     "backend:watch": "TS_NODE_FILES=true nodemon --exec \"node --inspect -r ts-node/register -r tsconfig-paths/register src/index.ts\"",
     "backend:start": "NODE_ENV=production node ./build/index.js",
-    "backend:build": "NODE_ENV=production yarn && rm -rf ./build && ttsc",
+    "backend:build": "yarn && rm -rf ./build && ttsc",
     "backend:test": "NODE_ENV=test jest --runInBand --forceExit",
     "backend:test:debug": "NODE_ENV=test node --inspect -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand --forceExit",
     "watch": "concurrently --names 'server,client' 'yarn backend:watch' 'cd client && yarn watch'",
@@ -45,6 +45,7 @@
     "@types/validator": "^13.1.4",
     "@types/winston": "^2.4.4",
     "@types/ws": "^7.4.0",
+    "@types/bcryptjs": "^2.4.2",
     "axios": "^0.21.1",
     "babel-jest": "^26.6.3",
     "concurrently": "^6.3.0",
@@ -57,7 +58,6 @@
     "typescript": "^4.0.5"
   },
   "dependencies": {
-    "@types/bcryptjs": "^2.4.2",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
     "colors": "^1.4.0",

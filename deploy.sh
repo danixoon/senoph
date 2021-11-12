@@ -23,19 +23,14 @@ mv ./build ./deploy
 
 echo "SET NODE_ENV=production node ./build/index.js" > ./deploy/start.bat
 echo -e '#!/usr/bin/env bash\nNODE_ENV=production node ./build/index.js' > ./deploy/start.sh
+echo -e 'process.env.NODE_ENV="production";\n' >> ./deploy/build/index.js
 
 cp .production.env ./deploy
 cp package.json ./deploy
 
 if $zip; then
-
   if [[ -e "./deploy.zip" ]]; then
     rm ./deploy.zip
   fi
   zip -r deploy.zip ./deploy
 fi
-
-
-
-
-# ZIP = false

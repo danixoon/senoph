@@ -31,8 +31,7 @@ export const init = async () => {
     app.use("*", (r, res, n) => res.sendFile(path.resolve(__dirname, "./public/index.html")));
   }
 
-
-  const port = Number(process.env.PORT) || 5000;
+  const port = process.env.PORT || 5000;
 
   server = http.createServer(app);
   server.listen(port, async () => {
