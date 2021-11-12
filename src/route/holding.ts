@@ -80,12 +80,12 @@ router.post(
     body: {
       description: tester(),
       orderDate: tester().isDate().required(),
-      holderId: tester().isNumeric().required(),
+      holderId: tester().isNumber().required(),
       reasonId: tester()
-        .isIn(["initial", "write-off", "movement", "dismissal"])
+        .isIn(["initial", "write-off", "movement", "dismissal", "order", "other"])
         .required(),
       phoneIds: tester().array().required(),
-      orderFile: tester().required(),
+      orderFile: tester()
     },
   }),
   owner("phone", (req) => req.body.phoneIds),

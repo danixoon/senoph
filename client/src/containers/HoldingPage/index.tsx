@@ -1,5 +1,6 @@
 import { useQueryInput } from "hooks/useQueryInput";
 import HoldingPage from "layout/Pages/HoldingPage";
+import { NoticeContext } from "providers/NoticeProvider";
 import React from "react";
 import { QueryStatus } from "react-query";
 import { getStatusProps } from "react-query/types/core/utils";
@@ -59,7 +60,23 @@ const HoldingPageContainer: React.FC<Props> = (props) => {
   const phonesStatus = extractStatus(phonesRest);
   const holdingsStatus = extractStatus(holdingsRest);
 
-  const [createHolding] = api.useCreateHoldingMutation();
+  const noticeContext = React.useContext(NoticeContext);
+
+  const [createHolding, holdingCreationInfo] = api.useCreateHoldingMutation();
+
+  const holdingCreationStatus = extractStatus(holdingCreationInfo);
+
+  React.useEffect(() => {
+    if (holdingCreationStatus.isLoading)
+      noticeContext.createNotice("Движение создаётся..");
+    if (holdingCreationStatus.isSuccess)
+      noticeContext.createNotice("Движение создано.");
+    if (holdingCreationStatus.isError)
+      noticeContext.createNotice(
+        "Ошибка создание движения: " + holdingCreationStatus.error?.message,
+        "danger"
+      );
+  }, [holdingCreationInfo.status]);
 
   return (
     <HoldingPage

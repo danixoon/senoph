@@ -63,6 +63,7 @@ const Items: React.FC<{
 
   const columns: TableColumn[] = [
     { key: "id", header: "ID", sortable: true, size: "30px" },
+    { key: "modelName", header: "Модель", sortable: true },
     {
       key: "inventoryKey",
       header: "Инвентарный номер",
@@ -90,7 +91,6 @@ const Items: React.FC<{
       sortable: true,
       size: "50px",
     },
-    { key: "modelName", header: "Модель", sortable: true },
   ];
 
   if (mode === "edit")

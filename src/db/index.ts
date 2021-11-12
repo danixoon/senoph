@@ -56,11 +56,21 @@ export const init = async () => {
     // return close();
   }
 
-  // Disable logging for syncing
-  if (process.env.NODE_ENV !== "test") {
-    await sequelize.drop({});
-    await sequelize.sync({ logging: () => { }, force: true });
-    if (process.env.NODE_ENV === "production") await fillProdDatabase();
+  const isProd = process.env.NODE_ENV === "production";
+  const isTest = process.env.NODE_ENV === "test";
+
+  if (!isTest) {
+    if (!isProd)
+      await sequelize.drop({});
+    await sequelize.sync({
+      logging: (sql) => {
+        const t = new Date();
+        const log = `[${t.toLocaleDateString()} ${t.toLocaleTimeString()} | sync] ${sql}\n`;
+        dbLogger.write(log);
+      }, force: !isProd
+    });
+
+    if (isProd) await fillProdDatabase();
     else await fillDevDatabase();
   }
 };

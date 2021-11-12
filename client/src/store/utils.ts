@@ -91,7 +91,7 @@ export const extractStatus = ({
     isSuccess: isSuccess === true,
     isError: isError === true,
     isIdle: isIdle === true,
-    error: isApiError(error) ? error : null,
+    error: isApiError(error?.data?.error) ? error?.data?.error : null,
   } as ApiStatus);
 export const splitStatus: (status: ActionStatus) => ApiStatus = (status) => {
   if (isApiError(status))

@@ -18,7 +18,7 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
     const e = err as Error;
     const p = process.env.NODE_ENV !== "production" ? { payload: e } : {};
     res.status(500).send({
-      error: { ...errorMap[errorType.INTERNAL_ERROR], ...p },
+      error: { ...errorMap[errorType.INTERNAL_ERROR], name: "INTERNAL_ERROR", ...p },
     });
     logger.error(e.message, {
       service: "api",

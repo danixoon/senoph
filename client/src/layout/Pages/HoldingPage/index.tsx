@@ -28,7 +28,7 @@ import { api } from "store/slices/api";
 import "./style.styl";
 import { useAppDispatch } from "store";
 import { createNotice } from "store/slices/notice";
-import { NoticeContext } from "providers/NoticeProvider";
+
 import FileInput from "components/FileInput";
 import { Route, Switch, useRouteMatch } from "react-router";
 import { useLastHolder } from "hooks/api/useFetchHolder";
@@ -108,7 +108,7 @@ const CreateContent: React.FC<HoldingPageProps> = (props) => {
     setDepartmentPopup(!isDepartmentPopup);
   };
 
-  const noticeContext = React.useContext(NoticeContext);
+
 
   // const mapDepartmentName = (value: any) =>
   //   value === ""
@@ -139,9 +139,10 @@ const CreateContent: React.FC<HoldingPageProps> = (props) => {
             ...bindFile.files,
             phoneIds: phones.map((phone) => phone.id),
           }}
+          mapper={({ departmentId, ...input }) => input}
           onSubmit={(data) => {
             onSubmit(data);
-            noticeContext.createNotice("Движение создано");
+            // noticeContext.createNotice("Движение создано");
           }}
         >
           <Layout flow="row">
@@ -190,6 +191,8 @@ const CreateContent: React.FC<HoldingPageProps> = (props) => {
               {...bind}
               name="reasonId"
               items={[
+                { id: "initial", label: "Назначение" },
+                { id: "order", label: "По приказу" },
                 { id: "dismissal", label: "Увольнение" },
                 { id: "movement", label: "Переезд" },
                 { id: "write-off", label: "Списание" },
@@ -198,7 +201,7 @@ const CreateContent: React.FC<HoldingPageProps> = (props) => {
             />
             <Input
               style={{ flex: "2rem" }}
-              disabled={bind.input.reasonId !== "other"}
+              required={bind.input.reasonId === "other"}
               label="Описание"
               {...bind}
               name="description"
