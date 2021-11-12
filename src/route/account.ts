@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import User from "@backend/db/models/user.model";
 import { tester, validate } from "@backend/middleware/validator";
 import { AppRouter } from "../router";

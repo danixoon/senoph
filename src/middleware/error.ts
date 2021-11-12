@@ -1,7 +1,11 @@
 import { ApiError, errorMap, errorType } from "@backend/utils/errors";
-import { ErrorRequestHandler } from "express";
-import { logger } from "../utils";
+import { ErrorRequestHandler, RequestHandler } from "express";
+import { handler, logger } from "../utils";
 
+
+export const notFoundHandler: RequestHandler = handler((req, res, next) => {
+  throw new ApiError(errorType.NOT_FOUND, { description: "Страница не найдена." });
+})
 export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   if (err instanceof ApiError) {
     const e = err as ApiError;

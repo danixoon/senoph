@@ -7,7 +7,7 @@ import PhoneCategory from "@backend/db/models/phoneCategory.model";
 import PhoneModel from "@backend/db/models/phoneModel.model";
 import PhoneType from "@backend/db/models/phoneType.model";
 import User from "@backend/db/models/user.model";
-import { randomUUID } from "crypto";
+import { v4 as uuid } from "uuid";
 import { Op, WhereOperators, WhereOptions } from "sequelize";
 
 // import { sequelize } from "../db";
@@ -250,8 +250,8 @@ export const fillDevDatabase = async (size: number = 100) => {
   );
 
   const phonesData = mapGenerated(size, () => ({
-    inventoryKey: randomUUID(),
-    factoryKey: randomUUID(),
+    inventoryKey: uuid(),
+    factoryKey: uuid(),
 
     accountingDate: randomDate().toString(),
     assemblyDate: randomDate().toString(),

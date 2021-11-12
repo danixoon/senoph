@@ -14,11 +14,11 @@ export const logger = winston.createLogger({
   ),
   transports: [
     new winston.transports.File({
-      filename: path.join(__dirname, "../logs/error.log"),
+      filename: path.join(__dirname, "../../logs/error.log"),
       level: "error",
     }),
     new winston.transports.File({
-      filename: path.join(__dirname, "../logs/combined.log"),
+      filename: path.join(__dirname, "../../logs/combined.log"),
     }),
   ],
 });
@@ -51,7 +51,7 @@ export const prepareItems: <T>(
 ) => ItemsResponse<T> = (items, total, offset) => ({ items, total, offset });
 
 export const handler: <RQ, RS>(
-  cb: (req: RQ, res: RS, next: (err?: any) => void) => Promise<any>
+  cb: (req: RQ, res: RS, next: (err?: any) => void) => Promise<any> | any
 ) => (req: RQ, res: RS, next: (err?: any) => void) => void =
   (cb) => async (req, res, next) => {
     // logger.info((req as any).url, { service: "api" });

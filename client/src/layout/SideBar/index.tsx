@@ -22,7 +22,7 @@ const SideBar: React.FC<SideBar> = (props) => {
   const { page, logout } = props;
   const handleSpoilerToggle = () => {};
 
-  const role = useAppSelector((store) => store.app.user.role);
+  const user = useAppSelector((store) => store.app.user);
 
   return (
     <Layout className="sidebar">
@@ -85,7 +85,7 @@ const SideBar: React.FC<SideBar> = (props) => {
           </LinkItemContainer>
         </Layout>
       </Spoiler>
-      {role === "admin" && (
+      {user.role === "admin" && (
         <Spoiler
           opened={page === "admin"}
           onToggle={page === "admin" ? handleSpoilerToggle : undefined}
@@ -101,12 +101,8 @@ const SideBar: React.FC<SideBar> = (props) => {
             <LinkItemContainer href="/admin/holders">
               Владельцы
             </LinkItemContainer>
-            <LinkItemContainer href="/admin/phone">
-              Типы
-            </LinkItemContainer>
-            <LinkItemContainer href="/admin/models">
-              Модели
-            </LinkItemContainer>
+            <LinkItemContainer href="/admin/phone">Типы</LinkItemContainer>
+            <LinkItemContainer href="/admin/models">Модели</LinkItemContainer>
             <LinkItemContainer href="/admin/logs">
               История (логи)
             </LinkItemContainer>
@@ -119,7 +115,7 @@ const SideBar: React.FC<SideBar> = (props) => {
         style={{ justifyContent: "center", alignItems: "center" }}
       >
         <Header style={{ margin: "auto" }} align="center">
-          Аккаунт
+          Аккаунт ({user.name})
         </Header>
         <Button
           color="primary"

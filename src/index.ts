@@ -7,11 +7,11 @@ import { logger } from "@backend/utils/index";
 import { logger as logRequest } from "@backend/middleware/logger";
 
 dotenv.config(
-  process.env.NODE_ENV === "production" ? { path: ".production.env" } : {}
+  process.env.NODE_ENV === "production" ? { path: path.resolve(__dirname, "../.production.env") } : {}
 );
 
 import { init as initDb, close as closeDb } from "@backend/db/index";
-import { errorHandler } from "@backend/middleware/error";
+import { errorHandler, notFoundHandler } from "@backend/middleware/error";
 import { routers } from "./route";
 
 let server: http.Server | null;
@@ -22,25 +22,18 @@ export const init = async () => {
 
   app.use(bodyParser.json());
   app.use(logRequest());
-  app.use("/api", ...routers);
+
+  app.use("/api", ...routers, notFoundHandler, errorHandler);
+  app.use("/upload", express.static(path.resolve(__dirname, "../uploads")))
 
   if (process.env.NODE_ENV === "production") {
-    app.use("/public", express.static(path.resolve(__dirname, "./public")));
-    app.use("*", express.static(path.resolve(__dirname, "./public")));
-  } else {
-    app.use(
-      "/public",
-      express.static(path.resolve(__dirname, "../client/public"))
-    );
-    app.use("*", express.static(path.resolve(__dirname, "../client/public")));
+    app.use("/content", express.static(path.resolve(__dirname, "./public")));
+    app.use("*", (r, res, n) => res.sendFile(path.resolve(__dirname, "./public/index.html")));
   }
 
-  app.use(errorHandler);
+  const port = process.env.PORT || 5000;
 
   server = http.createServer(app);
-
-  const port = Number(process.env.PORT) || 5000;
-
   server.listen(port, async () => {
     await Promise.all([initDb()]);
     logger.info(`Сервер запущен`, {

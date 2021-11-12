@@ -9,7 +9,7 @@ import Label from "components/Label";
 import Layout from "components/Layout";
 import Link from "components/Link";
 import Popup, { PopupProps, PopupTopBar } from "components/Popup";
-import { InputBind, useInput } from "hooks/useInput";
+import { InputBind, useFileInput, useInput } from "hooks/useInput";
 import * as React from "react";
 import qs from "query-string";
 import "./style.styl";
@@ -19,10 +19,11 @@ import { useFilterConfig } from "hooks/api/useFetchConfig";
 import DepartmentSelectionPopupContainer from "containers/HolderSelectionPopup";
 import { useFetchHolder } from "hooks/api/useFetchHolder";
 import ListItem from "components/ListItem";
-import { randomUUID } from "crypto";
+import { v4 as uuid } from "uuid";
 import { EmptyError, checkEmptiness, convertDate } from "store/utils";
 import AltPopup from "components/AltPopup";
 import { useTimeout } from "hooks/useTimeout";
+import { importPhone } from "api/import";
 
 export type PhoneCreatePopupProps = OverrideProps<
   PopupProps,
@@ -146,9 +147,9 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
     createPhones(
       addedPhones.map(({ payload, id, ...rest }) => ({
         ...rest,
-        accountingDate: convertDate(rest.accountingDate).toISOString(),
-        assemblyDate: convertDate(rest.assemblyDate).toISOString(),
-        commissioningDate: convertDate(rest.commissioningDate).toISOString(),
+        accountingDate: new Date(rest.accountingDate).toISOString(),
+        assemblyDate: new Date(rest.assemblyDate).toISOString(),
+        commissioningDate: new Date(rest.commissioningDate).toISOString(),
       }))
     );
   };
@@ -178,13 +179,55 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
   }, [rest.status.isSuccess]);
 
   const submitRef = React.useRef<HTMLButtonElement | null>(null);
+  // const importRef = React.useRef<HTMLInputElement | null>(null);
+
+  const [bindImport, _, ref] = useFileInput();
+
+  React.useEffect(() => {
+    if (bindImport.files.file) importPhone(bindImport.files.file[0]);
+  }, [bindImport.files.file]);
 
   return (
     <>
       <Popup {...rest} size="lg" closeable noPadding>
         <PopupTopBar>
-          <Header align="center" hr style={{ flex: 1 }}>
-            Добавление нового средства связи
+          <Header
+            align="center"
+            hr
+            style={{ flex: 1, display: "flex", alignItems: "center" }}
+          >
+            <Span style={{ margin: "auto" }}>
+              Добавление нового средства связи
+            </Span>
+            <Link
+              style={{ marginLeft: "auto", marginRight: "0.5rem" }}
+              size="sm"
+              color="primary"
+              // inverted
+              onClick={() => {
+                // console.log(importRef);
+                ref?.click();
+                // alert('lol');
+              }}
+            >
+              Импорт <Icon.Database color="primary" />
+            </Link>
+            <Link
+              native
+              size="sm"
+              color="primary"
+              href="/api/import?entity=phone"
+            >
+              Шаблон <Icon.Download color="primary" />
+            </Link>
+            <Input
+              hidden
+              name="file"
+              type="file"
+              inputProps={{ accept: ".xlsx" }}
+              {...bindImport}
+              // ref={(r) => (importRef.current = r)}
+            />
           </Header>
         </PopupTopBar>
         <Layout padding="md" flow="row" flex="1">
@@ -210,13 +253,24 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
                 />
               </Layout>
               <Layout>
-                <Input {...bind} name="assemblyDate" label="Дата сборки" />
                 <Input
                   {...bind}
+                  type="date"
+                  name="assemblyDate"
+                  label="Дата сборки"
+                />
+                <Input
+                  {...bind}
+                  type="date"
                   name="commissioningDate"
                   label="Дата ввода в эксплуатацию"
                 />
-                <Input {...bind} name="accountingDate" label="Дата учёта" />
+                <Input
+                  {...bind}
+                  type="date"
+                  name="accountingDate"
+                  label="Дата учёта"
+                />
               </Layout>
             </Layout>
             <ClickInput

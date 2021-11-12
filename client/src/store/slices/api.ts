@@ -71,12 +71,6 @@ export const api = createApi({
       query: (params) => ({ url: "phone/byId", params }),
       providesTags: (r, e, a) => [{ type: "phone", id: a.id }],
     }),
-    fetchFilterConfig: builder.query<
-      Api.GetResponse<"get", "/filter">,
-      Api.GetQuery<"get", "/filter">
-    >({
-      query: () => "filter",
-    }),
     fetchChanges: builder.query<
       Api.GetResponse<"get", "/commit">,
       Api.GetQuery<"get", "/commit">

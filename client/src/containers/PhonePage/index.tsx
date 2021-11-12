@@ -32,11 +32,6 @@ import { updateFilter, updateSelection } from "store/slices/phone";
 import Switch from "components/Switch";
 import PhoneCreatePopupContainer from "containers/PhoneCreatePopup";
 
-export type FilterQuery = Omit<
-  PartialNullable<Required<Api.GetQuery<"get", "/filter">>>,
-  "amount" | "offset"
-> & { selectedId: any };
-
 type PhonePageContainerProps = {};
 const PAGE_ITEMS = 15;
 
@@ -86,17 +81,17 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
       </PopupLayer>
       <TopBarLayer>
         <RouterSwitch>
-          <Route path={`${path}/view`}>
-            <Switch
+          {/* <Route path={`${path}/view`}> */}
+            {/* <Switch
               name="tab"
               input={{ tab: "filter" }}
               onChange={() => {}}
               items={[
                 { id: "filter", name: "Поиск" },
-                { id: "departments", name: "Вид по отделениям" },
+                // { id: "departments", name: "Вид по отделениям" },
               ]}
-            />
-          </Route>
+            /> */}
+          {/* </Route> */}
           <Route path={`${path}/edit`}>
             <Hr vertical />
             <Button margin="none" color="primary" onClick={handleCreatePopup}>

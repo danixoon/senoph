@@ -164,6 +164,7 @@ declare namespace Api {
 
   type FnRequestsMap = {
     get:
+      | (() => RouteHandler<"/import", {}, { entity: "phone" }, {}>)
       | (() => RouteHandler<"/account", Api.Models.User, {}, {}>)
       | (() => RouteHandler<
           "/account/login",
@@ -199,19 +200,6 @@ declare namespace Api {
             exceptIds: number[];
             ids: number[];
           }> & { offset: number; amount: number },
-          {}
-        >)
-      | (() => RouteHandler<
-          "/filter",
-          {
-            models: Pick<
-              Api.Models.PhoneModel,
-              "id" | "name" | "phoneTypeId"
-            >[];
-            types: Pick<Api.Models.PhoneType, "id" | "name">[];
-            departments: Pick<Api.Models.Department, "id" | "name">[];
-          },
-          {},
           {}
         >)
       | (() => RouteHandler<
@@ -294,6 +282,12 @@ declare namespace Api {
       | (() => RouteHandler<"/logs", ItemsResponse<Api.Models.Log>, {}, {}>);
 
     post:
+      | (<T extends "phone" | "model">() => RouteHandler<
+          `/import/${T}`,
+          {},
+          {},
+          { file: FileList }
+        >)
       | (() => RouteHandler<
           "/commit",
           {},

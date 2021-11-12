@@ -6,6 +6,7 @@ import Notice from "components/Notice";
 import { createNotice, removeNotice } from "store/slices/notice";
 import Layout from "components/Layout";
 import "./style.styl";
+import { v4 as uuid } from "uuid";
 import { AnimatePresence, motion } from "framer-motion";
 
 // export const NoticeLayerContext = React.createContext<HTMLElement | null>(null);
@@ -29,8 +30,7 @@ const NoticeLayerProvider: React.FC<
     message: string,
     type: "danger" | "info" = "info"
   ) => {
-    // TODO: Change to uuid
-    const id = Math.random(); // randomUUID();
+    const id = uuid();
     const lifeTime = 3000;
     dispatch(createNotice({ id, message, type, lifeTime }));
     setTimeout(() => {

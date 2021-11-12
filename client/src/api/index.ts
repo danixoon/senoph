@@ -12,20 +12,18 @@ export const request: <M extends Api.Methods, R extends Api.Routes<M>>(
   url: R,
   config: AxiosRequestConfig & {
     params: Api.GetQuery<M, R>;
-    body: Api.GetBody<M, R>;
+    data: Api.GetBody<M, R>;
     token?: string;
   }
-) => Promise<Api.GetResponse<M, R>> = async (
-  method,
-  url,
-  config
-) => {
+) => Promise<Api.GetResponse<M, R>> = async (method, url, config) => {
   try {
+    const headers = { ...getHeaders(config.token), ...(config.headers ?? {}) };
+    // console.log(headers);
     const response = await axios.request({
       ...{ ...config },
       url: "/api" + url,
       method: method as any,
-      headers: getHeaders(config.token),
+      headers,
     });
     return response.data;
   } catch (err) {

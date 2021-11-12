@@ -1,5 +1,5 @@
 import path from "path";
-import fs from "fs/promises";
+import { promises as fs } from "fs";
 import { fillDevDatabase, fillProdDatabase } from "@backend/utils/db";
 import { Sequelize } from "sequelize-typescript";
 import { logger } from "@backend/utils/index";
@@ -11,7 +11,7 @@ export const getModel = (name: string) => sequelize.models[name];
 
 export const init = async () => {
   // console.log(process.env);
-  dbLogger = await fs.open("./db.log", "a+");
+  dbLogger = await fs.open(path.resolve(__dirname, "../../logs/db.log"), "a+");
   sequelize = new Sequelize({
     dialect: process.env.DB_DIALECT,
     username: process.env.DB_USERNAME,
@@ -23,18 +23,17 @@ export const init = async () => {
     models: [
       path.resolve(
         __dirname,
-        `./models/*.model.${
-          process.env.NODE_ENV === "production" ? "js" : "ts"
+        `./models/*.model.${process.env.NODE_ENV === "production" ? "js" : "ts"
         }`
       ),
     ],
     dialectOptions:
       process.env.DB_DIALECT === "mssql"
         ? {
-            options: {
-              encrypt: false,
-            },
-          }
+          options: {
+            encrypt: false,
+          },
+        }
         : {},
 
     logging: (sql) => {
@@ -60,7 +59,7 @@ export const init = async () => {
   // Disable logging for syncing
   if (process.env.NODE_ENV !== "test") {
     await sequelize.drop({});
-    await sequelize.sync({ logging: () => {}, force: true });
+    await sequelize.sync({ logging: () => { }, force: true });
     if (process.env.NODE_ENV === "production") await fillProdDatabase();
     else await fillDevDatabase();
   }

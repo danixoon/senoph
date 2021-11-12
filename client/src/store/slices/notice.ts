@@ -1,7 +1,7 @@
 import axios from "axios";
 import api from "../../api";
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { randomUUID } from "crypto";
+
 
 export type Notice = {
   id: any;

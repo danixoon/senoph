@@ -15,15 +15,17 @@ type ValidatorExtensions = {
   ) => ValidationResult;
   message: (str: string) => Validator;
   required: () => Validator;
-  array: (schema?: ValidationSchema<any> | "int" | "float") => Validator;
+  array: (
+    schema?: ValidationSchema<any> | "int" | "float",
+    noEmpty?: boolean
+  ) => Validator;
   isNumber: () => Validator;
   isBoolean: () => Validator;
   isDate: () => Validator;
 };
-type Validator = ValidatorExtensions &
-  {
-    [K in keyof typeof validator]: RemapValidator<typeof validator[K]>;
-  };
+export type Validator = ValidatorExtensions & {
+  [K in keyof typeof validator]: RemapValidator<typeof validator[K]>;
+};
 type ValidationSchema<T> = Record<keyof T, Validator>;
 type ValidatorConfig<Q = any, B = any> = {
   query?: ValidationSchema<Q>;
@@ -86,13 +88,13 @@ export const tester = () => {
       });
       return proxy;
     },
-    array: (schema) => {
+    array: (schema, noEmpty) => {
       testers.push({
         test: function (v) {
           if (!Array.isArray(v))
             return `Значение параметра '${this.property}' не является массивом.`;
 
-          if (v.length === 0)
+          if (noEmpty && v.length === 0)
             return `Параметром '${this.property}' был передан пустой массив.`;
 
           if (!schema) return true;
@@ -123,7 +125,7 @@ export const tester = () => {
         },
         mapper: function (v) {
           if (Array.isArray(v)) return v;
-          
+
           const value = v.toString() as string;
           const values = value.split(",");
           return typeof schema === "string"
@@ -182,22 +184,24 @@ export const tester = () => {
   };
   const proxy = new Proxy(validator as any, {
     get: (target, property) => {
-      if (typeof target[property] === "undefined")
-        return extensions[property as keyof ValidatorExtensions];
+      if (
+        typeof extensions[property as keyof ValidatorExtensions] === "undefined"
+      )
+        // if (typeof target[property] === "undefined")
+        return (...args: any[]) => {
+          testers.push({
+            test: (v: string) => {
+              if (v === undefined) return !isRequired;
 
-      return (...args: any[]) => {
-        testers.push({
-          test: (v: string) => {
-            if (v === undefined) return !isRequired;
+              const isValid = target[property](v, ...args);
 
-            const isValid = target[property](v, ...args);
+              return isValid;
+            },
+          });
 
-            return isValid;
-          },
-        });
-
-        return proxy;
-      };
+          return proxy;
+        };
+      else return extensions[property as keyof ValidatorExtensions];
     },
   }) as Validator;
 

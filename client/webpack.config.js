@@ -1,14 +1,17 @@
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const TsconfigPathsPlugin = require("tsconfig-paths-webpack-plugin");
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
 
 const isProduction = process.env.NODE_ENV === "production";
 const isDevelopment = process.env.NODE_ENV === "development";
 
-module.exports = {
+const config = {
   mode: isDevelopment ? "development" : "production",
   entry: path.resolve(__dirname, "src/index.tsx"),
-  devtool: "inline-source-map",
+  devtool: isDevelopment ? "inline-source-map" : undefined,
   module: {
     rules: [
       {
@@ -29,12 +32,24 @@ module.exports = {
       {
         test: /\.styl$/i,
         use: [
+          MiniCssExtractPlugin.loader,
           // Creates `style` nodes from JS strings
-          "style-loader",
+          // "style-loader",
           // Translates CSS into CommonJS
           "css-loader",
+
           // Compiles Styl to CSS
-          "stylus-loader",
+          {
+            loader: "stylus-loader",
+            options: {
+              stylusOptions: {
+                define: [
+                  ["$development", process.env.NODE_ENV === "development"],
+                ],
+              },
+            },
+          },
+
         ],
         exclude: /node_modules/,
       },
@@ -56,13 +71,22 @@ module.exports = {
   output: {
     filename: "bundle.js",
     path: path.resolve(__dirname, "build"),
-    publicPath: "/public/",
+    publicPath: "/content/",
+  },
+  optimization: {
+    minimizer: [new CssMinimizerPlugin()],
+    minimize: true
   },
   plugins: [
     new HtmlWebpackPlugin({
       title: "Senoph",
       template: path.resolve(__dirname, "public/index.pug"),
     }),
+
+    new MiniCssExtractPlugin({
+      filename: "[name].css",
+      chunkFilename: "[id].css"
+    })
   ],
   devServer: {
     contentBase: path.resolve(__dirname, "build"),
@@ -71,10 +95,28 @@ module.exports = {
     writeToDisk: true,
     historyApiFallback: true,
     open: true,
+    stats: 'errors-only',
+    host: "0.0.0.0",
+    disableHostCheck: true,
+    public: require("child_process").execSync("gp url 3000").toString().trim(),
     proxy: {
       "/api": {
+        target: "http://localhost:5000/",
+      },
+      "/upload": {
         target: "http://localhost:5000/",
       },
     },
   },
 };
+
+
+if (process.env.ANALIZE)
+  module.plugins.push(new BundleAnalyzerPlugin({
+    analyzerMode: 'server',
+    generateStatsFile: true,
+    statsOptions: { source: false }
+  }));
+
+
+module.exports = config;
