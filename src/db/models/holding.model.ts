@@ -31,9 +31,9 @@ export default class Holding extends Model<
   @Column(DataType.DATE)
   orderDate: string;
 
-  @AllowNull(false)
+  @AllowNull(true)
   @Column(DataType.STRING)
-  orderUrl: string;
+  orderUrl?: string;
 
   @AllowNull(false)
   @Column(DataType.STRING)

@@ -72,7 +72,7 @@ declare namespace DB {
 
   type HoldingAttributes = Attributes<{
     orderDate: string;
-    orderUrl: string;
+    orderUrl?: string;
     reasonId: HoldingReason;
     description?: string;
 
