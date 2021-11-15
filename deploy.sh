@@ -5,7 +5,7 @@ yarn backend:build
 cd client && yarn build && cd ..
 
 # Перемещение билда фронта
-mkdir ./client/build/public
+mkdir ./build/public
 mv ./client/build/* ./build/public
 
 # Проверка на -z флаг создания .zip архива прода
