@@ -74,10 +74,7 @@ const templates: {
     {
       label: "Инвентарный номер",
       id: "inventoryKey",
-      validator: tester()
-        .isNumber()
-        .message("Принимаю только числа в столбце inventoryKey")
-        .required(),
+      validator: tester().required(),
       mutator: function (v, target) {
         return { ...target, inventoryKey: v };
       },
@@ -230,19 +227,21 @@ const getCellByTemplateId = (
 const extractRows = (sheet: exceljs.Worksheet) => {
   const rows: Row[] = [];
   sheet.eachRow((row, i) => {
+    if (i === 1) return;
     const cells: (string | null)[] = [];
     row.eachCell((cell) => {
       const value = cell.value?.toString().trim() ?? null;
       if (typeof value === "string" && value.length === 0) cells.push(null);
       else cells.push(value);
     });
-    rows.push({ id: i - 1, values: cells });
+    // 1 за заголовок, 1 за excel-стайл отсчёта с единицы
+    rows.push({ id: i - 2, values: cells });
   });
   return rows;
 };
-const importPhones = async (book: exceljs.Workbook) => {
+const importPhones = async (authorId: number, book: exceljs.Workbook) => {
   // Получение данных листа
-  const sheet = book.getWorksheet(0);
+  const sheet = book.getWorksheet(1);
   const rows = extractRows(sheet);
 
   if (rows.length === 0)
@@ -272,16 +271,16 @@ const importPhones = async (book: exceljs.Workbook) => {
         "holderName",
         templates.phone,
         row
-      )?.split(/s+/) ?? ["", "", ""];
+      )?.split(/\s+/) ?? ["", "", ""];
 
       const department = departments.find(
         (d) => d.name.toLowerCase() === departmentName?.toLowerCase()
       );
       const holder = holders.find(
         (h) =>
-          h.firstName.toLowerCase() === firstName.toLowerCase() &&
-          h.lastName.toLowerCase() === lastName.toLowerCase() &&
-          h.middleName.toLowerCase() === middleName.toLowerCase()
+          h.firstName.toLowerCase() === firstName?.toLowerCase() &&
+          h.lastName.toLowerCase() === lastName?.toLowerCase() &&
+          h.middleName.toLowerCase() === middleName?.toLowerCase()
       );
 
       if (!department)
@@ -299,7 +298,7 @@ const importPhones = async (book: exceljs.Workbook) => {
         models,
         row: {
           department,
-          holder,
+          holder, 
           id: row.id,
         },
         createHolding: (holding, id) => {
@@ -308,13 +307,11 @@ const importPhones = async (book: exceljs.Workbook) => {
           );
           if (existing) existing.rowIds.push(id);
           else holdings.push({ ...holding, rowIds: [id] });
-          // !holdings.find(h => h.holderId === holding.holderId) &&
-          // holdings.push({ ...holding, phoneRandomId: id }),
         },
       };
     });
 
-    phones.push(phone);
+    phones.push({ ...phone, authorId });
   }
 
   const [dbPhones, dbHoldings] = await Promise.all([
@@ -330,61 +327,15 @@ const importPhones = async (book: exceljs.Workbook) => {
   );
 
   HoldingPhone.bulkCreate(holdingPhones);
-
-  // Объект контекста
-  // const context: ImportContext = ({
-  //   departments, holders, models, createHolding: (holding, uuid) => {
-  //     // Проверка на дубликаты в holdings, нет смысла добавлять одинаковые
-  //     const existing = holdings.find(hold => hold.id === holding.id);
-  //     if (existing && existing.orderDate === holding.orderDate && existing.reasonId === existing.reasonId) return;
-
-  //     holdings.push({ ...holding, phoneRandomId: uuid })
-  //   }
-  // });
-
-  type PhoneWithHolderId = DB.PhoneAttributes & { holderId: number };
-
-  // const data: PhoneWithHolderId[] = [];
-  // const sheet = book.getWorksheet(0);
-  // sheet.eachRow((row, rowI) => {
-  //   const selfContext = {} as any;
-  //   let target = (data[rowI] ?? {}) as Partial<DB.PhoneAttributes>;
-
-  //   row.eachCell((cell, colI) => {
-  //     const template = templates.phone[colI];
-  //     if (!template)
-  //       throw new Error(
-  //         `Значение в ячейке (${rowI},${colI}) выходит за границы диапазона.`
-  //       );
-
-  //     let value = cell.value?.toString() as any;
-  //     if (template.validator)
-  //       value = validateSchema(
-  //         { value: template.validator },
-  //         { value },
-  //         { target: "query" }
-  //       ).value;
-
-  //     target = template.mutator.call(context, [value, target, selfContext]);
-  //   });
-
-  //   data.push({ ...(target as DB.PhoneAttributes), holderId: selfContext.holder.id });
-  // });
-
-  // if (data.length === 0) throw new ApiError(errorType.INVALID_BODY, { description: "Передана пустая таблица" })
-
-  // const [dbPhones, dbHoldings] = await Promise.all([Phone.bulkCreate(data), Holding.bulkCreate(holdings)]);
-
-  // const groupedByHolderId = data.reduce((a, v) => ({ ...a, [v.holderId]: [...(a[v.holderId] ?? []), v] }), {} as Record<number, PhoneWithHolderId[]>);
-  // const holdingPhonesData: DB.HoldingPhoneAttributes[] = Object.entries(groupedByHolderId).flatMap(([holderId, data]) => ({ holdingId:   }))
 };
 
-router.post(
+router.post(  
   "/import",
   access("user"),
   uploadMemory(".xlsx").single("file"),
   validate({ query: { target: tester().isIn(["phone"]).required() } }),
   handler(async (req, res, next) => {
+    const { user } = req.params;
     const { target } = req.query;
     const file = req.file;
 
@@ -398,7 +349,7 @@ router.post(
 
     switch (target) {
       case "phone":
-        await importPhones(workbook);
+        await importPhones(user.id, workbook);
         break;
       default:
         throw new ApiError(errorType.INVALID_QUERY, {

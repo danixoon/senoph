@@ -16,14 +16,15 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
     });
   } else {
     const e = err as Error;
-    const p = process.env.NODE_ENV !== "production" ? { payload: e } : {};
-    res.status(500).send({
+    const p = process.env.NODE_ENV !== "production" ? { payload: { ...e, stack: e.stack, name: e.name, message: e.message, } } : {};
+    const errorResponse = {
       error: { ...errorMap[errorType.INTERNAL_ERROR], name: "INTERNAL_ERROR", ...p },
-    });
+    };
+    res.status(500).send(errorResponse);
     logger.error(e.message, {
       service: "api",
       payload: { ...e, url: req.url },
     });
-    // next(err);
+    next();
   }
 };

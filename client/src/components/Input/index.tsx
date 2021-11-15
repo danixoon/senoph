@@ -126,7 +126,9 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>((props, ref) => {
           disabled,
           placeholder,
           type,
-          ...(type === "file" ? {} : { value: mapper ? mapper(value) : value }),
+          ...(type === "file"
+            ? { value: value === null ? "v" : undefined }
+            : { value: mapper ? mapper(value) : value }),
         }}
       />
       <AltPopup

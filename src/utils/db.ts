@@ -136,6 +136,8 @@ export const fillDevDatabase = async (size: number = 100) => {
     role: "admin",
   });
 
+  // return;
+
   const depsNames = [
     "Кардиологическое отделение",
     "Отделение информационных технологий",

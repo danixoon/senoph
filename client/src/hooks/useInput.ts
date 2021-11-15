@@ -21,7 +21,7 @@ export type InputFileHook<T = any> = [
 export type InputHookPrepare<P> = <
   T extends PartialNullable<P>,
   K extends keyof T
->(
+  >(
   key: K,
   value: T[K],
   input: T
@@ -100,7 +100,8 @@ export const useFileInput = function <
   const textInput = {} as any;
 
   for (const prop in input) {
-    textInput[prop] = (input[prop] as any)[0].name ?? "Не выбрано";
+    const propValue = (input[prop] as any) ?? [{}];
+    textInput[prop] = propValue[0]?.name ?? "Не выбрано"
   }
 
   const ref = React.useRef<HTMLInputElement | null>(null);

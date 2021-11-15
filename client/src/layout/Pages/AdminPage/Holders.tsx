@@ -92,6 +92,13 @@ const Holders: React.FC<HoldersProps> = (props) => {
           }}
         >
           <Layout flow="row">
+          <Input
+              required
+              label="Фамилия"
+              {...bind}
+              name="lastName"
+              style={{ flex: "1" }}
+            />
             <Input
               required
               label="Имя"
@@ -99,13 +106,7 @@ const Holders: React.FC<HoldersProps> = (props) => {
               name="firstName"
               style={{ flex: "1" }}
             />
-            <Input
-              required
-              label="Фамилия"
-              {...bind}
-              name="lastName"
-              style={{ flex: "1" }}
-            />
+            
             <Input
               required
               label="Отчество"

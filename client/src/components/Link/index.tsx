@@ -38,7 +38,12 @@ const Link: React.FC<LinkProps> = ({ href, ...props }: LinkProps) => {
       {children}
     </RouterLink>
   ) : (
-    <a href={href ?? "#"} tabIndex={0} {...mergedProps} onClick={onClick}>
+    <a
+      href={href ?? (native ? "#" : undefined)}
+      tabIndex={0}
+      {...mergedProps}
+      onClick={onClick}
+    >
       {children}
     </a>
   );

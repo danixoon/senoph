@@ -20,10 +20,16 @@ import DepartmentSelectionPopupContainer from "containers/HolderSelectionPopup";
 import { useFetchHolder } from "hooks/api/useFetchHolder";
 import ListItem from "components/ListItem";
 import { v4 as uuid } from "uuid";
-import { EmptyError, checkEmptiness, convertDate } from "store/utils";
+import {
+  EmptyError,
+  checkEmptiness,
+  convertDate,
+  splitStatus,
+} from "store/utils";
 import AltPopup from "components/AltPopup";
 import { useTimeout } from "hooks/useTimeout";
 import { importPhone } from "api/import";
+import { NoticeContext } from "providers/NoticeProvider";
 
 export type PhoneCreatePopupProps = OverrideProps<
   PopupProps,
@@ -181,10 +187,24 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
   const submitRef = React.useRef<HTMLButtonElement | null>(null);
   // const importRef = React.useRef<HTMLInputElement | null>(null);
 
-  const [bindImport, _, ref] = useFileInput();
+  const [bindImport, setImport, ref] = useFileInput();
+
+  const noticeContext = React.useContext(NoticeContext);
+  // const [importStatus, setStatus] = React.useState(() => splitStatus("idle"));
 
   React.useEffect(() => {
-    if (bindImport.files.file) importPhone(bindImport.files.file[0]);
+    const file = (bindImport.files.file ?? [])[0];
+    if (file) {
+      importPhone(file).catch((err) => {
+        const { error } = err as { error: Api.Error };
+        noticeContext.createNotice("Ошибка импорта: " + error.description);
+        setImport({ file: null });
+        // setStatus(splitStatus(error));
+      });
+      // .then(() => {
+      //   setStatus(splitStatus("success"));
+      // });
+    }
   }, [bindImport.files.file]);
 
   return (

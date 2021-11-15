@@ -23,13 +23,15 @@ export const init = async () => {
   app.use(bodyParser.json());
   app.use(logRequest());
 
-  app.use("/api", ...routers, notFoundHandler, errorHandler);
+  app.use("/api", ...routers);
   app.use("/upload", express.static(path.resolve(__dirname, "../uploads")))
 
   if (process.env.NODE_ENV === "production") {
     app.use("/content", express.static(path.resolve(__dirname, "./public")));
     app.use("*", (r, res, n) => res.sendFile(path.resolve(__dirname, "./public/index.html")));
   }
+
+  app.use(notFoundHandler, errorHandler);
 
   const port = process.env.PORT || 5000;
 
