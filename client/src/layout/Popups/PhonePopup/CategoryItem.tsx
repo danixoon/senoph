@@ -1,4 +1,6 @@
 import Badge from "components/Badge";
+import Button from "components/Button";
+import Icon from "components/Icon";
 import Label, { LabelProps } from "components/Label";
 import Layout from "components/Layout";
 import Link from "components/Link";
@@ -6,10 +8,11 @@ import React from "react";
 
 const CategoryItem: React.FC<{
   category: number;
-  // actKey: string;
+  onDelete: () => void;
+  deletable?: boolean;
   actDate: Date;
 }> = (props) => {
-  const { category, actDate } = props;
+  const { category, actDate, deletable, onDelete } = props;
   let cat = "?";
   switch (category) {
     case 1:
@@ -36,10 +39,13 @@ const CategoryItem: React.FC<{
       <Badge onClick={() => {}} className="category-item__level">
         {cat}
       </Badge>
-      <Label {...labelStyle}>Акт </Label>
-      {/* <Link> №{actKey}</Link> */}
-      <Label {...labelStyle}>от</Label>
+      <Label {...labelStyle}>Акт от</Label>
       <Link>{actDate.toLocaleDateString()}</Link>
+      {deletable && (
+        <Button onClick={onDelete} style={{ marginLeft: "auto" }} inverted color="primary">
+          <Icon.X />
+        </Button>
+      )}
     </Layout>
   );
 };

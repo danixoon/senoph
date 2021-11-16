@@ -435,6 +435,8 @@ declare namespace Api {
       { target: ChangesTargetName; targetId: number; keys?: string[] },
       {}
     >)
+    | (() => RouteHandler<"/category", {}, { id: number }, {}>)
+    | (() => RouteHandler<"/holding", {}, { id: number }, {}>)
     | (() => RouteHandler<"/phone", {}, { id: number }, {}>)
     | (() => RouteHandler<"/account", {}, { id: number }, {}>)
     | (() => RouteHandler<"/department", {}, { id: number }, {}>)

@@ -39,6 +39,7 @@ import InfoBanner from "components/InfoBanner";
 export type HoldingPageProps = {
   phones: Api.Models.Phone[];
   holdings: Api.Models.Holding[];
+  // holdings: Api.Models.Holding[];
   holdingHistory: Map<number, Api.Models.Holding[]>;
   phonesStatus: ApiStatus;
   holdingsStatus: ApiStatus;
@@ -246,7 +247,40 @@ const CreateContent: React.FC<HoldingPageProps> = (props) => {
   );
 };
 
-const ActionBox = (props: { commit: (action: CommitActionType) => void }) => {
+const ViewActionBox = (props: { onDelete: () => void }) => {
+  const { onDelete } = props;
+  const [target, setTarget] = React.useState<HTMLElement | null>(() => null);
+
+  const [isOpen, setIsOpen] = React.useState(() => false);
+
+  return (
+    <Button
+      ref={(r) => setTarget(r)}
+      color="primary"
+      inverted
+      onClick={() => setIsOpen(true)}
+    >
+      <Icon.Box />
+      <SpoilerPopup
+        target={isOpen ? target : null}
+        position="right"
+        onBlur={(e) => {
+          if (e.currentTarget.contains(e.relatedTarget as any))
+            e.preventDefault();
+          else setIsOpen(false);
+        }}
+      >
+        <SpoilerPopupButton onClick={() => onDelete()}>
+          Удалить
+        </SpoilerPopupButton>
+      </SpoilerPopup>
+    </Button>
+  );
+};
+
+const CommitActionBox = (props: {
+  commit: (action: CommitActionType) => void;
+}) => {
   const { commit } = props;
   const [target, setTarget] = React.useState<HTMLElement | null>(() => null);
 
@@ -280,22 +314,22 @@ const ActionBox = (props: { commit: (action: CommitActionType) => void }) => {
   );
 };
 
-const ViewContent: React.FC<HoldingPageProps> = (props) => {
-  const getReasonName = (reasonId: HoldingReason) => {
-    switch (reasonId) {
-      case "initial":
-        return "Первичное";
-      case "write-off":
-        return "Списание";
-      case "movement":
-        return "Перемещение";
-      case "dismissal":
-        return "Увольнение";
-      default:
-        return reasonId;
-    }
-  };
+const getReasonName = (reasonId: HoldingReason) => {
+  switch (reasonId) {
+    case "initial":
+      return "Первичное";
+    case "write-off":
+      return "Списание";
+    case "movement":
+      return "Перемещение";
+    case "dismissal":
+      return "Увольнение";
+    default:
+      return reasonId;
+  }
+};
 
+const CommitContent: React.FC<HoldingPageProps> = (props) => {
   const getHolderName = useHolderName();
   const [commitHolding, status] = api.useCommitHoldingMutation();
 
@@ -305,7 +339,7 @@ const ViewContent: React.FC<HoldingPageProps> = (props) => {
       size: "30px",
       header: "",
       mapper: (v, item: ArrayElement<typeof tableItems>) => (
-        <ActionBox
+        <CommitActionBox
           commit={(action) =>
             !status.isLoading && commitHolding({ action, ids: [item.id] })
           }
@@ -345,7 +379,10 @@ const ViewContent: React.FC<HoldingPageProps> = (props) => {
       mapper: (v, item: ArrayElement<typeof tableItems>) => {
         return item.phoneIds.map((id, i) => (
           <>
-            <Link href={`/phone/view?selectedId=${id}`}>{`#${id}`}</Link>
+            <Link
+              style={{ display: "inline" }}
+              href={`/phone/view?selectedId=${id}`}
+            >{`#${id}`}</Link>
             {i !== item.phoneIds.length - 1 ? ", " : ""}
           </>
         ));
@@ -359,6 +396,102 @@ const ViewContent: React.FC<HoldingPageProps> = (props) => {
     },
 
     // { key: "departmentName", header: "Отделение" },
+  ];
+
+  const tableItems = props.holdings
+    .filter((holding) => holding.status)
+    .map((holding) => {
+      const prevHolders: Api.Models.Holder[] = [];
+      for (const id of holding.phoneIds) {
+        const prevItem = [...(props.holdingHistory.get(id) ?? [])]
+          .sort((h1, h2) =>
+            (h1.createdAt as string) < (h2.createdAt as string) ? 1 : -1
+          )
+          .shift();
+
+        if (
+          prevItem?.holder &&
+          !prevHolders.find((h) => h.id === prevItem.holderId)
+        )
+          prevHolders.push(prevItem.holder as Api.Models.Holder);
+      }
+      return { ...holding, prevHolders };
+    });
+
+  // type TableItem = ;
+
+  return (
+    <>
+      {tableItems.length === 0 ? (
+        <InfoBanner
+          href="/phone/edit"
+          hrefContent="средство связи"
+          text="Движения для потдверждения отсутствуют. Создайте их, выбрав"
+        />
+      ) : (
+        <Table columns={columns} items={tableItems} />
+      )}
+    </>
+  );
+};
+
+const ViewContent: React.FC<HoldingPageProps> = (props) => {
+  const getHolderName = useHolderName();
+  const [deleteHolding, deleteHoldingStatus] = api.useDeleteHoldingMutation();
+
+  const columns: TableColumn[] = [
+    {
+      key: "control",
+      size: "30px",
+      header: "",
+      mapper: (v, item: ArrayElement<typeof tableItems>) => (
+        <ViewActionBox onDelete={() => deleteHolding({ id: item.id })} />
+      ),
+    },
+    { key: "orderDate", header: "Приказ от", size: "100px", type: "date" },
+    {
+      key: "holderId",
+      header: "Владелец",
+      mapper: (v, item: ArrayElement<typeof tableItems>) => {
+        return (
+          <Layout>
+            {item.prevHolders.map((holder) => (
+              <Span strike key={holder.id}>
+                {getHolderName(holder)}
+              </Span>
+            ))}
+            <Span>{getHolderName(item.holder)}</Span>
+          </Layout>
+        );
+      },
+    },
+    {
+      key: "phoneIds",
+      header: "Средства связи",
+      mapper: (v, item: ArrayElement<typeof tableItems>) => {
+        return item.phoneIds.map((id, i) => (
+          <>
+            <Link
+              style={{ display: "inline" }}
+              href={`/phone/view?selectedId=${id}`}
+            >{`#${id}`}</Link>
+            {i !== item.phoneIds.length - 1 ? ", " : ""}
+          </>
+        ));
+      },
+    },
+    {
+      key: "reasonId",
+      header: "Причина",
+      size: "150px",
+      mapper: (v, item) => <Badge>{`${getReasonName(v)}`}</Badge>,
+    },
+    {
+      key: "status",
+      header: "Статус",
+      size: "150px",
+      mapper: (v, item) => <Badge>{item.status}</Badge>,
+    },
   ];
 
   const tableItems = props.holdings.map((holding) => {
@@ -379,8 +512,6 @@ const ViewContent: React.FC<HoldingPageProps> = (props) => {
     return { ...holding, prevHolders };
   });
 
-  // type TableItem = ;
-
   return (
     <>
       {tableItems.length === 0 ? (
@@ -395,8 +526,6 @@ const ViewContent: React.FC<HoldingPageProps> = (props) => {
     </>
   );
 };
-
-
 
 const HoldingPage: React.FC<HoldingPageProps> = (props) => {
   const { phones } = props;
@@ -416,6 +545,9 @@ const HoldingPage: React.FC<HoldingPageProps> = (props) => {
           ) : (
             <CreateContent {...props} />
           )}
+        </Route>
+        <Route path={`${path}/commit`}>
+          <CommitContent {...props} />
         </Route>
         <Route path={`${path}/view`}>
           <ViewContent {...props} />

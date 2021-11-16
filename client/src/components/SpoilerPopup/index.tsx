@@ -4,7 +4,12 @@ import { mergeClassNames, mergeProps } from "utils";
 import "./styles.styl";
 
 import { ReactComponent as ArrowIcon } from "icons/popupArrow.svg";
-import { AnimatePresence, motion, HTMLMotionProps } from "framer-motion";
+import {
+  AnimatePresence,
+  motion,
+  HTMLMotionProps,
+  useMotionValue,
+} from "framer-motion";
 import PopupLayout from "layout/PopupLayout";
 import PopupLayer from "providers/PopupLayer";
 import { PopupLayerContext } from "providers/PopupLayerProvider";
@@ -43,6 +48,10 @@ const SpoilerPopup: React.FC<SpoilerPopupProps> = (
     if (target) layoutRef.current?.focus();
   }, [target]);
 
+  // const getPositionNumbers = () => {
+
+  // }
+
   const getPosition = () => {
     let result = {} as React.CSSProperties;
 
@@ -76,6 +85,23 @@ const SpoilerPopup: React.FC<SpoilerPopupProps> = (
     return result;
   };
 
+  const pos = getPosition();
+  const [left, top, right, bottom] = [
+    useMotionValue(pos.left),
+    useMotionValue(pos.top),
+    useMotionValue(pos.right),
+    useMotionValue(pos.bottom),
+  ];
+
+  const setStyle = () => {
+    // const [left, top, right, bottom] = style;
+    const pos = getPosition();
+    left.set(pos.left);
+    top.set(pos.top);
+    right.set(pos.right);
+    bottom.set(pos.bottom);
+  };
+
   const mergedProps = mergeProps(
     {
       className: mergeClassNames(
@@ -84,11 +110,32 @@ const SpoilerPopup: React.FC<SpoilerPopupProps> = (
       ),
       style: {
         [`margin${inversedPos[0].toUpperCase() + inversedPos.slice(1)}`]: "9px",
-        ...getPosition(),
-      },
+      } as any,
     },
     rest
   );
+
+  // style.
+
+  React.useEffect(() => {
+    let exit = false;
+    const request = () =>
+      window.requestAnimationFrame(() => {
+        if (!exit) setStyle();
+        request();
+      });
+    request();
+
+    return () => {
+      exit = true;
+    };
+  });
+
+  // React.useEffect(() => {
+  //   window.requestAnimationFrame(() => {
+
+  //   });
+  // });
 
   const getArrowStyle = () => {
     switch (position) {
@@ -134,7 +181,10 @@ const SpoilerPopup: React.FC<SpoilerPopupProps> = (
             exit={{ opacity: 0 }}
             transition={{ duration: 0.1 }}
             ref={popupRef}
-            {...mergedProps}
+            {...{
+              ...mergedProps,
+              style: { ...mergedProps.style, left, top, right, bottom },
+            }}
           >
             <Layout
               tabIndex={0}

@@ -100,4 +100,19 @@ router.post(
   })
 );
 
+router.delete(
+  "/category",
+  access("user"),
+  validate({
+    query: { id: tester().isNumber() },
+  }),
+  handler(async (req, res) => {
+    const { id } = req.query;
+    await PhoneCategory.update({ status: "delete-pending" }, { where: { id } });
+
+    res.send();
+  })
+);
+
+
 export default router;

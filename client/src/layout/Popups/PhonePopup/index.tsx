@@ -38,6 +38,8 @@ export type PhonePopupProps = {
   makeChanges: (targetId: number, changes: any) => void;
   undoChanges: (targetId: number, keys: string[]) => void;
   onDelete: () => void;
+  onDeleteCategory: (id: any) => void;
+  onDeleteHolding: (id: any) => void;
   changes: any[];
 } & PopupProps;
 
@@ -51,13 +53,15 @@ const Content: React.FC<
     changes,
     isEditMode: edit,
     changeEditMode,
+    onDeleteCategory,
+    onDeleteHolding,
     makeChanges,
     undoChanges,
     onDelete,
   } = props;
   const { types, departments } = useFilterConfig();
 
-  const [bind] = useInput({ search: "", tab: "category" });
+  const [bind] = useInput({ tab: "category" });
 
   // const holder = useFetchHolder({ id:  })
   // const holder =
@@ -87,7 +91,9 @@ const Content: React.FC<
     (phone.categories?.length ?? 0) > 0 ? (
       phone.categories?.map((cat) => (
         <CategoryItem
+          onDelete={() => onDeleteCategory(cat.id)}
           key={cat.id}
+          deletable={edit}
           actDate={new Date(cat.actDate)}
           category={Number.parseInt(cat.categoryKey)}
         />
@@ -102,6 +108,8 @@ const Content: React.FC<
     (phone.holdings?.length ?? 0) > 0 ? (
       phone.holdings?.map((hold) => (
         <HoldingItem
+          onDelete={() => onDeleteHolding(hold.id)}
+          deletable={edit}
           key={hold.id}
           orderDate={new Date(hold.orderDate ?? Date.now())}
           holder={getHolderName(hold.holder)}
@@ -269,11 +277,7 @@ const Content: React.FC<
               <Span>{departmentName}</Span>
             </ListItem>
             <ListItem label="Материально-ответственное лицо">
-              <Link
-                href="/phone/edit"
-                altLabel={{ text: "Точно хочешь узнать?", zIndex: "popup" }}
-                isMonospace
-              >
+              <Link href="/phone/edit" isMonospace>
                 {holderName}
               </Link>
             </ListItem>
@@ -297,11 +301,6 @@ const Content: React.FC<
           )}
           <Hr vertical />
           <Layout flex="0 0 250px" padding="md">
-            <Input
-              {...bind}
-              name="search"
-              inputProps={{ placeholder: "Фильтр.." }}
-            />
             {bind.input.tab === "category"
               ? renderCategories()
               : renderHoldings()}

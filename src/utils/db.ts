@@ -12,7 +12,7 @@ import { Op, WhereOperators, WhereOptions } from "sequelize";
 
 // import { sequelize } from "../db";
 
-interface AddFilter<T> {}
+interface AddFilter<T> { }
 
 export interface Filter<T> {
   add: (
@@ -80,9 +80,9 @@ export class Filter<T extends object = any> {
           const value =
             typeof condition === "symbol"
               ? {
-                  ...(this.conditions[key] ?? {}),
-                  [condition]: target,
-                }
+                ...(this.conditions[key] ?? {}),
+                [condition]: target,
+              }
               : condition;
 
           this.conditions = {
@@ -159,7 +159,7 @@ export const fillDevDatabase = async (size: number = 100) => {
   );
 
   const holdersNames = [
-    "Ариша Козлова Юрьевна",
+    "Козлова Ариша Юрьевна",
     "Антонов Иван Михайлович",
     "Афанасьева Валерия Андреевна",
     "Афанасьева Ника Львовна",
@@ -265,8 +265,8 @@ export const fillDevDatabase = async (size: number = 100) => {
       Math.random() > 0.5
         ? null
         : Math.random() > 0.5
-        ? ("create-pending" as const)
-        : ("delete-pending" as const),
+          ? ("create-pending" as const)
+          : ("delete-pending" as const),
   }));
 
   const phones = await Phone.bulkCreate(phonesData);

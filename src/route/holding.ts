@@ -60,6 +60,7 @@ router.get(
           holderId: holding.holderId,
           phoneIds: holding.phones?.map((phone) => phone.id) ?? [],
           reasonId: holding.reasonId,
+          status: holding.status,
           // orderKey: holding.orderKey,
           orderDate: holding.orderDate,
           orderUrl: holding.orderUrl,
@@ -69,6 +70,20 @@ router.get(
         0
       )
     );
+  })
+);
+
+router.delete(
+  "/holding",
+  access("user"),
+  validate({
+    query: { id: tester().isNumber() },
+  }),
+  handler(async (req, res) => {
+    const { id } = req.query;
+    await Holding.update({ status: "delete-pending" }, { where: { id } });
+
+    res.send();
   })
 );
 
@@ -82,10 +97,17 @@ router.post(
       orderDate: tester().isDate().required(),
       holderId: tester().isNumber().required(),
       reasonId: tester()
-        .isIn(["initial", "write-off", "movement", "dismissal", "order", "other"])
+        .isIn([
+          "initial",
+          "write-off",
+          "movement",
+          "dismissal",
+          "order",
+          "other",
+        ])
         .required(),
       phoneIds: tester().array().required(),
-      orderFile: tester()
+      orderFile: tester(),
     },
   }),
   owner("phone", (req) => req.body.phoneIds),

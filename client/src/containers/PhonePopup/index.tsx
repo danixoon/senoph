@@ -32,6 +32,8 @@ const PhonePopupContainer: React.FC<PhonePopupContainerProps> = (props) => {
   const [changes, makeChanges, undoChanges] = useChanges(CHANGES_TARGET);
 
   const [deletePhone] = api.usePhoneDeleteMutation();
+  const [deleteHolding] = api.useDeleteHoldingMutation();
+  const [deleteCategory] = api.useDeleteCategoryMutation();
 
   if (error) dispatch(updateFilter({ selectedId: null }));
 
@@ -49,6 +51,8 @@ const PhonePopupContainer: React.FC<PhonePopupContainerProps> = (props) => {
         changes={changes}
         makeChanges={makeChanges}
         undoChanges={undoChanges}
+        onDeleteHolding={(id) => deleteHolding({ id })}
+        onDeleteCategory={(id) => deleteCategory({ id })}
         onDelete={() => (phone ? deletePhone({ id: phone.id }) : null)}
         isEditMode={mode === "edit"}
         changeEditMode={() =>

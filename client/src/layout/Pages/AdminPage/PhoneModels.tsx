@@ -1,7 +1,8 @@
+import AltPopup from "components/AltPopup";
 import Badge from "components/Badge";
 import Button from "components/Button";
 import Dropdown from "components/Dropdown";
-import Form from "components/Form";
+import Form, { FormContext } from "components/Form";
 import Header from "components/Header";
 import Hr from "components/Hr";
 import Icon from "components/Icon";
@@ -11,6 +12,7 @@ import SpoilerPopup, { SpoilerPopupButton } from "components/SpoilerPopup";
 import Table, { TableColumn } from "components/Table";
 import { usePhoneTypeName } from "hooks/misc/usePhoneTypeName";
 import { useInput } from "hooks/useInput";
+import { useTimeout } from "hooks/useTimeout";
 import React from "react";
 import { api } from "store/slices/api";
 
@@ -35,6 +37,8 @@ const useContainer = () => {
 const detailsMap: Record<string, string> = {
   gold: "Золото",
   silver: "Серебро",
+  platinum: "Платина",
+  mbg: "МБГ",
 };
 
 const PhoneModels: React.FC<PhoneModelsProps> = (props) => {
@@ -146,18 +150,6 @@ const PhoneModels: React.FC<PhoneModelsProps> = (props) => {
               name="description"
               style={{ flex: "1" }}
             />
-            <Button
-              style={{
-                marginTop: "auto",
-                marginLeft: "auto",
-                padding: "0 4rem",
-              }}
-              margin="md"
-              type="submit"
-              color="primary"
-            >
-              Создать
-            </Button>
           </Layout>
           <Layout flow="row" padding="md">
             <CreateDetailButton
@@ -193,6 +185,18 @@ const PhoneModels: React.FC<PhoneModelsProps> = (props) => {
                 </Badge>
               ))
             )}
+            <Button
+              style={{
+                marginTop: "auto",
+                marginLeft: "auto",
+                padding: "0 4rem",
+              }}
+              margin="md"
+              type="submit"
+              color="primary"
+            >
+              Создать
+            </Button>
           </Layout>
         </Form>
         <Hr />
@@ -219,9 +223,18 @@ const CreateDetailButton = (props: {
     label,
   }));
 
+  const amount = Number(bind.input.amount?.replaceAll(",", ".").trim());
+  const [show, message, toggleMessage] = useTimeout<string | null>(null, 2000);
+  const inputRef = React.useRef<HTMLElement | null>(null);
+
+  // const formContext = React.useContext(FormContext);
+  // formContext.addCheck(bind.input, "amount", (v) => Number.isNaN("amount"))
+
   return (
     <Button
-      ref={(r) => setTarget(r)}
+      ref={(r) => {
+        setTarget(r);
+      }}
       color="primary"
       inverted
       onClick={() => setIsOpen(true)}
@@ -241,18 +254,31 @@ const CreateDetailButton = (props: {
           label="Количество"
           name="amount"
           {...bind}
+          type="number"
           placeholder="50 гр."
+          ref={(r) => (inputRef.current = r)}
         />
         <Button
-          disabled={dropdownItems.length === 0 || bind.input.name === null}
+          disabled={
+            dropdownItems.length === 0 || bind.input.name === null
+            // Number.isNaN(amount)
+          }
           color="primary"
           size="sm"
-          onClick={() =>
-            props.onCreate(bind.input.name ?? "", Number(bind.input.amount))
-          }
+          onClick={() => {
+            if (Number.isNaN(amount))
+              toggleMessage("Неверно указано количество");
+            else props.onCreate(bind.input.name ?? "", amount);
+          }}
         >
           Добавить
         </Button>
+        <AltPopup
+          target={show && message ? inputRef.current : null}
+          position="bottom"
+        >
+          {message}
+        </AltPopup>
       </SpoilerPopup>
     </Button>
   );

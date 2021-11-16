@@ -26,9 +26,7 @@ const HoldingPageContainer: React.FC<Props> = (props) => {
     { skip: (bind.input.phoneIds?.length ?? 0) === 0 }
   );
 
-  const { data: holdings, ...holdingsRest } = api.useFetchHoldingsQuery({
-    status: "create-pending",
-  });
+  const { data: holdings, ...holdingsRest } = api.useFetchHoldingsQuery({});
 
   const holdingPhoneIds = Array.from(
     // TODO: Flat map..?

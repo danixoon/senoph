@@ -202,6 +202,17 @@ export const api = createApi({
       }),
       invalidatesTags: (r, e, a) => ["holding", "log"],
     }),
+    deleteHolding: builder.mutation<
+      Api.GetResponse<"delete", "/holding">,
+      Api.GetBody<"delete", "/holding">
+    >({
+      query: (params) => ({
+        url: "holding",
+        params,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["holding", "log"],
+    }),
     fetchHoldings: builder.query<
       Api.GetResponse<"get", "/holdings">,
       Api.GetQuery<"get", "/holdings">
@@ -254,6 +265,17 @@ export const api = createApi({
         url: "category",
         body,
         method: "POST",
+      }),
+      invalidatesTags: ["category", "log"],
+    }),
+    deleteCategory: builder.mutation<
+      Api.GetResponse<"delete", "/category">,
+      Api.GetBody<"delete", "/category">
+    >({
+      query: (params) => ({
+        url: "category",
+        params,
+        method: "DELETE",
       }),
       invalidatesTags: ["category", "log"],
     }),
