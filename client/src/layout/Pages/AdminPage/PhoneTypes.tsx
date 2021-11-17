@@ -112,6 +112,7 @@ const PhoneTypes: React.FC<PhoneTypesProps> = (props) => {
             <Input
               required
               label="Наименование"
+              placeholder="Средство связи"
               {...bind}
               name="name"
               style={{ flex: "1" }}
@@ -119,6 +120,7 @@ const PhoneTypes: React.FC<PhoneTypesProps> = (props) => {
             <Input
               label="Описание"
               {...bind}
+              placeholder="Дополнительная информация"
               name="description"
               style={{ flex: "1" }}
             />
@@ -132,7 +134,7 @@ const PhoneTypes: React.FC<PhoneTypesProps> = (props) => {
               type="submit"
               color="primary"
             >
-              Создать
+              {createStatus.isLoading ? <LoaderIcon /> : "Создать"}
             </Button>
           </Layout>
         </Form>

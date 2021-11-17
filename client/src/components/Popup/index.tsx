@@ -60,7 +60,7 @@ const Popup: React.FC<PopupProps> = (props: PopupProps) => {
 
   return (
     <PopupContext.Provider value={ref}>
-      <div className="popup-container">
+      <div className="popup-container" style={rest.style}>
         <AnimatePresence>
           {isOpen && (
             <motion.div

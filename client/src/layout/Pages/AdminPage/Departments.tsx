@@ -113,6 +113,7 @@ const Departments: React.FC<DepartmentsProps> = (props) => {
           <Layout flow="row">
             <Input
               required
+              placeholder="Отделение связи и ИТ"
               label="Название"
               {...bind}
               name="name"
@@ -120,6 +121,7 @@ const Departments: React.FC<DepartmentsProps> = (props) => {
             />
             <Input
               label="Описание"
+              placeholder="Дополнительная информация"
               {...bind}
               name="description"
               style={{ flex: "1" }}

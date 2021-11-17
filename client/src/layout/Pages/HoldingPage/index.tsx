@@ -35,6 +35,7 @@ import { useLastHolder } from "hooks/api/useFetchHolder";
 import Badge from "components/Badge";
 import SpoilerPopup, { SpoilerPopupButton } from "components/SpoilerPopup";
 import InfoBanner from "components/InfoBanner";
+import { extractStatus } from "store/utils";
 
 export type HoldingPageProps = {
   phones: Api.Models.Phone[];
@@ -280,8 +281,9 @@ const ViewActionBox = (props: { onDelete: () => void }) => {
 
 const CommitActionBox = (props: {
   commit: (action: CommitActionType) => void;
+  status: ApiStatus;
 }) => {
-  const { commit } = props;
+  const { commit, status } = props;
   const [target, setTarget] = React.useState<HTMLElement | null>(() => null);
 
   const [isOpen, setIsOpen] = React.useState(() => false);
@@ -303,12 +305,18 @@ const CommitActionBox = (props: {
           else setIsOpen(false);
         }}
       >
-        <SpoilerPopupButton onClick={() => commit("approve")}>
-          Подтвердить
-        </SpoilerPopupButton>
-        <SpoilerPopupButton onClick={() => commit("decline")}>
-          Отменить
-        </SpoilerPopupButton>
+        {status.isLoading ? (
+          <LoaderIcon />
+        ) : (
+          <>
+            <SpoilerPopupButton onClick={() => commit("approve")}>
+              Подтвердить
+            </SpoilerPopupButton>
+            <SpoilerPopupButton onClick={() => commit("decline")}>
+              Отменить
+            </SpoilerPopupButton>
+          </>
+        )}
       </SpoilerPopup>
     </Button>
   );
@@ -324,6 +332,10 @@ const getReasonName = (reasonId: HoldingReason) => {
       return "Перемещение";
     case "dismissal":
       return "Увольнение";
+    case "order":
+      return "По приказу";
+    case "other":
+      return "Иное";
     default:
       return reasonId;
   }
@@ -340,6 +352,7 @@ const CommitContent: React.FC<HoldingPageProps> = (props) => {
       header: "",
       mapper: (v, item: ArrayElement<typeof tableItems>) => (
         <CommitActionBox
+          status={extractStatus(status)}
           commit={(action) =>
             !status.isLoading && commitHolding({ action, ids: [item.id] })
           }
@@ -490,7 +503,11 @@ const ViewContent: React.FC<HoldingPageProps> = (props) => {
       key: "status",
       header: "Статус",
       size: "150px",
-      mapper: (v, item) => <Badge>{item.status}</Badge>,
+      mapper: (v, item) => {
+        let status = "Произвидено";
+        if (item.status === "create-pending") status = "Ожидает подтверждения";
+        return <Badge>{status}</Badge>;
+      },
     },
   ];
 

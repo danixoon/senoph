@@ -158,6 +158,7 @@ const PhoneModels: React.FC<PhoneModelsProps> = (props) => {
           <Layout flow="row">
             <Input
               required
+              placeholder="DA 310"
               label="Наименование"
               {...bind}
               name="name"
@@ -176,6 +177,7 @@ const PhoneModels: React.FC<PhoneModelsProps> = (props) => {
             />
             <Input
               label="Описание"
+              placeholder="Информация по модели"
               {...bind}
               name="description"
               style={{ flex: "1" }}
@@ -273,7 +275,7 @@ const CreateDetailButton = (props: {
       <Icon.PlusCircle />
       <SpoilerPopup
         target={isOpen ? target : null}
-        position="right"
+        position="bottom"
         onBlur={(e) => {
           if (e.currentTarget.contains(e.relatedTarget as any))
             e.preventDefault();
@@ -282,11 +284,11 @@ const CreateDetailButton = (props: {
       >
         <Dropdown label="Металл" items={dropdownItems} name="name" {...bind} />
         <Input
-          label="Количество"
+          label="Количество (гр.)"
           name="amount"
           {...bind}
           type="number"
-          placeholder="50 гр."
+          placeholder="0.001"
           ref={(r) => (inputRef.current = r)}
         />
         <Button

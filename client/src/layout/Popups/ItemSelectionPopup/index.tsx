@@ -14,16 +14,16 @@ import qs from "query-string";
 import "./style.styl";
 import Paginator from "components/Paginator";
 import PhoneEditActions from "layout/PhoneEditActions";
+import PopupLayer from "providers/PopupLayer";
 
 export type ItemSelectionPopupProps = OverrideProps<
   PopupProps,
   {
-    searchBind: InputBind<{ search: string }>;
-    targetBind: InputBind;
     name: string;
     items: { id: any; name: string; href?: string }[];
     header: string;
-  }
+    zIndex?: number;
+  } & InputBind
 >;
 
 const Item: React.FC<{
@@ -60,7 +60,8 @@ const Item: React.FC<{
 
 const ItemSelectionPopup: React.FC<ItemSelectionPopupProps> = (props) => {
   // const [searchBind] = useInput<{ search: string }>({ search: null });
-  const { items, searchBind, targetBind, name, header, ...rest } = props;
+  const { items, input, onChange, zIndex, name, header, children, ...rest } =
+    props;
 
   return (
     <Popup {...rest} size="sm" closeable noPadding>
@@ -69,11 +70,7 @@ const ItemSelectionPopup: React.FC<ItemSelectionPopupProps> = (props) => {
           <Header align="center" hr style={{ flex: 1 }}>
             {header}
           </Header>
-          <Input
-            name="search"
-            {...searchBind}
-            inputProps={{ placeholder: "Запрос.." }}
-          />
+          {children}
         </Layout>
       </PopupTopBar>
       <Layout padding="md" flex="1" className="items-list">
@@ -82,10 +79,10 @@ const ItemSelectionPopup: React.FC<ItemSelectionPopupProps> = (props) => {
           .map((item) => (
             <Item
               key={item.id}
-              href={item.href }
+              href={item.href}
               {...item}
               onSelect={(id) => {
-                targetBind.onChange({ target: { name, value: id } });
+                onChange({ target: { name, value: id } });
                 if (rest.onToggle) rest.onToggle(false);
               }}
             />

@@ -127,6 +127,7 @@ const Holders: React.FC<HoldersProps> = (props) => {
           <Layout flow="row">
             <Input
               required
+              placeholder="Иванов"
               label="Фамилия"
               {...bind}
               name="lastName"
@@ -135,14 +136,15 @@ const Holders: React.FC<HoldersProps> = (props) => {
             <Input
               required
               label="Имя"
+              placeholder="Иван"
               {...bind}
               name="firstName"
               style={{ flex: "1" }}
             />
-
             <Input
               required
               label="Отчество"
+              placeholder="Иванович"
               {...bind}
               name="middleName"
               style={{ flex: "1" }}
@@ -169,7 +171,7 @@ const Holders: React.FC<HoldersProps> = (props) => {
               type="submit"
               color="primary"
             >
-              {createStatus.isLoading ? <LoaderIcon/> : "Создать"}
+              {createStatus.isLoading ? <LoaderIcon /> : "Создать"}
             </Button>
           </Layout>
         </Form>
