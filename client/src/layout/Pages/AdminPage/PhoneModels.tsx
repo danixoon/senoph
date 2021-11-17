@@ -10,7 +10,7 @@ import Input from "components/Input";
 import Layout from "components/Layout";
 import SpoilerPopup, { SpoilerPopupButton } from "components/SpoilerPopup";
 import Table, { TableColumn } from "components/Table";
-import { usePhoneTypeName } from "hooks/misc/usePhoneTypeName";
+import { usePhoneType, usePhoneTypeByModel } from "hooks/misc/phoneType";
 import { useInput } from "hooks/useInput";
 import { useTimeout } from "hooks/useTimeout";
 import { NoticeContext } from "providers/NoticeProvider";
@@ -24,7 +24,7 @@ const useContainer = () => {
   const models = api.useFetchPhoneModelQuery({});
   const [deletePhoneModel, deleteStatus] = api.useDeletePhoneModelMutation();
   const [createPhoneModel, createStatus] = api.useCreatePhoneModelMutation();
-  const getPhoneType = usePhoneTypeName();
+  const getPhoneType = usePhoneType();
   const types = api.useFetchPhoneTypesQuery({});
 
   return {
@@ -105,7 +105,8 @@ const PhoneModels: React.FC<PhoneModelsProps> = (props) => {
     {
       key: "phoneTypeId",
       header: "Тип СС",
-      mapper: (v) => getPhoneType(v),
+      mapper: (v, item: DB.PhoneModelAttributes) =>
+        getPhoneType(item.phoneTypeId),
       // size: "150px",
     },
     {

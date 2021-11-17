@@ -19,7 +19,7 @@ import { groupBy } from "utils";
 import Dropdown from "components/Dropdown";
 import Link from "components/Link";
 import { useHolderName } from "hooks/misc/useHolderName";
-import { usePhoneTypeName } from "hooks/misc/usePhoneTypeName";
+import { usePhoneTypeByModel } from "hooks/misc/phoneType";
 
 export type PhoneCommitPageTab = "create" | "delete" | "edit";
 export type PhoneCommitChange = {
@@ -201,7 +201,7 @@ const PhoneCommitPage: React.FC<PhoneCommitPageProps> = (props) => {
   } | null>(() => null);
 
   const getHolderName = useHolderName();
-  const getTypeName = usePhoneTypeName();
+  const getTypeName = usePhoneTypeByModel();
 
   const mapCommits = (
     commits: PhoneCommitChange[] | Api.Models.Phone[],
