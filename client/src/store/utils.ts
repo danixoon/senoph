@@ -92,6 +92,15 @@ export const extractStatus = ({
     isError: isError === true,
     isIdle: isIdle === true,
     error: isApiError(error?.data?.error) ? error?.data?.error : null,
+    status: isLoading
+      ? "loading"
+      : isSuccess
+      ? "success"
+      : isIdle
+      ? "idle"
+      : isError
+      ? "error"
+      : null,
   } as ApiStatus);
 export const splitStatus: (status: ActionStatus) => ApiStatus = (status) => {
   if (isApiError(status))
@@ -101,6 +110,7 @@ export const splitStatus: (status: ActionStatus) => ApiStatus = (status) => {
       isLoading: false,
       isIdle: false,
       isSuccess: false,
+      status: "error",
     };
   else
     switch (status) {
@@ -111,6 +121,7 @@ export const splitStatus: (status: ActionStatus) => ApiStatus = (status) => {
           isSuccess: false,
           isError: false,
           error: null,
+          status,
         };
       case "loading":
         return {
@@ -119,6 +130,7 @@ export const splitStatus: (status: ActionStatus) => ApiStatus = (status) => {
           isSuccess: false,
           isError: false,
           error: null,
+          status,
         };
 
       case "success":
@@ -128,6 +140,7 @@ export const splitStatus: (status: ActionStatus) => ApiStatus = (status) => {
           isSuccess: true,
           isError: false,
           error: null,
+          status,
         };
     }
 };

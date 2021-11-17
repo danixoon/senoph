@@ -3,25 +3,29 @@ import Dropdown from "components/Dropdown";
 import Form from "components/Form";
 import Header from "components/Header";
 import Hr from "components/Hr";
-import Icon from "components/Icon";
+import Icon, { LoaderIcon } from "components/Icon";
 import Input from "components/Input";
 import Layout from "components/Layout";
 import SpoilerPopup, { SpoilerPopupButton } from "components/SpoilerPopup";
 import Table, { TableColumn } from "components/Table";
 import { useInput } from "hooks/useInput";
+import { NoticeContext } from "providers/NoticeProvider";
 import React from "react";
 import { api } from "store/slices/api";
+import { extractStatus } from "store/utils";
 
 export type UsersProps = {};
 
 const useUsersContainer = () => {
   const users = api.useFetchUsersQuery({});
-  const [deleteUser] = api.useDeleteUserMutation();
-  const [createUser] = api.useCreateUserMutation();
+  const [deleteUser, deleteStatus] = api.useDeleteUserMutation();
+  const [createUser, createStatus] = api.useCreateUserMutation();
 
   return {
     users: { ...users, items: users.data?.items ?? [] },
     deleteUser,
+    deleteStatus: extractStatus(deleteStatus),
+    createStatus: extractStatus(createStatus),
     createUser,
   };
 };
@@ -32,7 +36,32 @@ const roleNameMapper = (role: Role) =>
   ] ?? "Неизвестно");
 
 const Users: React.FC<UsersProps> = (props) => {
-  const { users, deleteUser, createUser } = useUsersContainer();
+  const { users, deleteUser, createUser, createStatus, deleteStatus } =
+    useUsersContainer();
+
+  const noticeContext = React.useContext(NoticeContext);
+
+  React.useEffect(() => {
+    if (createStatus.isLoading)
+      noticeContext.createNotice("Создание пользователя...");
+    if (createStatus.isSuccess)
+      noticeContext.createNotice("Пользователь успешно создан.");
+    if (createStatus.isError)
+      noticeContext.createNotice(
+        `Произошла ошибка при создании пользователя: (${createStatus.error?.name}) ${createStatus.error?.description}`
+      );
+  }, [createStatus.status]);
+
+  React.useEffect(() => {
+    if (deleteStatus.isLoading)
+      noticeContext.createNotice("Удаление пользователя...");
+    if (deleteStatus.isSuccess)
+      noticeContext.createNotice("Пользователь успешно удален.");
+    if (deleteStatus.isError)
+      noticeContext.createNotice(
+        `Произошла ошибка при удалении пользователя: (${deleteStatus.error?.name}) ${deleteStatus.error?.description}`
+      );
+  }, [deleteStatus.status]);
 
   const columns: TableColumn[] = [
     {
@@ -40,7 +69,10 @@ const Users: React.FC<UsersProps> = (props) => {
       header: "",
       size: "30px",
       mapper: (v, item) => (
-        <ActionBox onDelete={() => deleteUser({ id: item.id })} />
+        <ActionBox
+          status={deleteStatus}
+          onDelete={() => deleteUser({ id: item.id })}
+        />
       ),
     },
 
@@ -91,6 +123,7 @@ const Users: React.FC<UsersProps> = (props) => {
             />
             <Input
               required
+              placeholder="Ivan"
               label="Логин пользователя"
               {...bind}
               name="username"
@@ -98,6 +131,7 @@ const Users: React.FC<UsersProps> = (props) => {
             />
             <Input
               required
+              placeholder="Иван Иванович"
               label="Имя пользователя"
               {...bind}
               name="name"
@@ -106,6 +140,7 @@ const Users: React.FC<UsersProps> = (props) => {
             <Input
               required
               label="Пароль"
+              placeholder="*********"
               {...bind}
               name="password"
               style={{ flex: "1" }}
@@ -121,7 +156,7 @@ const Users: React.FC<UsersProps> = (props) => {
               type="submit"
               color="primary"
             >
-              Создать
+              {createStatus.isLoading ? <LoaderIcon /> : "Создать"}
             </Button>
           </Layout>
         </Form>
@@ -135,10 +170,9 @@ const Users: React.FC<UsersProps> = (props) => {
   );
 };
 
-const ActionBox = (props: { onDelete: () => void }) => {
+const ActionBox = (props: { status: ApiStatus; onDelete: () => void }) => {
   // const { commit } = props;
   const [target, setTarget] = React.useState<HTMLElement | null>(() => null);
-
   const [isOpen, setIsOpen] = React.useState(() => false);
 
   return (
@@ -158,8 +192,10 @@ const ActionBox = (props: { onDelete: () => void }) => {
           else setIsOpen(false);
         }}
       >
-        <SpoilerPopupButton onClick={() => props.onDelete()}>
-          Удалить
+        <SpoilerPopupButton
+          onClick={() => !props.status.isLoading && props.onDelete()}
+        >
+          {props.status.isLoading ? <LoaderIcon /> : "Удалить"}
         </SpoilerPopupButton>
       </SpoilerPopup>
     </Button>

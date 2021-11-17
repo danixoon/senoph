@@ -3,32 +3,65 @@ import Dropdown from "components/Dropdown";
 import Form from "components/Form";
 import Header from "components/Header";
 import Hr from "components/Hr";
-import Icon from "components/Icon";
+import Icon, { LoaderIcon } from "components/Icon";
 import Input from "components/Input";
 import Layout from "components/Layout";
 import SpoilerPopup, { SpoilerPopupButton } from "components/SpoilerPopup";
 import Table, { TableColumn } from "components/Table";
 import { useInput } from "hooks/useInput";
+import { NoticeContext } from "providers/NoticeProvider";
 import React from "react";
 import { api } from "store/slices/api";
+import { extractStatus } from "store/utils";
 
 export type DepartmentsProps = {};
 
 const useDepartmentsContainer = () => {
   const departments = api.useFetchDepartmentsQuery({});
-  const [deleteDepartment] = api.useDeleteDepartmentMutation();
-  const [createDepartment] = api.useCreateDepartmentMutation();
+  const [deleteDepartment, deleteStatus] = api.useDeleteDepartmentMutation();
+  const [createDepartment, createStatus] = api.useCreateDepartmentMutation();
 
   return {
     departments: { ...departments, items: departments.data?.items ?? [] },
     deleteDepartment,
+    deleteStatus: extractStatus(deleteStatus),
+    createStatus: extractStatus(createStatus),
     createDepartment,
   };
 };
 
 const Departments: React.FC<DepartmentsProps> = (props) => {
-  const { departments, deleteDepartment, createDepartment } =
-    useDepartmentsContainer();
+  const {
+    departments,
+    deleteDepartment,
+    createDepartment,
+    deleteStatus,
+    createStatus,
+  } = useDepartmentsContainer();
+
+  const noticeContext = React.useContext(NoticeContext);
+
+  React.useEffect(() => {
+    if (createStatus.isLoading)
+      noticeContext.createNotice("Создание подразделения...");
+    if (createStatus.isSuccess)
+      noticeContext.createNotice("Подразделение успешно создано.");
+    if (createStatus.isError)
+      noticeContext.createNotice(
+        `Произошла ошибка при создании подразделения: (${createStatus.error?.name}) ${createStatus.error?.description}`
+      );
+  }, [createStatus.status]);
+
+  React.useEffect(() => {
+    if (deleteStatus.isLoading)
+      noticeContext.createNotice("Удаление подразделения...");
+    if (deleteStatus.isSuccess)
+      noticeContext.createNotice("Подразделение успешно удалено.");
+    if (deleteStatus.isError)
+      noticeContext.createNotice(
+        `Произошла ошибка при удалении подразделения: (${deleteStatus.error?.name}) ${deleteStatus.error?.description}`
+      );
+  }, [deleteStatus.status]);
 
   const columns: TableColumn[] = [
     {
@@ -36,7 +69,10 @@ const Departments: React.FC<DepartmentsProps> = (props) => {
       header: "",
       size: "30px",
       mapper: (v, item) => (
-        <ActionBox onDelete={() => deleteDepartment({ id: item.id })} />
+        <ActionBox
+          status={deleteStatus}
+          onDelete={() => deleteDepartment({ id: item.id })}
+        />
       ),
     },
     {
@@ -94,11 +130,12 @@ const Departments: React.FC<DepartmentsProps> = (props) => {
                 marginLeft: "auto",
                 padding: "0 4rem",
               }}
+              disabled={createStatus.isLoading}
               margin="md"
               type="submit"
               color="primary"
             >
-              Создать
+              {createStatus.isLoading ? <LoaderIcon /> : "Создать"}
             </Button>
           </Layout>
         </Form>
@@ -112,8 +149,8 @@ const Departments: React.FC<DepartmentsProps> = (props) => {
   );
 };
 
-const ActionBox = (props: { onDelete: () => void }) => {
-  // const { commit } = props;
+const ActionBox = (props: { status: ApiStatus; onDelete: () => void }) => {
+  const { status } = props;
   const [target, setTarget] = React.useState<HTMLElement | null>(() => null);
 
   const [isOpen, setIsOpen] = React.useState(() => false);
@@ -135,8 +172,10 @@ const ActionBox = (props: { onDelete: () => void }) => {
           else setIsOpen(false);
         }}
       >
-        <SpoilerPopupButton onClick={() => props.onDelete()}>
-          Удалить
+        <SpoilerPopupButton
+          onClick={() => !status.isLoading && props.onDelete()}
+        >
+          {status.isLoading ? <LoaderIcon /> : "Удаление"}
         </SpoilerPopupButton>
       </SpoilerPopup>
     </Button>

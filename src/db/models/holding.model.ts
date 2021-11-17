@@ -48,6 +48,9 @@ export default class Holding extends Model<
   @Column(DataType.INTEGER)
   holderId: number;
 
+  @BelongsTo(() => Holder)
+  holder?: Holder;
+
   @AllowNull(true)
   @Validate({ isIn: [["create-pending", "delete-pending"]] })
   @Default("create-pending")
@@ -64,9 +67,6 @@ export default class Holding extends Model<
     args.fields.push("statusAt");
     args.attributes.statusAt = new Date().toISOString();
   }
-
-  @BelongsTo(() => Holder)
-  holder: Holder;
 
   @BelongsToMany(() => Phone, () => HoldingPhone)
   phones?: Phone[];

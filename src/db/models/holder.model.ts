@@ -8,6 +8,7 @@ import {
   HasOne,
   BelongsTo,
   BelongsToMany,
+  HasMany,
 } from "sequelize-typescript";
 import { Op, Optional } from "sequelize";
 import Department from "./department.model";
@@ -41,6 +42,9 @@ export default class Holder extends Model<
   @BelongsTo(() => Department)
   department: Department;
 
+  // @HasMany(() => Holding)
+  // holdings: Holding[];
+
   static async getByPhones(ids: number[]) {
     const phoneHolderMap = new Map<number, Holder>();
     const holders = (
@@ -49,8 +53,10 @@ export default class Holder extends Model<
         include: [{ model: Holding, include: [Holder] }],
         attributes: ["phoneId"],
       })
-    ).forEach((holding) =>
-      phoneHolderMap.set(holding.phoneId, holding.holding.holder)
+    ).forEach(
+      (holding) =>
+        holding.holding?.holder &&
+        phoneHolderMap.set(holding.phoneId, holding.holding?.holder)
     );
 
     return phoneHolderMap;

@@ -1,5 +1,5 @@
 import { Router } from "express";
-
+import { ForeignKeyConstraintError } from "sequelize";
 import Phone from "../db/models/phone.model";
 import Model from "../db/models/phoneModel.model";
 import { handler, prepareItems } from "@backend/utils/index";
@@ -16,7 +16,7 @@ import PhoneCategory from "@backend/db/models/phoneCategory.model";
 import Department from "@backend/db/models/department.model";
 import { convertValues } from "@backend/middleware/converter";
 import { AppRouter } from "../router";
-import { ApiError, errorType } from "../utils/errors";
+import { ApiError, errorMap, errorType } from "../utils/errors";
 import { access, owner, withOwner } from "@backend/middleware/auth";
 import { tester, validate } from "@backend/middleware/validator";
 import { Filter } from "@backend/utils/db";
@@ -236,9 +236,12 @@ router.get(
         order: [[Holding, "orderDate", "ASC"]],
         limit: 1,
         // required: true,
-        include: [{
-          model: Holder, where: { departmentId },
-        }]
+        include: [
+          {
+            model: Holder,
+            where: { departmentId },
+          },
+        ],
       });
 
     if (categoryKey !== undefined)
@@ -343,7 +346,7 @@ router.post(
   access("admin"),
   validate({
     body: {
-      accountingDate: tester().required().isDate(),
+      // accountingDate: tester().required().isDate(),
       phoneTypeId: tester().required().isNumber(),
       name: tester().required(),
       details: tester().array({
@@ -358,11 +361,10 @@ router.post(
   }),
   handler(async (req, res) => {
     const { user } = req.params;
-    const { accountingDate, phoneTypeId, name, details, description } =
-      req.body;
+    const { phoneTypeId, name, details, description } = req.body;
 
     const model = await PhoneModel.create({
-      accountingDate: accountingDate.toISOString(),
+      // accountingDate: accountingDate.toISOString(),
       phoneTypeId,
       name,
       description,
@@ -398,8 +400,17 @@ router.delete(
     const { user } = req.params;
     const { id } = req.query;
 
-    const model = await PhoneModel.destroy({ where: { id } });
-    Log.log("model", [id], "delete", user.id);
+    try {
+      const model = await PhoneModel.destroy({ where: { id } });
+      Log.log("model", [id], "delete", user.id);
+    } catch (err) {
+      if (err instanceof ForeignKeyConstraintError) {
+        throw new ApiError(errorType.VALIDATION_ERROR, {
+          description:
+            "Невозможно удаление модели с существующими средствами связи",
+        });
+      }
+    }
 
     res.send();
   })
@@ -442,9 +453,9 @@ router.post(
     const { user } = req.params;
     const { description, name } = req.query;
 
+    // try {
     const type = await PhoneType.create({ name, description });
     Log.log("phoneType", [type.id], "create", user.id);
-
     res.send({ id: type.id });
   })
 );
@@ -461,8 +472,17 @@ router.delete(
     const { user } = req.params;
     const { id } = req.query;
 
-    const phoneType = await PhoneType.destroy({ where: { id } });
-    Log.log("phoneType", [id], "delete", user.id);
+    try {
+      const phoneType = await PhoneType.destroy({ where: { id } });
+      Log.log("phoneType", [id], "delete", user.id);
+    } catch (err) {
+      if (err instanceof ForeignKeyConstraintError) {
+        throw new ApiError(errorType.VALIDATION_ERROR, {
+          description:
+            "Невозможно удаление типа средства связи при существовании моделей этого типа",
+        });
+      }
+    }
 
     res.send();
   })

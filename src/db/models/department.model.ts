@@ -6,6 +6,7 @@ import {
   Model,
   Table,
   Scopes,
+  Unique,
 } from "sequelize-typescript";
 import { Optional } from "sequelize/types";
 
@@ -16,6 +17,7 @@ export default class Department extends Model<
   DB.CreateAttributes<DB.DepartmentAttributes>
 > {
   @AllowNull(false)
+  @Unique
   @Column(DataType.STRING)
   name: string;
 
@@ -23,5 +25,3 @@ export default class Department extends Model<
   @Column(DataType.STRING)
   description?: string;
 }
-
-

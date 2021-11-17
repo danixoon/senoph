@@ -22,4 +22,5 @@ declare type ApiStatus =
     isIdle: boolean;
     isSuccess: boolean;
     isError: boolean;
+    status?: "idle" | "loading" | "success" | "error";
   };

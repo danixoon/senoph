@@ -18,7 +18,13 @@ declare type CommitTargetName = keyof Pick<
 declare type ChangedDataType = "string" | "date" | "number";
 declare type CommitActionType = "approve" | "decline";
 declare type CommitStatus = "delete-pending" | "create-pending";
-declare type HoldingReason = "dismissal" | "movement" | "write-off" | "initial" | "other" | "order";
+declare type HoldingReason =
+  | "dismissal"
+  | "movement"
+  | "write-off"
+  | "initial"
+  | "other"
+  | "order";
 
 declare type WithCommit = {
   status?: CommitStatus | null;
@@ -46,8 +52,9 @@ declare namespace DB {
 
   type PhoneModelAttributes = Attributes<{
     name: string;
-    accountingDate: string;
+
     phoneTypeId: number;
+    phoneType?: PhoneTypeAttributes;
     description?: string;
   }>;
 
@@ -64,9 +71,11 @@ declare namespace DB {
   type PhoneCategoryAttributes = Attributes<{
     categoryKey: string;
     actDate: Date;
+
     actUrl: string;
     phoneId: number;
     description?: string;
+    phone?: PhoneAttributes;
   }> &
     WithCommit;
 
@@ -86,6 +95,7 @@ declare namespace DB {
     holdingId: number;
     phoneId: number;
     holding?: HoldingAttributes;
+    phone?: PhoneAttributes;
   }>;
 
   type HolderAttributes = Attributes<{

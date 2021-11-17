@@ -5,7 +5,7 @@ import Dropdown from "components/Dropdown";
 import Form, { FormContext } from "components/Form";
 import Header from "components/Header";
 import Hr from "components/Hr";
-import Icon from "components/Icon";
+import Icon, { LoaderIcon } from "components/Icon";
 import Input from "components/Input";
 import Layout from "components/Layout";
 import SpoilerPopup, { SpoilerPopupButton } from "components/SpoilerPopup";
@@ -13,15 +13,17 @@ import Table, { TableColumn } from "components/Table";
 import { usePhoneTypeName } from "hooks/misc/usePhoneTypeName";
 import { useInput } from "hooks/useInput";
 import { useTimeout } from "hooks/useTimeout";
+import { NoticeContext } from "providers/NoticeProvider";
 import React from "react";
 import { api } from "store/slices/api";
+import { extractStatus } from "store/utils";
 
 export type PhoneModelsProps = {};
 
 const useContainer = () => {
   const models = api.useFetchPhoneModelQuery({});
-  const [deletePhoneModel] = api.useDeletePhoneModelMutation();
-  const [createPhoneModel] = api.useCreatePhoneModelMutation();
+  const [deletePhoneModel, deleteStatus] = api.useDeletePhoneModelMutation();
+  const [createPhoneModel, createStatus] = api.useCreatePhoneModelMutation();
   const getPhoneType = usePhoneTypeName();
   const types = api.useFetchPhoneTypesQuery({});
 
@@ -29,6 +31,8 @@ const useContainer = () => {
     models: { ...models, items: models.data?.items ?? [] },
     types: { ...types, items: types.data?.items ?? [] },
     deletePhoneModel,
+    deleteStatus: extractStatus(deleteStatus),
+    createStatus: extractStatus(createStatus),
     createPhoneModel,
     getPhoneType,
   };
@@ -38,12 +42,43 @@ const detailsMap: Record<string, string> = {
   gold: "Золото",
   silver: "Серебро",
   platinum: "Платина",
-  mbg: "МБГ",
+  mpg: "МПГ",
 };
 
 const PhoneModels: React.FC<PhoneModelsProps> = (props) => {
-  const { models, types, deletePhoneModel, createPhoneModel, getPhoneType } =
-    useContainer();
+  const {
+    models,
+    types,
+    deletePhoneModel,
+    createPhoneModel,
+    getPhoneType,
+    createStatus,
+    deleteStatus,
+  } = useContainer();
+
+  const noticeContext = React.useContext(NoticeContext);
+
+  React.useEffect(() => {
+    if (createStatus.isLoading)
+      noticeContext.createNotice("Создание модели...");
+    if (createStatus.isSuccess)
+      noticeContext.createNotice("Модель успешно создана.");
+    if (createStatus.isError)
+      noticeContext.createNotice(
+        `Произошла ошибка при создании модели: (${createStatus.error?.name}) ${createStatus.error?.description}`
+      );
+  }, [createStatus.status]);
+
+  React.useEffect(() => {
+    if (deleteStatus.isLoading)
+      noticeContext.createNotice("Удаление модели...");
+    if (deleteStatus.isSuccess)
+      noticeContext.createNotice("Модель успешно удалена.");
+    if (deleteStatus.isError)
+      noticeContext.createNotice(
+        `Произошла ошибка при удалении модели: (${deleteStatus.error?.name}) ${deleteStatus.error?.description}`
+      );
+  }, [deleteStatus.status]);
 
   const columns: TableColumn[] = [
     {
@@ -51,7 +86,10 @@ const PhoneModels: React.FC<PhoneModelsProps> = (props) => {
       header: "",
       size: "30px",
       mapper: (v, item) => (
-        <ActionBox onDelete={() => deletePhoneModel({ id: item.id })} />
+        <ActionBox
+          status={deleteStatus}
+          onDelete={() => deletePhoneModel({ id: item.id })}
+        />
       ),
     },
     {
@@ -125,14 +163,6 @@ const PhoneModels: React.FC<PhoneModelsProps> = (props) => {
               name="name"
               style={{ flex: "1" }}
             />
-            <Input
-              required
-              label="Дата учёта"
-              {...bind}
-              type="date"
-              name="accountingDate"
-              style={{ flex: "1" }}
-            />
             <Dropdown
               required
               style={{ flex: "1" }}
@@ -186,6 +216,7 @@ const PhoneModels: React.FC<PhoneModelsProps> = (props) => {
               ))
             )}
             <Button
+              disabled={createStatus.isLoading}
               style={{
                 marginTop: "auto",
                 marginLeft: "auto",
@@ -195,7 +226,7 @@ const PhoneModels: React.FC<PhoneModelsProps> = (props) => {
               type="submit"
               color="primary"
             >
-              Создать
+              {createStatus.isLoading ? <LoaderIcon /> : "Создать"}
             </Button>
           </Layout>
         </Form>
@@ -223,7 +254,7 @@ const CreateDetailButton = (props: {
     label,
   }));
 
-  const amount = Number(bind.input.amount?.replaceAll(",", ".").trim());
+  const amount = Number(bind.input.amount);
   const [show, message, toggleMessage] = useTimeout<string | null>(null, 2000);
   const inputRef = React.useRef<HTMLElement | null>(null);
 
@@ -268,7 +299,10 @@ const CreateDetailButton = (props: {
           onClick={() => {
             if (Number.isNaN(amount))
               toggleMessage("Неверно указано количество");
-            else props.onCreate(bind.input.name ?? "", amount);
+            else {
+              props.onCreate(bind.input.name ?? "", amount);
+              inputRef.current?.focus();
+            }
           }}
         >
           Добавить
@@ -284,7 +318,7 @@ const CreateDetailButton = (props: {
   );
 };
 
-const ActionBox = (props: { onDelete: () => void }) => {
+const ActionBox = (props: { status: ApiStatus; onDelete: () => void }) => {
   // const { commit } = props;
   const [target, setTarget] = React.useState<HTMLElement | null>(() => null);
 
@@ -307,8 +341,11 @@ const ActionBox = (props: { onDelete: () => void }) => {
           else setIsOpen(false);
         }}
       >
-        <SpoilerPopupButton onClick={() => props.onDelete()}>
-          Удалить
+        <SpoilerPopupButton
+          // disabled={props.status.isLoading}
+          onClick={() => !props.status.isLoading && props.onDelete()}
+        >
+          {props.status.isLoading ? <LoaderIcon /> : "Удалить"}
         </SpoilerPopupButton>
       </SpoilerPopup>
     </Button>

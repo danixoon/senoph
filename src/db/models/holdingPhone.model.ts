@@ -33,6 +33,9 @@ export default class HoldingPhone extends Model<
   @Column(DataType.INTEGER)
   phoneId: number;
 
-  @BelongsTo(() => Holding)
-  holding: Holding;
+  @BelongsTo(() => Holding, { onDelete: "CASCADE" })
+  holding?: Holding;
+
+  @BelongsTo(() => Phone, { onDelete: "CASCADE" })
+  phone?: Phone;
 }

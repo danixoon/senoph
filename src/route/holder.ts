@@ -7,10 +7,11 @@ import { AppRouter } from "../router";
 
 import Model from "../db/models/phoneModel.model";
 import { Filter } from "@backend/utils/db";
-import { Op } from "sequelize";
+import { ForeignKeyConstraintError, Op } from "sequelize";
 import Holder from "@backend/db/models/holder.model";
 import { handler, prepareItems } from "../utils";
 import Log from "@backend/db/models/log.model";
+import { ApiError, errorType } from "@backend/utils/errors";
 
 const router = AppRouter();
 
@@ -92,10 +93,16 @@ router.delete(
     const { user } = req.params;
     const { id } = req.query;
 
-    const holder = await Holder.destroy({ where: { id } });
-
-    Log.log("holder", [id], "delete", user.id);
-
+    try {
+      const holder = await Holder.destroy({ where: { id } });
+      Log.log("holder", [id], "delete", user.id);
+    } catch (err) {
+      if (err instanceof ForeignKeyConstraintError) {
+        throw new ApiError(errorType.VALIDATION_ERROR, {
+          description: "Невозможно удаление владельца участвующего в движениях",
+        });
+      }
+    }
     res.send();
   })
 );

@@ -3,7 +3,7 @@ import Dropdown from "components/Dropdown";
 import Form from "components/Form";
 import Header from "components/Header";
 import Hr from "components/Hr";
-import Icon from "components/Icon";
+import Icon, { LoaderIcon } from "components/Icon";
 import Input from "components/Input";
 import Layout from "components/Layout";
 import SpoilerPopup, { SpoilerPopupButton } from "components/SpoilerPopup";
@@ -11,16 +11,18 @@ import Table, { TableColumn } from "components/Table";
 import { useDepartmentName } from "hooks/misc/useDepartmentName";
 import { useHolderName } from "hooks/misc/useHolderName";
 import { useInput } from "hooks/useInput";
+import { NoticeContext } from "providers/NoticeProvider";
 import React from "react";
 import { api } from "store/slices/api";
+import { extractStatus } from "store/utils";
 
 export type HoldersProps = {};
 
 const useContainer = () => {
   const holders = api.useFetchHoldersQuery({});
   const departments = api.useFetchDepartmentsQuery({});
-  const [deleteHolder] = api.useDeleteHolderMutation();
-  const [createHolder] = api.useCreateHolderMutation();
+  const [deleteHolder, deleteStatus] = api.useDeleteHolderMutation();
+  const [createHolder, createStatus] = api.useCreateHolderMutation();
   const getHolderName = useHolderName();
   const getDepartmentName = useDepartmentName();
 
@@ -29,6 +31,8 @@ const useContainer = () => {
     departments: { ...departments, items: departments.data?.items ?? [] },
     deleteHolder,
     createHolder,
+    deleteStatus: extractStatus(deleteStatus),
+    createStatus: extractStatus(createStatus),
     getHolderName,
     getDepartmentName,
   };
@@ -40,9 +44,35 @@ const Holders: React.FC<HoldersProps> = (props) => {
     departments,
     deleteHolder,
     createHolder,
+    createStatus,
+    deleteStatus,
     getHolderName,
     getDepartmentName,
   } = useContainer();
+
+  const noticeContext = React.useContext(NoticeContext);
+
+  React.useEffect(() => {
+    if (createStatus.isLoading)
+      noticeContext.createNotice("Создание владельца...");
+    if (createStatus.isSuccess)
+      noticeContext.createNotice("Владелец успешно создан.");
+    if (createStatus.isError)
+      noticeContext.createNotice(
+        `Произошла ошибка при создании владельца: (${createStatus.error?.name}) ${createStatus.error?.description}`
+      );
+  }, [createStatus.status]);
+
+  React.useEffect(() => {
+    if (deleteStatus.isLoading)
+      noticeContext.createNotice("Удаление владельца...");
+    if (deleteStatus.isSuccess)
+      noticeContext.createNotice("Владелец успешно удален.");
+    if (deleteStatus.isError)
+      noticeContext.createNotice(
+        `Произошла ошибка при удалении владельца: (${deleteStatus.error?.name}) ${deleteStatus.error?.description}`
+      );
+  }, [deleteStatus.status]);
 
   const columns: TableColumn[] = [
     {
@@ -50,7 +80,10 @@ const Holders: React.FC<HoldersProps> = (props) => {
       header: "",
       size: "30px",
       mapper: (v, item) => (
-        <ActionBox onDelete={() => deleteHolder({ id: item.id })} />
+        <ActionBox
+          status={deleteStatus}
+          onDelete={() => deleteHolder({ id: item.id })}
+        />
       ),
     },
     {
@@ -92,7 +125,7 @@ const Holders: React.FC<HoldersProps> = (props) => {
           }}
         >
           <Layout flow="row">
-          <Input
+            <Input
               required
               label="Фамилия"
               {...bind}
@@ -106,7 +139,7 @@ const Holders: React.FC<HoldersProps> = (props) => {
               name="firstName"
               style={{ flex: "1" }}
             />
-            
+
             <Input
               required
               label="Отчество"
@@ -131,11 +164,12 @@ const Holders: React.FC<HoldersProps> = (props) => {
                 marginLeft: "auto",
                 padding: "0 4rem",
               }}
+              disabled={createStatus.isLoading}
               margin="md"
               type="submit"
               color="primary"
             >
-              Создать
+              {createStatus.isLoading ? <LoaderIcon/> : "Создать"}
             </Button>
           </Layout>
         </Form>
@@ -149,7 +183,7 @@ const Holders: React.FC<HoldersProps> = (props) => {
   );
 };
 
-const ActionBox = (props: { onDelete: () => void }) => {
+const ActionBox = (props: { status: ApiStatus; onDelete: () => void }) => {
   // const { commit } = props;
   const [target, setTarget] = React.useState<HTMLElement | null>(() => null);
 
@@ -173,7 +207,7 @@ const ActionBox = (props: { onDelete: () => void }) => {
         }}
       >
         <SpoilerPopupButton onClick={() => props.onDelete()}>
-          Удалить
+          {props.status.isLoading ? <LoaderIcon /> : "Удалить"}
         </SpoilerPopupButton>
       </SpoilerPopup>
     </Button>

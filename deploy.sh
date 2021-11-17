@@ -18,7 +18,8 @@ do
 done
 
 # Перемещение кода билда и зависимостей в директорию прода
-rm -rf ./deploy || mkdir ./deploy
+rm -rf ./deploy
+mkdir ./deploy
 cp -r ./node_modules ./deploy
 mv ./build ./deploy
 
