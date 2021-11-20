@@ -118,15 +118,25 @@ router.put(
   /* owner("") ,*/ handler(async (req, res) => {
     const { user } = req.params;
     const { action, ids } = req.body;
-    if (action === "approve")
-      await Holding.unscoped().update(
-        { status: null },
-        { where: { id: { [Op.in]: ids }, status: "create-pending" } }
-      );
-    else
-      await Holding.unscoped().destroy({
-        where: { id: { [Op.in]: ids }, status: "create-pending" },
-      });
+    const holdings = await Holding.findAll({ where: { id: { [Op.in]: ids } } });
+
+    await Promise.all(
+      holdings.map(async (holding) => {
+        if (action === "approve") {
+          if (holding.status === "create-pending") {
+            await holding.update({ status: null });
+          } else if (holding.status === "delete-pending") {
+            await holding.destroy();
+          }
+        } else {
+          if (holding.status === "create-pending") {
+            await holding.destroy();
+          } else if (holding.status === "delete-pending") {
+            await holding.update({ status: null });
+          }
+        }
+      })
+    );
 
     Log.log("holding", ids, "commit", user.id, { action });
 

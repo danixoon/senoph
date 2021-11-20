@@ -26,16 +26,10 @@ import HoldingPhone from "@backend/db/models/holdingPhone.model";
 import Holding from "@backend/db/models/holding.model";
 
 type ImportContext<P> = {
-  row: { id: any } & P;
-  models: DB.PhoneModelAttributes[];
-  departments: DB.DepartmentAttributes[];
-  holders: DB.HolderAttributes[];
-
-  createHolding: (holding: DB.HoldingAttributes, id: any) => void;
-};
-type Template<T, K = any, P = any> = {
+  row: Row;
+} & P;
+type Template<T, P = any> = {
   label: string;
-  id: keyof K;
   validator?: Validator;
   mutator: (
     this: ImportContext<P>,
@@ -48,32 +42,24 @@ type Row = { id: any; values: (string | null)[] };
 // const extractRow
 
 const templates: {
-  phone: Template<
-    DB.PhoneAttributes,
-    any,
-    { department: DB.DepartmentAttributes; holder: DB.HolderAttributes }
-  >[];
+  phone: Template<DB.PhoneAttributes, { models: DB.PhoneModelAttributes[] }>[];
 } = {
   phone: [
     {
       label: "Модель",
-      id: "phoneModelId",
       validator: tester().required(),
       mutator: function (v, target) {
-        const model = Array.from(this.models.values()).find(
-          (model) => model.name === v
-        );
+        const model = this.models.find((model) => model.name === v);
         if (!model)
           throw new ApiError(errorType.INVALID_BODY, {
             description: "Несуществующая модель СС: " + v,
           });
 
-        return { ...target, phoneModelId: model?.id };
+        return { ...target, phoneModelId: model.id };
       },
     },
     {
       label: "Инвентарный номер",
-      id: "inventoryKey",
       validator: tester().required(),
       mutator: function (v, target) {
         return { ...target, inventoryKey: v };
@@ -81,7 +67,6 @@ const templates: {
     },
     {
       label: "Заводской номер",
-      id: "factoryKey",
       validator: tester().required(),
       mutator: function (v, target) {
         return { ...target, factoryKey: v };
@@ -89,15 +74,16 @@ const templates: {
     },
     {
       label: "Год сборки",
-      id: "assebmlyYear",
       validator: tester().isNumber().required(),
       mutator: function (v, target) {
-        return { ...target, assemblyDate: new Date(v, 1, 1).toISOString() };
+        return {
+          ...target,
+          assemblyDate: new Date(v, 1, 1).toISOString(),
+        };
       },
     },
     {
       label: "Дата принятия к учёту",
-      id: "accountingDate",
       validator: tester().isDate().required(),
       mutator: function (v, target) {
         return { ...target, accountingDate: v };
@@ -105,42 +91,9 @@ const templates: {
     },
     {
       label: "Дата ввода в эксплуатацию",
-      id: "comissioningDate",
       validator: tester().isDate().required(),
       mutator: function (v, target) {
         return { ...target, commissioningDate: v };
-      },
-    },
-    {
-      label: "Подразделение",
-      id: "departmentName",
-      validator: tester().required(),
-      mutator: function (v: string, target) {
-        return target;
-      },
-    },
-    {
-      label: "Владелец",
-      id: "holderName",
-      validator: tester().required(),
-      mutator: function (v: string, target) {
-        // if (!holder)
-        // throw new ApiError(errorType.INVALID_BODY, {
-        //   description:
-        //     `Несуществующий владелец отделения '${department}' с ФИО '${lastName} ${firstName} ${middleName}' ` +
-        //     v,
-        // });
-
-        this.createHolding(
-          {
-            holderId: this.row.holder.id as number,
-            orderDate: target.accountingDate as string,
-            reasonId: "initial",
-          },
-          this.row.id
-        );
-
-        return target;
       },
     },
   ],
@@ -162,7 +115,6 @@ router.get(
 
     sheet.columns = template.map((t) => ({
       header: t.label,
-      key: t.id.toString(),
     }));
 
     const row = sheet.getRow(1);
@@ -189,9 +141,9 @@ router.get(
 type WithRandomId<T, K extends string = "randomId"> = T & Record<K, string>;
 
 const processTemplate = <T, R>(
-  templates: Template<R, any, T>[],
+  templates: Template<R, T>[],
   row: Row,
-  getContext: () => ImportContext<T>
+  getContext: () => Omit<ImportContext<T>, "row">
 ) => {
   let result: Partial<R> = {};
 
@@ -206,22 +158,12 @@ const processTemplate = <T, R>(
         { target: "body" }
       ).value;
 
-    const context = getContext();
+    const context = { ...getContext(), row };
 
     result = template.mutator.call(context, value, result);
   }
 
   return result as R;
-};
-
-const getCellByTemplateId = (
-  id: string,
-  templates: Template<any>[],
-  row: Row
-) => {
-  const index = templates.findIndex((t) => t.id === id);
-  if (index !== -1) return row.values[index];
-  else return null;
 };
 
 const extractRows = (sheet: exceljs.Worksheet) => {
@@ -249,87 +191,19 @@ const importPhones = async (authorId: number, book: exceljs.Workbook) => {
       description: "Передана пустая таблица",
     });
 
-  // Получение данных отделений, владельцев и моделей телефонов
-  const [departments, holders, models] = await Promise.all([
-    Department.findAll(),
-    Holder.findAll(),
-    PhoneModel.findAll(),
-  ]);
-
-  // Инициированные движения при создании СС
-  const holdings: (DB.HoldingAttributes & { rowIds: string[] })[] = [];
   const phones: DB.PhoneAttributes[] = [];
+  const models = await PhoneModel.findAll();
 
   for (const row of rows) {
-    const phone = processTemplate(templates.phone, row, () => {
-      const departmentName = getCellByTemplateId(
-        "departmentName",
-        templates.phone,
-        row
-      );
-      const [lastName, firstName, middleName] = getCellByTemplateId(
-        "holderName",
-        templates.phone,
-        row
-      )?.split(/\s+/) ?? ["", "", ""];
-
-      const department = departments.find(
-        (d) => d.name.toLowerCase() === departmentName?.toLowerCase()
-      );
-      const holder = holders.find(
-        (h) =>
-          h.firstName.toLowerCase() === firstName?.toLowerCase() &&
-          h.lastName.toLowerCase() === lastName?.toLowerCase() &&
-          h.middleName.toLowerCase() === middleName?.toLowerCase()
-      );
-
-      if (!department)
-        throw new ApiError(errorType.INVALID_BODY, {
-          description: "Указано несуществующее отделение",
-        });
-      if (!holder)
-        throw new ApiError(errorType.INVALID_BODY, {
-          description: `Указан несуществующий владелец в отделении '${departmentName}'`,
-        });
-
-      return {
-        departments,
-        holders,
-        models,
-        row: {
-          department,
-          holder, 
-          id: row.id,
-        },
-        createHolding: (holding, id) => {
-          const existing = holdings.find(
-            (h) => h.holderId === holding.holderId
-          );
-          if (existing) existing.rowIds.push(id);
-          else holdings.push({ ...holding, rowIds: [id] });
-        },
-      };
-    });
-
+    const phone = processTemplate(templates.phone, row, () => ({ models }));
     phones.push({ ...phone, authorId });
   }
 
-  const [dbPhones, dbHoldings] = await Promise.all([
-    Phone.bulkCreate(phones),
-    Holding.bulkCreate(holdings),
-  ]);
-  const holdingPhones: DB.HoldingPhoneAttributes[] = holdings.flatMap(
-    (holding) =>
-      holding.rowIds.map((id) => ({
-        phoneId: dbPhones[Number(id)].id,
-        holdingId: dbHoldings.find((h) => h.holderId === holding.holderId)?.id,
-      }))
-  );
-
-  HoldingPhone.bulkCreate(holdingPhones);
+  const createdPhones = await Phone.bulkCreate(phones);
+  return createdPhones;
 };
 
-router.post(  
+router.post(
   "/import",
   access("user"),
   uploadMemory(".xlsx").single("file"),

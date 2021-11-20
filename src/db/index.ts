@@ -61,14 +61,14 @@ export const init = async () => {
   const isTest = process.env.NODE_ENV === "test";
 
   if (!isTest) {
-    if (!isProd) await sequelize.drop({});
+    // if (!isProd) await sequelize.drop({});
     await sequelize.sync({
       logging: (sql) => {
         const t = new Date();
         const log = `[${t.toLocaleDateString()} ${t.toLocaleTimeString()} | sync] ${sql}\n`;
         dbLogger.write(log);
-      },
-      force: !isProd,
+      }, 
+     // force: !isProd,
     });
 
     if (isProd) await fillProdDatabase();

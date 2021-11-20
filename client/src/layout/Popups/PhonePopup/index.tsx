@@ -77,7 +77,9 @@ const Content: React.FC<
   const departmentName = departments.find(
     (d) => phone.holder?.departmentId == d.id
   )?.name;
-  const holderName = `${phone?.holder?.lastName} ${phone?.holder?.firstName} ${phone?.holder?.middleName}`;
+
+  const holder = phone?.holder;
+  const holderName = `${holder?.lastName} ${holder?.firstName} ${holder?.middleName}`;
 
   const {
     // factoryKey,
@@ -273,14 +275,23 @@ const Content: React.FC<
               {new Date(commissioningDate).toLocaleDateString()}
             </EditableListItem>
             <Hr />
-            <ListItem label="Подразделение">
-              <Span>{departmentName}</Span>
-            </ListItem>
-            <ListItem label="Материально-ответственное лицо">
-              <Link href="/phone/edit" isMonospace>
-                {holderName}
-              </Link>
-            </ListItem>
+            {holder ? (
+              <>
+                <ListItem label="Подразделение">
+                  <Span>{departmentName}</Span>
+                </ListItem>
+                <ListItem label="Материально-ответственное лицо">
+                  <Link href="/phone/edit" isMonospace>
+                    {holderName}
+                  </Link>
+                </ListItem>
+              </>
+            ) : (
+              <Header align="center">
+                Материально-ответственное лицо отсутствует. Создайте его с
+                помощью движения
+              </Header>
+            )}
             <Hr />
           </Layout>
           {edit ? (

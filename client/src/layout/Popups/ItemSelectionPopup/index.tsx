@@ -64,16 +64,16 @@ const ItemSelectionPopup: React.FC<ItemSelectionPopupProps> = (props) => {
     props;
 
   return (
-    <Popup {...rest} size="sm" closeable noPadding>
+    <Popup {...rest} size="md" closeable noPadding>
       <PopupTopBar>
         <Layout flex="1">
           <Header align="center" hr style={{ flex: 1 }}>
             {header}
           </Header>
-          {children}
         </Layout>
       </PopupTopBar>
       <Layout padding="md" flex="1" className="items-list">
+        {children}
         {items
           // .filter((item) => isIncludes(item.name))
           .map((item) => (

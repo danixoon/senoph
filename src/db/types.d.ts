@@ -22,7 +22,6 @@ declare type HoldingReason =
   | "dismissal"
   | "movement"
   | "write-off"
-  | "initial"
   | "other"
   | "order";
 

@@ -25,6 +25,7 @@ import HoldingPhone from "@backend/db/models/holdingPhone.model";
 import PhoneType from "@backend/db/models/phoneType.model";
 import PhoneModelDetail from "@backend/db/models/phoneModelDetail.model";
 import Log from "@backend/db/models/log.model";
+import phone from "@backend/utils/phone";
 
 const router = AppRouter();
 
@@ -304,12 +305,13 @@ router.post(
     const { user } = params;
 
     try {
-      const phone = await Phone.create({ ...body.data[0], authorId: user.id });
+      const phones = await phone.create(user.id, body.data);
+      const ids = phones.map((p) => p.id as number);
 
       // TODO: Сделать логгирование более строгим (через хуки?)
-      Log.log("phone", [phone.id], "create", user.id);
+      Log.log("phone", ids, "create", user.id);
 
-      res.send(phone);
+      res.send(ids);
     } catch (err) {
       if (err instanceof UniqueConstraintError) {
         return next(

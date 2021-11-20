@@ -324,8 +324,6 @@ const CommitActionBox = (props: {
 
 const getReasonName = (reasonId: HoldingReason) => {
   switch (reasonId) {
-    case "initial":
-      return "Первичное";
     case "write-off":
       return "Списание";
     case "movement":
@@ -505,7 +503,10 @@ const ViewContent: React.FC<HoldingPageProps> = (props) => {
       size: "150px",
       mapper: (v, item) => {
         let status = "Произвидено";
-        if (item.status === "create-pending") status = "Ожидает подтверждения";
+        if (item.status === "create-pending")
+          status = "Ожидает создания";
+        else if (item.status === "delete-pending")
+          status = "Ожидает удаления";
         return <Badge>{status}</Badge>;
       },
     },
@@ -535,7 +536,7 @@ const ViewContent: React.FC<HoldingPageProps> = (props) => {
         <InfoBanner
           href="/phone/edit"
           hrefContent="средство связи"
-          text="Движения для потдверждения отсутствуют. Создайте их, выбрав"
+          text="Движения отсутствуют. Создайте их, выбрав"
         />
       ) : (
         <Table columns={columns} items={tableItems} />

@@ -12,7 +12,7 @@ import { Op, WhereOperators, WhereOptions } from "sequelize";
 
 // import { sequelize } from "../db";
 
-interface AddFilter<T> { }
+interface AddFilter<T> {}
 
 export interface Filter<T> {
   add: (
@@ -80,9 +80,9 @@ export class Filter<T extends object = any> {
           const value =
             typeof condition === "symbol"
               ? {
-                ...(this.conditions[key] ?? {}),
-                [condition]: target,
-              }
+                  ...(this.conditions[key] ?? {}),
+                  [condition]: target,
+                }
               : condition;
 
           this.conditions = {
@@ -128,6 +128,8 @@ export const fillProdDatabase = async () => {
 };
 
 export const fillDevDatabase = async (size: number = 100) => {
+  const adminUser = await User.findOne({ where: { role: "admin" } });
+  if (adminUser) return;
   const user = await User.create({
     name: "Админушка",
     username: "admin",
@@ -136,7 +138,7 @@ export const fillDevDatabase = async (size: number = 100) => {
     role: "admin",
   });
 
-  // return;
+  return;
 
   const depsNames = [
     "Кардиологическое отделение",
@@ -265,8 +267,8 @@ export const fillDevDatabase = async (size: number = 100) => {
       Math.random() > 0.5
         ? null
         : Math.random() > 0.5
-          ? ("create-pending" as const)
-          : ("delete-pending" as const),
+        ? ("create-pending" as const)
+        : ("delete-pending" as const),
   }));
 
   const phones = await Phone.bulkCreate(phonesData);
@@ -274,7 +276,7 @@ export const fillDevDatabase = async (size: number = 100) => {
     holderId: getRandomItem(holders).id,
     orderUrl: "sample.pdf",
     orderDate: new Date().toISOString(),
-    reasonId: "initial" as const,
+    reasonId: "movement" as const,
     status: null,
   });
 

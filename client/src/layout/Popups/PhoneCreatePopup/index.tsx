@@ -16,7 +16,7 @@ import "./style.styl";
 import Form, { FormError } from "components/Form";
 import ModelSelectionPopupContainer from "containers/ModelSelectionPopup";
 import { useFilterConfig } from "hooks/api/useFetchConfig";
-import DepartmentSelectionPopupContainer from "containers/HolderSelectionPopup";
+import HolderSelectionPopupContainer from "containers/HolderSelectionPopup";
 import { useFetchHolder } from "hooks/api/useFetchHolder";
 import ListItem from "components/ListItem";
 import { v4 as uuid } from "uuid";
@@ -49,10 +49,23 @@ export type PhoneCreatePopupProps = OverrideProps<
 const AddedItem: React.FC<{
   holder: string;
   inventoryKey: string;
+  factoryKey: string;
+  accountingDate: Date;
+  comissioningDate: Date;
+  assemblyYear: number;
   model: string;
   onRemove: () => void;
 }> = (props) => {
-  const { model, inventoryKey, holder, onRemove } = props;
+  const {
+    model,
+    inventoryKey,
+    factoryKey,
+    accountingDate,
+    assemblyYear,
+    comissioningDate,
+    holder,
+    onRemove,
+  } = props;
   return (
     <>
       <Layout className="added-item" flow="row">
@@ -65,11 +78,21 @@ const AddedItem: React.FC<{
             <Label>{model}</Label>
             <Hr vertical />
             <Span font="monospace">{inventoryKey}</Span>
+            <Hr vertical />
+            <Span font="monospace">{factoryKey}</Span>
           </Layout>
           <Hr />
-          <Header className="added-item__holder">
-            <Icon.User /> {holder}
-          </Header>
+          <Layout flow="row">
+            <Span>{comissioningDate.toDateString()}</Span>
+            <Hr vertical />
+            <Span style={{ marginRight: "auto" }}>
+              {accountingDate.toDateString()}
+            </Span>
+            <Hr vertical />
+            <Header className="added-item__holder">
+              <Icon.User /> {holder}
+            </Header>
+          </Layout>
         </Layout>
       </Layout>
       <Hr />
@@ -77,8 +100,12 @@ const AddedItem: React.FC<{
   );
 };
 
-type InputType = Omit<Api.Models.Phone, "id" | "commitId" | "authorId"> & {
+type InputType = Omit<
+  Api.Models.Phone,
+  "id" | "commitId" | "authorId" | "assemblyDate"
+> & {
   holderId: number;
+  assemblyYear: number;
 };
 const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
   const { createPhones, error, ...rest } = props;
@@ -88,7 +115,7 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
     inventoryKey: null,
     factoryKey: null,
     holderId: null,
-    assemblyDate: null,
+    assemblyYear: null,
     commissioningDate: null,
     phoneModelId: null,
   });
@@ -118,8 +145,9 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
 
   const [addedPhones, setAddedPhones] = React.useState<
     WithId<
-      Omit<Api.Models.Phone, "authorId"> & {
+      Omit<Api.Models.Phone, "authorId" | "assemblyDate"> & {
         payload: { holder: string; model: string };
+        assemblyYear: number;
       },
       string
     >[]
@@ -151,10 +179,10 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
 
   const handlePhonesSubmit = () => {
     createPhones(
-      addedPhones.map(({ payload, id, ...rest }) => ({
+      addedPhones.map(({ payload, id, assemblyYear, ...rest }) => ({
         ...rest,
         accountingDate: new Date(rest.accountingDate).toISOString(),
-        assemblyDate: new Date(rest.assemblyDate).toISOString(),
+        assemblyDate: new Date(1, 1, assemblyYear).toISOString(),
         commissioningDate: new Date(rest.commissioningDate).toISOString(),
       }))
     );
@@ -275,9 +303,9 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
               <Layout>
                 <Input
                   {...bind}
-                  type="date"
-                  name="assemblyDate"
-                  label="Дата сборки"
+                  type="number"
+                  name="assemblyYear"
+                  label="Год сборки"
                 />
                 <Input
                   {...bind}
@@ -318,6 +346,10 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
                 <AddedItem
                   key={phone.id}
                   inventoryKey={phone.inventoryKey}
+                  accountingDate={new Date(phone.accountingDate)}
+                  assemblyYear={phone.assemblyYear}
+                  comissioningDate={new Date(phone.commissioningDate)}
+                  factoryKey={phone.factoryKey}
                   onRemove={() =>
                     setAddedPhones(addedPhones.filter((p) => p.id !== phone.id))
                   }
@@ -351,7 +383,7 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
         targetBind={bind}
         name="phoneModelId"
       />
-      <DepartmentSelectionPopupContainer
+      <HolderSelectionPopupContainer
         isOpen={isHolderPopup}
         onToggle={handleHolderPopup}
         targetBind={bind}

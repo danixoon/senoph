@@ -261,6 +261,10 @@ const CreateDetailButton = (props: {
   const [show, message, toggleMessage] = useTimeout<string | null>(null, 2000);
   const inputRef = React.useRef<HTMLElement | null>(null);
 
+  React.useEffect(() => {
+    if (show) setTimeout(() => inputRef.current?.focus());
+  }, [show]);
+
   // const formContext = React.useContext(FormContext);
   // formContext.addCheck(bind.input, "amount", (v) => Number.isNaN("amount"))
 
@@ -271,16 +275,24 @@ const CreateDetailButton = (props: {
       }}
       color="primary"
       inverted
-      onClick={() => setIsOpen(true)}
+      onClick={() => {
+        setIsOpen(true);
+        // setTimeout(() => {
+
+        // });
+      }}
     >
       <Icon.PlusCircle />
       <SpoilerPopup
         target={isOpen ? target : null}
         position="bottom"
         onBlur={(e) => {
-          if (e.currentTarget.contains(e.relatedTarget as any))
-            e.preventDefault();
-          else setIsOpen(false);
+          const currentTarget = e.currentTarget;
+          setTimeout(() => {
+            if (!currentTarget.contains(document.activeElement))
+              // e.preventDefault();
+              setIsOpen(false);
+          });
         }}
       >
         <Dropdown label="Металл" items={dropdownItems} name="name" {...bind} />

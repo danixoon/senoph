@@ -10,6 +10,8 @@ import DepartmentSelectionPopupContainer from "containers/DepartmentSelectionPop
 import { useHolderName } from "hooks/misc/useHolderName";
 import ClickInput from "components/ClickInput";
 import PopupLayer from "providers/PopupLayer";
+import Dropdown from "components/Dropdown";
+import { api } from "store/slices/api";
 
 export type HolderSelectionPopupContainerProps = {
   onToggle: () => void;
@@ -28,17 +30,9 @@ const HolderSelectionPopupContainer: React.FC<HolderSelectionPopupContainerProps
     const query = clearObject({ name: holderName, departmentId });
 
     const { holders } = useFetchHolder(query);
-
-    const [isDepartment, setIsDepartment] = React.useState(() => false);
-
-    console.log(isDepartment);
+    const { data: items } = api.useFetchDepartmentsQuery({});
 
     const getHolderName = useHolderName();
-    const mapHolderName = (value: any) =>
-      value === ""
-        ? "Не выбрано"
-        : getHolderName(holders.items.find((h) => h.id === value)) ??
-          `Без имени (#${value})`;
 
     return (
       <ItemSelectionPopup
@@ -47,26 +41,20 @@ const HolderSelectionPopupContainer: React.FC<HolderSelectionPopupContainerProps
         {...bind}
         items={
           holders?.items.map((item) => ({
-            name: `${item.firstName} ${item.lastName} ${item.middleName}`,
+            name: `${item.lastName} ${item.firstName} ${item.middleName}`,
             ...item,
           })) ?? []
         }
         header="Выбор владельца"
       >
-        <ClickInput
-          {...bind}
+        <Dropdown
+          {...searchBind}
           name="departmentId"
           label="Подразделение"
-          mapper={mapHolderName}
-          onClick={() => setIsDepartment(true)}
-        />
-
-        <DepartmentSelectionPopupContainer
-          onToggle={() => setIsDepartment(!isDepartment)}
-          isOpen={isDepartment}
-          name="departmentId"
-          targetBind={searchBind}
-          zIndex={155} //MAGIC NUMBER OH YEAH
+          items={(items?.items ?? []).map((item) => ({
+            label: item.name,
+            id: item.id,
+          }))}
         />
       </ItemSelectionPopup>
     );
