@@ -127,7 +127,7 @@ export const fillProdDatabase = async () => {
   });
 };
 
-export const fillDevDatabase = async (size: number = 100) => {
+export const fillDevDatabase = async (full?: boolean, size: number = 100) => {
   const adminUser = await User.findOne({ where: { role: "admin" } });
   if (adminUser) return;
   const user = await User.create({
@@ -138,7 +138,7 @@ export const fillDevDatabase = async (size: number = 100) => {
     role: "admin",
   });
 
-  return;
+  if(!full) return;
 
   const depsNames = [
     "Кардиологическое отделение",
