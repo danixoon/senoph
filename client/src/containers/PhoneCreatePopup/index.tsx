@@ -3,7 +3,7 @@ import React from "react";
 import PhoneCreatePopup from "layout/Popups/PhoneCreatePopup";
 import { useAppDispatch } from "store";
 import { useCreatePhones } from "hooks/api/useCreatePhones";
-import { getError, getErrorMessage } from "store/utils";
+import { extractStatus, getError, getErrorMessage, splitStatus } from "store/utils";
 
 export type PhoneCreatePopupContainerProps = {
   onToggle: () => void;
@@ -22,14 +22,7 @@ const PhoneCreatePopupContainer: React.FC<PhoneCreatePopupContainerProps> = (
     <PhoneCreatePopup
       {...rest}
       createPhones={createPhones}
-      error={getErrorMessage(info.error)}
-      status={{
-        error: getError(info.error),
-        isIdle: info.isUninitialized,
-        isError: info.isError,
-        isLoading: info.isLoading,
-        isSuccess: info.isSuccess,
-      }}
+      status={extractStatus(info)}
     />
   );
 };

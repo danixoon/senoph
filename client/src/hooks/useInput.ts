@@ -19,9 +19,9 @@ export type InputFileHook<T = any> = [
 ];
 
 export type InputHookPrepare<P> = <
-  T extends PartialNullable<P>,
+  T extends PartialType<P, null | string>,
   K extends keyof T
-  >(
+>(
   key: K,
   value: T[K],
   input: T
@@ -62,11 +62,20 @@ export const handleChangeEvent = <T>(
   return changedInput;
 };
 
-export const useInput = function <P = any, T = PartialNullable<P>>(
-  defaultValue: T = {} as T,
-  prepareValue: InputHookPrepare<T> = (key, value, input) => input
-): InputHook<T> {
-  const [input, setInput] = React.useState<T>(() => defaultValue);
+export const useInput = function <T>(
+  defaultValue: PartialType<T, null | string> = {} as PartialType<
+    T,
+    null | string
+  >,
+  prepareValue: InputHookPrepare<PartialType<T, null | string>> = (
+    key,
+    value,
+    input
+  ) => input
+): InputHook<PartialType<T, null | string>> {
+  const [input, setInput] = React.useState<PartialType<T, null | string>>(
+    () => defaultValue
+  );
 
   const onChange: HookOnChange = (e) => {
     let changedInput = handleChangeEvent(input, e);
@@ -101,7 +110,7 @@ export const useFileInput = function <
 
   for (const prop in input) {
     const propValue = (input[prop] as any) ?? [{}];
-    textInput[prop] = propValue[0]?.name ?? "Не выбрано"
+    textInput[prop] = propValue[0]?.name ?? "Не выбрано";
   }
 
   const ref = React.useRef<HTMLInputElement | null>(null);

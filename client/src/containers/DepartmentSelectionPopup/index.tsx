@@ -12,16 +12,14 @@ import { api } from "store/slices/api";
 
 export type DepartmentSelectionPopupContainerProps = {
   onToggle: () => void;
+  onSelect: (id: any, name: string) => void;
   isOpen: boolean;
   zIndex?: number;
-} & { name: string; targetBind: InputBind };
+};
 
 const DepartmentSelectionPopupContainer: React.FC<DepartmentSelectionPopupContainerProps> =
   (props) => {
-    const { targetBind, zIndex, ...rest } = props;
-
-    // const [searchBind] = useInput({ search: "" });
-    // const name = searchBind.input.search;
+    const { zIndex, onSelect, ...rest } = props;
 
     const { data } = api.useFetchDepartmentsQuery({});
     const departments = data?.items ?? [];
@@ -29,15 +27,9 @@ const DepartmentSelectionPopupContainer: React.FC<DepartmentSelectionPopupContai
     return (
       <ItemSelectionPopup
         {...rest}
-        {...targetBind}
-        // searchBind={searchBind}
-        // targetBind={targetBind}
+        onSelect={(item) => onSelect(item.id, item.name)}
         zIndex={zIndex}
-        items={
-          name == null
-            ? departments
-            : departments.filter((dep) => dep.name.includes(name))
-        }
+        items={departments}
         header="Выбор подразделения"
       />
     );

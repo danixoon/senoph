@@ -15,13 +15,13 @@ const isEqual = (a: any, b: any) => {
 };
 
 export const useQueryInput = <T>(
-  defaultInput: PartialNullable<T>,
+  defaultInput: PartialType<T, string | null>,
   prepare: InputHookPrepare<T> = (k, v, i) => i
 ) => {
   const dispatch = useDispatch();
   const { pathname, search } = useLocation();
 
-  const dispatchQuery = (input: PartialNullable<T>) => {
+  const dispatchQuery = (input: PartialType<T, null | string>) => {
     const urlSearch = { ...input };
     const search = clearObject(urlSearch);
 
@@ -34,11 +34,14 @@ export const useQueryInput = <T>(
     );
   };
 
-  const [bind, setInput] = useInput<T>(defaultInput, (k, v, i) => {
-    i = prepare(k, v, i);
-    dispatchQuery(i);
-    return i;
-  });
+  const [bind, setInput] = useInput<PartialType<T, null | string>>(
+    defaultInput as PartialType<T, null | string>,
+    (k, v, i) => {
+      i = prepare(k, v, i);
+      dispatchQuery(i);
+      return i;
+    }
+  );
 
   React.useEffect(() => {
     const q = qs.parse(search) as any;

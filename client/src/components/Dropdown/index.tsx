@@ -10,9 +10,9 @@ import AltPopup from "components/AltPopup";
 import { useIsFirstEffect } from "hooks/useIsFirstEffect";
 import { useTimeout } from "hooks/useTimeout";
 
-type DropdownItem = { id: any; label: string; payload?: any };
+export type DropdownItem = { id: any; label: string; payload?: any };
 
-type DropdownProps = OverrideProps<
+export type DropdownProps = OverrideProps<
   React.InputHTMLAttributes<HTMLInputElement>,
   {
     input: any;

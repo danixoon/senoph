@@ -36,11 +36,11 @@ import Badge from "components/Badge";
 import SpoilerPopup, { SpoilerPopupButton } from "components/SpoilerPopup";
 import InfoBanner from "components/InfoBanner";
 import { extractStatus } from "store/utils";
+import { useTogglePopup } from "hooks/useTogglePopup";
 
 export type HoldingPageProps = {
   phones: Api.Models.Phone[];
   holdings: Api.Models.Holding[];
-  // holdings: Api.Models.Holding[];
   holdingHistory: Map<number, Api.Models.Holding[]>;
   phonesStatus: ApiStatus;
   holdingsStatus: ApiStatus;
@@ -48,20 +48,6 @@ export type HoldingPageProps = {
 
   onSubmitHolding: (data: any) => void;
 };
-
-// const useFileInput = () => {
-//   const [file, setFile] = React.useState<File | null>(() => null);
-
-//   return {
-//     input
-//     onChange: (e: {
-//       target: {
-//         name: string;
-//         files: File[];
-//       };
-//     }) => {},
-//   };
-// };
 
 const CreateContent: React.FC<HoldingPageProps> = (props) => {
   const { phones, holdingCreationStatus, onSubmitHolding: onSubmit } = props;
@@ -84,16 +70,14 @@ const CreateContent: React.FC<HoldingPageProps> = (props) => {
   const getHolderName = useHolderName();
   const getDepartmentName = useDepartmentName();
 
-  const [bind] = useInput({
+  const [bind, setInput] = useInput({
     departmentId: null,
     reasonId: null,
     holderId: null,
+    holderName: null,
   });
 
   const [bindFile] = useFileInput();
-
-  // TODO: Make Holder fetching hook
-  // const { holder } = useLastHolder(phone);
 
   const tableItems = phones.map((phone) => ({
     ...phone,
@@ -102,20 +86,7 @@ const CreateContent: React.FC<HoldingPageProps> = (props) => {
     departmentName: getDepartmentName(phone.holder?.departmentId),
   }));
 
-  const [isHolderPopup, setHolderPopup] = React.useState(() => false);
-  const handleHolderPopup = () => {
-    setHolderPopup(!isHolderPopup);
-  };
-
-  const [isDepartmentPopup, setDepartmentPopup] = React.useState(() => false);
-  const handleDepartmentPopup = () => {
-    setDepartmentPopup(!isDepartmentPopup);
-  };
-
-  // const mapDepartmentName = (value: any) =>
-  //   value === ""
-  //     ? "Не выбрано"
-  //     : models.find((m) => m.id === value)?.name ?? `Без имени (#${value})`;
+  const bindHoldingPopup = useTogglePopup();
 
   const { data: selectedHolder } = api.useFetchHoldersQuery(
     { id: bind.input.holderId as any },
@@ -150,22 +121,11 @@ const CreateContent: React.FC<HoldingPageProps> = (props) => {
           <Layout flow="row">
             <ClickInput
               required
-              label="Подразделение"
               {...bind}
-              name="departmentId"
-              style={{ flex: "2" }}
-              onClick={handleDepartmentPopup}
-              mapper={mapDepartmentName}
-            />
-            <ClickInput
-              required
+              name="holderName"
               label="Новый владелец"
-              {...bind}
-              mapper={mapHolderName}
-              name="holderId"
-              onClick={handleHolderPopup}
+              onActive={() => bindHoldingPopup.onToggle()}
               style={{ flex: "2" }}
-              disabled={bind.input.departmentId === null}
             />
             <Input
               required
@@ -232,24 +192,18 @@ const CreateContent: React.FC<HoldingPageProps> = (props) => {
       </Layout>
       <PopupLayer>
         <HolderSelectionPopupContainer
-          isOpen={isHolderPopup}
-          onToggle={handleHolderPopup}
-          targetBind={bind}
-          name="holderId"
-        />
-        <DepartmentSelectionPopupContainer
-          isOpen={isDepartmentPopup}
-          onToggle={handleDepartmentPopup}
-          targetBind={bind}
-          name="departmentId"
+          {...bindHoldingPopup}
+          onSelect={(id, name) =>
+            setInput({ ...bind.input, holderName: name, holderId: id })
+          }
         />
       </PopupLayer>
     </>
   );
 };
 
-const ViewActionBox = (props: { onDelete: () => void }) => {
-  const { onDelete } = props;
+const ViewActionBox = (props: { status: ApiStatus; onDelete: () => void }) => {
+  const { status, onDelete } = props;
   const [target, setTarget] = React.useState<HTMLElement | null>(() => null);
 
   const [isOpen, setIsOpen] = React.useState(() => false);
@@ -271,9 +225,15 @@ const ViewActionBox = (props: { onDelete: () => void }) => {
           else setIsOpen(false);
         }}
       >
-        <SpoilerPopupButton onClick={() => onDelete()}>
-          Удалить
-        </SpoilerPopupButton>
+        {status.isLoading ? (
+          <LoaderIcon />
+        ) : (
+          <>
+            <SpoilerPopupButton onClick={() => onDelete()}>
+              Удалить
+            </SpoilerPopupButton>
+          </>
+        )}
       </SpoilerPopup>
     </Button>
   );
@@ -405,20 +365,38 @@ const CommitContent: React.FC<HoldingPageProps> = (props) => {
       size: "150px",
       mapper: (v, item) => <Badge>{`${getReasonName(v)}`}</Badge>,
     },
-
+    {
+      key: "status",
+      header: "Статус",
+      size: "150px",
+      mapper: (v, item) => {
+        let status = "Произвидено";
+        if (item.status === "create-pending") status = "Ожидает создания";
+        else if (item.status === "delete-pending") status = "Ожидает удаления";
+        return <Badge>{status}</Badge>;
+      },
+    },
     // { key: "departmentName", header: "Отделение" },
   ];
+
+  console.log("history:", props.holdingHistory);
 
   const tableItems = props.holdings
     .filter((holding) => holding.status)
     .map((holding) => {
       const prevHolders: Api.Models.Holder[] = [];
       for (const id of holding.phoneIds) {
-        const prevItem = [...(props.holdingHistory.get(id) ?? [])]
-          .sort((h1, h2) =>
-            (h1.createdAt as string) < (h2.createdAt as string) ? 1 : -1
-          )
-          .shift();
+        // const prevItem = [...(props.holdingHistory.get(id) ?? [])]
+        //   .sort((h1, h2) =>
+        //     (h1.createdAt as string) > (h2.createdAt as string) ? 1 : -1
+        //   )
+        //   .shift();
+
+        // TODO: Проверить даты и прочую чушь
+        const prevItem = [...(props.holdingHistory.get(id) ?? [])].sort(
+          (a, b) => ((a.createdAt as string) > (b.createdAt as string) ? -1 : 1)
+        )[0];
+        if (!prevItem || prevItem.holderId === holding.holderId) continue;
 
         if (
           prevItem?.holder &&
@@ -456,7 +434,10 @@ const ViewContent: React.FC<HoldingPageProps> = (props) => {
       size: "30px",
       header: "",
       mapper: (v, item: ArrayElement<typeof tableItems>) => (
-        <ViewActionBox onDelete={() => deleteHolding({ id: item.id })} />
+        <ViewActionBox
+          status={extractStatus(deleteHoldingStatus)}
+          onDelete={() => deleteHolding({ id: item.id })}
+        />
       ),
     },
     { key: "orderDate", header: "Приказ от", size: "100px", type: "date" },
@@ -503,10 +484,8 @@ const ViewContent: React.FC<HoldingPageProps> = (props) => {
       size: "150px",
       mapper: (v, item) => {
         let status = "Произвидено";
-        if (item.status === "create-pending")
-          status = "Ожидает создания";
-        else if (item.status === "delete-pending")
-          status = "Ожидает удаления";
+        if (item.status === "create-pending") status = "Ожидает создания";
+        else if (item.status === "delete-pending") status = "Ожидает удаления";
         return <Badge>{status}</Badge>;
       },
     },

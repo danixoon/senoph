@@ -51,7 +51,13 @@ const HoldingPageContainer: React.FC<Props> = (props) => {
       // const { phoneIds, ...rest } = holding;
       // if(holding)
       const holdingList = holdingMap.get(phoneId) ?? [];
-      holdingMap.set(phoneId, [...holdingList, holding]);
+      // const last = holdingList[holdingList.length - 1] ?? { createdAt: NaN };
+      holdingMap.set(
+        phoneId,
+        // (last.createdAt as string) < (holding.createdAt as string)
+        [...holdingList, holding]
+        // : [holding, ...holdingList]
+      );
     }
   }
 

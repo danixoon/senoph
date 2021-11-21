@@ -10,35 +10,30 @@ import Dropdown from "components/Dropdown";
 export type ModelSelectionPopupContainerProps = {
   onToggle: () => void;
   isOpen: boolean;
-} & { name: string; targetBind: InputBind };
+  onSelect: (id: any, name: string) => void;
+};
 
 const ModelSelectionPopupContainer: React.FC<ModelSelectionPopupContainerProps> =
   (props) => {
-    const { targetBind, ...rest } = props;
+    const { onSelect, ...rest } = props;
 
     const { models, types } = useFilterConfig();
     const [searchBind] = useInput({ phoneTypeId: null });
 
     const modelItems = searchBind.input.phoneTypeId
       ? models.filter(
-          (model) => model.phoneTypeId === searchBind.input.phoneTypeId
+          (model) => model.phoneTypeId === Number(searchBind.input.phoneTypeId)
         )
       : models;
 
-    // const isIncludes = (str: string) =>
-    //   searchBind.input.search
-    //     ? str
-    //         .trim()
-    //         .toLowerCase()
-    //         .includes(searchBind.input.search.trim().toLowerCase())
-    //     : true;
-
     return (
       <ItemSelectionPopup
-        {...rest}
-        {...targetBind}
+        onSelect={(item) => {
+          onSelect(item.id, item.name);
+        }}
         items={modelItems}
         header="Выбор модели"
+        {...rest}
       >
         <Dropdown
           {...searchBind}

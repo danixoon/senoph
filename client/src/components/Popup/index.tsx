@@ -53,10 +53,33 @@ const Popup: React.FC<PopupProps> = (props: PopupProps) => {
     if (onToggle) onToggle(!isOpen);
   };
 
+  // React.useEffect(() => {
+  //   if (isOpen) {
+  //     console.clear();
+  //     console.log("REF ISSS: " + ref);
+  //     setTimeout(() => ref?.focus());
+  //   }
+  // }, [isOpen]);
+
   const [ref, setRef] = React.useState<HTMLDivElement | null>(() => null);
   const topBarRef = React.useCallback((node: HTMLDivElement) => {
-    if (node != null) setRef(node);
+    if (node != null) {
+      setRef(node);
+    }
   }, []);
+
+  // const closeRef = React.useRef<HTMLElement | null>(null);
+  const [closeRef, setCloseRef] = React.useState<HTMLElement | null>(
+    () => null
+  );
+  const prevRef = React.useRef<HTMLElement | null>(null);
+
+  React.useEffect(() => {
+    if (closeRef) {
+      prevRef.current = document.activeElement as HTMLElement;
+      closeRef.focus();
+    } else prevRef.current?.focus();
+  }, [!closeRef]);
 
   return (
     <PopupContext.Provider value={ref}>
@@ -73,12 +96,15 @@ const Popup: React.FC<PopupProps> = (props: PopupProps) => {
             >
               <div onClick={handleOnToggle} className="popup__fade" />
               <div {...mergedProps}>
-                {closeable && (
+                {(true || closeable) && (
                   <Button
                     inverted
                     onClick={handleOnToggle}
                     className="popup__close"
-                    tabIndex={0}
+                    ref={(e) => {
+                      setCloseRef(e);
+                      // e?.focus();
+                    }}
                   >
                     <CrossIcon />
                   </Button>

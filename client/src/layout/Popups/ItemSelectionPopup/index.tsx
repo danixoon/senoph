@@ -16,14 +16,15 @@ import Paginator from "components/Paginator";
 import PhoneEditActions from "layout/PhoneEditActions";
 import PopupLayer from "providers/PopupLayer";
 
+export type Item = { id: any; name: string; href?: string };
 export type ItemSelectionPopupProps = OverrideProps<
   PopupProps,
   {
-    name: string;
-    items: { id: any; name: string; href?: string }[];
+    items: Item[];
     header: string;
     zIndex?: number;
-  } & InputBind
+    onSelect: (item: Item) => void;
+  }
 >;
 
 const Item: React.FC<{
@@ -34,34 +35,30 @@ const Item: React.FC<{
 }> = (props) => {
   const { id, name, href, onSelect } = props;
   return (
-    <Layout flow="row">
-      <Link isMonospace href={href}>
+    <Button inverted onClick={() => onSelect(id)}>
+      <Layout flex={1} flow="row" border style={{ alignItems: "center" }}>
+        {/* <Link isMonospace href={href}>
         #{id}
-      </Link>
-      <Hr vertical />
-      <Link
-        isMonospace
-        onClick={() => onSelect(id)}
-        style={{ marginRight: "2rem" }}
-      >
-        {name}
-      </Link>
-      <Button
+      </Link> */}
+        {/* <Hr vertical /> */}
+        <Label style={{ margin: "0.25rem" }}>{name}</Label>
+        <Header style={{ marginLeft: "auto" }}>#{id}</Header>
+        {/* <Button
         style={{ marginLeft: "auto" }}
         color="primary"
         inverted
         onClick={() => onSelect(id)}
       >
         <Icon.Check />
-      </Button>
-    </Layout>
+      </Button> */}
+      </Layout>
+    </Button>
   );
 };
 
 const ItemSelectionPopup: React.FC<ItemSelectionPopupProps> = (props) => {
   // const [searchBind] = useInput<{ search: string }>({ search: null });
-  const { items, input, onChange, zIndex, name, header, children, ...rest } =
-    props;
+  const { items, onSelect, zIndex, header, children, ...rest } = props;
 
   return (
     <Popup {...rest} size="md" closeable noPadding>
@@ -74,6 +71,7 @@ const ItemSelectionPopup: React.FC<ItemSelectionPopupProps> = (props) => {
       </PopupTopBar>
       <Layout padding="md" flex="1" className="items-list">
         {children}
+        <Hr />
         {items
           // .filter((item) => isIncludes(item.name))
           .map((item) => (
@@ -81,8 +79,8 @@ const ItemSelectionPopup: React.FC<ItemSelectionPopupProps> = (props) => {
               key={item.id}
               href={item.href}
               {...item}
-              onSelect={(id) => {
-                onChange({ target: { name, value: id } });
+              onSelect={() => {
+                onSelect(item);
                 if (rest.onToggle) rest.onToggle(false);
               }}
             />

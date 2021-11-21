@@ -17,13 +17,13 @@ export const mergeProps = <P extends MergingProps, T>(
 ): T & P => {
   return {
     ...ownProps,
-    ...(newProps ?? {} as any),
+    ...(newProps ?? ({} as any)),
     className: mergeClassNames(
       ownProps.className,
       (newProps as MergingProps)?.className
     ),
     style: {
-      ...(ownProps.style ?? {} as any),
+      ...(ownProps.style ?? ({} as any)),
       ...((newProps as MergingProps)?.style ?? {}),
     },
   };
@@ -41,6 +41,7 @@ export const clearObject = function <T>(obj: T) {
   const filtered = { ...obj };
   for (const k in filtered) {
     const v = filtered[k];
+    if (typeof v === "number") if (isNaN(v)) delete filtered[k];
     if (Array.isArray(v) && v.length === 0) delete filtered[k];
     else if (typeof v === "string" && v.trim().length === 0) delete filtered[k];
     else if (v === null) delete filtered[k];

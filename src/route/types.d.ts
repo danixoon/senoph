@@ -305,10 +305,7 @@ declare namespace Api {
           {},
           {},
           {
-            data: Omit<
-              ExcludeType<Api.Models.Phone, undefined>,
-              "authorId" | "id"
-            >[];
+            data: Omit<Api.Models.Phone, "authorId" | "id">[];
           }
         >)
       | (() => RouteHandler<

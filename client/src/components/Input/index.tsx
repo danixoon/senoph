@@ -102,6 +102,10 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>((props, ref) => {
         <div
           tabIndex={0}
           onClick={() => inputRef.current?.click()}
+          onKeyDown={(e) => {
+            if (e.code === "Enter" || e.code === "Space")
+              inputRef.current?.click();
+          }}
           className={mergeClassNames(
             `input__element input_${size} input__element_file`
           )}

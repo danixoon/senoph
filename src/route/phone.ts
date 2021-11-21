@@ -295,7 +295,6 @@ router.post(
         factoryKey: tester().required(),
         inventoryKey: tester().required(),
 
-        holderId: tester().isNumber().required(),
         phoneModelId: tester().isNumber().required(),
       }),
     },
