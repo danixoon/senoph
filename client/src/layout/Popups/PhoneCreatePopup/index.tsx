@@ -1,3 +1,4 @@
+import React from "react";
 import Button from "components/Button";
 import Header from "components/Header";
 import Hr from "components/Hr";
@@ -9,29 +10,16 @@ import Label from "components/Label";
 import Layout from "components/Layout";
 import Link from "components/Link";
 import Popup, { PopupProps, PopupTopBar } from "components/Popup";
-import { InputBind, useFileInput, useInput } from "hooks/useInput";
-import * as React from "react";
-import qs from "query-string";
-import "./style.styl";
-import Form, { FormError } from "components/Form";
+import { useFileInput, useInput } from "hooks/useInput";
+import Form from "components/Form";
 import ModelSelectionPopupContainer from "containers/ModelSelectionPopup";
-import { useFilterConfig } from "hooks/api/useFetchConfig";
-import HolderSelectionPopupContainer from "containers/HolderSelectionPopup";
-import { useFetchHolder } from "hooks/api/useFetchHolder";
-import ListItem from "components/ListItem";
-import { v4 as uuid } from "uuid";
-import {
-  EmptyError,
-  checkEmptiness,
-  convertDate,
-  splitStatus,
-} from "store/utils";
-import AltPopup from "components/AltPopup";
-import { useTimeout } from "hooks/useTimeout";
+import { useFetchConfigMap } from "hooks/api/useFetchConfigMap";
 import { importPhone } from "api/import";
 import { NoticeContext } from "providers/NoticeProvider";
 import { useTogglePopup } from "hooks/useTogglePopup";
-import { clearObject } from "utils";
+import { clearObject, isResponse } from "utils";
+
+import "./style.styl";
 
 export type PhoneCreatePopupProps = OverrideProps<
   PopupProps,
@@ -41,14 +29,7 @@ export type PhoneCreatePopupProps = OverrideProps<
   }
 >;
 
-// type P<T> = Pick<T, keyof T extends infer K ? K : never>
-
-// type Pr = P<Api.Models.Phone>;
-
-// type ExtractRequired<T, P = Omit<T, "id">> = P;
-
 const AddedItem: React.FC<{
-  holderName: string;
   inventoryKey: string;
   factoryKey: string;
   accountingDate: Date;
@@ -64,7 +45,6 @@ const AddedItem: React.FC<{
     accountingDate,
     assemblyYear,
     comissioningDate,
-    holderName: holder,
     onRemove,
   } = props;
   return (
@@ -90,9 +70,11 @@ const AddedItem: React.FC<{
               {accountingDate.toDateString()}
             </Span>
             <Hr vertical />
+            <Span>{assemblyYear}</Span>
+            {/* <Hr vertical />
             <Header className="added-item__holder">
               <Icon.User /> {holder}
-            </Header>
+            </Header> */}
           </Layout>
         </Layout>
       </Layout>
@@ -114,13 +96,11 @@ type InputType = {
   holderId: number;
   assemblyYear: number;
   phoneModelName: string;
-  holderName: string;
 };
 type AddedItem = {
   payload: Omit<Api.Models.Phone, "authorId" | "id">;
   item: {
     phoneModelName: string;
-    holderName: string;
     assemblyYear: number;
     id: any;
   };
@@ -134,14 +114,11 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
   const [addedPhones, setAddedPhones] = React.useState<AddedItem[]>(() => []);
 
   const handleSubmit = () => {
-    const { phoneModelName, holderName, assemblyYear, ...rest } = clearObject(
-      bind.input
-    );
+    const { phoneModelName, assemblyYear, ...rest } = clearObject(bind.input);
     const year = parseInt(assemblyYear as string);
     const phone: AddedItem = {
       item: {
         phoneModelName,
-        holderName,
         assemblyYear: year,
         id: Math.random(),
       },
@@ -195,14 +172,36 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
   const submitRef = React.useRef<HTMLButtonElement | null>(null);
   const [bindImport, setImport, ref] = useFileInput();
   const noticeContext = React.useContext(NoticeContext);
+  const { models, holders } = useFetchConfigMap();
+
   React.useEffect(() => {
     const file = (bindImport.files.file ?? [])[0];
     if (file) {
-      importPhone(file).catch((err) => {
-        const { error } = err as { error: Api.Error };
-        noticeContext.createNotice("Ошибка импорта: " + error.description);
-        setImport({ file: null });
-      });
+      importPhone(file)
+        .catch((err) => {
+          const { error } = err as { error: Api.Error };
+          noticeContext.createNotice("Ошибка импорта: " + error.description);
+          setImport({ file: null });
+        })
+        .then((result) => {
+          if (!isResponse(result)) return console.log("response is:", result);
+
+          setAddedPhones(
+            result.items.map((item) => {
+              const year = new Date(item.assemblyDate).getFullYear();
+              const model = models.get(item.phoneModelId);
+              return {
+                payload: item,
+                item: {
+                  id: Math.random(),
+                  assemblyYear: year,
+                  phoneModelName:
+                    model?.name ?? `Неизвестная модель #${item.phoneModelId}`,
+                },
+              };
+            })
+          );
+        });
     }
   }, [bindImport.files.file]);
 

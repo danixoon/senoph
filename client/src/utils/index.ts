@@ -78,28 +78,6 @@ export const groupBy = <T, K extends keyof T>(
   return map;
 };
 
-// export const groupBy = <
-//   T,
-//   K extends keyof ExtractOnly<T, string | boolean | number>,
-//   P extends K extends keyof T ? K : never
-// >(
-//   list: T[],
-//   key: K
-// ) =>
-//   list.reduce(
-//     (p, c) => ({
-//       ...p,
-//       [(c as any)[key]]: [...((p as any)[(p as any)[key]] ?? []), c],
-//     }),
-//     {} as Record<T[P], T[]>
-//   );
-
-// export const t = groupBy(
-//   [
-//     { owo: true, foo: "sv" },
-//     { owo: false, foo: "sf" },
-//   ],
-//   "owo"
-// );
-
-// console.log(t);
+export function isResponse<T extends any>(res: T): res is Exclude<T, void> {
+  return typeof res !== "undefined";
+}

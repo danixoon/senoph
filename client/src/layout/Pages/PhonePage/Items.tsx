@@ -72,9 +72,9 @@ const Items: React.FC<{
     { key: "factoryKey", header: "Заводской номер", sortable: true },
     {
       key: "assemblyDate",
-      type: "date",
-      header: "Дата сборки",
+      header: "Год сборки",
       sortable: true,
+      mapper: (v) => new Date(v).getFullYear(),
       size: "50px",
     },
     {

@@ -14,7 +14,7 @@ import Span from "components/Span";
 import Switch from "components/Switch";
 import WithLoader from "components/WithLoader";
 import { useChanges } from "hooks/api/useChanges";
-import { useFilterConfig } from "hooks/api/useFetchConfig";
+import { useFetchConfig } from "hooks/api/useFetchConfig";
 import { useMakeChanges } from "hooks/api/useMakeChanges";
 import { useUndoChanges } from "hooks/api/useUndoChanges";
 import { useInput } from "hooks/useInput";
@@ -59,7 +59,7 @@ const Content: React.FC<
     undoChanges,
     onDelete,
   } = props;
-  const { types, departments } = useFilterConfig();
+  const { types, departments } = useFetchConfig();
 
   const [bind] = useInput({ tab: "category" });
 

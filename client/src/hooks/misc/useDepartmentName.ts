@@ -1,7 +1,7 @@
-import { useFilterConfig } from "hooks/api/useFetchConfig";
+import { useFetchConfig } from "hooks/api/useFetchConfig";
 
 export const useDepartmentName = () => {
-  const { departments } = useFilterConfig();
+  const { departments } = useFetchConfig();
   return (id?: number) => {
     if (id === undefined) return "Неизвестное отделение";
 

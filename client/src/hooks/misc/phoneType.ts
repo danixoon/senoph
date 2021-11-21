@@ -1,7 +1,7 @@
-import { useFilterConfig } from "hooks/api/useFetchConfig";
+import { useFetchConfig } from "hooks/api/useFetchConfig";
 
 export const usePhoneTypeByModel = () => {
-  const { models, types } = useFilterConfig();
+  const { models, types } = useFetchConfig();
   return (modelId: number) => {
     const model = models.find((model) => model.id === modelId);
     const type = model
@@ -13,7 +13,7 @@ export const usePhoneTypeByModel = () => {
 };
 
 export const usePhoneType = () => {
-  const { models, types } = useFilterConfig();
+  const { models, types } = useFetchConfig();
   return (phoneTypeId: number) => {
     const type = types.find((type) => type.id === phoneTypeId);
 

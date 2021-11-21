@@ -6,7 +6,7 @@ import ItemSelectionPopup, {
 } from "layout/Popups/ItemSelectionPopup";
 import { useFetchHolder } from "hooks/api/useFetchHolder";
 import { InputBind, useInput } from "hooks/useInput";
-import { useFilterConfig } from "hooks/api/useFetchConfig";
+import { useFetchConfig } from "hooks/api/useFetchConfig";
 import { api } from "store/slices/api";
 // import api from "api";
 

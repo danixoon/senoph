@@ -3,7 +3,7 @@ import React from "react";
 import ItemSelectionPopup, {
   ItemSelectionPopupProps,
 } from "layout/Popups/ItemSelectionPopup";
-import { useFilterConfig } from "hooks/api/useFetchConfig";
+import { useFetchConfig } from "hooks/api/useFetchConfig";
 import { InputBind, useInput } from "hooks/useInput";
 import Dropdown from "components/Dropdown";
 
@@ -17,7 +17,7 @@ const ModelSelectionPopupContainer: React.FC<ModelSelectionPopupContainerProps> 
   (props) => {
     const { onSelect, ...rest } = props;
 
-    const { models, types } = useFilterConfig();
+    const { models, types } = useFetchConfig();
     const [searchBind] = useInput({ phoneTypeId: null });
 
     const modelItems = searchBind.input.phoneTypeId

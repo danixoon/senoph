@@ -25,14 +25,15 @@ import { template } from "@babel/core";
 import HoldingPhone from "@backend/db/models/holdingPhone.model";
 import Holding from "@backend/db/models/holding.model";
 
-type ImportContext<P> = {
+type ImportContext<P, T> = {
   row: Row;
+  items: T[];
 } & P;
 type Template<T, P = any> = {
   label: string;
   validator?: Validator;
   mutator: (
-    this: ImportContext<P>,
+    this: ImportContext<P, T>,
     value: any,
     target: Partial<T>
   ) => Partial<T>;
@@ -62,6 +63,10 @@ const templates: {
       label: "Инвентарный номер",
       validator: tester().required(),
       mutator: function (v, target) {
+        if (this.items.some((m) => m.inventoryKey === v))
+          throw new ApiError(errorType.VALIDATION_ERROR, {
+            description: `В строке ${this.row.id} присутствует дублирующийся инвентарный номер.`,
+          });
         return { ...target, inventoryKey: v };
       },
     },
@@ -69,6 +74,11 @@ const templates: {
       label: "Заводской номер",
       validator: tester().required(),
       mutator: function (v, target) {
+        if (this.items.some((m) => m.factoryKey === v))
+          throw new ApiError(errorType.VALIDATION_ERROR, {
+            description: `В строке ${this.row.id} присутствует дублирующийся заводской номер.`,
+          });
+
         return { ...target, factoryKey: v };
       },
     },
@@ -143,7 +153,7 @@ type WithRandomId<T, K extends string = "randomId"> = T & Record<K, string>;
 const processTemplate = <T, R>(
   templates: Template<R, T>[],
   row: Row,
-  getContext: () => Omit<ImportContext<T>, "row">
+  getContext: () => Omit<ImportContext<T, R>, "row">
 ) => {
   let result: Partial<R> = {};
 
@@ -181,7 +191,7 @@ const extractRows = (sheet: exceljs.Worksheet) => {
   });
   return rows;
 };
-const importPhones = async (authorId: number, book: exceljs.Workbook) => {
+const parsePhonesFile = async (book: exceljs.Workbook) => {
   // Получение данных листа
   const sheet = book.getWorksheet(1);
   const rows = extractRows(sheet);
@@ -191,16 +201,18 @@ const importPhones = async (authorId: number, book: exceljs.Workbook) => {
       description: "Передана пустая таблица",
     });
 
-  const phones: DB.PhoneAttributes[] = [];
+  const phones: Omit<DB.PhoneAttributes, "authorId">[] = [];
   const models = await PhoneModel.findAll();
 
   for (const row of rows) {
-    const phone = processTemplate(templates.phone, row, () => ({ models }));
-    phones.push({ ...phone, authorId });
+    const phone = processTemplate(templates.phone, row, () => ({
+      models,
+      items: phones,
+    }));
+    phones.push({ ...phone });
   }
 
-  const createdPhones = await Phone.bulkCreate(phones);
-  return createdPhones;
+  return phones;
 };
 
 router.post(
@@ -223,21 +235,14 @@ router.post(
 
     switch (target) {
       case "phone":
-        await importPhones(user.id, workbook);
+        const phones = await parsePhonesFile(workbook);
+        res.send(prepareItems(phones, phones.length, 0));
         break;
       default:
         throw new ApiError(errorType.INVALID_QUERY, {
           description: "Импорт данного вида недоступен.",
         });
     }
-
-    res.send();
-
-    //const cell = workbook.worksheets[0].getCell(2, 1);
-
-    //console.log(cell.text);
-
-    //res.send(cell.text);
   })
 );
 

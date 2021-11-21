@@ -10,7 +10,7 @@ import Header from "components/Header";
 import Span from "components/Span";
 import Badge from "components/Badge";
 import Hr from "components/Hr";
-import { useFilterConfig } from "hooks/api/useFetchConfig";
+import { useFetchConfig } from "hooks/api/useFetchConfig";
 import ListItem from "components/ListItem";
 import Button from "components/Button";
 import Icon from "components/Icon";
@@ -32,7 +32,7 @@ export const getPhonePropertyName = (property: keyof Api.Models.Phone) => {
     accountingDate: "Дата принятия к учёту",
     commissioningDate: "Дата ввода в эксплуатацию",
     factoryKey: "Заводской номер",
-    assemblyDate: "Дата сборки",
+    assemblyDate: "Год сборки",
   };
 
   return propMap[property] ?? property;
@@ -78,7 +78,7 @@ const CommitItemContent: React.FC<{
       <Hr vertical />
       <Layout flex="2">
         <ListItem label={getPhonePropertyName("assemblyDate")}>
-          <Span>{item.assemblyDate}</Span>
+          <Span>{new Date(item.assemblyDate).getFullYear()}</Span>
         </ListItem>
         <Hr />
         <ListItem label={getPhonePropertyName("commissioningDate")}>
@@ -181,7 +181,7 @@ const CommitPage: React.FC<CommitPageProps> = (props) => {
 
   const { author } = bind.input;
 
-  const { models, types } = useFilterConfig();
+  const { models, types } = useFetchConfig();
 
   const getTypeName = (modelId: number) => {
     const model = models.find((model) => model.id === modelId);
@@ -198,12 +198,11 @@ const CommitPage: React.FC<CommitPageProps> = (props) => {
 
   const targetCommits = getTargetCommits(tab);
 
-  const commitGroup = (isEditCommits(targetCommits)
-    ? groupBy(targetCommits, (item) => item.changes?.createdAt)
-    : groupBy(targetCommits, (item) => item.statusAt)) as Map<
-    any,
-    CommitChange[] | Api.Models.Phone[]
-  >;
+  const commitGroup = (
+    isEditCommits(targetCommits)
+      ? groupBy(targetCommits, (item) => item.changes?.createdAt)
+      : groupBy(targetCommits, (item) => item.statusAt)
+  ) as Map<any, CommitChange[] | Api.Models.Phone[]>;
 
   const [lastDeleted, setLastDeleted] = React.useState<{
     commit: Api.Models.Phone;
@@ -352,7 +351,7 @@ const CommitPage: React.FC<CommitPageProps> = (props) => {
 };
 
 const useHolderName = () => {
-  const { departments } = useFilterConfig();
+  const { departments } = useFetchConfig();
 
   return (holder?: Api.Models.Holder) => {
     if (!holder) return "Имя не определено";

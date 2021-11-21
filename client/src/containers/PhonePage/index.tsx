@@ -14,7 +14,7 @@ import qs from "query-string";
 import { useQueryInput } from "hooks/useQueryInput";
 import { denullObject } from "utils";
 import PopupLayer from "providers/PopupLayer";
-import { useFilterConfig } from "hooks/api/useFetchConfig";
+import { useFetchConfig } from "hooks/api/useFetchConfig";
 import PhonePopupContainer from "containers/PhonePopup";
 import Icon from "components/Icon";
 import Button from "components/Button";
@@ -45,7 +45,7 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
   const { path, url, params } = useRouteMatch();
   const selectionIdsSet = new Set(rest.selectionIds);
 
-  const filterData = useFilterConfig();
+  const filterData = useFetchConfig();
   const { data: itemsData } = api.useFetchPhonesQuery({
     ...denullObject(filter),
     amount: PAGE_ITEMS,

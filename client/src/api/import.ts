@@ -6,8 +6,6 @@ export const importPhone = async (file: File) => {
 
   data.append("file", file);
 
-  // console.log(data, file);
-
   return api.request("post", "/import", {
     params: { target: "phone" as const },
     data: data as any,

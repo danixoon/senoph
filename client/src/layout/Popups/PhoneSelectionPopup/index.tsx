@@ -17,7 +17,7 @@ import Spoiler from "components/Spoiler";
 import Switch from "components/Switch";
 import Toggle from "components/Toggle";
 import LinkItemContainer from "containers/LinkItem";
-import { useFilterConfig } from "hooks/api/useFetchConfig";
+import { useFetchConfig } from "hooks/api/useFetchConfig";
 import { InputBind, useInput } from "hooks/useInput";
 import * as React from "react";
 import { Edit, Edit2, Edit3 } from "react-feather";

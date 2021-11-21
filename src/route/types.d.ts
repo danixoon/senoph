@@ -282,10 +282,14 @@ declare namespace Api {
       | (() => RouteHandler<"/logs", ItemsResponse<Api.Models.Log>, {}, {}>);
 
     post:
-      | (() => RouteHandler<
+      | (<T extends "phone" | "model">() => RouteHandler<
           `/import`,
-          {},
-          { target: "phone" | "model" },
+          ItemsResponse<
+            WithoutId<
+              T extends "phone" ? Omit<DB.PhoneAttributes, "authorId"> : never
+            >
+          >,
+          { target: T },
           { file: FileList }
         >)
       | (() => RouteHandler<

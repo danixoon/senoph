@@ -1,7 +1,7 @@
-import { useFilterConfig } from "hooks/api/useFetchConfig";
+import { useFetchConfig } from "hooks/api/useFetchConfig";
 
 export const useHolderName = () => {
-  const { departments } = useFilterConfig();
+  const { departments } = useFetchConfig();
 
   return (holder?: WithoutId<Api.Models.Holder>, withDepartment?: boolean) => {
     if (!holder) return "Имя не определено";

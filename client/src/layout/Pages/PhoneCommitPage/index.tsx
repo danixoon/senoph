@@ -10,7 +10,7 @@ import Header from "components/Header";
 import Span from "components/Span";
 import Badge from "components/Badge";
 import Hr from "components/Hr";
-import { useFilterConfig } from "hooks/api/useFetchConfig";
+import { useFetchConfig } from "hooks/api/useFetchConfig";
 import ListItem from "components/ListItem";
 import Button from "components/Button";
 import Icon from "components/Icon";
@@ -34,7 +34,7 @@ export const getPhonePropertyName = (property: keyof Api.Models.Phone) => {
     accountingDate: "Дата принятия к учёту",
     commissioningDate: "Дата ввода в эксплуатацию",
     factoryKey: "Заводской номер",
-    assemblyDate: "Дата сборки",
+    assemblyDate: "Год сборки",
   };
 
   return propMap[property] ?? property;
