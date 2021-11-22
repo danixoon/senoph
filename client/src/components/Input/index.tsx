@@ -1,5 +1,7 @@
 import AltPopup from "components/AltPopup";
+import Button from "components/Button";
 import { FormContext } from "components/Form";
+import Icon from "components/Icon";
 import Label from "components/Label";
 import Span from "components/Span";
 import { useIsFirstEffect } from "hooks/useIsFirstEffect";
@@ -18,6 +20,8 @@ export type InputProps<T = any> = OverrideProps<
     size?: Size;
     mapper?: (value: any) => any;
     required?: boolean;
+    clearable?: boolean;
+    onClear?: () => void;
 
     inputProps?: React.InputHTMLAttributes<HTMLInputElement>;
   }
@@ -33,14 +37,19 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>((props, ref) => {
     name,
     required,
     placeholder,
+    clearable,
     type,
     mapper,
     inputProps = {},
     onChange,
+    onClear,
     ...rest
   } = props;
 
-  const mergedProps = mergeProps({ className: `input` }, rest);
+  const mergedProps = mergeProps(
+    { className: mergeClassNames(`input`, clearable && "input_clearable") },
+    rest
+  );
   const value = input[name] ?? "";
 
   const handleOnChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
@@ -122,7 +131,10 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>((props, ref) => {
           // console.log(ref);
           if (typeof ref === "function") ref(r);
         }}
-        className={mergeClassNames(`input__element input_${size}`)}
+        className={mergeClassNames(
+          `input__element input_${size}`,
+          clearable && "input__element_clearable"
+        )}
         name={name as string}
         onChange={handleOnChange}
         {...{
@@ -142,6 +154,21 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>((props, ref) => {
         {message}
       </AltPopup>
       {/* {infoText && <small className="input__info">{infoText}</small>} */}
+      {clearable && value && (
+        <Button
+          inverted
+          color="primary"
+          className="input__clear-button"
+          onClick={() => {
+            if (onChange) {
+              onChange({ target: { name, value: "" } } as any);
+            }
+            if (onClear) onClear();
+          }}
+        >
+          <Icon.X />
+        </Button>
+      )}
     </div>
   );
 });

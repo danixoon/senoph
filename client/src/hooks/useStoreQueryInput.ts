@@ -1,5 +1,5 @@
 import React from "react";
-import { handleChangeEvent, InputBind } from "./useInput";
+import { handleChangeEvent, InputBind, InputHook } from "./useInput";
 
 export const useStoreQueryInput = <T>(
   query: T,
@@ -13,5 +13,5 @@ export const useStoreQueryInput = <T>(
     },
   };
 
-  return bind;
+  return [bind, updater] as InputHook<T>;
 };

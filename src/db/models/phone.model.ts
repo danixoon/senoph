@@ -1,5 +1,6 @@
 import { logger } from "@backend/utils/index";
 import { Sequelize } from "sequelize";
+import { QueryTypes } from "sequelize";
 import { Op } from "sequelize";
 import {
   AllowNull,
@@ -24,6 +25,7 @@ import {
   BeforeCreate,
   BeforeBulkUpdate,
 } from "sequelize-typescript";
+import { sequelize } from "..";
 
 import { getChanges, getChangesById } from "../commit";
 import Change from "./change.model";
@@ -151,8 +153,32 @@ export default class Phone extends Model<
   @HasMany(() => PhoneCategory)
   categories: PhoneCategory[];
 
+  holders?: Holder[];
+
+  // @HasOne(() => Holder, {  })
+
   // @HasMany(() => HoldingPhone)
   // holdings: HoldingPhone[];
+
+  static async getHolderIds(ids?: number[]) {
+    const [values] = await sequelize.query<{ id: number }[]>(
+      `SELECT
+      holder.id as holderId,
+      MAX(holding.orderDate) as dt
+    FROM
+      Phones phone
+      INNER JOIN PhoneModels phoneModel ON phoneModel.id = phone.phoneModelId
+      INNER JOIN HoldingPhones holdingPhone ON holdingPhone.phoneId = phone.id
+      INNER JOIN Holdings holding ON holding.id = holdingPhone.holdingId
+      INNER JOIN Holders holder ON holder.id = holding.holderId
+      INNER JOIN Departments dep ON dep.id = holder.departmentId
+    GROUP BY
+      phone.id, holder.id ${ids ? "HAVING phone.id IN (:ids)" : ""} `,
+      { replacements: { ids }, type: QueryTypes.SELECT }
+    );
+
+    const phoneIds = values.map((v) => v.id);
+  }
 
   @BeforeBulkUpdate
   static onBeforeUpdate(args: any) {
@@ -162,10 +188,15 @@ export default class Phone extends Model<
 
   static async withHolders(phones: Phone[]) {
     const holders = await Holder.getByPhones(phones.map((phone) => phone.id));
-    const mappedPhones = phones.map((phone) => ({
-      ...phone.toJSON(),
-      holder: holders.get(phone.id)?.toJSON(),
-    })) as Api.Models.Phone[];
+    const mappedPhones: Api.Models.Phone[] = [];
+    phones.forEach((phone) => {
+      const holder = holders.get(phone.id);
+      const p: Api.Models.Phone = {
+        ...phone.toJSON(),
+        holder: holder?.toJSON(),
+      };
+      mappedPhones.push(p);
+    });
 
     return mappedPhones;
   }

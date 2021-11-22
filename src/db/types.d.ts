@@ -124,6 +124,7 @@ declare namespace DB {
     // holders?: HolderAttributes[];
     categories?: PhoneCategoryAttributes[];
     holdings?: HoldingAttributes[];
+    holders?: HolderAttributes[];
   }> &
     WithCommit &
     WithAuthor;

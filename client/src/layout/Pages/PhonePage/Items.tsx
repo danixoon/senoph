@@ -2,6 +2,7 @@ import Checkbox from "components/Checkbox";
 import Dropdown from "components/Dropdown";
 import Form from "components/Form";
 import Header from "components/Header";
+import { LoaderIcon } from "components/Icon";
 import Input from "components/Input";
 import Layout from "components/Layout";
 import Paginator from "components/Paginator";
@@ -14,6 +15,7 @@ import { PhoneState } from "store/slices/phone";
 
 const Items: React.FC<{
   items: Api.Models.Phone[];
+  status: ApiStatus;
   paging: {
     totalItems: number;
     pageItems: number;
@@ -33,7 +35,7 @@ const Items: React.FC<{
   };
   mode: "edit" | "view";
 }> = (props) => {
-  const { items, paging, sorting, selection, mode } = props;
+  const { items, status, paging, sorting, selection, mode } = props;
 
   const { totalItems, pageItems, offset, onOffsetChanged } = paging;
   const { onSelect, selectedId } = selection;
@@ -137,7 +139,7 @@ const Items: React.FC<{
           current={currentPage}
         />
         <span style={{ marginLeft: "auto" }}>
-          Результаты поиска ({totalItems})
+          {status.isLoading && <LoaderIcon />} Результаты поиска ({totalItems})
         </span>
       </Header>
       <PopupLayer>

@@ -228,6 +228,7 @@ const getTableColumns: (args: {
   {
     key: "phoneIds",
     header: "Средства связи",
+    props: { style: { whiteSpace: "normal" } },
     mapper: (v, item: HoldingTableItem) => {
       return item.phoneIds.map((id, i) => (
         <>

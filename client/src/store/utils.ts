@@ -73,21 +73,26 @@ export const getErrorMessage = (
   return err?.description ?? err?.message ?? "Ошибка";
 };
 
-export const extractStatus = ({
-  isError,
-  isLoading,
-  isIdle,
-  isSuccess,
-  error,
-}: {
-  isError?: boolean;
-  isLoading?: boolean;
-  isIdle?: boolean;
-  isSuccess?: boolean;
-  error?: any;
-}) =>
+export const extractStatus = (
+  {
+    isError,
+    isLoading,
+    isIdle,
+    isSuccess,
+    isFetching,
+    error,
+  }: {
+    isError?: boolean;
+    isLoading?: boolean;
+    isIdle?: boolean;
+    isSuccess?: boolean;
+    isFetching?: boolean;
+    error?: any;
+  },
+  fetchCheck?: boolean
+) =>
   ({
-    isLoading: isLoading === true,
+    isLoading: isLoading === true || (fetchCheck && isFetching),
     isSuccess: isSuccess === true,
     isError: isError === true,
     isIdle: isIdle === true,

@@ -4,7 +4,7 @@ import { fillDevDatabase, fillProdDatabase } from "@backend/utils/db";
 import { Sequelize } from "sequelize-typescript";
 import { logger } from "@backend/utils/index";
 
-let sequelize: Sequelize;
+export let sequelize: Sequelize;
 let dbLogger: fs.FileHandle;
 
 export const getModel = (name: string) => sequelize.models[name];

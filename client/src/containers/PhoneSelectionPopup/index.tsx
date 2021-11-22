@@ -18,65 +18,70 @@ export type PhoneSelectionPopupContainerProps = {
 
 const PAGE_ITEMS = 10;
 
-const PhoneSelectionPopupContainer: React.FC<PhoneSelectionPopupContainerProps> = (
-  props
-) => {
-  const {
-    onToggle,
-    isOpen,
+const PhoneSelectionPopupContainer: React.FC<PhoneSelectionPopupContainerProps> =
+  (props) => {
+    const {
+      onToggle,
+      isOpen,
 
-    ...rest
-  } = props;
+      ...rest
+    } = props;
 
-  const { filter, selectionIds } = useAppSelector((state) => state.phone);
-  const dispatch = useAppDispatch();
+    const { filter, selectionIds } = useAppSelector((state) => state.phone);
+    const dispatch = useAppDispatch();
 
-  const [offset, setOffset] = React.useState(() => 0);
+    const [offset, setOffset] = React.useState(() => 0);
 
-  const [innerSelectionBind] = useInput({ search: null });
+    const [innerSelectionBind] = useInput({ search: null });
 
-  const query = {
-    ids: selectionIds,
-    search: innerSelectionBind.input.search,
-    offset,
-    amount: PAGE_ITEMS,
+    const query = {
+      ids: selectionIds,
+      search: innerSelectionBind.input.search,
+      offset: 0,
+      amount: selectionIds.length,
+    };
+
+    const isNoSelection = selectionIds.length === 0;
+
+    const { data } = api.useFetchPhonesQuery(clearObject(query), {
+      skip: isNoSelection,
+    });
+
+    return (
+      <PhoneSelectionPopup
+        offset={offset}
+        onOffsetChange={setOffset}
+        onDeselect={(id) => {
+          dispatch(
+            updateSelection({
+              ids: query.ids.filter((selectedId) => selectedId !== id),
+            })
+          );
+        }}
+        onDeselectAll={() => dispatch(updateSelection({ ids: [] }))}
+        isOpen={isOpen}
+        onToggle={onToggle}
+        totalItems={isNoSelection ? 0 : data?.total ?? 0}
+        pageItems={PAGE_ITEMS}
+        bind={innerSelectionBind}
+        selectedIds={selectionIds}
+        items={
+          isNoSelection
+            ? []
+            : data?.items
+                .filter(
+                  (item, i) =>
+                    i > offset &&
+                    i < offset + PAGE_ITEMS &&
+                    selectionIds.includes(item.id)
+                )
+                .map((item) => ({
+                  id: item.id,
+                  name: item.model?.name ?? "Без модели",
+                })) ?? []
+        }
+      />
+    );
   };
-
-  const isNoSelection = selectionIds.length === 0;
-
-  const { data } = api.useFetchPhonesQuery(clearObject(query), {
-    skip: isNoSelection,
-  });
-
-  return (
-    <PhoneSelectionPopup
-      offset={offset}
-      onOffsetChange={setOffset}
-      onDeselect={(id) => {
-        dispatch(
-          updateSelection({
-            ids: query.ids.filter((selectedId) => selectedId !== id),
-          })
-        );
-      }}
-      onDeselectAll={() => dispatch(updateSelection({ ids: [] }))}
-      isOpen={isOpen}
-      onToggle={onToggle}
-      totalItems={isNoSelection ? 0 : data?.total ?? 0}
-      pageItems={PAGE_ITEMS}
-      bind={innerSelectionBind}
-      items={
-        isNoSelection
-          ? []
-          : data?.items
-              .filter((item) => selectionIds.includes(item.id))
-              .map((item) => ({
-                id: item.id,
-                name: item.model?.name ?? "Без модели",
-              })) ?? []
-      }
-    />
-  );
-};
 
 export default PhoneSelectionPopupContainer;

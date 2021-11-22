@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { ForeignKeyConstraintError } from "sequelize";
+import { ForeignKeyConstraintError, ModelStatic } from "sequelize";
 import Phone from "../db/models/phone.model";
 import Model from "../db/models/phoneModel.model";
 import { handler, prepareItems } from "@backend/utils/index";
@@ -26,6 +26,7 @@ import PhoneType from "@backend/db/models/phoneType.model";
 import PhoneModelDetail from "@backend/db/models/phoneModelDetail.model";
 import Log from "@backend/db/models/log.model";
 import phone from "@backend/utils/phone";
+import { sequelize } from "../db";
 
 const router = AppRouter();
 
@@ -138,6 +139,24 @@ router.get(
   })
 );
 
+const orderByKey = (
+  key: string,
+  dir: "asc" | "desc",
+  map: Record<string, [ModelStatic<any>, string, string] | string>
+) => {
+  const mapped = map[key];
+  if (mapped) {
+    if (typeof mapped === "string")
+      return [mapped, dir.toUpperCase()] as OrderItem;
+    const [model, associationKey, attribute] = mapped;
+    return [
+      { model, as: associationKey },
+      attribute,
+      dir.toUpperCase(),
+    ] as OrderItem;
+  } else return ["id", "DESC"] as OrderItem;
+};
+
 router.get(
   "/phone",
   access("user"),
@@ -162,11 +181,11 @@ router.get(
   handler(async (req, res) => {
     const {
       search,
-      sortDir: orderDir,
-      sortKey: orderKey,
+      sortDir,
+      sortKey,
       amount = 50,
       offset = 0,
-      category: categoryKey,
+      category,
       phoneModelId,
       departmentId,
       phoneTypeId,
@@ -176,109 +195,144 @@ router.get(
       exceptIds,
     } = req.query;
 
-    const order = [] as OrderItem[];
-    const dir = orderDir?.toUpperCase() ?? "ASC";
+    // const items = await Phone.findAll({
+    //   order: [PhoneModel.associations.Task],
+    // });
 
-    switch (orderKey) {
-      case "modelName":
-        order.push([{ model: PhoneModel, as: "model" }, "name", dir]);
-        break;
-      case "category":
-        order.push([{ model: PhoneCategory, as: "category" }, "category", dir]);
-        break;
-      case "department":
-        order.push([
-          { model: Holder, as: "holder" },
-          { model: Department, as: "department" },
-          "name",
-          dir,
-        ]);
-        break;
-      default:
-        if (typeof orderKey === "string") order.push([orderKey, dir]);
-        break;
-    }
+    const order = sortKey
+      ? [
+          orderByKey(sortKey, sortDir ?? "asc", {
+            modelName: [PhoneModel, "model", "name"],
+            category: [PhoneCategory, "category", "category"],
+            id: "id",
+          }),
+        ]
+      : [["id", "DESC"] as OrderItem];
 
-    const offset_ = Number.parseInt(offset.toString()),
-      limit_ = Number.parseInt(amount.toString());
-
-    const valueOrNotNull = <T>(v: T) => v ?? { [Op.not]: null };
-
-    // TODO: Использовать объект позоляющий удобно опиционально фильтровать
-    const whereId = { [Op.notIn]: exceptIds ?? [] } as WhereOperators;
-    if ((ids?.length ?? 0) > 0) whereId[Op.in] = ids;
-
-    const include = [
-      // {
-      // model: Holding,
-      // include: [Holder], // where: {
-      // departmentId: valueOrNotNull(departmentId),
-      // },
-      // },
-    ] as any;
-    // ] as any;
-
-    // if (phoneTypeId !== undefined || search !== undefined)
-    include.push({
-      model: PhoneModel,
-      where: new Filter({ phoneTypeId, search })
-        .add("phoneTypeId")
-        .add("search", Op.substring).where,
-      //  {
-      //   phoneTypeId: valueOrNotNull(phoneTypeId),
-      //   name: search ? { [Op.substring]: search } : { [Op.not]: null },
-      // },
-      // required: phoneTypeId !== undefined || search !== undefined,
-    });
-
-    if (departmentId !== undefined)
-      include.push({
-        model: Holding,
-        order: [[Holding, "orderDate", "ASC"]],
-        limit: 1,
-        // required: true,
-        include: [
-          {
-            model: Holder,
-            where: { departmentId },
-          },
-        ],
-      });
-
-    if (categoryKey !== undefined)
-      include.push({
-        model: PhoneCategory,
-        where: new Filter({ categoryKey }).add("categoryKey").where, // { category: valueOrNotNull(category?.toString()) },
-      });
-
-    const filter = new Filter({
-      id: whereId,
-      phoneModelId,
-      inventoryKey,
-      factoryKey,
-    });
-
-    filter.add("id");
-    filter.add("phoneModelId");
-    filter.add("inventoryKey", Op.substring);
-    filter.add("factoryKey", Op.substring);
-
-    const phones = await Phone.findAll({
-      where: filter.where,
-      include,
+    const items = await Phone.findAll({
       order,
-    }).catch((err) => console.error(err));
+      where: { id: { [Op.in]: ids } },
+      include: [Holding, PhoneCategory, PhoneModel],
+    });
 
-    // TODO: Неоптимизированный костыль, но что поделать
-    const rows = await Phone.withHolders(
-      (phones ?? []).slice(offset_, offset_ + limit_)
-    );
+    Phone.withHolders(items);
 
-    if (phones) res.send(prepareItems(rows, phones.length, offset_));
-    else
-      throw new ApiError(errorType.INTERNAL_ERROR, {
-        description: "Ошибка поиска",
-      });
+    res.send(prepareItems(items, items.length, 0) as any);
+
+    const phoneIds = items.map((phone) => phone.id);
+
+    // HoldingPhone.findAll({ include: [{ model: }] })
+
+    // const query = sequelize.query(``);
+
+    const query = `SELECT phone.id FROM `;
+
+    // const order = [] as OrderItem[];
+    // const dir = orderDir?.toUpperCase() ?? "ASC";
+
+    // switch (orderKey) {
+    //   case "modelName":
+    //     order.push([{ model: PhoneModel, as: "model" }, "name", dir]);
+    //     break;
+    //   case "category":
+    //     order.push([{ model: PhoneCategory, as: "category" }, "category", dir]);
+    //     break;
+    //   case "department":
+    //     order.push([
+    //       { model: Holder, as: "holder" },
+    //       { model: Department, as: "department" },
+    //       "name",
+    //       dir,
+    //     ]);
+    //     break;
+    //   default:
+    //     if (typeof orderKey === "string") order.push([orderKey, dir]);
+    //     break;
+    // }
+
+    // const offset_ = Number.parseInt(offset.toString()),
+    //   limit_ = Number.parseInt(amount.toString());
+
+    // const valueOrNotNull = <T>(v: T) => v ?? { [Op.not]: null };
+
+    // // TODO: Использовать объект позоляющий удобно опиционально фильтровать
+    // const whereId = { [Op.notIn]: exceptIds ?? [] } as WhereOperators;
+    // if ((ids?.length ?? 0) > 0) whereId[Op.in] = ids;
+
+    // const include = [
+    //   // {
+    //   // model: Holding,
+    //   // include: [Holder], // where: {
+    //   // departmentId: valueOrNotNull(departmentId),
+    //   // },
+    //   // },
+    // ] as any;
+    // // ] as any;
+
+    // // if (phoneTypeId !== undefined || search !== undefined)
+    // include.push({
+    //   model: PhoneModel,
+    //   where: new Filter({ phoneTypeId, search })
+    //     .add("phoneTypeId")
+    //     .add("search", Op.substring).where,
+    //   //  {
+    //   //   phoneTypeId: valueOrNotNull(phoneTypeId),
+    //   //   name: search ? { [Op.substring]: search } : { [Op.not]: null },
+    //   // },
+    //   // required: phoneTypeId !== undefined || search !== undefined,
+    // });
+
+    // if (departmentId !== undefined)
+    //   include.push({
+    //     model: Holding,
+    //     order: [[Holding, "orderDate", "ASC"]],
+    //     required: true,
+    //     include: [
+    //       {
+    //         model: Holder,
+    //         where: { departmentId },
+    //         required: true,
+    //       },
+    //     ],
+    //   });
+
+    // if (categoryKey !== undefined)
+    //   include.push({
+    //     model: PhoneCategory,
+    //     where: new Filter({ categoryKey }).add("categoryKey").where, // { category: valueOrNotNull(category?.toString()) },
+    //   });
+
+    // const filter = new Filter({
+    //   id: whereId,
+    //   phoneModelId,
+    //   inventoryKey,
+    //   factoryKey,
+    // });
+
+    // filter.add("id");
+    // filter.add("phoneModelId");
+    // filter.add("inventoryKey", Op.substring);
+    // filter.add("factoryKey", Op.substring);
+
+    // const phones = await Phone.findAll({
+    //   where: filter.where,
+    //   include,
+    //   order,
+    // }).catch((err) => console.error(err));
+
+    // // TODO: Неоптимизированный костыль, но что поделать
+    // let rows = await Phone.withHolders(phones ?? []);
+
+    // // if(departmentId)
+    //   // rows = rows.filter(row => row.holders)
+
+    // const ofsetted = rows.slice(offset_, offset_ + limit_);
+
+    // if (phones) res.send(prepareItems(rows, phones.length, offset_));
+    // else
+    //   throw new ApiError(errorType.INTERNAL_ERROR, {
+    //     description: "Ошибка поиска",
+    //   });
   })
 );
 

@@ -74,16 +74,20 @@ const HoldingPageContainer: React.FC<Props> = (props) => {
     const prevHolders: Api.Models.Holder[] = [];
     for (const id of holding.phoneIds) {
       // TODO: Проверить даты и прочую чушь
-      const prevItem = [...(holdingMap.get(id) ?? [])].sort((a, b) =>
-        (a.createdAt as string) > (b.createdAt as string) ? -1 : 1
-      )[0];
-      if (!prevItem || prevItem.holderId === holding.holderId) continue;
+      const prevItems = [...(holdingMap.get(id) ?? [])].sort((a, b) =>
+        (a.orderDate as string) < (b.orderDate as string) ? -1 : 1
+      );
+      for (const prevItem of prevItems) {
+        if (!prevItem || prevItem.holderId === holding.holderId) break;
 
-      if (
-        prevItem?.holder &&
-        !prevHolders.find((h) => h.id === prevItem.holderId)
-      )
-        prevHolders.push(prevItem.holder as Api.Models.Holder);
+        if (
+          prevItem?.holder &&
+          !prevHolders.find((h) => h.id === prevItem.holderId)
+        )
+          prevHolders.push(prevItem.holder as Api.Models.Holder);
+      }
+
+      console.log(`#${id}: `, prevHolders);
     }
 
     return { ...holding, prevHolders };

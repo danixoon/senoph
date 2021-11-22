@@ -17,6 +17,7 @@ export type TableColumn<T = any> = {
   header: React.ReactChild;
   size?: string;
   sortable?: boolean;
+  props?: React.TdHTMLAttributes<HTMLElement>;
   mapper?: (v: any, row: T) => any;
 } & (
   | { type?: "date" }
@@ -52,8 +53,8 @@ type TableCellProps = OverrideProps<
 >;
 
 const TableCell: React.FC<TableCellProps> = ({ children, ...rest }) => {
-  const mergedProps = mergeProps({}, rest);
-  return <td {...mergedProps}>{children}</td>;
+  // const mergedProps = mergeProps({}, rest);
+  return <td {...rest}>{children}</td>;
 };
 
 const Table: React.FC<React.PropsWithChildren<TableProps>> = (
@@ -123,25 +124,33 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
     <table {...mergedProps}>
       <thead>
         <tr>
-          {columns.map((column) => (
-            <TableCell
-              title={column.header.toString()}
-              className={mergeClassNames(
-                column.type === "checkbox" && "cell_checkbox",
-                column.sortable && "cell_sortable",
-                sortKey === column.key && `sort_${sortDir}`
-              )}
-              onClick={() =>
-                column.sortable &&
-                onSort &&
-                onSort(column.key, sortDir === "asc" ? "desc" : "asc")
-              }
-              key={column.key}
-              style={{ width: column.size }}
-            >
-              {column.header}
-            </TableCell>
-          ))}
+          {columns.map((column) => {
+            const mergedProps = mergeProps(
+              {
+                className: mergeClassNames(
+                  column.type === "checkbox" && "cell_checkbox",
+                  column.sortable && "cell_sortable",
+                  sortKey === column.key && `sort_${sortDir}`
+                ),
+                style: { width: column.size },
+              },
+              column.props ?? {}
+            );
+            return (
+              <TableCell
+                title={column.header.toString()}
+                onClick={() =>
+                  column.sortable &&
+                  onSort &&
+                  onSort(column.key, sortDir === "asc" ? "desc" : "asc")
+                }
+                key={column.key}
+                {...mergedProps}
+              >
+                {column.header}
+              </TableCell>
+            );
+          })}
         </tr>
       </thead>
       <tbody>
@@ -156,19 +165,27 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
             key={`${item.id ?? "id"}-${i}`}
             {...item.props}
           >
-            {columns.map((column, i) => (
-              <TableCell
-                className={mergeClassNames(
-                  column.type === "checkbox" && "cell_checkbox"
-                )}
-                key={`${column.key}-${i}`}
-                onClick={() =>
-                  column.type != "checkbox" && onSelect && onSelect(item)
-                }
-              >
-                {convertValue(column, item, item[column.key])}
-              </TableCell>
-            ))}
+            {columns.map((column, i) => {
+              const mergedProps = mergeProps(
+                {
+                  className: mergeClassNames(
+                    column.type === "checkbox" && "cell_checkbox"
+                  ),
+                },
+                column.props ?? {}
+              );
+              return (
+                <TableCell
+                  key={`${column.key}-${i}`}
+                  onClick={() =>
+                    column.type != "checkbox" && onSelect && onSelect(item)
+                  }
+                  {...mergedProps}
+                >
+                  {convertValue(column, item, item[column.key])}
+                </TableCell>
+              );
+            })}
           </tr>
         ))}
       </tbody>

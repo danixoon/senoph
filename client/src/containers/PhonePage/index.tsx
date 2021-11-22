@@ -31,6 +31,9 @@ import { useAppDispatch, useAppSelector } from "store";
 import { updateFilter, updateSelection } from "store/slices/phone";
 import Switch from "components/Switch";
 import PhoneCreatePopupContainer from "containers/PhoneCreatePopup";
+import { extractStatus } from "store/utils";
+import { useTogglePopup } from "hooks/useTogglePopup";
+import { NoticeContext } from "providers/NoticeProvider";
 
 type PhonePageContainerProps = {};
 const PAGE_ITEMS = 15;
@@ -38,7 +41,7 @@ const PAGE_ITEMS = 15;
 const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
   const dispatch = useAppDispatch();
   const { filter, mode, ...rest } = useAppSelector((state) => state.phone);
-  const bindFilter = useStoreQueryInput(filter, (q) =>
+  const filterHook = useStoreQueryInput(filter, (q) =>
     dispatch(updateFilter(q))
   );
 
@@ -46,7 +49,7 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
   const selectionIdsSet = new Set(rest.selectionIds);
 
   const filterData = useFetchConfig();
-  const { data: itemsData } = api.useFetchPhonesQuery({
+  const { data: itemsData, ...fetchPhones } = api.useFetchPhonesQuery({
     ...denullObject(filter),
     amount: PAGE_ITEMS,
     offset: filter.offset < 0 ? 0 : filter.offset,
@@ -56,45 +59,36 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
 
   const totalItems = itemsData?.total ?? PAGE_ITEMS;
 
-  const [isSelectionPopup, setSelectionPopup] = React.useState(() => false);
-  const handleSelectionPopup = () => {
-    setSelectionPopup(!isSelectionPopup);
-  };
+  const selectionPopup = useTogglePopup(mode === "edit");
+  const createPopup = useTogglePopup(mode === "edit");
 
-  const [isCreatePopup, setCreatePopup] = React.useState(() => false);
-  const handleCreatePopup = () => {
-    setCreatePopup(!isCreatePopup);
-  };
+  const fetchStatus = extractStatus(fetchPhones, true);
+  const noticeContext = React.useContext(NoticeContext);
+
+  React.useEffect(() => {
+    if (fetchStatus.isError) {
+      noticeContext.createNotice(
+        `Ошибка поиска (${fetchStatus.error?.name}): ${fetchStatus.error?.description}`
+      );
+    }
+  }, [fetchStatus.status]);
 
   return (
     <>
       <PopupLayer>
-        <PhoneSelectionPopupContainer
-          isOpen={isSelectionPopup && mode === "edit"}
-          onToggle={handleSelectionPopup}
-        />
+        <PhoneSelectionPopupContainer {...selectionPopup} />
         <PhonePopupContainer />
-        <PhoneCreatePopupContainer
-          isOpen={isCreatePopup && mode === "edit"}
-          onToggle={handleCreatePopup}
-        />
+        <PhoneCreatePopupContainer {...createPopup} />
       </PopupLayer>
       <TopBarLayer>
         <RouterSwitch>
-          {/* <Route path={`${path}/view`}> */}
-          {/* <Switch
-              name="tab"
-              input={{ tab: "filter" }}
-              onChange={() => {}}
-              items={[
-                { id: "filter", name: "Поиск" },
-                // { id: "departments", name: "Вид по отделениям" },
-              ]}
-            /> */}
-          {/* </Route> */}
           <Route path={`${path}/edit`}>
             <Hr vertical />
-            <Button margin="none" color="primary" onClick={handleCreatePopup}>
+            <Button
+              margin="none"
+              color="primary"
+              onClick={() => createPopup.onToggle()}
+            >
               <Icon.Plus size="md" />
             </Button>
             <Hr vertical />
@@ -102,7 +96,7 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
               <Button
                 disabled={selectionIdsSet.size === 0}
                 margin="none"
-                onClick={() => handleSelectionPopup()}
+                onClick={() => selectionPopup.onToggle()}
               >
                 Выбранное
               </Button>
@@ -141,11 +135,12 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
             }}
             items={itemsData?.items ?? []}
             mode={mode}
+            status={fetchStatus}
           />
         </Layout>
         <Hr vertical />
         <Layout style={{ flexBasis: "200px" }}>
-          <PhonePage.Filter bind={bindFilter} config={filterData} />
+          <PhonePage.Filter hook={filterHook} config={filterData} />
         </Layout>
       </Layout>
     </>

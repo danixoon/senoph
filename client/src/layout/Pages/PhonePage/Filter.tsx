@@ -4,17 +4,22 @@ import Form from "components/Form";
 import Header from "components/Header";
 import Input from "components/Input";
 import Layout from "components/Layout";
-import { InputBind } from "hooks/useInput";
+import { InputBind, InputHook } from "hooks/useInput";
+import ClickInput from "components/ClickInput";
+import { useTogglePopup } from "hooks/useTogglePopup";
+import HolderSelectionPopupContainer from "containers/HolderSelectionPopup";
+import PopupLayer from "providers/PopupLayer";
 
 const Filter: React.FC<{
-  bind: InputBind;
+  hook: InputHook;
   config: {
     types: { id: number; name: string }[];
     departments: { id: number; name: string }[];
     models: { id: number; name: string; phoneTypeId: number }[];
   };
 }> = (props) => {
-  const { bind, config } = props;
+  const { config } = props;
+  const [bind, setInput] = props.hook;
 
   const types = config.types.map((type) => ({
     id: type.id,
@@ -33,11 +38,12 @@ const Filter: React.FC<{
     label: dep.name,
   }));
 
+  const holderPopup = useTogglePopup();
+
   return (
     <>
       <Form className="filter-content__form" input={bind.input}>
         <Layout>
-          <Input {...bind} name="search" label="Запрос" />
           <Dropdown {...bind} name="phoneTypeId" label="Тип СС" items={types} />
           <Dropdown
             {...bind}
@@ -63,29 +69,50 @@ const Filter: React.FC<{
             items={departments}
           />
 
-          <Input {...bind} name="inventoryKey" label="Инвентарный номер" />
-          <Input {...bind} name="factoryKey" label="Заводской номер" />
+          <Input
+            {...bind}
+            name="inventoryKey"
+            label="Инвентарный номер"
+            placeholder="110xxxxxxxxx"
+          />
+          <Input
+            {...bind}
+            name="factoryKey"
+            label="Заводской номер"
+            placeholder="110xxxxxxxxx"
+          />
 
           <Input
             style={{ flex: 1 }}
             {...bind}
             name="accountingDate"
             label="Дата принятия к учёту"
+            type="date"
           />
           <Input
             style={{ flex: 1 }}
             {...bind}
             name="assemblyDate"
             label="Дата ввода в эксплуатацию"
+            type="date"
           />
-
-          <Input
+          <ClickInput
             {...bind}
-            name="holderId"
+            placeholder="Иванов Иван Иванович"
+            name="holderName"
             label="Материально-ответственное лицо"
+            clearable
+            onClear={() => setInput({ holderId: null, holderName: null })}
+            onActive={() => holderPopup.onToggle()}
           />
         </Layout>
       </Form>
+      <PopupLayer>
+        <HolderSelectionPopupContainer
+          {...holderPopup}
+          onSelect={(id, name) => setInput({ holderId: id, holderName: name })}
+        />
+      </PopupLayer>
     </>
   );
 };

@@ -30,34 +30,25 @@ export type ItemSelectionPopupProps = OverrideProps<
 const Item: React.FC<{
   id: any;
   name: string;
-  href?: string;
   onSelect: (id: any) => void;
 }> = (props) => {
-  const { id, name, href, onSelect } = props;
+  const { id, name, onSelect } = props;
   return (
-    <Button inverted onClick={() => onSelect(id)}>
-      <Layout flex={1} flow="row" border style={{ alignItems: "center" }}>
-        {/* <Link isMonospace href={href}>
-        #{id}
-      </Link> */}
-        {/* <Hr vertical /> */}
-        <Label style={{ margin: "0.25rem" }}>{name}</Label>
-        <Header style={{ marginLeft: "auto" }}>#{id}</Header>
-        {/* <Button
-        style={{ marginLeft: "auto" }}
-        color="primary"
+    <>
+      <Hr />
+      <Button
         inverted
         onClick={() => onSelect(id)}
+        className="items-list__item"
       >
-        <Icon.Check />
-      </Button> */}
-      </Layout>
-    </Button>
+        <Label className="items-list__item-label">{name}</Label>
+        <Header className="items-list__item-id">#{id}</Header>
+      </Button>
+    </>
   );
 };
 
 const ItemSelectionPopup: React.FC<ItemSelectionPopupProps> = (props) => {
-  // const [searchBind] = useInput<{ search: string }>({ search: null });
   const { items, onSelect, zIndex, header, children, ...rest } = props;
 
   return (
@@ -71,7 +62,7 @@ const ItemSelectionPopup: React.FC<ItemSelectionPopupProps> = (props) => {
       </PopupTopBar>
       <Layout padding="md" flex="1" className="items-list">
         {children}
-        <Hr />
+        {/* <Hr /> */}
         {items
           // .filter((item) => isIncludes(item.name))
           .map((item) => (

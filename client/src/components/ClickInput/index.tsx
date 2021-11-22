@@ -12,7 +12,7 @@ import "./styles.styl";
 
 const ClickInput = React.forwardRef<
   HTMLInputElement,
-  Omit<InputProps, "onChange"> & { onActive?: () => void }
+  Omit<InputProps, "onChange"> & { onActive: () => void }
 >((props, ref) => {
   const { onActive, ...rest } = props;
 
@@ -24,9 +24,9 @@ const ClickInput = React.forwardRef<
         ...(rest.inputProps ?? {}),
         onKeyDown: (e) => {
           console.log(e);
-          if (e.code === "Space" || e.code === "Enter") onActive && onActive();
+          if (e.code === "Space" || e.code === "Enter") onActive();
         },
-        onClick: (e) => onActive && onActive(),
+        onClick: (e) => onActive(),
       }}
     />
   );

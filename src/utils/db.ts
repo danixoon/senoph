@@ -118,7 +118,9 @@ const mapGenerated = <T = any>(size: number, f: (i: number) => T) =>
   new Array(size).fill(0).map((_, i) => f(i));
 
 export const fillProdDatabase = async () => {
-  const user = await User.create({
+  const adminUser = await User.findOne({ where: { role: "admin" } });
+  if (adminUser) return;
+  await User.create({
     name: "Администратор",
     username: "admin",
     passwordHash:
@@ -138,7 +140,7 @@ export const fillDevDatabase = async (full?: boolean, size: number = 100) => {
     role: "admin",
   });
 
-  if(!full) return;
+  if (!full) return;
 
   const depsNames = [
     "Кардиологическое отделение",

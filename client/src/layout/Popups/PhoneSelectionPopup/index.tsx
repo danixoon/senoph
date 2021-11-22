@@ -48,6 +48,7 @@ export type PhoneSelectionPopup = OverrideProps<
     onDeselectAll: () => void;
 
     items: PhoneListItem[];
+    selectedIds: number[];
   }
 >;
 
@@ -86,6 +87,7 @@ const PhoneSelectionPopup: React.FC<PhoneSelectionPopup> = (props) => {
     onOffsetChange,
     onDeselect,
     onDeselectAll,
+    selectedIds,
     ...rest
   } = props;
 
@@ -193,7 +195,7 @@ const PhoneSelectionPopup: React.FC<PhoneSelectionPopup> = (props) => {
               Действия с выбранным
             </Header>
             <Hr />
-            <PhoneEditActions flex="1" phoneIds={items.map((item) => item.id)}>
+            <PhoneEditActions flex="1" phoneIds={selectedIds}>
               <Button color="primary" style={{ marginTop: "auto" }}>
                 Удалить всё
               </Button>

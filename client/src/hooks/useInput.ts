@@ -5,13 +5,15 @@ export type InputBind<T = any> = {
   onChange: HookOnChange;
 };
 
+export type SetInput<T = any> = (input: T) => void;
+
 export type InputFileBind<T = any> = {
   input: PartialNullable<T>;
   files: PartialNullable<{ [key: string]: FileList | null }>;
   onChange: HookOnChange;
 };
 
-export type InputHook<T = any> = [InputBind<T>, (input: T) => void];
+export type InputHook<T = any> = [InputBind<T>, SetInput<T>];
 export type InputFileHook<T = any> = [
   InputFileBind<T> & { ref: (e: HTMLInputElement) => void },
   (input: T) => void,

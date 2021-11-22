@@ -9,8 +9,7 @@ import React from "react";
 const HoldingItem: React.FC<{
   holder: string;
   orderDate: Date;
-  onDelete: () => void;
-  deletable?: boolean;
+  onSelect: () => void;
 }> = (props) => {
   return (
     <Layout flow="row" className="holding-item">
@@ -25,11 +24,9 @@ const HoldingItem: React.FC<{
           <Link>{props.orderDate.toLocaleDateString()}</Link>
         </ListItem>
       </Layout>
-      {props.deletable && (
-        <Button onClick={props.onDelete} inverted color="primary">
-          <Icon.ExternalLink />
-        </Button>
-      )}
+      <Button onClick={props.onSelect} inverted color="primary">
+        <Icon.ExternalLink />
+      </Button>
     </Layout>
   );
 };

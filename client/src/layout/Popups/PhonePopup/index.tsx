@@ -39,7 +39,7 @@ export type PhonePopupProps = {
   undoChanges: (targetId: number, keys: string[]) => void;
   onDelete: () => void;
   onDeleteCategory: (id: any) => void;
-  onDeleteHolding: (id: any) => void;
+  onSelectHolding: (id: any) => void;
   changes: any[];
 } & PopupProps;
 
@@ -54,7 +54,7 @@ const Content: React.FC<
     isEditMode: edit,
     changeEditMode,
     onDeleteCategory,
-    onDeleteHolding,
+    onSelectHolding,
     makeChanges,
     undoChanges,
     onDelete,
@@ -110,8 +110,7 @@ const Content: React.FC<
     (phone.holdings?.length ?? 0) > 0 ? (
       phone.holdings?.map((hold) => (
         <HoldingItem
-          onDelete={() => onDeleteHolding(hold.id)}
-          deletable={edit}
+          onSelect={() => onSelectHolding(hold.id)}
           key={hold.id}
           orderDate={new Date(hold.orderDate ?? Date.now())}
           holder={getHolderName(hold.holder)}
@@ -323,12 +322,23 @@ const Content: React.FC<
 };
 
 const PhonePopup: React.FC<PhonePopupProps> = (props) => {
-  const { phone, isEditMode, changeEditMode, ...rest } = props;
+  const {
+    phone,
+    isEditMode,
+    changeEditMode,
+    undoChanges,
+    changes,
+    makeChanges,
+    ...rest
+  } = props;
 
   return (
     <Popup {...rest} size="lg" closeable noPadding>
       <WithLoader isLoading={!phone}>
         <Content
+          changes={changes}
+          undoChanges={undoChanges}
+          makeChanges={makeChanges}
           phone={phone as Api.Models.Phone}
           isEditMode={isEditMode}
           changeEditMode={changeEditMode}

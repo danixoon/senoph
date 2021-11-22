@@ -50,6 +50,7 @@ router.get(
         },
         Holder,
       ],
+      order: [["orderDate", "ASC"]],
       where: filter.where,
     });
 
