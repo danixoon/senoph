@@ -3,7 +3,7 @@ import * as React from "react";
 import { api } from "store/slices/api";
 import { useFetchConfig } from "./useFetchConfig";
 
-const makeMap = <T extends { id: K }, K>(list: T[]) => {
+const makeMap = <K, T extends { id: K }>(list: T[]) => {
   const map = new Map<K, T>();
   for (const item of list) map.set(item.id, item);
 
@@ -50,9 +50,9 @@ export const useFetchConfigMap = () => {
   // if (hasDiffs(hp, holders)) setHoldersMap(makeMap(holders));
 
   return {
-    types: makeMap(types),
-    models: makeMap(models),
-    departments: makeMap(departments),
-    holders: makeMap(holders),
+    types: makeMap<number, Api.Models.PhoneType>(types),
+    models: makeMap<number, Api.Models.PhoneModel>(models),
+    departments: makeMap<number, Api.Models.Department>(departments),
+    holders: makeMap<number, Api.Models.Holder>(holders),
   };
 };

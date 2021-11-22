@@ -70,6 +70,25 @@ const HoldingPageContainer: React.FC<Props> = (props) => {
 
   const holdingCreationStatus = extractStatus(holdingCreationInfo);
 
+  const holdingItems = (holdings?.items ?? []).map((holding) => {
+    const prevHolders: Api.Models.Holder[] = [];
+    for (const id of holding.phoneIds) {
+      // TODO: Проверить даты и прочую чушь
+      const prevItem = [...(holdingMap.get(id) ?? [])].sort((a, b) =>
+        (a.createdAt as string) > (b.createdAt as string) ? -1 : 1
+      )[0];
+      if (!prevItem || prevItem.holderId === holding.holderId) continue;
+
+      if (
+        prevItem?.holder &&
+        !prevHolders.find((h) => h.id === prevItem.holderId)
+      )
+        prevHolders.push(prevItem.holder as Api.Models.Holder);
+    }
+
+    return { ...holding, prevHolders };
+  });
+
   React.useEffect(() => {
     if (holdingCreationStatus.isLoading)
       noticeContext.createNotice("Движение создаётся..");
@@ -88,11 +107,10 @@ const HoldingPageContainer: React.FC<Props> = (props) => {
         createHolding(data);
       }}
       phones={phones?.items ?? []}
-      holdings={holdings?.items ?? []}
+      holdings={holdingItems}
       phonesStatus={phonesStatus}
       holdingCreationStatus={holdingCreationStatus}
       holdingsStatus={holdingsStatus}
-      holdingHistory={holdingMap}
     />
   );
 };

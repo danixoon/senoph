@@ -100,19 +100,16 @@ const PhoneModels: React.FC<PhoneModelsProps> = (props) => {
     {
       key: "name",
       header: "Наименование",
-      // size: "150px",
     },
     {
       key: "phoneTypeId",
       header: "Тип СС",
       mapper: (v, item: DB.PhoneModelAttributes) =>
         getPhoneType(item.phoneTypeId),
-      // size: "150px",
     },
     {
       key: "description",
       header: "Описание",
-      // size: "150px",
     },
     {
       key: "details",
@@ -131,19 +128,9 @@ const PhoneModels: React.FC<PhoneModelsProps> = (props) => {
 
   const tableItems = models.items.map((type) => type);
 
-  // const noticeContext = React.useContext(NoticeContext);
-  // const [isDetailPopup, setDetailPopup] = React.useState(() => false);
-  // const handleDetailPopup = () => {
-  //   setDetailPopup(!isDetailPopup);
-  // };
-  // TODO: Make proper typing for POST request params & form inputs
-
   const [details, setDetails] = React.useState<
     Omit<DB.PhoneModelDetailAttributes, "modelId">[]
   >(() => [] as any);
-
-  // const mapDetailName = (name: string) =>
-  //   detailsMap[name]);
 
   return (
     <>
@@ -151,9 +138,7 @@ const PhoneModels: React.FC<PhoneModelsProps> = (props) => {
         <Form
           input={bind.input}
           onSubmit={(data) => {
-            // onSubmit(data);
             createPhoneModel({ ...data, details });
-            // noticeContext.createNotice("Пользователь создан");
           }}
         >
           <Layout flow="row">
@@ -243,11 +228,13 @@ const PhoneModels: React.FC<PhoneModelsProps> = (props) => {
   );
 };
 
-const CreateDetailButton = (props: {
-  onCreate: (name: string, amount: number) => void;
-  details: Record<string, string>;
-}) => {
-  // const { commit } = props;
+const CreateDetailButton = React.forwardRef<
+  HTMLButtonElement,
+  {
+    onCreate: (name: string, amount: number) => void;
+    details: Record<string, string>;
+  }
+>((props, ref) => {
   const [target, setTarget] = React.useState<HTMLElement | null>(() => null);
 
   const [isOpen, setIsOpen] = React.useState(() => false);
@@ -257,29 +244,28 @@ const CreateDetailButton = (props: {
     label,
   }));
 
-  const amount = Number(bind.input.amount);
+  const amount = Number(bind.input.amount?.replace(",", ".") ?? "0");
   const [show, message, toggleMessage] = useTimeout<string | null>(null, 2000);
   const inputRef = React.useRef<HTMLElement | null>(null);
 
-  React.useEffect(() => {
-    if (show) setTimeout(() => inputRef.current?.focus());
-  }, [show]);
+  // React.useEffect(() => {
+  //   if (show) setTimeout(() => inputRef.current?.focus());
+  // }, [show]);
 
-  // const formContext = React.useContext(FormContext);
-  // formContext.addCheck(bind.input, "amount", (v) => Number.isNaN("amount"))
+  React.useEffect(() => {
+    if (!isOpen) setTimeout(() => target?.focus(), 1000);
+  }, [isOpen]);
 
   return (
     <Button
       ref={(r) => {
         setTarget(r);
+        if (ref) typeof ref === "function" ? ref(r) : (ref.current = r);
       }}
       color="primary"
       inverted
       onClick={() => {
         setIsOpen(true);
-        // setTimeout(() => {
-
-        // });
       }}
     >
       <Icon.PlusCircle />
@@ -289,9 +275,9 @@ const CreateDetailButton = (props: {
         onBlur={(e) => {
           const currentTarget = e.currentTarget;
           setTimeout(() => {
-            if (!currentTarget.contains(document.activeElement))
-              // e.preventDefault();
+            if (!currentTarget.contains(document.activeElement)) {
               setIsOpen(false);
+            }
           });
         }}
       >
@@ -306,7 +292,9 @@ const CreateDetailButton = (props: {
         />
         <Button
           disabled={
-            dropdownItems.length === 0 || bind.input.name === null
+            amount <= 0 ||
+            dropdownItems.length === 0 ||
+            bind.input.name === null
             // Number.isNaN(amount)
           }
           color="primary"
@@ -331,7 +319,7 @@ const CreateDetailButton = (props: {
       </SpoilerPopup>
     </Button>
   );
-};
+});
 
 const ActionBox = (props: { status: ApiStatus; onDelete: () => void }) => {
   // const { commit } = props;

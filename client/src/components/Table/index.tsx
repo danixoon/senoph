@@ -118,6 +118,7 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
 
   // console.log(sortDir);
 
+  // TODO: Unique key error
   return (
     <table {...mergedProps}>
       <thead>
@@ -144,7 +145,7 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
         </tr>
       </thead>
       <tbody>
-        {items.map((item) => (
+        {items.map((item, i) => (
           <tr
             className={mergeClassNames(
               onSelect && "row_selectable",
@@ -152,15 +153,15 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
             )}
             // TODO: Make rows selectable with keyboard
             tabIndex={onSelect ? 0 : undefined}
-            key={item.id}
+            key={`${item.id ?? "id"}-${i}`}
             {...item.props}
           >
-            {columns.map((column) => (
+            {columns.map((column, i) => (
               <TableCell
                 className={mergeClassNames(
                   column.type === "checkbox" && "cell_checkbox"
                 )}
-                key={column.key}
+                key={`${column.key}-${i}`}
                 onClick={() =>
                   column.type != "checkbox" && onSelect && onSelect(item)
                 }
