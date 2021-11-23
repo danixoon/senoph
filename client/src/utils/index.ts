@@ -1,5 +1,7 @@
 // import { getAction } from "../redux/types";
 
+import { extractStatus } from "store/utils";
+
 export const mergeClassNames = (
   ...names: (string | undefined | boolean | null)[]
 ) => {
@@ -81,3 +83,18 @@ export const groupBy = <T, K extends keyof T>(
 export function isResponse<T extends any>(res: T): res is Exclude<T, void> {
   return typeof res !== "undefined";
 }
+
+export const extractItemsHook = <T>(hook: {
+  data?: ItemsResponse<T>;
+  isError?: boolean;
+  isLoading?: boolean;
+  isIdle?: boolean;
+  isSuccess?: boolean;
+  isFetching?: boolean;
+  error?: any;
+}) => {
+  const status = extractStatus(hook);
+  const items = hook.data ?? { items: [], offset: 0, total: 0 };
+
+  return { status, items };
+};

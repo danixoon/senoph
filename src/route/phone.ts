@@ -34,16 +34,17 @@ const router = AppRouter();
 router.delete(
   "/phone",
   access("user"),
-  validate({ query: { id: tester() } }),
-  owner("phone", (q) => q.query.id),
+  validate({ query: { ids: tester().array("int").required() } }),
+  owner("phone", (q) => q.query.ids),
   handler(async (req, res) => {
     const { params } = req;
     if (!withOwner(params, "phone")) return res.sendStatus(500);
 
     const { phone } = params;
+    // TODO: Сделать назначение статуса единоместным
     await Phone.update(
-      { status: "delete-pending" },
-      { where: { id: phone[0].id } }
+      { status: "delete-pending", statusAt: new Date().toISOString() },
+      { where: { id: { [Op.in]: phone.map((phone) => phone.id) } } }
     );
 
     res.send();
@@ -383,8 +384,8 @@ router.post(
         accountingDate: tester().isISO8601().required(),
         commissioningDate: tester().isISO8601().required(),
 
-        factoryKey: tester().required(),
-        inventoryKey: tester().required(),
+        factoryKey: tester(),
+        inventoryKey: tester(),
 
         phoneModelId: tester().isNumber().required(),
       }),

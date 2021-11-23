@@ -20,6 +20,7 @@ import Dropdown from "components/Dropdown";
 import Link from "components/Link";
 import { useHolderName } from "hooks/misc/useHolderName";
 import { usePhoneTypeByModel } from "hooks/misc/phoneType";
+import Spoiler from "components/Spoiler";
 
 export type PhoneCommitPageTab = "create" | "delete" | "edit";
 export type PhoneCommitChange = {
@@ -256,8 +257,7 @@ const PhoneCommitPage: React.FC<PhoneCommitPageProps> = (props) => {
       ([key, commits]) => {
         // return items.map((commit, i) => {
         // return mapCommits(commi)\\
-
-        return mapCommits(commits, (info) => (
+        const mapped = mapCommits(commits, (info) => (
           <CommitItem
             key={info.commit.id}
             // item={{ ...commit, type:  }}
@@ -295,10 +295,12 @@ const PhoneCommitPage: React.FC<PhoneCommitPageProps> = (props) => {
           </CommitItem>
         ));
 
-        // );
-        // });
+        return (
+          <Spoiler label={`${mapped.length} средств связи`}>{mapped}</Spoiler>
+        );
       }
     );
+
     return commits;
   };
 

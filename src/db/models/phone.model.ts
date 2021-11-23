@@ -38,26 +38,6 @@ import PhoneCategory from "./phoneCategory.model";
 import PhoneModel from "./phoneModel.model";
 import User from "./user.model";
 
-// class CommitedModel<T, K> extends Model<T, K> {
-//   @ForeignKey(() => Commit)
-//   @AllowNull(true)
-//   @Column(DataType.INTEGER)
-//   commitId: number | null;
-
-//   @BelongsTo(() => Commit)
-//   commit: Commit | null;
-
-//   onInit = () => {
-//     // bindHooks()
-//   };
-// }
-
-// CommitedModel.addHook("beforeBulkCreate", )
-
-// @DefaultScope(() => ({
-//   ,
-// }))
-
 @Table({
   scopes: {
     commit: {
@@ -71,16 +51,6 @@ import User from "./user.model";
           model: PhoneModel,
           as: "model",
         },
-        // {
-        //   model: Holder,
-        //   as: "holder",
-        // },
-        // {
-        //   model: PhoneModel,
-        // },
-        // {
-        //   model: PhoneModel,
-        // },
       ],
     },
   },
@@ -95,14 +65,14 @@ export default class Phone extends Model<
   DB.CreateAttributes<DB.PhoneAttributes>
 > {
   @Unique
-  @AllowNull(false)
+  @AllowNull(true)
   @Column(DataType.STRING)
-  inventoryKey: string;
+  inventoryKey?: string;
 
   @Unique
-  @AllowNull(false)
+  @AllowNull(true)
   @Column(DataType.STRING)
-  factoryKey: string;
+  factoryKey?: string;
 
   @AllowNull(false)
   @Column(DataType.DATE)
@@ -120,11 +90,6 @@ export default class Phone extends Model<
   @AllowNull(false)
   @Column(DataType.INTEGER)
   phoneModelId: number;
-
-  // @ForeignKey(() => Holder)
-  // @AllowNull(false)
-  // @Column(DataType.INTEGER)
-  // holderId: number;
 
   @AllowNull(true)
   @Validate({ isIn: [["create-pending", "delete-pending"]] })

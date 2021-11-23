@@ -10,6 +10,9 @@ import { InputBind, useInput } from "hooks/useInput";
 import { clearObject } from "utils";
 import { useAppDispatch, useAppSelector } from "store";
 import { updateSelection } from "store/slices/phone";
+import { extractStatus } from "store/utils";
+import { NoticeContext } from "providers/NoticeProvider";
+import { useNotice } from "hooks/useNotice";
 
 export type PhoneSelectionPopupContainerProps = {
   onToggle: () => void;
@@ -63,8 +66,40 @@ const PhoneSelectionPopupContainer: React.FC<PhoneSelectionPopupContainerProps> 
 
     const selectedItems = items.slice(offset, offset + PAGE_ITEMS);
 
+    const [deletePhones, deletePhonesInfo] = api.useDeletePhoneMutation();
+    const deletePhonesStatus = extractStatus(deletePhonesInfo);
+
+    useNotice(deletePhonesStatus, {
+      success:
+        "Средства связи успешно помечены удалёнными и ожидают подтверждения.",
+      onSuccess: () => {
+        if (onToggle) onToggle();
+        if (deletePhonesInfo.originalArgs?.ids)
+          dispatch(updateSelection({ ids: [] }));
+      },
+    });
+
+    // React.useEffect(() => {
+    //   if (deletePhonesStatus.isSuccess) {
+    //     if (onToggle) onToggle();
+    //     noticeContext.createNotice(
+    //       "Средства связи помечены удалёнными и ожидают подтверждения"
+    //     );
+    //   }
+    //   if (deletePhonesStatus.isError) {
+    //     noticeContext.createNotice(
+    //       `Ошибка при удалении: (${deletePhonesStatus.error?.name})` +
+    //         deletePhonesStatus.error?.description
+    //     );
+    //   }
+    //   if (deletePhonesStatus.isLoading)
+    //     noticeContext.createNotice("Средства связи удаляются..");
+    // }, [deletePhonesStatus.status]);
+
     return (
       <PhoneSelectionPopup
+        deletePhones={(ids) => deletePhones({ ids })}
+        deletePhonesStatus={deletePhonesStatus}
         offset={offset}
         onOffsetChange={setOffset}
         onDeselect={(id) => {

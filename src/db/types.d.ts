@@ -112,8 +112,8 @@ declare namespace DB {
   }>;
 
   type PhoneAttributes = Attributes<{
-    inventoryKey: string;
-    factoryKey: string;
+    inventoryKey?: string;
+    factoryKey?: string;
 
     accountingDate: string;
     assemblyDate: string;
@@ -159,6 +159,7 @@ declare namespace DB {
     | "phone"
     | "category"
     | "holding"
+    | "holdingPhone"
     | "phoneType"
     | "department"
     | "holder"

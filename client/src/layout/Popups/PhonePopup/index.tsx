@@ -13,7 +13,7 @@ import Popup, { PopupProps, PopupTopBar } from "components/Popup";
 import Span from "components/Span";
 import Switch from "components/Switch";
 import WithLoader from "components/WithLoader";
-import { useChanges } from "hooks/api/useChanges";
+import { ChangeStatus, useChanges } from "hooks/api/useChanges";
 import { useFetchConfig } from "hooks/api/useFetchConfig";
 import { useMakeChanges } from "hooks/api/useMakeChanges";
 import { useUndoChanges } from "hooks/api/useUndoChanges";
@@ -44,7 +44,8 @@ export type PhonePopupProps = {
   onSelectHolding: (id: any) => void;
   changes: any[];
   popupProps?: PopupProps;
-  phoneStatus: ApiStatus;
+  fetchPhoneStatus: ApiStatus;
+  deletePhoneStatus: ApiStatus;
 };
 
 const Content: React.FC<
@@ -58,7 +59,7 @@ const Content: React.FC<
     isEditMode: edit,
     changeEditMode,
     onDeleteCategory,
-    phoneStatus,
+    deletePhoneStatus,
     onSelectHolding,
     makeChanges,
     undoChanges,
@@ -68,17 +69,9 @@ const Content: React.FC<
 
   const [bind] = useInput({ tab: "category" });
 
-  // const holder = useFetchHolder({ id:  })
-  // const holder =
-
-  // const holding = u
-
-  // const { holder } = useLastHolder(
-  //   (phone.holdings as Api.Models.Holding[]) ?? []
-  // );
   const typeName = types.find((t) => phone.model?.phoneTypeId === t.id)?.name;
   const modelName = phone.model?.name;
-  // const departmentName = departments.find(
+
   const departmentName = departments.find(
     (d) => phone.holder?.departmentId == d.id
   )?.name;
@@ -86,13 +79,7 @@ const Content: React.FC<
   const holder = phone?.holder;
   const holderName = `${holder?.lastName} ${holder?.firstName} ${holder?.middleName}`;
 
-  const {
-    // factoryKey,
-    // inventoryKey,
-    accountingDate,
-    commissioningDate,
-    assemblyDate,
-  } = phone;
+  const { accountingDate, commissioningDate, assemblyDate } = phone;
 
   const renderCategories = () =>
     (phone.categories?.length ?? 0) > 0 ? (
@@ -197,7 +184,6 @@ const Content: React.FC<
                 {edit ? "Изменение" : "Просмотр"}
               </Badge>
             </ButtonGroup>
-            {/* <Edit3 color="#C5C5C5" /> */}
             <span style={{ margin: "auto" }}>
               Средство связи №{phone.id} ({phone.model?.name})
             </span>
@@ -250,8 +236,9 @@ const Content: React.FC<
               onOpen={handleFieldEdit("Новый год сборки", "number")}
               propertyKey="assemblyDate"
               editable={edit}
+              mapper={(v) => new Date(v).getFullYear()}
             >
-              {new Date(assemblyDate).toLocaleDateString()}
+              {assemblyDate}
             </EditableListItem>
             <Hr />
             <EditableListItem
@@ -259,8 +246,9 @@ const Content: React.FC<
               onOpen={handleFieldEdit("Новая дата принятия к учёту", "date")}
               propertyKey="accountingDate"
               editable={edit}
+              mapper={(v) => new Date(v).toLocaleDateString()}
             >
-              {new Date(accountingDate).toLocaleDateString()}
+              {accountingDate}
             </EditableListItem>
             <EditableListItem
               label="Дата ввода в эксплуатацию"
@@ -270,8 +258,9 @@ const Content: React.FC<
               )}
               propertyKey="commissioningDate"
               editable={edit}
+              mapper={(v) => new Date(v).toLocaleDateString()}
             >
-              {new Date(commissioningDate).toLocaleDateString()}
+              {commissioningDate}
             </EditableListItem>
             <Hr />
             {holder ? (
@@ -301,8 +290,9 @@ const Content: React.FC<
                   color="primary"
                   style={{ marginTop: "auto" }}
                   onClick={onDelete}
+                  disabled={deletePhoneStatus.isLoading}
                 >
-                  Удалить
+                  {deletePhoneStatus.isLoading ? <LoaderIcon /> : "Удалить"}
                 </Button>
               </PhoneEditActions>
             </>
@@ -322,7 +312,12 @@ const Content: React.FC<
 };
 
 const PhonePopup: React.FC<PhonePopupProps> = (props) => {
-  const { phone, popupProps = {}, phoneStatus, ...rest } = props;
+  const {
+    phone,
+    popupProps = {},
+    fetchPhoneStatus: phoneStatus,
+    ...rest
+  } = props;
 
   return (
     <Popup {...popupProps} size="lg" closeable noPadding>
@@ -330,7 +325,7 @@ const PhonePopup: React.FC<PhonePopupProps> = (props) => {
         <Content
           phone={phone as Api.Models.Phone}
           {...rest}
-          phoneStatus={phoneStatus}
+          fetchPhoneStatus={phoneStatus}
         />
       </WithLoader>
     </Popup>

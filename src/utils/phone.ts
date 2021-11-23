@@ -6,8 +6,8 @@ import { ApiError, errorType } from "./errors";
 
 type PhoneCreation = {
   phoneModelId: number;
-  inventoryKey: string;
-  factoryKey: string;
+  inventoryKey?: string;
+  factoryKey?: string;
   assemblyDate: string;
   accountingDate: string;
   commissioningDate: string;
@@ -16,6 +16,7 @@ type PhoneCreation = {
 const create = async (authorId: number, creationPhones: PhoneCreation[]) => {
   const phones: DB.PhoneAttributes[] = creationPhones.map((phone) => ({
     ...phone,
+    statusAt: new Date().toISOString(),
     authorId,
   }));
 

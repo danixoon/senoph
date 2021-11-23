@@ -4,7 +4,7 @@ import ButtonGroup from "components/ButtonGroup";
 import Dropdown from "components/Dropdown";
 import Header from "components/Header";
 import Hr from "components/Hr";
-import Icon from "components/Icon";
+import Icon, { LoaderIcon } from "components/Icon";
 import Input from "components/Input";
 import Label, { LabelProps } from "components/Label";
 import Layout from "components/Layout";
@@ -49,6 +49,9 @@ export type PhoneSelectionPopup = OverrideProps<
 
     items: PhoneListItem[];
     selectedIds: number[];
+
+    deletePhonesStatus: ApiStatus;
+    deletePhones: (ids: number[]) => void;
   }
 >;
 
@@ -87,6 +90,8 @@ const PhoneSelectionPopup: React.FC<PhoneSelectionPopup> = (props) => {
     onOffsetChange,
     onDeselect,
     onDeselectAll,
+    deletePhones,
+    deletePhonesStatus,
     selectedIds,
     ...rest
   } = props;
@@ -196,8 +201,13 @@ const PhoneSelectionPopup: React.FC<PhoneSelectionPopup> = (props) => {
             </Header>
             <Hr />
             <PhoneEditActions flex="1" phoneIds={selectedIds}>
-              <Button color="primary" style={{ marginTop: "auto" }}>
-                Удалить всё
+              <Button
+                onClick={() => deletePhones(selectedIds)}
+                color="primary"
+                style={{ marginTop: "auto" }}
+                disabled={deletePhonesStatus.isLoading}
+              >
+                {deletePhonesStatus.isLoading ? <LoaderIcon /> : "Удалить всё"}
               </Button>
             </PhoneEditActions>
           </Layout>

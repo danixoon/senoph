@@ -76,6 +76,7 @@ export const getErrorMessage = (
   return err?.description ?? err?.message ?? "Ошибка";
 };
 
+// export const getIdleStatus: ApiStatus = splitStatus("idle");
 export const extractStatus = (
   {
     isError,

@@ -30,8 +30,8 @@ export type PhoneCreatePopupProps = OverrideProps<
 >;
 
 const AddedItem: React.FC<{
-  inventoryKey: string;
-  factoryKey: string;
+  inventoryKey: string | null;
+  factoryKey: string | null;
   accountingDate: Date;
   comissioningDate: Date;
   assemblyYear: number;
@@ -84,8 +84,8 @@ const AddedItem: React.FC<{
 };
 
 type InputType = {
-  inventoryKey: string;
-  factoryKey: string;
+  inventoryKey: string | null;
+  factoryKey: string | null;
 
   accountingDate: string;
   assemblyDate: string;
@@ -125,18 +125,24 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
       payload: {
         ...rest,
         phoneModelId: Number(rest.phoneModelId),
-        assemblyDate: new Date(1, 1, year).toISOString(),
+        assemblyDate: new Date(year, 1, 1).toISOString(),
       },
     };
 
     const isFuckedUp = addedPhones.some(({ payload }) => {
-      if (payload.factoryKey === phone.payload.factoryKey) {
+      if (
+        payload.factoryKey !== undefined &&
+        payload.factoryKey === phone.payload.factoryKey
+      ) {
         noticeContext.createNotice(
           "Ошибка: Невозможно добавить средство связи с одинаковыми заводскими номерами."
         );
         return true;
       }
-      if (payload.inventoryKey === phone.payload.inventoryKey) {
+      if (
+        payload.inventoryKey !== undefined &&
+        payload.inventoryKey === phone.payload.inventoryKey
+      ) {
         noticeContext.createNotice(
           "Ошибка: Невозможно добавить средство связи с одинаковыми инвентарными номерами."
         );
@@ -252,14 +258,8 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
                   {...bind}
                   name="inventoryKey"
                   label="Инвентарный номер"
-                  required
                 />
-                <Input
-                  {...bind}
-                  name="factoryKey"
-                  label="Заводской номер"
-                  required
-                />
+                <Input {...bind} name="factoryKey" label="Заводской номер" />
                 <ClickInput
                   {...bind}
                   name="phoneModelName"
@@ -309,10 +309,10 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
               {addedPhones.map((phone) => (
                 <AddedItem
                   key={phone.item.id}
-                  inventoryKey={phone.payload.inventoryKey}
+                  inventoryKey={phone.payload.inventoryKey ?? null}
                   accountingDate={new Date(phone.payload.accountingDate)}
                   comissioningDate={new Date(phone.payload.commissioningDate)}
-                  factoryKey={phone.payload.factoryKey}
+                  factoryKey={phone.payload.factoryKey ?? null}
                   onRemove={() =>
                     setAddedPhones(
                       addedPhones.filter((p) => p.item.id !== phone.item.id)
