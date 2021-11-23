@@ -159,6 +159,7 @@ declare namespace DB {
     | "phone"
     | "category"
     | "holding"
+    | "holdingPhone"
     | "phoneType"
     | "department"
     | "holder"

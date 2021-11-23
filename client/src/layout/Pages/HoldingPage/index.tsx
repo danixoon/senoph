@@ -31,8 +31,14 @@ import { useFetchConfigMap } from "hooks/api/useFetchConfigMap";
 import ActionBox from "components/ActionBox";
 import { useAppDispatch } from "store";
 import { push } from "connected-react-router";
+import CommitContent from "./Commit";
+import ViewContent from "./View";
+import CreateContent from "./Create";
+import CommitPhoneContent from "./CommitPhone";
 
-type HoldingItem = Api.Models.Holding & { prevHolders: Api.Models.Holder[] };
+export type HoldingItem = Api.Models.Holding & {
+  prevHolders: Api.Models.Holder[];
+};
 
 export type HoldingPageProps = {
   phones: Api.Models.Phone[];
@@ -44,298 +50,8 @@ export type HoldingPageProps = {
   onSubmitHolding: (data: any) => void;
 };
 
-const reasonMap = [
-  { id: "initial", label: "Назначение" },
-  { id: "order", label: "По приказу" },
-  { id: "dismissal", label: "Увольнение" },
-  { id: "movement", label: "Переезд" },
-  { id: "write-off", label: "Списание" },
-  { id: "other", label: "Другое" },
-];
-const getReason = (id: string) =>
-  reasonMap.find((r) => r.id === id)?.label ?? `#${id}`;
-
-const CreateContent: React.FC<HoldingPageProps> = (props) => {
-  const { phones, holdingCreationStatus, onSubmitHolding: onSubmit } = props;
-  const columns: TableColumn[] = [
-    {
-      key: "id",
-      header: "ID",
-      size: "30px",
-      mapper: (v, item) => (
-        <Link href={`/phone/view?selectedId=${item.id}`}>
-          <Span font="monospace">{`#${v}`}</Span>
-        </Link>
-      ),
-    },
-    { key: "modelName", header: "Модель", size: "150px" },
-    { key: "inventoryKey", header: "Инвентарный номер", size: "300px" },
-    { key: "holderName", header: "Владелец" },
-    { key: "departmentName", header: "Отделение" },
-  ];
-  const getHolderName = useHolderName();
-  const getDepartmentName = useDepartmentName();
-
-  const [bind, setInput] = useInput({
-    departmentId: null,
-    reasonId: null,
-    holderId: null,
-    holderName: null,
-  });
-
-  const [bindFile] = useFileInput();
-
-  const tableItems = phones.map((phone) => ({
-    ...phone,
-    modelName: phone.model?.name,
-    holderName: getHolderName(phone.holder),
-    departmentName: getDepartmentName(phone.holder?.departmentId),
-  }));
-
-  const bindHoldingPopup = useTogglePopup();
-
-  const { data: selectedHolder } = api.useFetchHoldersQuery(
-    { id: bind.input.holderId as any },
-    { skip: bind.input.holderId === null }
-  );
-
-  // TODO: Make proper typing for POST request params & form inputs
-  return (
-    <>
-      <Layout>
-        <Form
-          json={false}
-          input={{
-            ...bind.input,
-            ...bindFile.files,
-            phoneIds: phones.map((phone) => phone.id),
-          }}
-          mapper={({ departmentId, ...input }) => input}
-          onSubmit={(data) => {
-            onSubmit(data);
-          }}
-        >
-          <Layout flow="row">
-            <ClickInput
-              required
-              {...bind}
-              name="holderName"
-              label="Новый владелец"
-              onActive={() => bindHoldingPopup.onToggle()}
-              style={{ flex: "2" }}
-            />
-            <Input
-              required
-              label="Дата приказа"
-              {...bind}
-              type="date"
-              name="orderDate"
-              style={{ flex: "1" }}
-            />
-            <Input
-              required
-              label="Файл приказа"
-              {...bindFile}
-              name="orderFile"
-              style={{ flex: "1" }}
-              type="file"
-              inputProps={{ accept: ".pdf" }}
-            />
-          </Layout>
-          <Layout flow="row">
-            <Dropdown
-              required
-              style={{ flex: "1" }}
-              label="Причина"
-              {...bind}
-              name="reasonId"
-              items={reasonMap}
-            />
-            <Input
-              style={{ flex: "2rem" }}
-              required={bind.input.reasonId === "other"}
-              label="Описание"
-              {...bind}
-              name="description"
-            />
-
-            <Button
-              style={{
-                marginTop: "auto",
-                marginLeft: "auto",
-                padding: "0 4rem",
-              }}
-              disabled={holdingCreationStatus.isLoading}
-              margin="md"
-              type="submit"
-              color="primary"
-            >
-              {holdingCreationStatus.isLoading ? <LoaderIcon /> : "Создать"}
-            </Button>
-          </Layout>
-        </Form>
-        <Hr />
-        <Header align="right">
-          Затрагиваемые средства связи ({phones.length})
-        </Header>
-        <Table items={tableItems} columns={columns} />
-      </Layout>
-      <PopupLayer>
-        <HolderSelectionPopupContainer
-          {...bindHoldingPopup}
-          onSelect={(id, name) =>
-            setInput({ ...bind.input, holderName: name, holderId: id })
-          }
-        />
-      </PopupLayer>
-    </>
-  );
-};
-
-type HoldingTableItem = Api.Models.Holding & {
+export type HoldingTableItem = Api.Models.Holding & {
   prevHolders: Api.Models.Holder[];
-};
-const getTableColumns: (args: {
-  status: ApiStatus;
-  holders: Map<number, Api.Models.Holder>;
-  controlMapper: (v: any, item: HoldingTableItem) => React.ReactNode;
-}) => TableColumn[] = ({ status, holders, controlMapper }) => [
-  {
-    key: "control",
-    size: "30px",
-    header: "",
-    mapper: controlMapper,
-  },
-
-  { key: "orderDate", header: "Приказ от", size: "100px", type: "date" },
-  {
-    key: "holderId",
-    header: "Владелец",
-    mapper: (v, item: HoldingTableItem) => {
-      const holder = holders.get(item.holderId);
-      return (
-        <Layout>
-          {item.prevHolders.map((holder) => (
-            <Span strike key={holder.id}>
-              {splitHolderName(holder)}
-            </Span>
-          ))}
-          <Span>{holder ? splitHolderName(holder) : <LoaderIcon />}</Span>
-        </Layout>
-      );
-    },
-  },
-  {
-    key: "phoneIds",
-    header: "Средства связи",
-    props: { style: { whiteSpace: "normal" } },
-    mapper: (v, item: HoldingTableItem) => {
-      return item.phoneIds.map((id, i) => (
-        <>
-          <Link
-            style={{ display: "inline" }}
-            href={`/phone/view?selectedId=${id}`}
-          >{`#${id}`}</Link>
-          {i !== item.phoneIds.length - 1 ? ", " : ""}
-        </>
-      ));
-    },
-  },
-  {
-    key: "reasonId",
-    header: "Причина",
-    size: "150px",
-    mapper: (v, item) => <Badge>{getReason(item.reasonId)}</Badge>,
-  },
-  {
-    key: "status",
-    header: "Статус",
-    size: "150px",
-    mapper: (v, item) => {
-      let status = "Произвидено";
-      if (item.status === "create-pending") status = "Ожидает создания";
-      else if (item.status === "delete-pending") status = "Ожидает удаления";
-      return <Badge>{status}</Badge>;
-    },
-  },
-];
-
-const CommitContent: React.FC<HoldingPageProps> = (props) => {
-  const { holdings } = props;
-  const [commitHolding, status] = api.useCommitHoldingMutation();
-  const { holders } = useFetchConfigMap();
-
-  const handleCommit = (action: CommitActionType, id: number) =>
-    !status.isLoading && commitHolding({ action, ids: [id] });
-
-  const columns = getTableColumns({
-    holders,
-    status: extractStatus(status),
-    controlMapper: (v, item) => (
-      <ActionBox icon={Icon.Box} status={extractStatus(status)}>
-        <SpoilerPopupButton onClick={() => handleCommit("approve", item.id)}>
-          Подтвердить
-        </SpoilerPopupButton>
-        <SpoilerPopupButton onClick={() => handleCommit("decline", item.id)}>
-          Отменить
-        </SpoilerPopupButton>
-      </ActionBox>
-    ),
-  });
-
-  return (
-    <>
-      {holdings.length === 0 ? (
-        <InfoBanner
-          href="/phone/edit"
-          hrefContent="средство связи"
-          text="Движения для потдверждения отсутствуют. Создайте их, выбрав"
-        />
-      ) : (
-        <Table columns={columns} items={holdings} />
-      )}
-    </>
-  );
-};
-
-const ViewContent: React.FC<HoldingPageProps> = (props) => {
-  const { holdings } = props;
-  const [deleteHolding, deleteHoldingStatus] = api.useDeleteHoldingMutation();
-  const { holders } = useFetchConfigMap();
-
-  const dispatch = useAppDispatch();
-
-  const columns = getTableColumns({
-    status: extractStatus(deleteHoldingStatus),
-    holders,
-    controlMapper: (v, item) => (
-      <ActionBox icon={Icon.Box} status={extractStatus(deleteHoldingStatus)}>
-        {item.status !== null ? (
-          <SpoilerPopupButton onClick={() => dispatch(push("/holding/commit"))}>
-            Просмотреть
-          </SpoilerPopupButton>
-        ) : (
-          <SpoilerPopupButton onClick={() => deleteHolding({ id: item.id })}>
-            Удалить
-          </SpoilerPopupButton>
-        )}
-      </ActionBox>
-    ),
-  });
-
-  return (
-    <>
-      {holdings.length === 0 ? (
-        <InfoBanner
-          href="/phone/edit"
-          hrefContent="средство связи"
-          text="Движения отсутствуют. Создайте их, выбрав"
-        />
-      ) : (
-        <Table columns={columns} items={holdings} />
-      )}
-    </>
-  );
 };
 
 const HoldingPage: React.FC<HoldingPageProps> = (props) => {
@@ -365,6 +81,9 @@ const HoldingPage: React.FC<HoldingPageProps> = (props) => {
         </Route>
         <Route path={`${path}/view`}>
           <ViewContent {...props} />
+        </Route>
+        <Route path={`${path}/phone/commit`}>
+          <CommitPhoneContent {...props} />
         </Route>
       </Switch>
     </Layout>

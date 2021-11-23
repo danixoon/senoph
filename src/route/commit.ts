@@ -19,6 +19,7 @@ import { ApiError, errorType } from "@backend/utils/errors";
 import Holding from "@backend/db/models/holding.model";
 import PhoneCategory from "@backend/db/models/phoneCategory.model";
 import Log from "@backend/db/models/log.model";
+import HoldingPhone from "@backend/db/models/holdingPhone.model";
 
 const router = AppRouter();
 
@@ -139,6 +140,59 @@ router.put(
     );
 
     Log.log("holding", ids, "commit", user.id, { action });
+
+    res.send();
+  })
+);
+
+router.put(
+  "/commit/holding/phone",
+  access("user"),
+  validate({
+    body: {
+      action: tester().isIn(["approve", "decline"]).required(),
+      phoneIds: tester().array("int"),
+      holdingId: tester().isNumber(),
+    },
+  }),
+  /* owner("") ,*/ handler(async (req, res) => {
+    const { user } = req.params;
+    const { action, phoneIds, holdingId } = req.body;
+    const holdingPhones = await HoldingPhone.findAll({
+      where: { phoneId: { [Op.in]: phoneIds }, holdingId },
+    });
+
+    if (holdingPhones.length !== phoneIds.length)
+      throw new ApiError(errorType.INVALID_QUERY, {
+        description:
+          "Один или несколько ID средств связи не ожидают изменения.",
+      });
+
+    await Promise.all(
+      holdingPhones.map(async (holdingPhone) => {
+        if (action === "approve") {
+          if (holdingPhone.status === "create-pending") {
+            await holdingPhone.update({
+              status: null,
+              statusAt: new Date().toISOString(),
+            });
+          } else if (holdingPhone.status === "delete-pending") {
+            await holdingPhone.destroy();
+          }
+        } else {
+          if (holdingPhone.status === "create-pending") {
+            await holdingPhone.destroy();
+          } else if (holdingPhone.status === "delete-pending") {
+            await holdingPhone.update({
+              status: null,
+              statusAt: new Date().toISOString(),
+            });
+          }
+        }
+      })
+    );
+
+    Log.log("holdingPhone", phoneIds, "commit", user.id, { action, holdingId });
 
     res.send();
   })

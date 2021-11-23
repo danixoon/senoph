@@ -74,6 +74,45 @@ router.get(
   })
 );
 
+export const groupBy = <T, K>(list: T[], getKey: (value: T) => K) => {
+  const map = new Map<K, T[]>();
+  for (const item of list) {
+    const key = getKey(item);
+    map.set(key, [...(map.get(key) ?? []), item]);
+  }
+
+  return map;
+};
+
+router.get(
+  "/holdings/commit",
+  access("user"),
+  validate({
+    query: {
+      status: tester(),
+    },
+  }),
+  handler(async (req, res) => {
+    const holdingPhones = await HoldingPhone.findAll({
+      where: { status: { [Op.not]: null } },
+    });
+
+    const groupedItems = groupBy(holdingPhones, (item) => item.holdingId);
+    const items: {
+      holderId: number;
+      commits: ({ phoneId: number } & WithCommit)[];
+    }[] = [];
+
+    for (const [key, value] of groupedItems)
+      items.push({
+        holderId: key,
+        commits: value.map(({ holdingId, ...rest }) => rest),
+      });
+
+    return prepareItems(items, items.length, 0);
+  })
+);
+
 router.delete(
   "/holding",
   access("user"),
@@ -140,6 +179,44 @@ router.post(
     Log.log("holding", [holding.id], "create", user.id);
 
     res.send({ holdingId: holding.id });
+  })
+);
+
+router.put(
+  "/holding",
+  access("admin"),
+  validate({
+    query: {
+      action: tester().isIn(["add", "remove"]).required(),
+      phoneIds: tester().array("int").required(),
+      holdingId: tester().isNumber().required(),
+    },
+  }),
+  handler(async (req, res) => {
+    const { action, phoneIds, holdingId } = req.query;
+    const holdings = await HoldingPhone.findAll({
+      where: {
+        phoneId: { [Op.in]: phoneIds },
+        holdingId,
+        status: null,
+      },
+    });
+
+    if (holdings.length !== phoneIds.length)
+      throw new ApiError(errorType.INVALID_QUERY, {
+        description: "Один или более ID средств связи указан неверно.",
+      });
+
+    const holdingPhonesIds = holdings.map((h) => h.id);
+    const [row, updated] = await HoldingPhone.update(
+      {
+        status: action === "add" ? "create-pending" : "delete-pending",
+        statusAt: new Date().toISOString(),
+      },
+      { where: { id: { [Op.in]: holdingPhonesIds } } }
+    );
+
+    res.send();
   })
 );
 

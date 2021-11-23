@@ -11,16 +11,18 @@ export type InfoBannerProps = OverrideProps<
   React.AnchorHTMLAttributes<HTMLAnchorElement>,
   {
     text: string;
-    href: string;
-    hrefContent: string;
+    href?: string;
+    hrefContent?: string;
   }
 >;
 const InfoBanner: React.FC<InfoBannerProps> = (props) => (
   <Label style={{ margin: "auto" }}>
     <Span>{props.text}</Span>
-    <Link href={`${props.href}`} style={{ marginLeft: "0.2rem" }}>
-      {props.hrefContent}
-    </Link>
+    {props.href && (
+      <Link href={`${props.href}`} style={{ marginLeft: "0.2rem" }}>
+        {props.hrefContent ?? "¯\\_(ツ)_/¯"}
+      </Link>
+    )}
   </Label>
 );
 

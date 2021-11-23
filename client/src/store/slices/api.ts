@@ -22,6 +22,7 @@ export const api = createApi({
     "holder",
     "phone",
     "holding",
+    "holdingPhone",
     "holder",
     "category",
     "user",
@@ -235,6 +236,17 @@ export const api = createApi({
       }),
       providesTags: ["holding"],
     }),
+    fetchHoldingPhoneCommits: builder.query<
+      Api.GetResponse<"get", "/holdings/commit">,
+      Api.GetQuery<"get", "/holdings/commit">
+    >({
+      query: (params) => ({
+        url: "holdings/commit",
+        params,
+        method: "GET",
+      }),
+      providesTags: ["holding", "holdingPhone"],
+    }),
     commitHolding: builder.mutation<
       Api.GetResponse<"put", "/commit/holding">,
       Api.GetBody<"put", "/commit/holding">
@@ -245,6 +257,17 @@ export const api = createApi({
         method: "PUT",
       }),
       invalidatesTags: (r, e, a) => ["holding", "phone", "log"],
+    }),
+    commitHoldingPhone: builder.mutation<
+      Api.GetResponse<"put", "/commit/holding/phone">,
+      Api.GetBody<"put", "/commit/holding/phone">
+    >({
+      query: (params) => ({
+        url: "commit/holding/phone",
+        body: params,
+        method: "PUT",
+      }),
+      invalidatesTags: (r, e, a) => ["holding", "phone", "log", "holdingPhone"],
     }),
     fetchCategories: builder.query<
       Api.GetResponse<"get", "/categories">,

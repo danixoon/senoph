@@ -4,6 +4,9 @@ declare type ItemsResponse<T> = {
   offset: number;
 };
 
+declare type GetItemType<T extends ItemsResponse<any>> =
+  T extends ItemsResponse<infer I> ? I : never;
+
 declare type UnionToIntersection<U> = (
   U extends any ? (k: U) => void : never
 ) extends (k: infer I) => void
@@ -243,6 +246,18 @@ declare namespace Api {
           {}
         >)
       | (() => RouteHandler<
+          "/holdings/commit",
+          ItemsResponse<{
+            holdingId: number;
+            commits: ({ phoneId: number } & WithCommit)[];
+          }>,
+          {
+            // ids?: number[];
+            status?: CommitStatus;
+          },
+          {}
+        >)
+      | (() => RouteHandler<
           "/categories",
           ItemsResponse<Api.Models.PhoneCategory>,
           {
@@ -391,6 +406,16 @@ declare namespace Api {
           {}
         >)
       | (() => RouteHandler<
+          "/holding",
+          {},
+          {
+            action: "remove" | "add";
+            phoneIds: number[];
+            holdingId: number;
+          },
+          {}
+        >)
+      | (() => RouteHandler<
           "/phone",
           {},
           { id: number },
@@ -413,6 +438,12 @@ declare namespace Api {
           {},
           {},
           { ids: number[]; action: CommitActionType }
+        >)
+      | (() => RouteHandler<
+          "/commit/holding/phone",
+          {},
+          {},
+          { phoneIds: number[]; holdingId: number; action: CommitActionType }
         >);
     // | (() => RouteHandler<
     // "/commit/holding",
