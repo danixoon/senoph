@@ -19,7 +19,7 @@ import { AppRouter } from "../router";
 import { ApiError, errorMap, errorType } from "../utils/errors";
 import { access, owner, withOwner } from "@backend/middleware/auth";
 import { tester, validate } from "@backend/middleware/validator";
-import { Filter } from "@backend/utils/db";
+import { Filter, WhereField, WhereFilter } from "@backend/utils/db";
 import Holding from "@backend/db/models/holding.model";
 import HoldingPhone from "@backend/db/models/holdingPhone.model";
 import PhoneType from "@backend/db/models/phoneType.model";
@@ -27,6 +27,7 @@ import PhoneModelDetail from "@backend/db/models/phoneModelDetail.model";
 import Log from "@backend/db/models/log.model";
 import phone from "@backend/utils/phone";
 import { sequelize } from "../db";
+import { Sequelize } from "sequelize";
 
 const router = AppRouter();
 
@@ -172,6 +173,9 @@ router.get(
       offset: tester().isNumber(),
       phoneModelId: tester().isNumber(),
       phoneTypeId: tester().isNumber(),
+      accountingDate: tester().isDate(),
+      comissioningDate: tester().isDate(),
+      assemblyDate: tester().isDate(),
       search: tester(),
       sortDir: tester().isIn(["asc", "desc"]),
       sortKey: tester(),
@@ -191,6 +195,9 @@ router.get(
       phoneTypeId,
       factoryKey,
       inventoryKey,
+      accountingDate,
+      comissioningDate,
+      assemblyDate,
       ids,
       exceptIds,
     } = req.query;
@@ -205,21 +212,51 @@ router.get(
             modelName: [PhoneModel, "model", "name"],
             category: [PhoneCategory, "category", "category"],
             id: "id",
+            inventoryKey: "inventoryKey",
+            factoryKey: "factoryKey",
+            assemblyDate: "assemblyDate",
+            comissioningDate: "comissioningDate",
+            accountingDate: "accountingDate",
           }),
         ]
       : [["id", "DESC"] as OrderItem];
 
+    const filter = new WhereFilter<DB.PhoneAttributes>();
+    filter.on("id").optional(Op.in, ids).optional(Op.notIn, exceptIds);
+    filter.on("factoryKey").optional(Op.substring, factoryKey);
+    filter.on("inventoryKey").optional(Op.substring, inventoryKey);
+    filter.on("accountingDate").optional(Op.eq, accountingDate);
+    // filter
+    // .on("assemblyDate")
+    // .optional(
+
+    if (assemblyDate?.getFullYear())
+      filter.fn(
+        Sequelize.where(
+          Sequelize.fn("YEAR", Sequelize.col("assemblyDate")),
+          assemblyDate.getFullYear().toString()
+        )
+      );
+
+    // );
+    filter.on("commissioningDate").optional(Op.eq, comissioningDate);
+
+    const modelFilter = new WhereFilter<DB.PhoneModelAttributes>();
+    modelFilter.on("id").optional(Op.eq, phoneModelId);
+    modelFilter.on("phoneTypeId").optional(Op.eq, phoneTypeId);
+
     const items = await Phone.findAll({
       order,
-      where: { id: { [Op.in]: ids } },
-      include: [Holding, PhoneCategory, PhoneModel],
+      where: filter.where,
+      include: [PhoneCategory, { model: PhoneModel, where: modelFilter.where }],
     });
 
-    Phone.withHolders(items);
+    const phones = await Phone.withHolders(items);
+    const ofsetted = phones.slice(offset, offset + amount);
 
-    res.send(prepareItems(items, items.length, 0) as any);
+    res.send(prepareItems(ofsetted, phones.length, amount));
 
-    const phoneIds = items.map((phone) => phone.id);
+    // const phoneIds = items.map((phone) => phone.id);
 
     // HoldingPhone.findAll({ include: [{ model: }] })
 

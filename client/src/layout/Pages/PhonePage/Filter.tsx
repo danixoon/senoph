@@ -51,23 +51,6 @@ const Filter: React.FC<{
             label="Модель СС"
             items={models}
           />
-          <Dropdown
-            {...bind}
-            name="category"
-            label="Категория"
-            items={[
-              { id: 1, label: "1" },
-              { id: 2, label: "2" },
-              { id: 3, label: "3" },
-              { id: 4, label: "4" },
-            ]}
-          />
-          <Dropdown
-            {...bind}
-            name="departmentId"
-            label="Подразделение"
-            items={departments}
-          />
 
           <Input
             {...bind}
@@ -81,7 +64,14 @@ const Filter: React.FC<{
             label="Заводской номер"
             placeholder="110xxxxxxxxx"
           />
-
+          <Input
+            style={{ flex: 1 }}
+            {...bind}
+            name="assemblyDate"
+            label="Год сборки"
+            placeholder="2008"
+            type="number"
+          />
           <Input
             style={{ flex: 1 }}
             {...bind}
@@ -89,12 +79,32 @@ const Filter: React.FC<{
             label="Дата принятия к учёту"
             type="date"
           />
+
           <Input
             style={{ flex: 1 }}
             {...bind}
-            name="assemblyDate"
+            name="comissioningDate"
             label="Дата ввода в эксплуатацию"
             type="date"
+          />
+
+          <Dropdown
+            {...bind}
+            name="category"
+            label="Категория"
+            items={[
+              { id: 1, label: "1" },
+              { id: 2, label: "2" },
+              { id: 3, label: "3" },
+              { id: 4, label: "4" },
+            ]}
+          />
+
+          <Dropdown
+            {...bind}
+            name="departmentId"
+            label="Подразделение"
+            items={departments}
           />
           <ClickInput
             {...bind}

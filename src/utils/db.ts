@@ -8,7 +8,9 @@ import PhoneModel from "@backend/db/models/phoneModel.model";
 import PhoneType from "@backend/db/models/phoneType.model";
 import User from "@backend/db/models/user.model";
 import { v4 as uuid } from "uuid";
-import { Op, WhereOperators, WhereOptions } from "sequelize";
+import { Op, fn, WhereOperators, WhereOptions } from "sequelize";
+import sequelize from "sequelize";
+import { Fn } from "sequelize/types/lib/utils";
 
 // import { sequelize } from "../db";
 
@@ -24,6 +26,55 @@ export interface Filter<T> {
     value: any,
     ...conditions: (keyof WhereOperators | WhereOperators)[]
   ) => this;
+}
+
+export class WhereField<T> {
+  private filter: WhereFilter<T>;
+
+  private key: keyof T;
+
+  constructor(filter: WhereFilter<T>, key: keyof T) {
+    this.filter = filter;
+    this.key = key;
+  }
+
+  optional = (op: keyof WhereOperators, value: any) => {
+    if (typeof value !== "undefined") {
+      if (!this.filter.whereMap[this.key])
+        this.filter.whereMap[this.key] = { [op]: value };
+      else this.filter.whereMap[this.key][op] = value;
+    }
+    return this;
+  };
+}
+type WhereType<T> = Record<keyof T, Partial<Record<keyof WhereOperators, any>>>;
+export class WhereFilter<T> {
+  public whereMap: WhereType<T> = {} as WhereType<T>;
+  on: (key: keyof T) => WhereField<T> = (key) => {
+    return new WhereField(this, key);
+  };
+
+  private fns: sequelize.Utils.Where[] = [];
+
+  fn = (where: sequelize.Utils.Where) => {
+    this.fns.push(where);
+  };
+
+  public set where(value: undefined | typeof this.whereMap) {
+    this.whereMap = value ?? ({} as any);
+  }
+
+  public get where(): undefined | typeof this.whereMap {
+    let where =
+      Object.keys(this.whereMap).length === 0 ? undefined : this.whereMap;
+    if (this.fns.length > 0) {
+      where = where
+        ? ({ [Op.and]: [...this.fns, where] } as any)
+        : { [Op.and]: [...this.fns] };
+    }
+
+    return where;
+  }
 }
 
 export class Filter<T extends object = any> {
@@ -97,7 +148,7 @@ export class Filter<T extends object = any> {
     return this;
   };
   get where() {
-    return this.conditions;
+    return this.conditions as WhereOptions<T>;
   }
 }
 

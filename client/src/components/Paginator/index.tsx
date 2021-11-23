@@ -57,7 +57,7 @@ const Paginator = React.forwardRef<HTMLDivElement, PaginatorProps>(
       })
       .filter((v) => v);
 
-    if (pages.length === 1) return <> </>;
+    if (pages.length <= 1) return <> </>;
 
     return (
       <ButtonGroup {...mergedProps}>

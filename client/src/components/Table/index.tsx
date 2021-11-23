@@ -138,7 +138,9 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
             );
             return (
               <TableCell
-                title={column.header.toString()}
+                title={
+                  typeof column.header === "string" ? column.header : undefined
+                }
                 onClick={() =>
                   column.sortable &&
                   onSort &&

@@ -41,6 +41,9 @@ const initialState: PhoneState = {
     phoneModelId: null,
     phoneTypeId: null,
     category: null,
+    accountingDate: null,
+    assemblyDate: null,
+    comissioningDate: null,
     departmentId: null,
     exceptIds: null,
     ids: null,
@@ -117,18 +120,30 @@ export const phoneSlice = createSlice({
     // },
   },
   extraReducers: (builder) =>
-    locationQueryReducer("/phone", builder, initialState.filter, (state, action) => {
-      const mode = action.payload.location.pathname.split(
-        "/"
-      )[2] as PhonePageMode;
-      state.mode = mode;
-    }),
+    locationQueryReducer(
+      "/phone",
+      builder,
+      initialState.filter,
+      (state, action) => {
+        const mode = action.payload.location.pathname.split(
+          "/"
+        )[2] as PhonePageMode;
+        state.mode = mode;
+      }
+    ),
 });
 
-export const updateFilter = (qs: Partial<QueryState>) => updateQuery(qs);
+export const updateFilter = (qs: Partial<QueryState>) => {
+  const filter = store.getState().phone.filter;
+  return updateQuery({ ...filter, ...qs });
+};
 export const changeMode = (mode: PhonePageMode) => {
-  const location = store.getState().router.location;
-  return push({ ...location, pathname: `/phone/${mode}` });
+  // const location = store.getState().router.location;
+  const filter = store.getState().phone.filter;
+
+  return updateQuery(filter, `/phone/${mode}`);
+  // const filter = store.getState().phone.filter;
+  // return push({ ...location, pathname: `/phone/${mode}` });
 };
 
 export const { updateSelection } = phoneSlice.actions;

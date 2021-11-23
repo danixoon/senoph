@@ -32,11 +32,17 @@ const SideBar: React.FC<SideBar> = (props) => {
         label="Средства связи"
       >
         <Layout className="sidebar__group">
-          <LinkItemContainer href="/phone/view">
+          <LinkItemContainer
+            href="/phone/view"
+            withQuery={(loc) => loc.pathname.startsWith("/phone/edit")}
+          >
             Просмотр
             <Icon.Eye style={{ marginLeft: "auto" }} />
           </LinkItemContainer>
-          <LinkItemContainer href="/phone/edit">
+          <LinkItemContainer
+            href="/phone/edit"
+            withQuery={(loc) => loc.pathname.startsWith("/phone/view")}
+          >
             Управление
             <Icon.Settings style={{ marginLeft: "auto" }} />
           </LinkItemContainer>

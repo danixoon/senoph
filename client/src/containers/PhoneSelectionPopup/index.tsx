@@ -32,11 +32,10 @@ const PhoneSelectionPopupContainer: React.FC<PhoneSelectionPopupContainerProps> 
 
     const [offset, setOffset] = React.useState(() => 0);
 
-    const [innerSelectionBind] = useInput({ search: null });
+    const [filterBind] = useInput({ search: null });
 
     const query = {
       ids: selectionIds,
-      search: innerSelectionBind.input.search,
       offset: 0,
       amount: selectionIds.length,
     };
@@ -47,6 +46,23 @@ const PhoneSelectionPopupContainer: React.FC<PhoneSelectionPopupContainerProps> 
       skip: isNoSelection,
     });
 
+    const items = isNoSelection
+      ? []
+      : data?.items
+          .filter(
+            (item, i) =>
+              filterBind.input.search !== null
+                ? item.model?.name.includes(filterBind.input.search)
+                : true // &&
+            // selectionIds.includes(item.id)
+          )
+          .map((item) => ({
+            id: item.id,
+            name: item.model?.name ?? "Без модели",
+          })) ?? [];
+
+    const selectedItems = items.slice(offset, offset + PAGE_ITEMS);
+
     return (
       <PhoneSelectionPopup
         offset={offset}
@@ -54,32 +70,18 @@ const PhoneSelectionPopupContainer: React.FC<PhoneSelectionPopupContainerProps> 
         onDeselect={(id) => {
           dispatch(
             updateSelection({
-              ids: query.ids.filter((selectedId) => selectedId !== id),
+              ids: selectionIds.filter((selectedId) => selectedId !== id),
             })
           );
         }}
         onDeselectAll={() => dispatch(updateSelection({ ids: [] }))}
         isOpen={isOpen}
         onToggle={onToggle}
-        totalItems={isNoSelection ? 0 : data?.total ?? 0}
+        totalItems={items.length}
         pageItems={PAGE_ITEMS}
-        bind={innerSelectionBind}
+        bind={filterBind}
         selectedIds={selectionIds}
-        items={
-          isNoSelection
-            ? []
-            : data?.items
-                .filter(
-                  (item, i) =>
-                    i > offset &&
-                    i < offset + PAGE_ITEMS &&
-                    selectionIds.includes(item.id)
-                )
-                .map((item) => ({
-                  id: item.id,
-                  name: item.model?.name ?? "Без модели",
-                })) ?? []
-        }
+        items={selectedItems}
       />
     );
   };

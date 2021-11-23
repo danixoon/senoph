@@ -68,9 +68,9 @@ export default class Holder extends Model<
     return Holder.findAll({ where: { id: { [Op.in]: holderIds } } });
   }
 
-  static async getByPhones(ids: number[], departmentId?: number) {
+  static async getByPhones(ids: number[]) {
     const phoneHolderMap = new Map<number, Holder>();
-    const departmentFilter = departmentId ? { where: { departmentId } } : {};
+    // const departmentFilter = departmentId ? { where: { departmentId } } : {};
     const holders = await HoldingPhone.findAll({
       where: { phoneId: { [Op.in]: ids } },
       include: [
@@ -79,7 +79,7 @@ export default class Holder extends Model<
           include: [
             {
               model: Holder,
-              ...departmentFilter,
+              // ...departmentFilter,
               order: ["orderDate", "DESC"],
             },
           ],

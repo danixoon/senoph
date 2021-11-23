@@ -18,7 +18,9 @@ import { useFetchConfig } from "hooks/api/useFetchConfig";
 import { useMakeChanges } from "hooks/api/useMakeChanges";
 import { useUndoChanges } from "hooks/api/useUndoChanges";
 import { useInput } from "hooks/useInput";
-import FieldEditPopup from "layout/Popups/FieldEditPopup";
+import FieldEditPopup, {
+  FieldEditPopupType,
+} from "layout/Popups/FieldEditPopup";
 import PhoneEditActions from "layout/PhoneEditActions";
 import PopupLayer from "providers/PopupLayer";
 import * as React from "react";
@@ -41,7 +43,9 @@ export type PhonePopupProps = {
   onDeleteCategory: (id: any) => void;
   onSelectHolding: (id: any) => void;
   changes: any[];
-} & PopupProps;
+  popupProps?: PopupProps;
+  phoneStatus: ApiStatus;
+};
 
 const Content: React.FC<
   Omit<PhonePopupProps, "phone"> & {
@@ -54,6 +58,7 @@ const Content: React.FC<
     isEditMode: edit,
     changeEditMode,
     onDeleteCategory,
+    phoneStatus,
     onSelectHolding,
     makeChanges,
     undoChanges,
@@ -122,7 +127,7 @@ const Content: React.FC<
 
   const [field, setFieldEdit] = React.useState<{
     isEdit: boolean;
-    type: "text";
+    type: FieldEditPopupType;
     key: string;
     label: null | string;
     targetId: number;
@@ -135,7 +140,7 @@ const Content: React.FC<
   }));
 
   const handleFieldEdit =
-    (label = field.label, type = "text" as const) =>
+    (label = field.label, type: FieldEditPopupType = "text" as const) =>
     (targetId: number, key: string) =>
       setFieldEdit({
         type,
@@ -221,15 +226,7 @@ const Content: React.FC<
               <Span>{typeName}</Span>
             </ListItem>
             <ListItem label="Модель">
-              <Span
-                altLabel={{
-                  text: "Модель устройства!",
-                  zIndex: "popup",
-                  position: "right",
-                }}
-              >
-                {modelName}
-              </Span>
+              <Span>{modelName}</Span>
             </ListItem>
             <EditableListItem
               label="Заводской номер"
@@ -249,8 +246,8 @@ const Content: React.FC<
             </EditableListItem>
             <Hr />
             <EditableListItem
-              label="Дата ввода в эксплуатацию"
-              onOpen={handleFieldEdit("Новая дата ввода в эксплуатацию")}
+              label="Год сборки"
+              onOpen={handleFieldEdit("Новый год сборки", "number")}
               propertyKey="assemblyDate"
               editable={edit}
             >
@@ -259,7 +256,7 @@ const Content: React.FC<
             <Hr />
             <EditableListItem
               label="Дата принятия к учёту"
-              onOpen={handleFieldEdit("Новая дата принятия к учёту")}
+              onOpen={handleFieldEdit("Новая дата принятия к учёту", "date")}
               propertyKey="accountingDate"
               editable={edit}
             >
@@ -267,7 +264,10 @@ const Content: React.FC<
             </EditableListItem>
             <EditableListItem
               label="Дата ввода в эксплуатацию"
-              onOpen={handleFieldEdit("Новая дата ввода в эксплуатацию")}
+              onOpen={handleFieldEdit(
+                "Новая дата ввода в эксплуатацию",
+                "date"
+              )}
               propertyKey="commissioningDate"
               editable={edit}
             >
@@ -322,27 +322,15 @@ const Content: React.FC<
 };
 
 const PhonePopup: React.FC<PhonePopupProps> = (props) => {
-  const {
-    phone,
-    isEditMode,
-    changeEditMode,
-    undoChanges,
-    changes,
-    makeChanges,
-    ...rest
-  } = props;
+  const { phone, popupProps = {}, phoneStatus, ...rest } = props;
 
   return (
-    <Popup {...rest} size="lg" closeable noPadding>
-      <WithLoader isLoading={!phone}>
+    <Popup {...popupProps} size="lg" closeable noPadding>
+      <WithLoader isLoading={phoneStatus.isLoading}>
         <Content
-          changes={changes}
-          undoChanges={undoChanges}
-          makeChanges={makeChanges}
           phone={phone as Api.Models.Phone}
-          isEditMode={isEditMode}
-          changeEditMode={changeEditMode}
           {...rest}
+          phoneStatus={phoneStatus}
         />
       </WithLoader>
     </Popup>

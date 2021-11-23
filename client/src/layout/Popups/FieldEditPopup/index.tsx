@@ -8,7 +8,7 @@ import * as React from "react";
 
 import "./style.styl";
 
-type FieldEditPopupType = "text";
+export type FieldEditPopupType = "text" | "number" | "date";
 
 export type FieldEditPopupProps = OverrideProps<
   PopupProps,
@@ -24,7 +24,10 @@ export type FieldEditPopupProps = OverrideProps<
 
 const TextFieldPopup = React.forwardRef<
   HTMLInputElement,
-  { bind: InputBind; label?: string }
+  {
+    bind: InputBind;
+    label?: string;
+  } & Omit<React.InputHTMLAttributes<HTMLInputElement>, "size">
 >((props, ref) => {
   const { bind, ...rest } = props;
   return <Input {...bind} {...rest} ref={ref} name="value" />;
@@ -63,18 +66,20 @@ const FieldEditPopup: React.FC<FieldEditPopupProps> = (props) => {
   // }, [bind.input.value])
 
   const renderField = () => {
-    switch (type) {
-      case "text":
-        return (
-          <TextFieldPopup
-            ref={(ref) => (inputRef.current = ref)}
-            bind={bind}
-            label={rest.label}
-          />
-        );
-      default:
-        return "";
-    }
+    // switch (type) {
+    //   case "text":
+    return (
+      <TextFieldPopup
+        ref={(ref) => (inputRef.current = ref)}
+        bind={bind}
+        label={rest.label}
+        type={type}
+      />
+    );
+    //     );
+    //   default:
+    //     return "";
+    // }
   };
 
   const isReset = bind.input.value === null;

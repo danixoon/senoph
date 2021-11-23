@@ -193,6 +193,9 @@ declare namespace Api {
             factoryKey: string;
             phoneModelId: number;
             phoneTypeId: number;
+            accountingDate: Date;
+            comissioningDate: Date;
+            assemblyDate: Date;
             departmentId: number;
             category: number;
             sortKey: string;

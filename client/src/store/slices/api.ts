@@ -177,7 +177,7 @@ export const api = createApi({
       }),
       invalidatesTags: (r, e, a) => ["phone", "commit", "log"],
     }),
-    phoneDelete: builder.mutation<
+    deletePhone: builder.mutation<
       Api.GetResponse<"delete", "/phone">,
       Api.GetQuery<"delete", "/phone">
     >({

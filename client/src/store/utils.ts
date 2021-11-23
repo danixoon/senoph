@@ -41,9 +41,12 @@ export const locationQueryReducer = <T extends { filter: F }, F>(
     if (middlware) middlware(state, action);
   });
 
-export const updateQuery = <T>(query: Partial<T>) => {
+export const updateQuery = <T>(query: Partial<T>, pathname?: string) => {
   const q = clearObject(query);
-  return push({ search: qs.stringify(q) });
+  const search = qs.stringify(q).trim();
+  // if (pathname)
+  // return push({ pathname: `${pathname}${search ? `/${search}` : ""}` });
+  return push({ search, pathname });
 };
 
 export function isApiError(type: any): type is Api.Error {

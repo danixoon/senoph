@@ -57,7 +57,8 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
     sortDir: filter.sortDir ?? "asc",
   });
 
-  const totalItems = itemsData?.total ?? PAGE_ITEMS;
+  const totalItems = itemsData?.total ?? 0;
+
 
   const selectionPopup = useTogglePopup(mode === "edit");
   const createPopup = useTogglePopup(mode === "edit");

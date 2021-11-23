@@ -6,8 +6,10 @@ import {
   Table,
   DataType,
   Scopes,
+  BelongsTo,
 } from "sequelize-typescript";
 import { Optional } from "sequelize/types";
+import Phone from "./phone.model";
 import PhoneModel from "./phoneModel.model";
 
 import PhoneType from "./phoneType.model";
@@ -37,4 +39,7 @@ export default class PhoneModelDetail extends Model<
   @AllowNull(false)
   @Column(DataType.INTEGER)
   modelId: number;
+
+  @BelongsTo(() => PhoneModel, { onDelete: "CASCADE" })
+  phoneModel?: PhoneModel;
 }

@@ -13,6 +13,8 @@ import ChangesContext from "providers/ChangesContext";
 
 import { api } from "store/slices/api";
 import { push } from "connected-react-router";
+import { useTogglePopup } from "hooks/useTogglePopup";
+import { extractStatus } from "store/utils";
 
 export type PhonePopupContainerProps = {};
 
@@ -22,7 +24,7 @@ const PhonePopupContainer: React.FC<PhonePopupContainerProps> = (props) => {
   const { ...rest } = props;
 
   const { mode, filter } = useAppSelector((store) => store.phone);
-  const { data: phone, error } = api.useFetchPhoneQuery(
+  const { data: phone, ...phoneFetchInfo } = api.useFetchPhoneQuery(
     {
       id: filter.selectedId,
     },
@@ -32,10 +34,14 @@ const PhonePopupContainer: React.FC<PhonePopupContainerProps> = (props) => {
   const dispatch = useAppDispatch();
   const [changes, makeChanges, undoChanges] = useChanges(CHANGES_TARGET);
 
-  const [deletePhone] = api.usePhoneDeleteMutation();
+  const [deletePhone] = api.useDeletePhoneMutation();
   const [deleteCategory] = api.useDeleteCategoryMutation();
 
-  if (error) dispatch(updateFilter({ selectedId: null }));
+  const phoneStatus = extractStatus(phoneFetchInfo, true);
+
+  if (phoneStatus.isError) dispatch(updateFilter({ selectedId: null }));
+
+  const popup = useTogglePopup();
 
   return (
     <ChangesContext.Provider
@@ -44,9 +50,11 @@ const PhonePopupContainer: React.FC<PhonePopupContainerProps> = (props) => {
       }
     >
       <PhonePopup
-        size="lg"
-        isOpen={filter.selectedId != null}
-        onToggle={() => dispatch(updateFilter({ selectedId: null }))}
+        phoneStatus={phoneStatus}
+        popupProps={{
+          isOpen: filter.selectedId != null,
+          onToggle: () => dispatch(updateFilter({ selectedId: null })),
+        }}
         phone={phone ?? null}
         changes={changes}
         makeChanges={makeChanges}

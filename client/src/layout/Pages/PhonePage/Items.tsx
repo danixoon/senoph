@@ -43,6 +43,21 @@ const Items: React.FC<{
   const maxPage = Math.ceil(totalItems / pageItems);
   let currentPage = Math.floor((offset / totalItems) * maxPage) + 1;
   if (Number.isNaN(currentPage)) currentPage = 1;
+  // if (currentPage > maxPage) currentPage = maxPage;
+
+  React.useEffect(() => {
+    if (totalItems > 0) {
+      if (currentPage > maxPage) {
+        onOffsetChanged(Math.max(0, (maxPage - 1) * pageItems));
+      }
+    }
+  }, [offset, totalItems]);
+
+  // React.useEffect(() => {
+  //   if(totalItems < filter.offset) return;
+
+  //   let nextOffset =
+  // }, [totalItems]);
 
   const handleTableSelection = (markedIds: Set<any>) => {
     if (props.mode === "edit") selection.onSelection(markedIds);
@@ -132,7 +147,9 @@ const Items: React.FC<{
         style={{ display: "flex", alignItems: "center" }}
       >
         <Paginator
-          onChange={(page) => onOffsetChanged((page - 1) * pageItems)}
+          onChange={(page) =>
+            onOffsetChanged(Math.max(0, (page - 1) * pageItems))
+          }
           min={1}
           max={maxPage}
           size={5}

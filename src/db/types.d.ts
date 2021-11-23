@@ -65,6 +65,7 @@ declare namespace DB {
     units: string;
 
     modelId: number;
+    phoneModel?: DB.PhoneModelAttributes;
   }>;
 
   type PhoneCategoryAttributes = Attributes<{
@@ -95,7 +96,8 @@ declare namespace DB {
     phoneId: number;
     holding?: HoldingAttributes;
     phone?: PhoneAttributes;
-  }>;
+  }> &
+    WithCommit;
 
   type HolderAttributes = Attributes<{
     firstName: string;
