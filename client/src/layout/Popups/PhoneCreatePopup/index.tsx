@@ -190,7 +190,7 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
           setImport({ file: null });
         })
         .then((result) => {
-          if (!isResponse(result)) return console.log("response is:", result);
+          if (!isResponse(result)) return;
 
           setAddedPhones(
             result.items.map((item) => {
@@ -254,18 +254,25 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
           <Form onSubmit={() => handleSubmit()} input={bind.input}>
             <Layout flow="row">
               <Layout>
-                <Input
-                  {...bind}
-                  name="inventoryKey"
-                  label="Инвентарный номер"
-                />
-                <Input {...bind} name="factoryKey" label="Заводской номер" />
                 <ClickInput
                   {...bind}
                   name="phoneModelName"
                   label="Модель"
+                  placeholder="DA 310"
                   required
                   onActive={() => modelPopup.onToggle()}
+                />
+                <Input
+                  {...bind}
+                  name="inventoryKey"
+                  label="Инвентарный номер"
+                  placeholder="110xxxxxxxxx"
+                />
+                <Input
+                  {...bind}
+                  name="factoryKey"
+                  placeholder="110xxxxxxxxx"
+                  label="Заводской номер"
                 />
               </Layout>
               <Layout>
@@ -273,6 +280,7 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
                   {...bind}
                   type="number"
                   name="assemblyYear"
+                  placeholder="2008"
                   label="Год сборки"
                   required
                 />

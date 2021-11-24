@@ -180,7 +180,7 @@ export const fillProdDatabase = async () => {
   });
 };
 
-export const fillDevDatabase = async (full?: boolean, size: number = 100) => {
+export const fillDevDatabase = async (full?: boolean, size: number = 1500) => {
   const adminUser = await User.findOne({ where: { role: "admin" } });
   if (adminUser) return;
   const user = await User.create({
@@ -337,7 +337,7 @@ export const fillDevDatabase = async (full?: boolean, size: number = 100) => {
     phones.map((phone) => ({ phoneId: phone.id, holdingId: holding.id }))
   );
 
-  const categories = Promise.all(
+  const categories = await Promise.all(
     mapGenerated(size - 5, (i) => {
       const phoneId = phones[i].id;
       const date = randomDate();
@@ -348,35 +348,6 @@ export const fillDevDatabase = async (full?: boolean, size: number = 100) => {
         actUrl: "test.pdf",
         status: null,
       });
-      // return PhoneCategory.bulkCreate(
-      //   mapGenerated(Math.floor(Math.random() * 5), (i) => ({
-      //     categoryKey: (i + 1).toString(),
-      //     date: new Date(
-      //       date.getFullYear() + i,
-      //       date.getMonth(),
-      //       date.getDay()
-      //     ).toString(),
-      //     phoneId,
-      //     actKey: "12",
-      //     actUrl: "test.pdf",
-      //     status: null,
-      //   }))
-      // );
     })
   );
-
-  // const holdingData = mapGenerated(size - 10, () => {
-  //   const randomHolders = getRandomItems(size - 10, holders);
-  //   const randomPhones = getRandomItems(size - 10, phones);
-  //   return {
-  //     actKey: `#${Math.floor(10 + Math.random() * 100)}`,
-  //     actDate: randomDate().toString(),
-  //     holderId: getRandomItem(randomHolders).id,
-  //     phoneId: getRandomItem(randomPhones).id,
-  //   };
-  // });
-
-  // const holdings = await Holding.bulkCreate(holdingData);
-
-  // console.log("fill complete.");
 };

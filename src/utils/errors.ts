@@ -5,8 +5,9 @@ export const errorType = {
   INVALID_QUERY: "INVALID_QUERY",
   INVALID_BODY: "INVALID_BODY",
   INTERNAL_ERROR: "INTERNAL_ERROR",
+  SERVER_NOT_STARTED: "SERVER_NOT_STARTED",
   VALIDATION_ERROR: "VALIDATION_ERROR",
-  NOT_FOUND: "NOT_FOUND",
+  NOT_FOUND: "NOT_FOUND", 
 } as const;
 
 export const errorMap: ErrorTypeMap = {
@@ -33,6 +34,10 @@ export const errorMap: ErrorTypeMap = {
   [errorType.VALIDATION_ERROR]: {
     code: 400,
     message: "Ошибка валидации",
+  },
+  [errorType.SERVER_NOT_STARTED]: {
+    code: 500,
+    message: "Сервер не запущен",
   },
 };
 

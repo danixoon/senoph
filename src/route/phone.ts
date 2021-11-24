@@ -250,12 +250,14 @@ router.get(
       order,
       where: filter.where,
       include: [PhoneCategory, { model: PhoneModel, where: modelFilter.where }],
+      //attributes: ["id"],
     });
 
-    const phones = await Phone.withHolders(items);
-    const ofsetted = phones.slice(offset, offset + amount);
+    const ofsetted = items.slice(offset, offset + amount);
 
-    res.send(prepareItems(ofsetted, phones.length, amount));
+    const phones = await Phone.withHolders(ofsetted);
+
+    res.send(prepareItems(phones, items.length, amount));
 
     // const phoneIds = items.map((phone) => phone.id);
 

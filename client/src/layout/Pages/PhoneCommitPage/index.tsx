@@ -296,7 +296,9 @@ const PhoneCommitPage: React.FC<PhoneCommitPageProps> = (props) => {
         ));
 
         return (
-          <Spoiler label={`${mapped.length} средств связи`}>{mapped}</Spoiler>
+          <Spoiler label={`Средства связи (${mapped.length})`}>
+            {mapped}
+          </Spoiler>
         );
       }
     );
