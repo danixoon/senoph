@@ -1,4 +1,5 @@
 import { IResult, Request } from "mssql";
+import { groupBy } from "../utils";
 
 /// Parsing result of mssql query
 
@@ -21,3 +22,9 @@ export const insertObject = (req: Request, table: string, object: any) => {
 
 export const getValues = (entries: [string, any][]) =>
   entries.map(([key]) => `@${key}`).join(", ");
+
+export const modelsToMap = <T extends { id?: any }>(list: T[]) =>
+  groupBy(list, (v) => {
+    if (v == null) throw new Error("ID is null");
+    return v.id;
+  });

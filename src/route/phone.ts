@@ -25,7 +25,7 @@ import HoldingPhone from "@backend/db/models/holdingPhone.model";
 import PhoneType from "@backend/db/models/phoneType.model";
 import PhoneModelDetail from "@backend/db/models/phoneModelDetail.model";
 import Log from "@backend/db/models/log.model";
-import phone from "@backend/utils/phone";
+import phone from "@backend/db/queries/phone";
 import { sequelize } from "../db";
 import { Sequelize } from "sequelize";
 

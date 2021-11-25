@@ -47,7 +47,8 @@ export const tester = () => {
       testers.push({
         mapper: function (v) {
           try {
-            return new Date(v);
+            const date = new Date(v);
+            return isNaN(date.getTime()) ? null : date;
           } catch (err) {
             return null;
           }

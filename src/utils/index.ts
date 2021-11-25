@@ -3,6 +3,16 @@ import path from "path";
 import { inspect } from "util";
 import winston from "winston";
 
+export const groupBy = <T, K>(list: T[], getKey: (value: T) => K) => {
+  const map = new Map<K, T[]>();
+  for (const item of list) {
+    const key = getKey(item);
+    map.set(key, [...(map.get(key) ?? []), item]);
+  }
+
+  return map;
+};
+
 export const createEnumProxy = <T extends string>() =>
   new Proxy({} as Readonly<Record<T, T>>, { get: (t, p) => p });
 

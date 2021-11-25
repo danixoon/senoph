@@ -7,7 +7,7 @@ import PhoneType from "@backend/db/models/phoneType.model";
 import Department from "@backend/db/models/department.model";
 import PhoneModel from "@backend/db/models/phoneModel.model";
 import { AppRouter } from "../router";
-import { handler, prepareItems } from "../utils";
+import { groupBy, handler, prepareItems } from "../utils";
 import { access, owner } from "@backend/middleware/auth";
 import { tester, validate } from "@backend/middleware/validator";
 import { upload } from "@backend/middleware/upload";
@@ -73,16 +73,6 @@ router.get(
     );
   })
 );
-
-export const groupBy = <T, K>(list: T[], getKey: (value: T) => K) => {
-  const map = new Map<K, T[]>();
-  for (const item of list) {
-    const key = getKey(item);
-    map.set(key, [...(map.get(key) ?? []), item]);
-  }
-
-  return map;
-};
 
 router.get(
   "/holdings/commit",
