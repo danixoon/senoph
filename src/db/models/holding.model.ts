@@ -23,7 +23,7 @@ import Phone from "./phone.model";
 import PhoneType from "./phoneType.model";
 import User from "./user.model";
 
-@Table
+@Table({ indexes: [{ unique: true, fields: ["orderDate", "orderKey"] }] })
 export default class Holding extends Model<
   DB.HoldingAttributes,
   DB.CreateAttributes<DB.HoldingAttributes>

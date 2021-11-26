@@ -1,7 +1,8 @@
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const TsconfigPathsPlugin = require("tsconfig-paths-webpack-plugin");
-const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+const BundleAnalyzerPlugin =
+  require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
 
@@ -49,7 +50,6 @@ const config = {
               },
             },
           },
-
         ],
         exclude: /node_modules/,
       },
@@ -75,18 +75,18 @@ const config = {
   },
   optimization: {
     minimizer: [new CssMinimizerPlugin()],
-    minimize: true
+    minimize: true,
   },
   plugins: [
     new HtmlWebpackPlugin({
-      title: "Senoph",
+      title: "ИС учета средств связи",
       template: path.resolve(__dirname, "public/index.pug"),
     }),
 
     new MiniCssExtractPlugin({
       filename: "[name].css",
-      chunkFilename: "[id].css"
-    })
+      chunkFilename: "[id].css",
+    }),
   ],
   devServer: {
     contentBase: path.resolve(__dirname, "build"),
@@ -95,7 +95,7 @@ const config = {
     writeToDisk: true,
     historyApiFallback: true,
     open: true,
-    stats: 'errors-only',
+    stats: "errors-only",
     host: "0.0.0.0",
     disableHostCheck: true,
     public: require("child_process").execSync("gp url 3000").toString().trim(),
@@ -110,13 +110,13 @@ const config = {
   },
 };
 
-
 if (process.env.ANALIZE)
-  module.plugins.push(new BundleAnalyzerPlugin({
-    analyzerMode: 'server',
-    generateStatsFile: true,
-    statsOptions: { source: false }
-  }));
-
+  module.plugins.push(
+    new BundleAnalyzerPlugin({
+      analyzerMode: "server",
+      generateStatsFile: true,
+      statsOptions: { source: false },
+    })
+  );
 
 module.exports = config;

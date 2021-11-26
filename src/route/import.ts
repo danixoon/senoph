@@ -126,7 +126,11 @@ const templates: {
         key: "inventoryKey",
         validator: tester(),
         mutator: function (v, target) {
-          if (this.items.some((m) => m.inventoryKey === v))
+          if (
+            this.items.some(
+              (m) => m.inventoryKey != null && v != null && m.inventoryKey === v
+            )
+          )
             throw new ApiError(errorType.VALIDATION_ERROR, {
               description: `В строке ${this.row.id} присутствует дублирующийся инвентарный номер.`,
             });
@@ -138,7 +142,11 @@ const templates: {
         key: "factoryKey",
         validator: tester(),
         mutator: function (v, target) {
-          if (this.items.some((m) => m.factoryKey === v))
+          if (
+            this.items.some(
+              (m) => m.factoryKey != null && v != null && m.factoryKey === v
+            )
+          )
             throw new ApiError(errorType.VALIDATION_ERROR, {
               description: `В строке ${this.row.id} присутствует дублирующийся заводской номер.`,
             });
@@ -407,16 +415,25 @@ const parsePhonesFile = async (book: exceljs.Workbook) => {
     }
   );
 
-  // rows.forEach((row) => {
-  //   const { payload, ...phone } = processTemplateColumn(
-  //     templates.phone,
-  //     row,
-  //     () => ({
-  //       models,
-  //       items: phones,
-  //     })
-  //   );
-  // });
+  const existingHoldings = await Holding.findAll({
+    where: { orderKey: { [Op.in]: holdings.map((h) => h.orderKey) } },
+  });
+
+  const ex = existingHoldings.find((holding) => {
+    return holdings.find(
+      (h) =>
+        new Date(h.orderDate).getFullYear() ===
+          new Date(holding.orderDate).getFullYear() &&
+        h.orderKey === holding.orderKey
+    );
+  });
+
+  if (ex)
+    throw new ApiError(errorType.VALIDATION_ERROR, {
+      description: `В базе данных уже присутствует движение с приказом от '${new Date(
+        ex.orderDate
+      ).getFullYear()}' года и номером приказа '${ex.orderKey}'.`,
+    });
 
   return { phones, holdings };
 };

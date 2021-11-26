@@ -237,6 +237,7 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
       noticeContext.createNotice(
         "Средства связи успешно добавлены и ожидают подтверждения"
       );
+      setCreations({ phones: [], holdings: [] });
     }
     if (phonesStatus.isError) {
       noticeContext.createNotice(
