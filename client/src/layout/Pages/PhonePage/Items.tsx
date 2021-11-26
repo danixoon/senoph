@@ -140,12 +140,7 @@ const Items: React.FC<{
 
   return (
     <>
-      <Header
-        hr
-        align="right"
-        className="margin_md"
-        style={{ display: "flex", alignItems: "center" }}
-      >
+      <Header hr align="right" className="margin_md page__header">
         <Paginator
           onChange={(page) =>
             onOffsetChanged(Math.max(0, (page - 1) * pageItems))

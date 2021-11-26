@@ -5,7 +5,7 @@ import { tester, validate } from "@backend/middleware/validator";
 import { AppRouter } from "../router";
 import { ApiError, errorType } from "@backend/utils/errors";
 import { access } from "@backend/middleware/auth";
-import { handler, prepareItems } from "../utils";
+import { transactionHandler, prepareItems } from "../utils";
 import Log from "@backend/db/models/log.model";
 
 const router = AppRouter();
@@ -13,7 +13,7 @@ const router = AppRouter();
 router.get(
   "/account",
   access("user"),
-  handler(async (req, res, next) => {
+  transactionHandler(async (req, res, next) => {
     const { id } = req.params.user;
     const user = await User.findByPk(id, { attributes: ["role", "username"] });
 
@@ -32,7 +32,7 @@ router.delete(
   "/account",
   access("admin"),
   validate({ query: { id: tester().required().isNumber() } }),
-  handler(async (req, res) => {
+  transactionHandler(async (req, res) => {
     const { id: userId } = req.params.user;
     const { id } = req.query;
 
@@ -56,7 +56,7 @@ router.get(
   validate({
     query: {},
   }),
-  handler(async (req, res, next) => {
+  transactionHandler(async (req, res, next) => {
     const {} = req.query;
     // const filter = new Filter(req.query);
 
@@ -91,7 +91,7 @@ router.get(
       password: tester().required(),
     },
   }),
-  handler(async (req, res, next) => {
+  transactionHandler(async (req, res, next) => {
     const { password, username } = req.query;
     const accessError = new ApiError(errorType.ACCESS_DENIED, {
       description: "Неверное имя пользователя или пароль.",
@@ -128,7 +128,7 @@ router.post(
         .message(`Разрешённые роли: ${ALLOWED_ROLES.join()}`),
     },
   }),
-  handler(async (req, res) => {
+  transactionHandler(async (req, res) => {
     const { id: userId } = req.params.user;
     const { name, username, password, role } = req.query;
     const hash = await bcrypt.hash(password, await bcrypt.genSalt(13));

@@ -13,7 +13,7 @@ import Commit, {
 import { Filter } from "@backend/utils/db";
 import { Op } from "sequelize";
 import { getModel } from "../db";
-import { handler, prepareItems } from "../utils";
+import { transactionHandler, prepareItems } from "../utils";
 import Phone from "@backend/db/models/phone.model";
 import { ApiError, errorType } from "@backend/utils/errors";
 import Holding from "@backend/db/models/holding.model";
@@ -50,7 +50,7 @@ router.put(
     },
   }),
   // TODO: Сделать проверку на владельца изменений
-  handler(async (req, res, next) => {
+  transactionHandler(async (req, res, next) => {
     const { target, targetId } = req.query;
     const { id } = req.params.user;
 
@@ -93,7 +93,7 @@ router.post(
     query: { target: tester().required(), targetId: tester().required() },
   }),
   owner("phone", (r) => r.query.targetId),
-  handler(async (req, res) => {
+  transactionHandler(async (req, res) => {
     const { id } = req.params.user;
     const { target, targetId } = req.query;
     const changes = req.body;
@@ -116,7 +116,7 @@ router.put(
       ids: tester().array("int"),
     },
   }),
-  /* owner("") ,*/ handler(async (req, res) => {
+  /* owner("") ,*/ transactionHandler(async (req, res) => {
     const { user } = req.params;
     const { action, ids } = req.body;
     const holdings = await Holding.findAll({ where: { id: { [Op.in]: ids } } });
@@ -155,7 +155,7 @@ router.put(
       holdingId: tester().isNumber(),
     },
   }),
-  /* owner("") ,*/ handler(async (req, res) => {
+  /* owner("") ,*/ transactionHandler(async (req, res) => {
     const { user } = req.params;
     const { action, phoneIds, holdingId } = req.body;
     const holdingPhones = await HoldingPhone.findAll({
@@ -207,7 +207,7 @@ router.put(
       ids: tester().array("int"),
     },
   }),
-  /* owner("") ,*/ handler(async (req, res) => {
+  /* owner("") ,*/ transactionHandler(async (req, res) => {
     const { user } = req.params;
     const { action, ids } = req.body;
     if (action === "approve")
@@ -273,7 +273,7 @@ router.put(
         });
     }
   ),
-  handler(async (req, res, next) => {
+  transactionHandler(async (req, res, next) => {
     const { ids, action } = req.body;
     const { params } = req;
 
@@ -334,7 +334,7 @@ router.delete(
   }),
   owner("phone", (r) => r.query.targetId),
   convertValues({ keys: (c) => c.toArray().value }),
-  handler(async (req, res) => {
+  transactionHandler(async (req, res) => {
     const { id } = req.params.user;
     const { target, targetId, keys } = req.query;
 

@@ -3,7 +3,7 @@ import path from "path";
 import express, { Router } from "express";
 import dotenv from "dotenv";
 import * as bodyParser from "body-parser";
-import { handler, logger } from "@backend/utils/index";
+import { transactionHandler, logger, handler } from "@backend/utils/index";
 import { logger as logRequest } from "@backend/middleware/logger";
 
 dotenv.config(

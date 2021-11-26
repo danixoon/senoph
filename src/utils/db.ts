@@ -180,7 +180,7 @@ export const fillProdDatabase = async () => {
   });
 };
 
-export const fillDevDatabase = async (full?: boolean, size: number = 1500) => {
+export const fillDevDatabase = async (full?: boolean, size: number = 150) => {
   const adminUser = await User.findOne({ where: { role: "admin" } });
   if (adminUser) return;
   const user = await User.create({
@@ -328,6 +328,8 @@ export const fillDevDatabase = async (full?: boolean, size: number = 1500) => {
   const holding = await Holding.create({
     holderId: getRandomItem(holders).id,
     orderUrl: "sample.pdf",
+    authorId: user.id,
+    orderKey: Math.floor(10 + Math.random() * 200).toString(),
     orderDate: new Date().toISOString(),
     reasonId: "movement" as const,
     status: null,

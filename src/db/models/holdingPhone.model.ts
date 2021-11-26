@@ -37,7 +37,7 @@ export default class HoldingPhone extends Model<
 
   @AllowNull(true)
   @Validate({ isIn: [["create-pending", "delete-pending"]] })
-  @Default("create-pending")
+  @Default(null)
   @Column(DataType.STRING)
   status?: CommitStatus | null;
 

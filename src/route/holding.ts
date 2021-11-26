@@ -7,7 +7,7 @@ import PhoneType from "@backend/db/models/phoneType.model";
 import Department from "@backend/db/models/department.model";
 import PhoneModel from "@backend/db/models/phoneModel.model";
 import { AppRouter } from "../router";
-import { groupBy, handler, prepareItems } from "../utils";
+import { groupBy, transactionHandler, prepareItems } from "../utils";
 import { access, owner } from "@backend/middleware/auth";
 import { tester, validate } from "@backend/middleware/validator";
 import { upload } from "@backend/middleware/upload";
@@ -34,9 +34,9 @@ router.get(
       // latest: tester().isBoolean(),
     },
   }),
-  handler(async (req, res) => {
+  transactionHandler(async (req, res) => {
     // const { latest, phoneIds } = req.query;
-
+    const { user } = req.params;
     const filter = new Filter(req.query).add("status");
     // const phoneFilter = new Filter({ id: req.query.phoneIds }).add("id", Op.in);
 
@@ -46,6 +46,7 @@ router.get(
           model: Phone,
           // where: phoneFilter.where,
           attributes: ["id"],
+          required: false
           // required: (req.query.phoneIds ?? []).length > 0,
         },
         Holder,
@@ -62,7 +63,8 @@ router.get(
           phoneIds: holding.phones?.map((phone) => phone.id) ?? [],
           reasonId: holding.reasonId,
           status: holding.status,
-          // orderKey: holding.orderKey,
+          authorId: holding.authorId,
+          orderKey: holding.orderKey,
           orderDate: holding.orderDate,
           orderUrl: holding.orderUrl,
           holder: holding.holder,
@@ -82,7 +84,7 @@ router.get(
       status: tester(),
     },
   }),
-  handler(async (req, res) => {
+  transactionHandler(async (req, res) => {
     const holdingPhones = await HoldingPhone.findAll({
       where: { status: { [Op.not]: null } },
     });
@@ -109,7 +111,7 @@ router.delete(
   validate({
     query: { id: tester().isNumber() },
   }),
-  handler(async (req, res) => {
+  transactionHandler(async (req, res) => {
     const { id } = req.query;
     await Holding.update({ status: "delete-pending" }, { where: { id } });
 
@@ -138,24 +140,24 @@ router.post(
         .required(),
       phoneIds: tester().array().required(),
       orderFile: tester(),
+      orderKey: tester().required(),
     },
   }),
   owner("phone", (req) => req.body.phoneIds),
-  handler(async (req, res) => {
+  transactionHandler(async (req, res) => {
     // TODO: Make file validation
     const { user } = req.params;
     const { file } = req;
-    if (!file)
-      throw new ApiError(errorType.INVALID_BODY, {
-        description: "Файл приказа обязателен",
-      });
 
-    const { holderId, phoneIds, reasonId, description, orderDate } = req.body;
+    const { holderId, phoneIds, reasonId, description, orderDate, orderKey } =
+      req.body;
 
     const holding = await Holding.create({
       holderId,
-      orderUrl: file.path,
-      orderDate: orderDate.toISOString(),
+      orderUrl: file ? file.path : undefined,
+      orderDate: (orderDate as any).toISOString(),
+      orderKey,
+      authorId: user.id,
       reasonId,
       description,
     });
@@ -182,7 +184,7 @@ router.put(
       holdingId: tester().isNumber().required(),
     },
   }),
-  handler(async (req, res) => {
+  transactionHandler(async (req, res) => {
     const { action, phoneIds, holdingId } = req.query;
     const holdings = await HoldingPhone.findAll({
       where: {

@@ -82,6 +82,7 @@ declare namespace DB {
   type HoldingAttributes = Attributes<{
     orderDate: string;
     orderUrl?: string;
+    orderKey: string;
     reasonId: HoldingReason;
     description?: string;
 
@@ -89,7 +90,8 @@ declare namespace DB {
     phones?: PhoneAttributes[];
     holder?: HolderAttributes;
   }> &
-    WithCommit;
+    WithCommit &
+    WithAuthor;
 
   type HoldingPhoneAttributes = Attributes<{
     holdingId: number;

@@ -1,9 +1,9 @@
 import { ApiError, errorMap, errorType } from "@backend/utils/errors";
 import { ErrorRequestHandler, RequestHandler } from "express";
 import { UniqueConstraintError } from "sequelize";
-import { handler, logger } from "../utils";
+import { transactionHandler, logger } from "../utils";
 
-export const notFoundHandler: RequestHandler = handler((req, res, next) => {
+export const notFoundHandler: RequestHandler = transactionHandler((req, res, next) => {
   throw new ApiError(errorType.NOT_FOUND, {
     description: "Страница не найдена.",
   });

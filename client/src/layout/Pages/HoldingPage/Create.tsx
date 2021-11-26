@@ -100,6 +100,12 @@ const CreateContent: React.FC<HoldingPageProps> = (props) => {
             />
             <Input
               required
+              label="Номер приказа"
+              {...bind}
+              name="orderKey"
+              style={{ flex: "1" }}
+            />
+            <Input
               label="Файл приказа"
               {...bindFile}
               name="orderFile"

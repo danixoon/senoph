@@ -3,7 +3,13 @@ import React from "react";
 import PhoneCreatePopup from "layout/Popups/PhoneCreatePopup";
 import { useAppDispatch } from "store";
 import { useCreatePhones } from "hooks/api/useCreatePhones";
-import { extractStatus, getError, getErrorMessage, splitStatus } from "store/utils";
+import {
+  extractStatus,
+  getError,
+  getErrorMessage,
+  splitStatus,
+} from "store/utils";
+import { api } from "store/slices/api";
 
 export type PhoneCreatePopupContainerProps = {
   onToggle: () => void;
@@ -16,13 +22,17 @@ const PhoneCreatePopupContainer: React.FC<PhoneCreatePopupContainerProps> = (
   const { ...rest } = props;
 
   const dispatch = useAppDispatch();
-  const [createPhones, info] = useCreatePhones();
+  const [createPhones, phoneInfo] = useCreatePhones();
+  const [createHolding, holdingInfo] = api.useCreateHoldingMutation();
 
   return (
     <PhoneCreatePopup
       {...rest}
+      createdPhoneIds={phoneInfo.data?.created ?? []}
       createPhones={createPhones}
-      status={extractStatus(info)}
+      createHoldings={(body) => createHolding(body as any)}
+      phonesStatus={extractStatus(phoneInfo)}
+      holdingsStatus={extractStatus(holdingInfo)}
     />
   );
 };

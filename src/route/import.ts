@@ -2,7 +2,7 @@ import { Router } from "express";
 import { v4 as uuid } from "uuid";
 import Phone from "../db/models/phone.model";
 import Model from "../db/models/phoneModel.model";
-import { handler, prepareItems } from "@backend/utils/index";
+import { transactionHandler, prepareItems } from "@backend/utils/index";
 import PhoneModel from "../db/models/phoneModel.model";
 import Holder from "@backend/db/models/holder.model";
 import { Op, Order, OrderItem, WhereOperators } from "sequelize";
@@ -37,6 +37,7 @@ type Template<T, P = any> = {
 };
 type ColumnTemplate<T, P = any> = {
   label: string;
+  key: string;
   validator?: Validator;
   finalValidator?: (this: ImportContext<P, T>, final: T) => void;
   optional?: boolean;
@@ -54,9 +55,10 @@ const templates: {
   phone: Template<
     DB.PhoneAttributes & {
       payload: {
-        holderName: string | null;
-        departmentName: string | null;
-        orderDate: Date | null;
+        holderName?: string;
+        departmentName?: string;
+        orderDate?: Date;
+        orderKey?: string;
       };
     },
     { models: DB.PhoneModelAttributes[] }
@@ -70,15 +72,30 @@ const templates: {
           payload: { rowId: this.row.id },
         });
 
-      if (payload.orderDate && !payload.holderName)
+      // TODO: Если номер приказа будет 0?
+      if ((payload.orderKey || payload.orderDate) && !payload.holderName)
         throw new ApiError(errorType.VALIDATION_ERROR, {
-          description: `Указана дата приказа без владельца`,
+          description: `Владелец должен быть указан`,
           payload: { rowId: this.row.id },
         });
+
+      // const differentOrderDate = this.items.find(
+      //   (item) =>
+      //     item.payload.orderKey === payload.orderKey &&
+      //     item.payload.orderDate !== payload.orderDate
+      // );
+
+      // if (differentOrderDate) {
+      //   throw new ApiError(errorType.VALIDATION_ERROR, {
+      //     description: `Разные даты у актов с одинаковым номером`,
+      //     payload: { rowId: this.row.id },
+      //   });
+      // }
     },
     columns: [
       {
-        label: "Модель",
+        label: "Модель*",
+        key: "labelName",
         validator: tester().required(),
         mutator: function (v, target) {
           const model = this.models.find((model) => model.name === v);
@@ -92,7 +109,8 @@ const templates: {
       },
       {
         label: "Инвентарный номер",
-        validator: tester().required(),
+        key: "inventoryKey",
+        validator: tester(),
         mutator: function (v, target) {
           if (this.items.some((m) => m.inventoryKey === v))
             throw new ApiError(errorType.VALIDATION_ERROR, {
@@ -103,7 +121,8 @@ const templates: {
       },
       {
         label: "Заводской номер",
-        validator: tester().required(),
+        key: "factoryKey",
+        validator: tester(),
         mutator: function (v, target) {
           if (this.items.some((m) => m.factoryKey === v))
             throw new ApiError(errorType.VALIDATION_ERROR, {
@@ -114,7 +133,8 @@ const templates: {
         },
       },
       {
-        label: "Год сборки",
+        label: "Год сборки*",
+        key: "assemblyYear",
         validator: tester().isNumber().required(),
         mutator: function (v, target) {
           return {
@@ -124,14 +144,16 @@ const templates: {
         },
       },
       {
-        label: "Дата принятия к учёту",
+        label: "Дата принятия к учёту*",
+        key: "accountingDate",
         validator: tester().isDate().required(),
         mutator: function (v, target) {
           return { ...target, accountingDate: v };
         },
       },
       {
-        label: "Дата ввода в эксплуатацию",
+        label: "Дата ввода в эксплуатацию*",
+        key: "comissioningDate",
         validator: tester().isDate().required(),
         mutator: function (v, target) {
           return { ...target, commissioningDate: v };
@@ -139,13 +161,10 @@ const templates: {
       },
       {
         label: "Подразделение",
+        key: "departmentName",
         validator: tester(),
         mutator: function (v, target) {
-          const payload = target.payload ?? {
-            holderName: null,
-            departmentName: null,
-            orderDate: null,
-          };
+          const payload = target.payload ?? {};
           payload.departmentName = v;
 
           return { ...target, payload };
@@ -153,27 +172,31 @@ const templates: {
       },
       {
         label: "Владелец",
+        key: "holderName",
         validator: tester(),
         mutator: function (v, target) {
-          const payload = target.payload ?? {
-            holderName: null,
-            departmentName: null,
-            orderDate: null,
-          };
+          const payload = target.payload ?? {};
           payload.holderName = v;
           return { ...target, payload };
         },
       },
       {
         label: "Дата приказа",
+        key: "orderDate",
         validator: tester().isDate(),
         mutator: function (v, target) {
-          const payload = target.payload ?? {
-            holderName: null,
-            departmentName: null,
-            orderDate: null,
-          };
+          const payload = target.payload ?? {};
           payload.orderDate = v;
+          return { ...target, payload };
+        },
+      },
+      {
+        label: "Номер приказа",
+        key: "orderKey",
+        validator: tester(),
+        mutator: function (v, target) {
+          const payload = target.payload ?? {};
+          payload.orderKey = v;
           return { ...target, payload };
         },
       },
@@ -187,7 +210,7 @@ router.get(
   "/import",
   // access("user"),
   validate({ query: { entity: tester().required().isIn(["phone", "model"]) } }),
-  handler(async (req, res, next) => {
+  transactionHandler(async (req, res, next) => {
     const { entity } = req.query;
 
     const template = templates[entity];
@@ -220,8 +243,6 @@ router.get(
   })
 );
 
-type WithRandomId<T, K extends string = "randomId"> = T & Record<K, string>;
-
 const processTemplate = <R, T, L>(
   template: Template<R, T>,
   row: Row,
@@ -232,24 +253,28 @@ const processTemplate = <R, T, L>(
   const context = { ...getContext(row), row };
 
   const columns = template.columns;
-  const finalValidators: Function[] = [];
+
   for (let i = 0; i < columns.length; i++) {
     const column = columns[i];
     let value = row.values[i] as any;
 
+    const key = column.key;
+
     if (column.validator)
       value = validateSchema(
-        { value: column.validator },
-        { value },
+        { [key]: column.validator },
+        { [key]: value },
         { target: "body" }
-      ).value;
+      )[key];
 
     result = column.mutator.call(context, value, result);
   }
 
-  for (const validator of finalValidators) validator.call(context, result);
+  const payload = result as R;
 
-  return result as R;
+  if (template.validator) template.validator.call(context, payload);
+
+  return payload;
 };
 
 const extractRows = (sheet: exceljs.Worksheet) => {
@@ -257,7 +282,7 @@ const extractRows = (sheet: exceljs.Worksheet) => {
   sheet.eachRow((row, i) => {
     if (i === 1) return;
     const cells: (string | null)[] = [];
-    row.eachCell((cell) => {
+    row.eachCell({ includeEmpty: true }, (cell) => {
       const value = cell.value?.toString().trim() ?? null;
       if (typeof value === "string" && value.length === 0) cells.push(null);
       else cells.push(value);
@@ -277,69 +302,92 @@ const parsePhonesFile = async (book: exceljs.Workbook) => {
       description: "Передана пустая таблица",
     });
 
-  const phones: Omit<DB.PhoneAttributes, "authorId">[] = [];
+  const phones: WithRandomId<Omit<DB.PhoneAttributes, "authorId">>[] = [];
+  const holdings: (Omit<DB.HoldingAttributes, "authorId" | "reasonId"> & {
+    phoneRandomIds: string[];
+  })[] = [];
   const [models, departments, holders] = await Promise.all([
     PhoneModel.findAll(),
     Department.findAll(),
     Holder.findAll(),
   ]);
 
-  await Promise.all(
-    rows.map((row) => {
-      const { payload, ...phone } = processTemplate(
-        templates.phone,
-        row,
-        () => ({
-          models,
-          items: phones,
-        })
+  rows.forEach((row) => {
+    const { payload, ...phone } = processTemplate(templates.phone, row, () => ({
+      models,
+      items: phones,
+    }));
+
+    const targetDepartment = payload.departmentName
+      ? departments.find(
+          (dep) =>
+            dep.name.toLowerCase() === payload.departmentName?.toLowerCase()
+        )
+      : null;
+
+    if (payload.departmentName && !targetDepartment)
+      throw new ApiError(errorType.VALIDATION_ERROR, {
+        description: `Не удалось найти подразделение ${payload.departmentName}`,
+        payload: { rowId: row.id },
+      });
+
+    const targetHolder = payload.holderName
+      ? holders.find(
+          (holder) =>
+            `${holder.lastName} ${holder.firstName} ${holder.middleName}`.toLowerCase() ===
+              payload.holderName?.toLowerCase() &&
+            (targetDepartment
+              ? holder.departmentId === targetDepartment.id
+              : true)
+        )
+      : null;
+
+    if (payload.holderName && !targetHolder)
+      throw new ApiError(errorType.VALIDATION_ERROR, {
+        description: `Не удалось найти владельца ${payload.holderName} ${
+          targetDepartment ? `в поздразделении ${targetDepartment.name}` : ""
+        }`.trimEnd(),
+        payload: { rowId: row.id },
+      });
+
+    const randomId = uuid();
+
+    // Создание движения
+    if (targetHolder) {
+      const existing = holdings.find(
+        (holding) =>
+          holding.orderKey === payload.orderKey &&
+          new Date(holding.orderDate).getFullYear() ===
+            new Date(payload.orderDate ?? 0).getFullYear()
       );
-
-      const targetDepartment = payload.departmentName
-        ? departments.find(
-            (dep) =>
-              dep.name.toLowerCase() === payload.departmentName?.toLowerCase()
-          )
-        : null;
-
-      if (payload.departmentName && !targetDepartment)
-        throw new ApiError(errorType.VALIDATION_ERROR, {
-          description: `Не удалось найти подразделение ${payload.departmentName}`,
-          payload: { rowId: row.id },
+      if (existing) existing.phoneRandomIds.push(randomId);
+      else
+        holdings.push({
+          phoneRandomIds: [randomId],
+          orderDate: (payload.orderDate as Date).toISOString(),
+          holderId: targetHolder.id,
+          orderKey: payload.orderKey as string,
         });
+    }
+    phones.push({ ...phone, randomId });
+  });
 
-      const targetHolder = payload.holderName
-        ? holders.find(
-            (holder) =>
-              `${holder.lastName} ${holder.firstName} ${holder.middleName}`.toLowerCase() ===
-                payload.holderName &&
-              (targetDepartment
-                ? holder.departmentId === targetDepartment.id
-                : true)
-          )
-        : null;
-
-      if (payload.holderName && !targetHolder)
-        throw new ApiError(errorType.VALIDATION_ERROR, {
-          description: `Не удалось найти владельца ${payload.holderName} ${
-            targetDepartment ? `в поздразделении ${targetDepartment.name}` : ""
-          }`.trimEnd(),
-          payload: { rowId: row.id },
-        });
-
-      phones.push({ ...phone });
-    })
-  );
-
-  return phones;
+  return { phones, holdings };
 };
 
 router.post(
   "/import",
+  access("admin"),
+  validate({}),
+  transactionHandler((req, res) => {})
+);
+
+router.post(
+  "/import/file",
   access("user"),
   uploadMemory(".xlsx").single("file"),
   validate({ query: { target: tester().isIn(["phone"]).required() } }),
-  handler(async (req, res, next) => {
+  transactionHandler(async (req, res, next) => {
     const { user } = req.params;
     const { target } = req.query;
     const file = req.file;
@@ -354,8 +402,8 @@ router.post(
 
     switch (target) {
       case "phone":
-        const phones = await parsePhonesFile(workbook);
-        res.send(prepareItems(phones, phones.length, 0));
+        const { phones, holdings } = await parsePhonesFile(workbook);
+        res.send({ phones, holdings });
         break;
       default:
         throw new ApiError(errorType.INVALID_QUERY, {

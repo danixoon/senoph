@@ -34,9 +34,13 @@ import PhoneCreatePopupContainer from "containers/PhoneCreatePopup";
 import { extractStatus } from "store/utils";
 import { useTogglePopup } from "hooks/useTogglePopup";
 import { NoticeContext } from "providers/NoticeProvider";
+import Input from "components/Input";
+import Span from "components/Span";
+import Header from "components/Header";
 
 type PhonePageContainerProps = {};
-const PAGE_ITEMS = 15;
+
+const DEFAULT_PAGE_ITEMS = 40;
 
 const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
   const dispatch = useAppDispatch();
@@ -49,16 +53,18 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
   const selectionIdsSet = new Set(rest.selectionIds);
 
   const filterData = useFetchConfig();
+
+  // const [pageItems, setPageItems] = React.useState(() => DEFAULT_PAGE_ITEMS);
+
   const { data: itemsData, ...fetchPhones } = api.useFetchPhonesQuery({
     ...denullObject(filter),
-    amount: PAGE_ITEMS,
+    amount: filter.pageItems,
     offset: filter.offset < 0 ? 0 : filter.offset,
     sortKey: filter.sortKey ?? undefined,
     sortDir: filter.sortDir ?? "asc",
   });
 
   const totalItems = itemsData?.total ?? 0;
-
 
   const selectionPopup = useTogglePopup(mode === "edit");
   const createPopup = useTogglePopup(mode === "edit");
@@ -73,6 +79,27 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
       );
     }
   }, [fetchStatus.status]);
+
+  const [bind, setBind] = useInput({ items: DEFAULT_PAGE_ITEMS });
+
+  React.useEffect(() => {
+    setBind({ items: filter.pageItems });
+  }, [filter.pageItems]);
+
+  const handleTotalPageSelection = () => {
+    let value = parseInt(
+      bind.input.items?.toString() ?? DEFAULT_PAGE_ITEMS.toString()
+    );
+
+    if (value <= 0) value = 1;
+    else if (value >= 200) value = 200;
+
+    dispatch(
+      updateFilter({
+        pageItems: isNaN(value) ? DEFAULT_PAGE_ITEMS : value,
+      })
+    );
+  };
 
   return (
     <>
@@ -107,9 +134,27 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
             </ButtonGroup>
           </Route>
         </RouterSwitch>
+        <Header style={{ margin: "auto", marginRight: 0 }}>Результатов:</Header>
+        <Input
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === "Space")
+              handleTotalPageSelection();
+          }}
+          onBlur={(e) => {
+            handleTotalPageSelection();
+          }}
+          {...bind}
+          style={{ margin: 0, maxWidth: "50px" }}
+          name="items"
+          placeholder="12"
+          type="number"
+        />
       </TopBarLayer>
       <Layout flow="row">
-        <Layout flex="1" style={{ marginLeft: "0.25rem" }}>
+        <Layout
+          flex="1"
+          style={{ marginLeft: "0.25rem", position: "relative" }}
+        >
           <PhonePage.Items
             selection={{
               onSelection: (/*all,*/ ids) =>
@@ -131,8 +176,8 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
                 dispatch(
                   updateFilter({ offset: nextOffset < 0 ? 0 : nextOffset })
                 ),
-              pageItems: PAGE_ITEMS,
-              totalItems: totalItems,
+              pageItems: filter.pageItems,
+              totalItems,
             }}
             items={itemsData?.items ?? []}
             mode={mode}

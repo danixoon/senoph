@@ -61,7 +61,9 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>((props, ref) => {
 
   const formContext = React.useContext(FormContext);
 
-  if (required)
+  const isRequired = required && !disabled;
+
+  if (isRequired)
     formContext.addCheck(input, name, (v) =>
       v == null ? "Значение обязательно" : false
     );
@@ -98,7 +100,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>((props, ref) => {
       {label && (
         <Label className="input__label" weight="medium" size={size}>
           {label}
-          {required ? (
+          {isRequired ? (
             <Span inline color="primary">
               *
             </Span>

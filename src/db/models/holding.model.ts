@@ -21,6 +21,7 @@ import Holder from "./holder.model";
 import HoldingPhone from "./holdingPhone.model";
 import Phone from "./phone.model";
 import PhoneType from "./phoneType.model";
+import User from "./user.model";
 
 @Table
 export default class Holding extends Model<
@@ -37,6 +38,10 @@ export default class Holding extends Model<
 
   @AllowNull(false)
   @Column(DataType.STRING)
+  orderKey: string;
+
+  @AllowNull(false)
+  @Column(DataType.STRING)
   reasonId: HoldingReason;
 
   @AllowNull(true)
@@ -50,6 +55,11 @@ export default class Holding extends Model<
 
   @BelongsTo(() => Holder)
   holder?: Holder;
+
+  @AllowNull(false)
+  @ForeignKey(() => User)
+  @Column(DataType.INTEGER)
+  authorId: number;
 
   @AllowNull(true)
   @Validate({ isIn: [["create-pending", "delete-pending"]] })

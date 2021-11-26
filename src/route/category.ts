@@ -7,7 +7,7 @@ import PhoneType from "@backend/db/models/phoneType.model";
 import Department from "@backend/db/models/department.model";
 import PhoneModel from "@backend/db/models/phoneModel.model";
 import { AppRouter } from "../router";
-import { handler, prepareItems } from "../utils";
+import { transactionHandler, prepareItems } from "../utils";
 import { access, owner } from "@backend/middleware/auth";
 import { tester, validate } from "@backend/middleware/validator";
 import { upload } from "@backend/middleware/upload";
@@ -32,7 +32,7 @@ router.get(
       ids: tester().array("int"),
     },
   }),
-  handler(async (req, res) => {
+  transactionHandler(async (req, res) => {
     const filter = new Filter(req.query).add("status");
     const categories = await PhoneCategory.findAll({
       // include: [
@@ -75,7 +75,7 @@ router.post(
     },
   }),
   owner("phone", (req) => req.body.phoneIds),
-  handler(async (req, res) => {
+  transactionHandler(async (req, res) => {
     // TODO: Make file validation
     const { file } = req;
     if (!file)
@@ -106,7 +106,7 @@ router.delete(
   validate({
     query: { id: tester().isNumber() },
   }),
-  handler(async (req, res) => {
+  transactionHandler(async (req, res) => {
     const { id } = req.query;
     await PhoneCategory.update({ status: "delete-pending" }, { where: { id } });
 

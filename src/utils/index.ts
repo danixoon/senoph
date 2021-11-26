@@ -2,6 +2,7 @@ import { NextFunction, Request, Response, RequestHandler } from "express";
 import path from "path";
 import { inspect } from "util";
 import winston from "winston";
+import { sequelize } from "../db";
 
 export const groupBy = <T, K>(list: T[], getKey: (value: T) => K) => {
   const map = new Map<K, T[]>();
@@ -70,5 +71,29 @@ export const handler: <RQ, RS>(
       // next();
     } catch (err) {
       next(err);
+    }
+  };
+export const transactionHandler: <RQ, RS>(
+  cb: (req: RQ, res: RS, next: (err?: any) => void) => Promise<any> | any
+) => (req: RQ, res: RS, next: (err?: any) => void) => void =
+  (cb) => async (req, res: any, next) => {
+    //  const trans = await sequelize.transaction();
+
+    // Proxying send function
+    const _send = res.send;
+
+    try {
+      res.send = async function () {
+        //     await trans.commit();
+        return _send.bind(this)(...arguments);
+      }.bind(res);
+
+      return await cb(req, res, next);
+    } catch (err) {
+      res.send = _send;
+      //   await trans.rollback();
+      next(err);
+    } finally {
+      res.send = _send;
     }
   };

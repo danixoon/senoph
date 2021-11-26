@@ -9,7 +9,7 @@ import Model from "../db/models/phoneModel.model";
 import { Filter } from "@backend/utils/db";
 import { ForeignKeyConstraintError, Op } from "sequelize";
 import Holder from "@backend/db/models/holder.model";
-import { handler, prepareItems } from "../utils";
+import { transactionHandler, prepareItems } from "../utils";
 import Log from "@backend/db/models/log.model";
 import { ApiError, errorType } from "@backend/utils/errors";
 
@@ -25,7 +25,7 @@ router.get(
       departmentId: tester().isNumeric(),
     },
   }),
-  handler(async (req, res, next) => {
+  transactionHandler(async (req, res, next) => {
     const { name } = req.query;
     const filter = new Filter(req.query);
 
@@ -64,7 +64,7 @@ router.post(
       departmentId: tester().required().isNumber(),
     },
   }),
-  handler(async (req, res) => {
+  transactionHandler(async (req, res) => {
     const { user } = req.params;
     const { firstName, lastName, middleName, departmentId } = req.query;
 
@@ -89,7 +89,7 @@ router.delete(
       id: tester().required().isNumber(),
     },
   }),
-  handler(async (req, res) => {
+  transactionHandler(async (req, res) => {
     const { user } = req.params;
     const { id } = req.query;
 

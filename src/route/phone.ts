@@ -2,7 +2,7 @@ import { Router } from "express";
 import { ForeignKeyConstraintError, ModelStatic } from "sequelize";
 import Phone from "../db/models/phone.model";
 import Model from "../db/models/phoneModel.model";
-import { handler, prepareItems } from "@backend/utils/index";
+import { transactionHandler, prepareItems } from "@backend/utils/index";
 import PhoneModel from "../db/models/phoneModel.model";
 import Holder from "@backend/db/models/holder.model";
 import {
@@ -36,7 +36,7 @@ router.delete(
   access("user"),
   validate({ query: { ids: tester().array("int").required() } }),
   owner("phone", (q) => q.query.ids),
-  handler(async (req, res) => {
+  transactionHandler(async (req, res) => {
     const { params } = req;
     if (!withOwner(params, "phone")) return res.sendStatus(500);
 
@@ -55,7 +55,7 @@ router.get(
   "/phone/byId",
   access("user"),
   validate({ query: { id: tester().required().isNumber() } }),
-  handler(async (req, res) => {
+  transactionHandler(async (req, res) => {
     const { id } = req.query;
     const phone = await Phone.findByPk(id, {
       include: [
@@ -84,8 +84,10 @@ router.get(
       // latest: tester().isBoolean(),
     },
   }),
-  handler(async (req, res) => {
+  transactionHandler(async (req, res) => {
     // const { latest, phoneIds } = req.query;
+
+    const { user } = req.params;
 
     // const filter = new Filter(req.query).add("status");
     const filter = new Filter({ id: req.query.phoneIds }).add("id", Op.in);
@@ -110,6 +112,8 @@ router.get(
           holderId: holding.holderId,
           phoneIds: holding.phones?.map((phone) => phone.id) ?? [],
           reasonId: holding.reasonId,
+          authorId: user.id,
+          orderKey: holding.orderKey,
           orderDate: holding.orderDate,
           orderUrl: holding.orderUrl,
           holder: holding.holder,
@@ -127,7 +131,7 @@ router.get(
   validate({
     query: { status: tester().isIn(["delete-pending", "create-pending"]) },
   }),
-  handler(async (req, res, next) => {
+  transactionHandler(async (req, res, next) => {
     const { status } = req.query;
 
     const filter = new Filter(req.query);
@@ -183,7 +187,7 @@ router.get(
     },
   }),
 
-  handler(async (req, res) => {
+  transactionHandler(async (req, res) => {
     const {
       search,
       sortDir,
@@ -390,10 +394,11 @@ router.post(
         inventoryKey: tester(),
 
         phoneModelId: tester().isNumber().required(),
+        randomId: tester(),
       }),
     },
   }),
-  handler(async (req, res, next) => {
+  transactionHandler(async (req, res, next) => {
     const { body, params } = req;
     const { user } = params;
 
@@ -404,15 +409,17 @@ router.post(
       // TODO: Сделать логгирование более строгим (через хуки?)
       Log.log("phone", ids, "create", user.id);
 
-      res.send(ids);
+      res.send({
+        created: ids.map((v, i) => ({
+          id: v,
+          randomId: body.data[i].randomId,
+        })),
+      });
     } catch (err) {
-      if (err instanceof UniqueConstraintError) {
-        return next(
-          new ApiError("INVALID_BODY", {
-            description: "Проверьте уникальность полей",
-          })
-        );
-      }
+      if (err instanceof UniqueConstraintError)
+        throw new ApiError("INVALID_BODY", {
+          description: "Проверьте уникальность полей",
+        });
     }
   })
 );
@@ -421,7 +428,7 @@ router.get(
   "/phone/models",
   access("user"),
   validate({ query: { ids: tester().array("int"), name: tester() } }),
-  handler(async (req, res) => {
+  transactionHandler(async (req, res) => {
     const { name } = req.query;
 
     const filter = new Filter({ name });
@@ -454,7 +461,7 @@ router.post(
       description: tester(),
     },
   }),
-  handler(async (req, res) => {
+  transactionHandler(async (req, res) => {
     const { user } = req.params;
     const { phoneTypeId, name, details, description } = req.body;
 
@@ -491,7 +498,7 @@ router.delete(
       id: tester().required().isNumber(),
     },
   }),
-  handler(async (req, res) => {
+  transactionHandler(async (req, res) => {
     const { user } = req.params;
     const { id } = req.query;
 
@@ -519,7 +526,7 @@ router.get(
       ids: tester().array("int"),
     },
   }),
-  handler(async (req, res) => {
+  transactionHandler(async (req, res) => {
     const filter = new Filter({ id: req.query.ids }).add("id", Op.in);
     const phoneTypes = await PhoneType.findAll({
       where: filter.where,
@@ -544,7 +551,7 @@ router.post(
       name: tester().required(),
     },
   }),
-  handler(async (req, res) => {
+  transactionHandler(async (req, res) => {
     const { user } = req.params;
     const { description, name } = req.query;
 
@@ -563,7 +570,7 @@ router.delete(
       id: tester().required().isNumber(),
     },
   }),
-  handler(async (req, res) => {
+  transactionHandler(async (req, res) => {
     const { user } = req.params;
     const { id } = req.query;
 

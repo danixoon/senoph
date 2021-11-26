@@ -4,6 +4,9 @@ declare type ItemsResponse<T> = {
   offset: number;
 };
 
+declare type WithRandomId<T, K extends string = "randomId"> = T &
+  Record<K, string>;
+
 declare type GetItemType<T extends ItemsResponse<any>> =
   T extends ItemsResponse<infer I> ? I : never;
 
@@ -302,11 +305,33 @@ declare namespace Api {
     post:
       | (<T extends "phone" | "model">() => RouteHandler<
           `/import`,
-          ItemsResponse<
-            WithoutId<
-              T extends "phone" ? Omit<DB.PhoneAttributes, "authorId"> : never
-            >
-          >,
+          {},
+          { target: T },
+          T extends "phone"
+            ? WithoutId<{
+                phones: Omit<DB.PhoneAttributes, "authorId">[];
+                holdings: {
+                  holderId: number;
+                  orderDate: string;
+                  orderKey: string;
+                  phoneRandomIds: string[];
+                }[];
+              }>
+            : never
+        >)
+      | (<T extends "phone" | "model">() => RouteHandler<
+          `/import/file`,
+          T extends "phone"
+            ? WithoutId<{
+                phones: WithRandomId<Omit<DB.PhoneAttributes, "authorId">>[];
+                holdings: {
+                  holderId: number;
+                  orderDate: string;
+                  orderKey: string;
+                  phoneRandomIds: string[];
+                }[];
+              }>
+            : never,
           { target: T },
           { file: FileList }
         >)
@@ -324,10 +349,10 @@ declare namespace Api {
         >)
       | (() => RouteHandler<
           "/phone",
-          {},
+          { created: WithRandomId<{ id: number }>[] },
           {},
           {
-            data: Omit<Api.Models.Phone, "authorId" | "id">[];
+            data: WithRandomId<Omit<Api.Models.Phone, "authorId" | "id">>[];
           }
         >)
       | (() => RouteHandler<
@@ -335,14 +360,15 @@ declare namespace Api {
           { holdingId: number },
           {},
           {
-            orderFile: FileList;
+            orderFile?: FileList;
             phoneIds: number[];
             holderId: number;
 
             reasonId: HoldingReason;
             description?: string;
 
-            orderDate: Date;
+            orderDate: string;
+            orderKey: string;
           }
         >)
       | (() => RouteHandler<

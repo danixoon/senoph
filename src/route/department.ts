@@ -7,7 +7,7 @@ import PhoneType from "@backend/db/models/phoneType.model";
 import Department from "@backend/db/models/department.model";
 import PhoneModel from "@backend/db/models/phoneModel.model";
 import { AppRouter } from "../router";
-import { handler, prepareItems } from "../utils";
+import { transactionHandler, prepareItems } from "../utils";
 import { access, owner } from "@backend/middleware/auth";
 import { tester, validate } from "@backend/middleware/validator";
 import { upload } from "@backend/middleware/upload";
@@ -32,7 +32,7 @@ router.get(
       ids: tester().array("int"),
     },
   }),
-  handler(async (req, res) => {
+  transactionHandler(async (req, res) => {
     const filter = new Filter({ id: req.query.ids }).add("id", Op.in);
     const departments = await Department.findAll({
       where: filter.where,
@@ -57,7 +57,7 @@ router.post(
       name: tester().required(),
     },
   }),
-  handler(async (req, res) => {
+  transactionHandler(async (req, res) => {
     const { user } = req.params;
     const { description, name } = req.query;
 
@@ -76,7 +76,7 @@ router.delete(
       id: tester().required().isNumber(),
     },
   }),
-  handler(async (req, res) => {
+  transactionHandler(async (req, res) => {
     const { user } = req.params;
     const { id } = req.query;
 

@@ -20,12 +20,19 @@ import { useTogglePopup } from "hooks/useTogglePopup";
 import { clearObject, isResponse } from "utils";
 
 import "./style.styl";
+import HolderSelectionPopupContainer from "containers/HolderSelectionPopup";
+import PopupLayer from "providers/PopupLayer";
+import Checkbox from "components/Checkbox";
+import { HoldingItem } from "layout/Pages/HoldingPage";
 
 export type PhoneCreatePopupProps = OverrideProps<
   PopupProps,
   {
+    createdPhoneIds: { id: number; randomId: string }[];
     createPhones: (phones: Api.GetBody<"post", "/phone">["data"]) => any;
-    status: ApiStatus;
+    createHoldings: (holdings: Api.GetBody<"post", "/holding">) => any;
+    phonesStatus: ApiStatus;
+    holdingsStatus: ApiStatus;
   }
 >;
 
@@ -94,42 +101,85 @@ type InputType = {
   phoneModelId: number;
 
   holderId: number;
+  holderName: string;
   assemblyYear: number;
   phoneModelName: string;
 };
 type AddedItem = {
-  payload: Omit<Api.Models.Phone, "authorId" | "id">;
+  payload: WithRandomId<Omit<Api.Models.Phone, "authorId" | "id">>;
   item: {
     phoneModelName: string;
     assemblyYear: number;
-    id: any;
   };
 };
+type AddedHolding = {
+  holderId: number;
+  orderDate: string;
+  orderKey: string;
+  phoneRandomIds: string[];
+};
 const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
-  const { createPhones, status, ...rest } = props;
+  const {
+    createdPhoneIds,
+    createPhones,
+    createHoldings,
+    holdingsStatus,
+    phonesStatus,
+    ...rest
+  } = props;
 
   const [bind, setBind] = useInput<InputType>();
 
+  const [bindHolding, setBindHolding] = useInput<{
+    isHolded: boolean;
+    holderName: string;
+    holderId: number;
+    orderDate: string;
+    orderKey: string;
+  }>({
+    isHolded: false,
+    holderName: null,
+    holderId: null,
+    orderDate: null,
+    orderKey: null,
+  });
+
   const modelPopup = useTogglePopup();
-  const [addedPhones, setAddedPhones] = React.useState<AddedItem[]>(() => []);
+  const [creations, setCreations] = React.useState<{
+    phones: AddedItem[];
+    holdings: AddedHolding[];
+  }>(() => ({ phones: [], holdings: [] }));
 
   const handleSubmit = () => {
     const { phoneModelName, assemblyYear, ...rest } = clearObject(bind.input);
+    const { isHolded, holderId, orderDate, orderKey } = clearObject(
+      bindHolding.input
+    );
     const year = parseInt(assemblyYear as string);
     const phone: AddedItem = {
       item: {
         phoneModelName,
         assemblyYear: year,
-        id: Math.random(),
       },
       payload: {
         ...rest,
+        randomId: Math.random().toString(),
         phoneModelId: Number(rest.phoneModelId),
         assemblyDate: new Date(year, 1, 1).toISOString(),
       },
     };
 
-    const isFuckedUp = addedPhones.some(({ payload }) => {
+    // const holding: HoldingItem | null = !isHolded
+    //   ? null
+    //   : {
+    //       holderId,
+    //       orderDate,
+    //       orderKey,
+    //       reasonId: "movement",
+
+    //     };
+
+    const isFuckedUp = creations.phones.some(({ payload }) => {
       if (
         payload.factoryKey !== undefined &&
         payload.factoryKey === phone.payload.factoryKey
@@ -151,29 +201,52 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
     });
     if (isFuckedUp) return;
 
-    setAddedPhones([...addedPhones, phone]);
+    setCreations({ ...creations, phones: [...creations.phones, phone] });
   };
 
   const handlePhonesSubmit = () => {
-    createPhones(addedPhones.map((phone) => phone.payload));
+    const { holdings, phones } = creations;
+    createPhones(phones.map((phone) => phone.payload));
   };
 
   React.useEffect(() => {
-    if (status.isSuccess) {
+    if (!phonesStatus.isSuccess || holdingsStatus.isSuccess) return;
+    const { holdings, phones } = creations;
+    // const phoneIds = createdPhoneIds;
+    for (const holding of holdings) {
+      const phoneIds = holding.phoneRandomIds
+        .map(
+          (id) =>
+            createdPhoneIds.find((createdId) => createdId.randomId === id)?.id
+        )
+        .filter((v) => v) as number[];
+      createHoldings({
+        holderId: holding.holderId,
+        phoneIds,
+        orderDate: holding.orderDate,
+        orderKey: holding.orderKey,
+        reasonId: "movement",
+      });
+    }
+    // createHoldings({  })
+  }, [phonesStatus.isSuccess]);
+
+  React.useEffect(() => {
+    if (phonesStatus.isSuccess) {
       if (rest.onToggle) rest.onToggle(false);
       noticeContext.createNotice(
         "Средства связи успешно добавлены и ожидают подтверждения"
       );
     }
-    if (status.isError) {
+    if (phonesStatus.isError) {
       noticeContext.createNotice(
-        `Ошибка при добавлении: (${status.error?.name})` +
-          status.error?.description
+        `Ошибка при добавлении: (${phonesStatus.error?.name})` +
+          phonesStatus.error?.description
       );
     }
-    if (status.isLoading)
+    if (phonesStatus.isLoading)
       noticeContext.createNotice("Средства связи добавляются..");
-  }, [status.status]);
+  }, [phonesStatus.status]);
 
   const submitRef = React.useRef<HTMLButtonElement | null>(null);
   const [bindImport, setImport, ref] = useFileInput();
@@ -192,8 +265,10 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
         .then((result) => {
           if (!isResponse(result)) return;
 
-          setAddedPhones(
-            result.items.map((item) => {
+          const { phones, holdings } = result;
+          setCreations({
+            holdings,
+            phones: phones.map((item) => {
               const year = new Date(item.assemblyDate).getFullYear();
               const model = models.get(item.phoneModelId);
               return {
@@ -205,12 +280,13 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
                     model?.name ?? `Неизвестная модель #${item.phoneModelId}`,
                 },
               };
-            })
-          );
+            }),
+          });
         });
     }
   }, [bindImport.files.file]);
 
+  const holderPopup = useTogglePopup();
   return (
     <>
       <Popup {...rest} size="lg" closeable noPadding>
@@ -301,6 +377,64 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
               </Layout>
             </Layout>
             <Hr style={{ marginTop: "auto" }} />
+            <Header
+              align="center"
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              Привязывается к движению
+              <Checkbox
+                {...bindHolding}
+                name="isHolded"
+                // type="checkbox"
+                containerProps={{ style: { margin: "0 0 0 1rem" } }}
+              />
+            </Header>
+            <Layout flow="column">
+              <Layout flow="row">
+                <Input
+                  {...bindHolding}
+                  type="date"
+                  name="orderDate"
+                  placeholder="2008"
+                  label="Дата приказа"
+                  disabled={!bindHolding.input.isHolded}
+                  required
+                />
+                <Input
+                  {...bindHolding}
+                  name="orderKey"
+                  disabled={!bindHolding.input.isHolded}
+                  label="Номер приказа"
+                  required
+                  style={{ flex: "1" }}
+                />
+              </Layout>
+              <ClickInput
+                {...bindHolding}
+                name="holderName"
+                disabled={!bindHolding.input.isHolded}
+                label="Владелец"
+                onActive={() => holderPopup.onToggle()}
+                required
+              />
+              <PopupLayer>
+                <HolderSelectionPopupContainer
+                  {...holderPopup}
+                  onSelect={(id, name) =>
+                    setBindHolding({
+                      ...bindHolding.input,
+                      holderId: id,
+                      holderName: name,
+                    })
+                  }
+                />
+              </PopupLayer>
+            </Layout>
+            <Hr />
             <Layout>
               <Button type="submit">Добавить</Button>
             </Layout>
@@ -309,22 +443,34 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
           <Layout flex="1">
             <Layout className="added-list">
               <Header align="right">
-                {addedPhones.length === 0
+                {creations.holdings.length > 0 ? (
+                  <Layout>
+                    {creations.holdings.map((holding) => {
+                      return <Link>От {holding.orderKey}</Link>;
+                    })}
+                  </Layout>
+                ) : (
+                  ""
+                )}
+                {creations.phones.length === 0
                   ? "Добавленые СС отсутствуют"
                   : "Добавленные СС"}
               </Header>
               <Hr />
-              {addedPhones.map((phone) => (
+              {creations.phones.map((phone) => (
                 <AddedItem
-                  key={phone.item.id}
+                  key={phone.payload.randomId}
                   inventoryKey={phone.payload.inventoryKey ?? null}
                   accountingDate={new Date(phone.payload.accountingDate)}
                   comissioningDate={new Date(phone.payload.commissioningDate)}
                   factoryKey={phone.payload.factoryKey ?? null}
                   onRemove={() =>
-                    setAddedPhones(
-                      addedPhones.filter((p) => p.item.id !== phone.item.id)
-                    )
+                    setCreations({
+                      ...creations,
+                      phones: creations.phones.filter(
+                        (p) => phone.payload.randomId !== phone.payload.randomId
+                      ),
+                    })
                   }
                   {...phone.item}
                 />
@@ -334,11 +480,13 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
             <Layout>
               <Button
                 color="primary"
-                disabled={addedPhones.length === 0 || status.isLoading}
+                disabled={
+                  creations.phones.length === 0 || phonesStatus.isLoading
+                }
                 onClick={handlePhonesSubmit}
                 ref={submitRef}
               >
-                {status.isLoading ? <LoaderIcon /> : "Применить"}
+                {phonesStatus.isLoading ? <LoaderIcon /> : "Применить"}
               </Button>
             </Layout>
           </Layout>

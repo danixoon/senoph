@@ -1,4 +1,5 @@
-// @import '~stylus/theme.styl'
+@require 'stylus/theme.styl'
+
 .popup-layout
   overflow: hidden
   position: fixed
@@ -9,3 +10,4 @@
   height: 100%
   pointer-events: none
   flex-flow: column-reverse
+  z-index: zIndex.popup
