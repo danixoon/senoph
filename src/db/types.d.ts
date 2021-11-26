@@ -111,6 +111,13 @@ declare namespace DB {
   type DepartmentAttributes = Attributes<{
     name: string;
     description?: string;
+    placementId?: number;
+    placement?: PlacementAttributes;
+  }>;
+
+  type PlacementAttributes = Attributes<{
+    name: string;
+    description?: string;
   }>;
 
   type PhoneAttributes = Attributes<{
@@ -164,6 +171,7 @@ declare namespace DB {
     | "holdingPhone"
     | "phoneType"
     | "department"
+    | "placement"
     | "holder"
     | "model";
   type LogType = "create" | "delete" | "commit";

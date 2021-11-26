@@ -8,7 +8,7 @@ import "./styles.styl";
 
 export type ActionBoxProps = {
   status: ApiStatus;
-  icon: React.FC<any>;
+  icon?: React.FC<any>;
 } & Omit<SpoilerPopupProps, "target">;
 // React.PropsWithChildren<React.HTMLAttributes<HTMLElement>>
 
@@ -17,7 +17,7 @@ const ActionBox: React.FC<ActionBoxProps> = (props) => {
   const [target, setTarget] = React.useState<HTMLElement | null>(() => null);
   const [isOpen, setIsOpen] = React.useState(() => false);
 
-  const IconComponent = icon;
+  const IconComponent = icon ?? Icon.Box;
 
   return (
     <Button

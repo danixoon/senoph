@@ -115,16 +115,16 @@ export const useFileInput = function <
     textInput[prop] = propValue[0]?.name ?? "Не выбрано";
   }
 
-  const ref = React.useRef<HTMLInputElement | null>(null);
+  const [ref, setRef] = React.useState<HTMLInputElement | null>(null);
 
   return [
     {
       input: textInput,
       files: input,
       onChange,
-      ref: (e: HTMLInputElement) => (ref.current = e),
+      ref: (e: HTMLInputElement) => setRef(e),
     },
     setInput,
-    ref.current,
+    ref,
   ];
 };

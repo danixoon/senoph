@@ -303,7 +303,7 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
               style={{ marginLeft: "auto", marginRight: "0.5rem" }}
               size="sm"
               color="primary"
-              onClick={() => {
+              onClick={(e) => {
                 ref?.click();
               }}
             >

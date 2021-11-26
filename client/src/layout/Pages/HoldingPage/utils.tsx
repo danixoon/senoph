@@ -54,15 +54,26 @@ export const getTableColumns: (args: {
     header: "Средства связи",
     props: { style: { whiteSpace: "normal" } },
     mapper: (v, item: HoldingTableItem) => {
-      return item.phoneIds.map((id, i) => (
+      const maxItems = 25;
+      const sliced = item.phoneIds.slice(0, maxItems);
+      const items = sliced.map((id, i) => (
         <>
           <Link
             style={{ display: "inline" }}
             href={`/phone/view?selectedId=${id}`}
           >{`#${id}`}</Link>
-          {i !== item.phoneIds.length - 1 ? ", " : ""}
+          {i !== sliced.length - 1 ? ", " : ""}
         </>
       ));
+
+      if (items.length === maxItems)
+        items.push(
+          <Link inline style={{ float: "right" }}>
+            <small> +{item.phoneIds.length - maxItems} элемент(ов)</small>
+          </Link>
+        );
+
+      return items;
     },
   },
   {

@@ -79,6 +79,20 @@ const templates: {
           payload: { rowId: this.row.id },
         });
 
+      if (
+        this.items.some(
+          (item) =>
+            item.payload?.orderKey === payload.orderKey &&
+            item.payload?.orderDate?.getTime() ===
+              payload.orderDate?.getTime() &&
+            item.payload?.holderName !== payload.holderName
+        )
+      )
+        throw new ApiError(errorType.VALIDATION_ERROR, {
+          description:
+            "Дубликат имени владельца с одинаковой парой 'дата приказа' и 'номер приказа'",
+        });
+
       // const differentOrderDate = this.items.find(
       //   (item) =>
       //     item.payload.orderKey === payload.orderKey &&
@@ -243,10 +257,31 @@ router.get(
   })
 );
 
-const processTemplate = <R, T, L>(
+const processTempalte = <R, T, L>(
+  template: Template<R, T>,
+  rows: Row[],
+  getContext: (row: Row) => Omit<ImportContext<T, L>, "row" | "items">,
+  cb: (item: R, row: Row) => void
+) => {
+  const items: R[] = [];
+  rows.forEach((row) => {
+    const item = processTemplateColumn(template, row, (r) => ({
+      ...getContext(r),
+      items,
+    }));
+
+    cb(item, row);
+
+    items.push(item);
+  });
+
+  return items;
+};
+
+const processTemplateColumn = <R, T, L>(
   template: Template<R, T>,
   row: Row,
-  getContext: (row: Row) => Omit<ImportContext<T, L>, "row">
+  getContext: (row: Row) => Omit<ImportContext<T, L>, "row" | "items">
 ) => {
   let result: Partial<R> = {};
 
@@ -312,65 +347,76 @@ const parsePhonesFile = async (book: exceljs.Workbook) => {
     Holder.findAll(),
   ]);
 
-  rows.forEach((row) => {
-    const { payload, ...phone } = processTemplate(templates.phone, row, () => ({
-      models,
-      items: phones,
-    }));
+  processTempalte(
+    templates.phone,
+    rows,
+    () => ({ models }),
+    ({ payload, ...phone }, row) => {
+      const targetDepartment = payload.departmentName
+        ? departments.find(
+            (dep) =>
+              dep.name.toLowerCase() === payload.departmentName?.toLowerCase()
+          )
+        : null;
 
-    const targetDepartment = payload.departmentName
-      ? departments.find(
-          (dep) =>
-            dep.name.toLowerCase() === payload.departmentName?.toLowerCase()
-        )
-      : null;
-
-    if (payload.departmentName && !targetDepartment)
-      throw new ApiError(errorType.VALIDATION_ERROR, {
-        description: `Не удалось найти подразделение ${payload.departmentName}`,
-        payload: { rowId: row.id },
-      });
-
-    const targetHolder = payload.holderName
-      ? holders.find(
-          (holder) =>
-            `${holder.lastName} ${holder.firstName} ${holder.middleName}`.toLowerCase() ===
-              payload.holderName?.toLowerCase() &&
-            (targetDepartment
-              ? holder.departmentId === targetDepartment.id
-              : true)
-        )
-      : null;
-
-    if (payload.holderName && !targetHolder)
-      throw new ApiError(errorType.VALIDATION_ERROR, {
-        description: `Не удалось найти владельца ${payload.holderName} ${
-          targetDepartment ? `в поздразделении ${targetDepartment.name}` : ""
-        }`.trimEnd(),
-        payload: { rowId: row.id },
-      });
-
-    const randomId = uuid();
-
-    // Создание движения
-    if (targetHolder) {
-      const existing = holdings.find(
-        (holding) =>
-          holding.orderKey === payload.orderKey &&
-          new Date(holding.orderDate).getFullYear() ===
-            new Date(payload.orderDate ?? 0).getFullYear()
-      );
-      if (existing) existing.phoneRandomIds.push(randomId);
-      else
-        holdings.push({
-          phoneRandomIds: [randomId],
-          orderDate: (payload.orderDate as Date).toISOString(),
-          holderId: targetHolder.id,
-          orderKey: payload.orderKey as string,
+      if (payload.departmentName && !targetDepartment)
+        throw new ApiError(errorType.VALIDATION_ERROR, {
+          description: `Не удалось найти подразделение ${payload.departmentName}`,
+          payload: { rowId: row.id },
         });
+
+      const targetHolder = payload.holderName
+        ? holders.find(
+            (holder) =>
+              `${holder.lastName} ${holder.firstName} ${holder.middleName}`.toLowerCase() ===
+                payload.holderName?.toLowerCase() &&
+              (targetDepartment
+                ? holder.departmentId === targetDepartment.id
+                : true)
+          )
+        : null;
+
+      if (payload.holderName && !targetHolder)
+        throw new ApiError(errorType.VALIDATION_ERROR, {
+          description: `Не удалось найти владельца ${payload.holderName} ${
+            targetDepartment ? `в поздразделении ${targetDepartment.name}` : ""
+          }`.trimEnd(),
+          payload: { rowId: row.id },
+        });
+
+      const randomId = uuid();
+
+      // Создание движения
+      if (targetHolder) {
+        const existing = holdings.find(
+          (holding) =>
+            holding.orderKey === payload.orderKey &&
+            new Date(holding.orderDate).getFullYear() ===
+              new Date(payload.orderDate ?? 0).getFullYear()
+        );
+        if (existing) existing.phoneRandomIds.push(randomId);
+        else
+          holdings.push({
+            phoneRandomIds: [randomId],
+            orderDate: (payload.orderDate as Date).toISOString(),
+            holderId: targetHolder.id,
+            orderKey: payload.orderKey as string,
+          });
+      }
+      phones.push({ ...phone, randomId });
     }
-    phones.push({ ...phone, randomId });
-  });
+  );
+
+  // rows.forEach((row) => {
+  //   const { payload, ...phone } = processTemplateColumn(
+  //     templates.phone,
+  //     row,
+  //     () => ({
+  //       models,
+  //       items: phones,
+  //     })
+  //   );
+  // });
 
   return { phones, holdings };
 };

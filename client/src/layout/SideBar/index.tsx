@@ -105,18 +105,25 @@ const SideBar: React.FC<SideBar> = (props) => {
         >
           <Layout className="sidebar__group">
             <LinkItemContainer href="/admin/users">
-              Пользователи
+              Пользователи <Icon.User style={{ marginLeft: "auto" }} />
             </LinkItemContainer>
             <LinkItemContainer href="/admin/departments">
-              Подразделения
+              Подразделения <Icon.Home style={{ marginLeft: "auto" }} />
+            </LinkItemContainer>
+            <LinkItemContainer href="/admin/placements">
+              Местоположения <Icon.Globe style={{ marginLeft: "auto" }} />
             </LinkItemContainer>
             <LinkItemContainer href="/admin/holders">
-              Владельцы
+              Владельцы <Icon.Star style={{ marginLeft: "auto" }} />
             </LinkItemContainer>
-            <LinkItemContainer href="/admin/phone">Типы</LinkItemContainer>
-            <LinkItemContainer href="/admin/models">Модели</LinkItemContainer>
+            <LinkItemContainer href="/admin/phone">
+              Типы <Icon.Folder style={{ marginLeft: "auto" }} />
+            </LinkItemContainer>
+            <LinkItemContainer href="/admin/models">
+              Модели <Icon.Phone style={{ marginLeft: "auto" }} />
+            </LinkItemContainer>
             <LinkItemContainer href="/admin/logs">
-              История (логи)
+              История (логи) <Icon.Cloud style={{ marginLeft: "auto" }} />
             </LinkItemContainer>
           </Layout>
         </Spoiler>

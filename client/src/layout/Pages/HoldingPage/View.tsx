@@ -25,13 +25,21 @@ const ViewContent: React.FC<HoldingPageProps> = (props) => {
     controlMapper: (v, item) => (
       <ActionBox icon={Icon.Box} status={extractStatus(deleteHoldingStatus)}>
         {item.status !== null ? (
-          <SpoilerPopupButton onClick={() => dispatch(push("/holding/commit"))}>
-            Просмотреть
-          </SpoilerPopupButton>
+          <>
+            <SpoilerPopupButton onClick={() => {}}>Изменить</SpoilerPopupButton>
+            <SpoilerPopupButton
+              onClick={() => dispatch(push("/holding/commit"))}
+            >
+              Просмотреть
+            </SpoilerPopupButton>
+          </>
         ) : (
-          <SpoilerPopupButton onClick={() => deleteHolding({ id: item.id })}>
-            Удалить
-          </SpoilerPopupButton>
+          <>
+            <SpoilerPopupButton onClick={() => {}}>Изменить</SpoilerPopupButton>
+            <SpoilerPopupButton onClick={() => deleteHolding({ id: item.id })}>
+              Удалить
+            </SpoilerPopupButton>
+          </>
         )}
       </ActionBox>
     ),

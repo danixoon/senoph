@@ -20,6 +20,7 @@ export const validLogTargetTypes: DB.LogTarget[] = [
   "holding",
   "model",
   "department",
+  "placement",
   "phoneType",
   "holder",
 ];

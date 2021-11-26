@@ -65,6 +65,7 @@ declare namespace Api {
     type PhoneCategory = RequiredId<DB.PhoneCategoryAttributes>;
     type PhoneModel = RequiredId<DB.PhoneModelAttributes>;
     type Department = RequiredId<DB.DepartmentAttributes>;
+    type Placement = RequiredId<DB.PlacementAttributes>;
     type User = Omit<RequiredId<DB.UserAttributes>, "passwordHash">;
     type Holder = RequiredId<DB.HolderAttributes>;
     type Holding = RequiredId<DB.HoldingAttributes> & { phoneIds: number[] };
@@ -284,6 +285,14 @@ declare namespace Api {
           {}
         >)
       | (() => RouteHandler<
+          "/placements",
+          ItemsResponse<Api.Models.Placement>,
+          {
+            ids?: number[];
+          },
+          {}
+        >)
+      | (() => RouteHandler<
           "/phone/types",
           ItemsResponse<Api.Models.PhoneType>,
           {
@@ -386,6 +395,12 @@ declare namespace Api {
         >)
       | (() => RouteHandler<
           "/department",
+          { id: number },
+          { name: string; description?: string; placementId?: number },
+          {}
+        >)
+      | (() => RouteHandler<
+          "/placement",
           { id: number },
           { name: string; description?: string },
           {}
@@ -499,6 +514,7 @@ declare namespace Api {
       | (() => RouteHandler<"/holding", {}, { id: number }, {}>)
       | (() => RouteHandler<"/phone", {}, { ids: number[] }, {}>)
       | (() => RouteHandler<"/account", {}, { id: number }, {}>)
+      | (() => RouteHandler<"/placement", {}, { id: number }, {}>)
       | (() => RouteHandler<"/department", {}, { id: number }, {}>)
       | (() => RouteHandler<"/phone/type", {}, { id: number }, {}>)
       | (() => RouteHandler<"/phone/model", {}, { id: number }, {}>)

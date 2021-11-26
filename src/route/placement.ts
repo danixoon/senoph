@@ -26,7 +26,7 @@ import Placement from "@backend/db/models/placement.model";
 const router = AppRouter();
 
 router.get(
-  "/departments",
+  "/placements",
   access("user"),
   validate({
     query: {
@@ -35,15 +35,14 @@ router.get(
   }),
   transactionHandler(async (req, res) => {
     const filter = new Filter({ id: req.query.ids }).add("id", Op.in);
-    const departments = await Department.findAll({
+    const placements = await Placement.findAll({
       where: filter.where,
-      include: [Placement],
     });
 
     res.send(
       prepareItems(
-        departments.map((department) => department as Api.Models.Department),
-        departments.length,
+        placements.map((placement) => placement as Api.Models.Placement),
+        placements.length,
         0
       )
     );
@@ -51,32 +50,27 @@ router.get(
 );
 
 router.post(
-  "/department",
+  "/placement",
   access("admin"),
   validate({
     query: {
       description: tester(),
       name: tester().required(),
-      placementId: tester().isNumber(),
     },
   }),
   transactionHandler(async (req, res) => {
     const { user } = req.params;
-    const { description, name, placementId } = req.query;
+    const { description, name } = req.query;
 
-    const department = await Department.create({
-      name,
-      description,
-      placementId,
-    });
-    Log.log("department", [department.id], "create", user.id);
+    const placement = await Placement.create({ name, description });
+    Log.log("placement", [placement.id], "create", user.id);
 
-    res.send({ id: department.id });
+    res.send({ id: placement.id });
   })
 );
 
 router.delete(
-  "/department",
+  "/placement",
   access("admin"),
   validate({
     query: {
@@ -87,9 +81,9 @@ router.delete(
     const { user } = req.params;
     const { id } = req.query;
 
-    const department = await Department.destroy({ where: { id } });
+    const placement = await Placement.destroy({ where: { id } });
 
-    Log.log("department", [id], "delete", user.id);
+    Log.log("placement", [id], "delete", user.id);
 
     res.send();
   })

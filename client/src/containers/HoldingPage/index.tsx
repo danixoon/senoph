@@ -21,7 +21,7 @@ const HoldingPageContainer: React.FC<Props> = (props) => {
     {
       amount: phoneIds.length,
       offset: 0,
-      ids: phoneIds,
+      ids: phoneIds.length > 0 ? undefined : phoneIds,
     },
     { skip: (bind.input.phoneIds?.length ?? 0) === 0 }
   );
@@ -42,7 +42,7 @@ const HoldingPageContainer: React.FC<Props> = (props) => {
       {
         phoneIds: holdingPhoneIds,
       },
-      { skip: (holdings?.items ?? []).length === 0 }
+      { skip: holdingPhoneIds.length === 0 }
     );
 
   const holdingMap = new Map<number, Api.Models.Holding[]>();

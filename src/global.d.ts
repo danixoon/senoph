@@ -10,6 +10,7 @@ declare global {
       readonly DB_DIALECT: "mysql" | "postgres" | "mssql";
       readonly DB_PORT: string;
       readonly DEV_DB_FILL?: string;
+      readonly DEV_DB_DROP?: string;
       readonly DB_HOST: string;
       readonly API_TEST_TOKEN: string;
 

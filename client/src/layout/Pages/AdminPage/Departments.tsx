@@ -17,12 +17,14 @@ import { extractStatus } from "store/utils";
 export type DepartmentsProps = {};
 
 const useDepartmentsContainer = () => {
+  const placements = api.useFetchPlacementsQuery({});
   const departments = api.useFetchDepartmentsQuery({});
   const [deleteDepartment, deleteStatus] = api.useDeleteDepartmentMutation();
   const [createDepartment, createStatus] = api.useCreateDepartmentMutation();
 
   return {
     departments: { ...departments, items: departments.data?.items ?? [] },
+    placements: { ...placements, items: placements.data?.items ?? [] },
     deleteDepartment,
     deleteStatus: extractStatus(deleteStatus),
     createStatus: extractStatus(createStatus),
@@ -33,6 +35,7 @@ const useDepartmentsContainer = () => {
 const Departments: React.FC<DepartmentsProps> = (props) => {
   const {
     departments,
+    placements,
     deleteDepartment,
     createDepartment,
     deleteStatus,
@@ -86,6 +89,13 @@ const Departments: React.FC<DepartmentsProps> = (props) => {
       // size: "150px",
     },
     {
+      key: "placementId",
+      header: "Местоположение",
+      mapper: (v, item: Api.Models.Department) =>
+        item.placement?.name ?? "Не задано",
+      // size: "150px",
+    },
+    {
       key: "description",
       header: "Описание",
       // size: "150px",
@@ -118,6 +128,16 @@ const Departments: React.FC<DepartmentsProps> = (props) => {
               {...bind}
               name="name"
               style={{ flex: "1" }}
+            />
+            <Dropdown
+              style={{ flex: "1" }}
+              label="Местоположение"
+              items={placements.items.map((item) => ({
+                id: item.id,
+                label: item.name,
+              }))}
+              name="placementId"
+              {...bind}
             />
             <Input
               label="Описание"

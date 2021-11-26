@@ -60,9 +60,10 @@ export const init = async () => {
   const isProd = process.env.NODE_ENV === "production";
   const isTest = process.env.NODE_ENV === "test";
   const isFill = process.env.DEV_DB_FILL === "true";
+  const isDrop = process.env.DEV_DB_DROP === "true";
 
   if (!isTest) {
-    if (!isProd && isFill) await sequelize.drop({});
+    if (!isProd && isDrop) await sequelize.drop({});
     await sequelize.sync({
       logging: (sql) => {
         const t = new Date();

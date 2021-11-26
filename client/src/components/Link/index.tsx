@@ -11,12 +11,14 @@ export interface LinkProps
   isMonospace?: boolean;
   size?: "xs" | "sm";
   native?: boolean;
+  inline?: boolean;
 }
 const Link: React.FC<LinkProps> = ({ href, ...props }: LinkProps) => {
   const {
     children,
     isMonospace,
     native,
+    inline,
     size = "sm",
     onClick,
     ...rest
@@ -27,6 +29,7 @@ const Link: React.FC<LinkProps> = ({ href, ...props }: LinkProps) => {
       className: mergeClassNames(
         "link",
         `link_${size}`,
+        inline && "link_inline",
         isMonospace && "link_monospace"
       ),
     },

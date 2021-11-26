@@ -25,6 +25,7 @@ export const api = createApi({
     "holdingPhone",
     "holder",
     "category",
+    "placement",
     "user",
     "department",
     "phoneType",
@@ -349,7 +350,7 @@ export const api = createApi({
         params,
         method: "GET",
       }),
-      providesTags: ["department"],
+      providesTags: ["department", "placement"],
     }),
     deleteDepartment: builder.mutation<
       Api.GetResponse<"delete", "/department">,
@@ -364,6 +365,33 @@ export const api = createApi({
     >({
       query: (params) => ({ url: "department", params, method: "POST" }),
       invalidatesTags: ["department", "log"],
+    }),
+
+    //*****//
+    fetchPlacements: builder.query<
+      Api.GetResponse<"get", "/placements">,
+      Api.GetQuery<"get", "/placements">
+    >({
+      query: (params) => ({
+        url: "placements",
+        params,
+        method: "GET",
+      }),
+      providesTags: ["placement"],
+    }),
+    deletePlacement: builder.mutation<
+      Api.GetResponse<"delete", "/placement">,
+      Api.GetQuery<"delete", "/placement">
+    >({
+      query: (params) => ({ url: "placement", params, method: "DELETE" }),
+      invalidatesTags: ["placement", "log", "department"],
+    }),
+    createPlacement: builder.mutation<
+      Api.GetResponse<"post", "/placement">,
+      Api.GetQuery<"post", "/placement">
+    >({
+      query: (params) => ({ url: "placement", params, method: "POST" }),
+      invalidatesTags: ["placement", "log"],
     }),
     //*****//
     fetchPhoneTypes: builder.query<
