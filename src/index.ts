@@ -24,6 +24,13 @@ export const init = async () => {
   if (server) throw new Error("Сервер уже запущен.");
   const app = express();
 
+  const port = process.env.PORT || 5000;
+
+  logger.info(`Сервер запускается`, {
+    service: "server",
+    payload: { port },
+  });
+
   app.use(bodyParser.json());
   app.use(logRequest());
 
@@ -49,8 +56,6 @@ export const init = async () => {
   }
 
   app.use(notFoundHandler, errorHandler);
-
-  const port = process.env.PORT || 5000;
 
   server = http.createServer(app);
   server.listen(port, async () => {

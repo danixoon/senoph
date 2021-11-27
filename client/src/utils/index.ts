@@ -49,7 +49,7 @@ export const clearObject = function <T>(obj: T) {
     else if (v === null) delete filtered[k];
   }
 
-  return filtered as { [K in keyof T]: Exclude<T[K], null> };
+  return filtered as { [K in keyof T]: Exclude<T[K], null | undefined> };
 };
 
 type ExtractOnly<T, P> = UnionToIntersection<

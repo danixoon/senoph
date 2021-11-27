@@ -77,22 +77,45 @@ export const getErrorMessage = (
 };
 
 // export const getIdleStatus: ApiStatus = splitStatus("idle");
+
+export function isItemsResponse<T>(type: any): type is ItemsResponse<T> {
+  return type.items && Array.isArray(type.items);
+}
+
+export const parseQuery = <T extends { data?: K } & Statusable, K>(
+  query: T
+) => {
+  const { data, ...info } = query;
+  const status = extractStatus(info);
+
+  return { data, status };
+};
+
+type ParseItems = <K>(query: { data?: ItemsResponse<K> } & Statusable) => {
+  data: ItemsResponse<K>;
+  status: ApiStatus;
+};
+
+export const parseItems: ParseItems = (query) => {
+  const { data, ...info } = query;
+  const status = extractStatus(info);
+
+  return {
+    data: data ?? { items: [], total: 0, offset: 0 },
+    status,
+  };
+};
+
+type Statusable = {
+  isError?: boolean;
+  isLoading?: boolean;
+  isIdle?: boolean;
+  isSuccess?: boolean;
+  isFetching?: boolean;
+  error?: any;
+};
 export const extractStatus = (
-  {
-    isError,
-    isLoading,
-    isIdle,
-    isSuccess,
-    isFetching,
-    error,
-  }: {
-    isError?: boolean;
-    isLoading?: boolean;
-    isIdle?: boolean;
-    isSuccess?: boolean;
-    isFetching?: boolean;
-    error?: any;
-  },
+  { isError, isLoading, isIdle, isSuccess, isFetching, error }: Statusable,
   fetchCheck?: boolean
 ) =>
   ({

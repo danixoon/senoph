@@ -57,7 +57,7 @@ router.get(
   validate({ query: { id: tester().required().isNumber() } }),
   transactionHandler(async (req, res) => {
     const { id } = req.query;
-    const phone = await Phone.findByPk(id, {
+    const phone = await Phone.unscoped().findByPk(id, {
       include: [
         PhoneModel,
         PhoneCategory,
@@ -66,7 +66,7 @@ router.get(
     });
 
     // TODO: Сделать проверку на статус правильной
-    if (phone != null && phone.status === null) {
+    if (phone != null) {
       const withHolder = await Phone.withHolders([phone]);
       res.send(withHolder[0]);
     } else res.sendStatus(404);

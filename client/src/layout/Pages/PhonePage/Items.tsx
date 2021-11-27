@@ -5,22 +5,67 @@ import Header from "components/Header";
 import { LoaderIcon } from "components/Icon";
 import Input from "components/Input";
 import Layout from "components/Layout";
+import Link from "components/Link";
 import Paginator from "components/Paginator";
 import Popup from "components/Popup";
 import Table, { TableColumn } from "components/Table";
 import { InputHook, useInput } from "hooks/useInput";
 import PopupLayer from "providers/PopupLayer";
+import TopBarLayer from "providers/TopBarLayer";
 import * as React from "react";
 import { PhoneState } from "store/slices/phone";
+
+export const defaultColumns: TableColumn[] = [
+  {
+    key: "id",
+    header: "ID",
+    sortable: true,
+    size: "30px",
+    mapper: (v, item) => <Link href={`/phone?selectedId=${v}`}>#{v}</Link>,
+  },
+  {
+    key: "modelName",
+    header: "Модель",
+    sortable: true,
+    mapper: (v, item: any) => item.model?.name ?? "Не определена",
+  },
+  {
+    key: "inventoryKey",
+    header: "Инвентарный номер",
+    sortable: true,
+  },
+  { key: "factoryKey", header: "Заводской номер", sortable: true },
+  {
+    key: "assemblyDate",
+    header: "Год сборки",
+    sortable: true,
+    mapper: (v) => new Date(v).getFullYear(),
+    size: "50px",
+  },
+  {
+    key: "accountingDate",
+    type: "date",
+    header: "Дата учёта",
+    sortable: true,
+    size: "50px",
+  },
+  {
+    key: "commissioningDate",
+    type: "date",
+    header: "Дата ввода в эксплуатацию",
+    sortable: true,
+    size: "50px",
+  },
+];
 
 const Items: React.FC<{
   items: Api.Models.Phone[];
   status: ApiStatus;
   paging: {
     totalItems: number;
-    pageItems: number;
-    onOffsetChanged: (offset: number) => void;
-    offset: number;
+    // pageItems: number;
+    // onOffsetChanged: (offset: number) => void;
+    // offset: number;
   };
   sorting: {
     onSort: (key: string, dir: SortDir) => void;
@@ -37,21 +82,8 @@ const Items: React.FC<{
 }> = (props) => {
   const { items, status, paging, sorting, selection, mode } = props;
 
-  const { totalItems, pageItems, offset, onOffsetChanged } = paging;
+  const { totalItems } = paging;
   const { onSelect, selectedId } = selection;
-
-  const maxPage = Math.ceil(totalItems / pageItems);
-  let currentPage = Math.floor((offset / totalItems) * maxPage) + 1;
-  if (Number.isNaN(currentPage)) currentPage = 1;
-  // if (currentPage > maxPage) currentPage = maxPage;
-
-  React.useEffect(() => {
-    if (totalItems > 0) {
-      if (currentPage > maxPage) {
-        onOffsetChanged(Math.max(0, (maxPage - 1) * pageItems));
-      }
-    }
-  }, [offset, totalItems]);
 
   // React.useEffect(() => {
   //   if(totalItems < filter.offset) return;
@@ -78,37 +110,7 @@ const Items: React.FC<{
     };
   });
 
-  const columns: TableColumn[] = [
-    { key: "id", header: "ID", sortable: true, size: "30px" },
-    { key: "modelName", header: "Модель", sortable: true },
-    {
-      key: "inventoryKey",
-      header: "Инвентарный номер",
-      sortable: true,
-    },
-    { key: "factoryKey", header: "Заводской номер", sortable: true },
-    {
-      key: "assemblyDate",
-      header: "Год сборки",
-      sortable: true,
-      mapper: (v) => new Date(v).getFullYear(),
-      size: "50px",
-    },
-    {
-      key: "accountingDate",
-      type: "date",
-      header: "Дата учёта",
-      sortable: true,
-      size: "50px",
-    },
-    {
-      key: "commissioningDate",
-      type: "date",
-      header: "Дата ввода в эксплуатацию",
-      sortable: true,
-      size: "50px",
-    },
-  ];
+  const columns: TableColumn[] = [...defaultColumns];
 
   if (mode === "edit")
     columns.push({
@@ -140,20 +142,6 @@ const Items: React.FC<{
 
   return (
     <>
-      <Header hr align="right" className="margin_md page__header">
-        <Paginator
-          onChange={(page) =>
-            onOffsetChanged(Math.max(0, (page - 1) * pageItems))
-          }
-          min={1}
-          max={maxPage}
-          size={5}
-          current={currentPage}
-        />
-        <span style={{ marginLeft: "auto" }}>
-          {status.isLoading && <LoaderIcon />} Результаты поиска ({totalItems})
-        </span>
-      </Header>
       <PopupLayer>
         <Popup size="lg" closeable onToggle={() => {}}>
           hey
@@ -169,7 +157,7 @@ const Items: React.FC<{
         name="phoneId"
         items={tableItems.map((item) => ({
           ...item,
-          modelName: item.model?.name,
+          // modelName: item.model?.name,
         }))}
         columns={columns}
       />

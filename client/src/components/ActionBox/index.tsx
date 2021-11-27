@@ -7,7 +7,7 @@ import { mergeClassNames, mergeProps } from "utils";
 import "./styles.styl";
 
 export type ActionBoxProps = {
-  status: ApiStatus;
+  status?: ApiStatus;
   icon?: React.FC<any>;
 } & Omit<SpoilerPopupProps, "target">;
 // React.PropsWithChildren<React.HTMLAttributes<HTMLElement>>
@@ -37,7 +37,7 @@ const ActionBox: React.FC<ActionBoxProps> = (props) => {
         }}
         {...rest}
       >
-        {status.isLoading ? <LoaderIcon /> : children}
+        {status && status.isLoading ? <LoaderIcon /> : children}
       </SpoilerPopup>
     </Button>
   );

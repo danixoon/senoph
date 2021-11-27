@@ -18,6 +18,7 @@ import CommitPageContainer from "containers/CommitPage";
 import HoldingPageContainer from "containers/HoldingPage";
 import CategoryPageContainer from "containers/CategoryPage";
 import AdminPage from "layout/Pages/AdminPage";
+import TestPage from "layout/Pages/_CommitPage";
 import "./style.styl";
 import Span from "components/Span";
 
@@ -78,11 +79,14 @@ const RootLayout: React.FC<{}> = (props) => {
                       <Span> Добро пожаловать, {user.name}! </Span>
                     </Layout>
                   </Route>
+                  <Route path="/test">
+                    <TestPage />
+                  </Route>
+                  <Route path="/phone/commit">
+                    <TestPage />
+                  </Route>
                   <Route path="/phone">
                     <PhonePageContainer />
-                  </Route>
-                  <Route path="/commit">
-                    <CommitPageContainer />
                   </Route>
                   <Route path="/holding">
                     <HoldingPageContainer />

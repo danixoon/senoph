@@ -104,10 +104,10 @@ const CreateContent: React.FC<CategoryPageProps> = (props) => {
               label="Категория"
               name="categoryKey"
               items={[
-                { id: "1", label: "I (Создание)" },
-                { id: "2", label: "II (ТО)" },
-                { id: "3", label: "III (Ремонт)" },
-                { id: "4", label: "IV (Списано)" },
+                { id: "1", label: "I (Прибыло, на гарантии)" },
+                { id: "2", label: "II (Нет гарантии, исправно)" },
+                { id: "3", label: "III (Неисправно)" },
+                { id: "4", label: "IV (Подлежит списанию)" },
               ]}
               {...bind}
             />

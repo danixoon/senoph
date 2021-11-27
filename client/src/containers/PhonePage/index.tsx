@@ -16,7 +16,7 @@ import { denullObject } from "utils";
 import PopupLayer from "providers/PopupLayer";
 import { useFetchConfig } from "hooks/api/useFetchConfig";
 import PhonePopupContainer from "containers/PhonePopup";
-import Icon from "components/Icon";
+import Icon, { LoaderIcon } from "components/Icon";
 import Button from "components/Button";
 import ButtonGroup from "components/ButtonGroup";
 import Hr from "components/Hr";
@@ -37,6 +37,7 @@ import { NoticeContext } from "providers/NoticeProvider";
 import Input from "components/Input";
 import Span from "components/Span";
 import Header from "components/Header";
+import Paginator from "components/Paginator";
 
 type PhonePageContainerProps = {};
 
@@ -101,6 +102,23 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
     );
   };
 
+  const maxPage = Math.ceil(totalItems / filter.pageItems);
+  let currentPage = Math.floor((filter.offset / totalItems) * maxPage) + 1;
+  if (Number.isNaN(currentPage)) currentPage = 1;
+  // if (currentPage > maxPage) currentPage = maxPage;
+
+  React.useEffect(() => {
+    if (totalItems > 0) {
+      if (currentPage > maxPage) {
+        dispatch(
+          updateFilter({
+            offset: Math.max(0, (maxPage - 1) * filter.pageItems),
+          })
+        );
+      }
+    }
+  }, [filter.offset, totalItems]);
+
   return (
     <>
       <PopupLayer>
@@ -109,18 +127,33 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
         <PhoneCreatePopupContainer {...createPopup} />
       </PopupLayer>
       <TopBarLayer>
+        <Paginator
+          onChange={(page) =>
+            dispatch(
+              updateFilter({
+                offset: Math.max(0, (page - 1) * filter.pageItems),
+              })
+            )
+          }
+          min={1}
+          max={maxPage}
+          size={5}
+          current={currentPage}
+        />
+        <Header
+          align="center"
+          style={{ margin: "auto" }}
+          className="margin_md page__header"
+        >
+          {/* <span style={{ marginRight: "auto" }}> */}
+          {fetchStatus.isLoading && (
+            <LoaderIcon style={{ marginRight: "0.5rem" }} />
+          )}{" "}
+          Результаты поиска ({totalItems}){/* </span> */}
+        </Header>
         <RouterSwitch>
           <Route path={`${path}/edit`}>
-            <Hr vertical />
-            <Button
-              margin="none"
-              color="primary"
-              onClick={() => createPopup.onToggle()}
-            >
-              <Icon.Plus size="md" />
-            </Button>
-            <Hr vertical />
-            <ButtonGroup>
+            <ButtonGroup style={{ marginLeft: "auto", marginRight: "1rem" }}>
               <Button
                 disabled={selectionIdsSet.size === 0}
                 margin="none"
@@ -132,9 +165,21 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
                 {selectionIdsSet.size}
               </Badge>
             </ButtonGroup>
+            <Button
+              style={{ marginRight: "4rem" }}
+              margin="none"
+              color="primary"
+              onClick={() => createPopup.onToggle()}
+            >
+              <Icon.Plus size="md" />
+            </Button>
           </Route>
         </RouterSwitch>
-        <Header style={{ margin: "auto", marginRight: 0 }}>Результатов:</Header>
+        <Header
+          style={{ marginLeft: mode === "view" ? "auto" : 0, marginRight: 0 }}
+        >
+          Результатов:
+        </Header>
         <Input
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === "Space")
@@ -150,7 +195,7 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
           type="number"
         />
       </TopBarLayer>
-      <Layout flow="row">
+      <Layout flex="1" flow="row">
         <Layout
           flex="1"
           style={{ marginLeft: "0.25rem", position: "relative" }}
@@ -171,12 +216,6 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
                 dispatch(updateFilter({ sortKey, sortDir })),
             }}
             paging={{
-              offset: filter.offset,
-              onOffsetChanged: (nextOffset) =>
-                dispatch(
-                  updateFilter({ offset: nextOffset < 0 ? 0 : nextOffset })
-                ),
-              pageItems: filter.pageItems,
               totalItems,
             }}
             items={itemsData?.items ?? []}
@@ -185,7 +224,7 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
           />
         </Layout>
         <Hr vertical />
-        <Layout style={{ flexBasis: "200px" }}>
+        <Layout>
           <PhonePage.Filter hook={filterHook} config={filterData} />
         </Layout>
       </Layout>

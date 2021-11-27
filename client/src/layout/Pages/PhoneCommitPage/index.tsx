@@ -331,7 +331,7 @@ const CommitItem: React.FC<{
           <ButtonGroup style={{ marginLeft: "auto" }}>
             <Button color="primary" onClick={() => onCommit("approve")}>
               Подтвердить
-              <Icon.Check />
+              <Icon.Check />  
             </Button>
             <Button onClick={() => onCommit("decline")}>
               Отменить

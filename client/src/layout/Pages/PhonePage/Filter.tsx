@@ -9,6 +9,8 @@ import ClickInput from "components/ClickInput";
 import { useTogglePopup } from "hooks/useTogglePopup";
 import HolderSelectionPopupContainer from "containers/HolderSelectionPopup";
 import PopupLayer from "providers/PopupLayer";
+import Icon from "components/Icon";
+import Button from "components/Button";
 
 const Filter: React.FC<{
   hook: InputHook;
@@ -43,6 +45,9 @@ const Filter: React.FC<{
   return (
     <>
       <Form className="filter-content__form" input={bind.input}>
+        {/* <Button inverted color="primary" className="filter-content__spoiler-button">
+          <Icon.ChevronLeft />
+        </Button> */}
         <Layout>
           <Dropdown {...bind} name="phoneTypeId" label="Тип СС" items={types} />
           <Dropdown

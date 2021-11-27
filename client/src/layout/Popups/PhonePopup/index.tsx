@@ -185,7 +185,32 @@ const Content: React.FC<
               </Badge>
             </ButtonGroup>
             <span style={{ margin: "auto" }}>
-              Средство связи №{phone.id} ({phone.model?.name})
+              Средство связи #{phone.id} ({phone.model?.name})
+              {phone.status === "create-pending" ? (
+                <Link href={`/phone/commit/actions?id=${phone.id}`}>
+                  <Span
+                    style={{ marginLeft: "1rem" }}
+                    inline
+                    color="primary"
+                    weight="bold"
+                  >
+                    ПОДЛЕЖИТ СОЗДАНИЮ
+                  </Span>
+                </Link>
+              ) : phone.status === "delete-pending" ? (
+                <Link href={`/phone/commit/actions?id=${phone.id}`}>
+                  <Span
+                    style={{ marginLeft: "1rem" }}
+                    inline
+                    color="primary"
+                    weight="bold"
+                  >
+                    ПОДЛЕЖИТ УДАЛЕНИЮ
+                  </Span>
+                </Link>
+              ) : (
+                ""
+              )}
             </span>
           </Header>
           <Switch

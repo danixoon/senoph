@@ -46,23 +46,15 @@ const SideBar: React.FC<SideBar> = (props) => {
             Управление
             <Icon.Settings style={{ marginLeft: "auto" }} />
           </LinkItemContainer>
-        </Layout>
-      </Spoiler>
-      <Spoiler
-        opened={page === "commit"}
-        onToggle={page === "commit" ? handleSpoilerToggle : undefined}
-        label="Действия"
-      >
-        <Layout className="sidebar__group">
-          <LinkItemContainer href="/commit/phone/create">
-            Внесения <Icon.Check style={{ marginLeft: "auto" }} />
+          <LinkItemContainer href="/phone/commit/actions">
+            Действия <Icon.DownloadCloud style={{ marginLeft: "auto" }} />
           </LinkItemContainer>
-          <LinkItemContainer href="/commit/phone/delete">
+          {/* <LinkItemContainer href="/phone/commit/delete">
             Удаления <Icon.X style={{ marginLeft: "auto" }} />
           </LinkItemContainer>
-          <LinkItemContainer href="/commit/phone/edit">
+          <LinkItemContainer href="/phone/commit/edit">
             Изменения <Icon.Edit3 style={{ marginLeft: "auto" }} />
-          </LinkItemContainer>
+          </LinkItemContainer> */}
         </Layout>
       </Spoiler>
       <Spoiler
