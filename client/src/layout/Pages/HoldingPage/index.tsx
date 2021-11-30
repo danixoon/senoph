@@ -70,6 +70,7 @@ const useContainer = (props: { holdings: Api.Models.Holding[] }) => {
   return {
     path,
     phones,
+    holderId: isId ? parseInt(query.id as string) : undefined,
     isOpen: isId,
     onToggle: (id?: number) => {
       history.replace({
@@ -90,6 +91,7 @@ const HoldingPage: React.FC<HoldingPageProps> = (props) => {
   const { phones, holdings } = props;
   const {
     phones: holdingPhones,
+    holderId,
     isOpen,
     onToggle,
     onCommit,
@@ -110,7 +112,9 @@ const HoldingPage: React.FC<HoldingPageProps> = (props) => {
             content: (
               <>
                 <Button
-                  onClick={() => onCommit("remove")}
+                  onClick={() =>
+                    holderId && onCommit("remove", holderId, item.id)
+                  }
                   inverted
                   style={{ marginRight: "1rem" }}
                 >
