@@ -14,7 +14,7 @@ export const usePhoneTypeByModel = () => {
 
 export const usePhoneType = () => {
   const { models, types } = useFetchConfig();
-  return (phoneTypeId: number) => {
+  return (phoneTypeId?: number) => {
     const type = types.find((type) => type.id === phoneTypeId);
 
     return type ? type.name : "Неизвестно";

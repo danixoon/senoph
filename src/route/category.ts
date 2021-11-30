@@ -49,7 +49,7 @@ router.get(
       prepareItems(
         categories.map((category) => ({
           id: category.id,
-          actDate: new Date(category.actDate),
+          actDate: category.actDate,
           actUrl: category.actUrl,
           categoryKey: category.categoryKey,
           phoneId: category.phoneId,
@@ -91,7 +91,7 @@ router.post(
         actUrl: file.path,
         description,
         categoryKey,
-        actDate
+        actDate: actDate.toISOString(),
       }))
     );
 
@@ -113,6 +113,5 @@ router.delete(
     res.send();
   })
 );
-
 
 export default router;

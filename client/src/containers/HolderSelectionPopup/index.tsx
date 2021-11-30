@@ -7,7 +7,7 @@ import ItemSelectionPopup, {
 import { useFetchHolder } from "hooks/api/useFetchHolder";
 import { InputBind, useInput } from "hooks/useInput";
 import DepartmentSelectionPopupContainer from "containers/DepartmentSelectionPopup";
-import { splitHolderName, useHolderName } from "hooks/misc/useHolderName";
+import { splitHolderName, useHolder } from "hooks/misc/holder";
 import ClickInput from "components/ClickInput";
 import PopupLayer from "providers/PopupLayer";
 import Dropdown, { DropdownProps } from "components/Dropdown";
@@ -42,9 +42,7 @@ const HolderSelectionPopupContainer: React.FC<HolderSelectionPopupContainerProps
         }}
         header="Выбор владельца"
         {...rest}
-       />
-
-
+      />
     );
   };
 

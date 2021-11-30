@@ -48,16 +48,9 @@ const HoldingPageContainer: React.FC<Props> = (props) => {
   const holdingMap = new Map<number, Api.Models.Holding[]>();
   for (const holding of phoneHoldings?.items ?? []) {
     for (const phoneId of holding.phoneIds) {
-      // const { phoneIds, ...rest } = holding;
-      // if(holding)
       const holdingList = holdingMap.get(phoneId) ?? [];
-      // const last = holdingList[holdingList.length - 1] ?? { createdAt: NaN };
-      holdingMap.set(
-        phoneId,
-        // (last.createdAt as string) < (holding.createdAt as string)
-        [...holdingList, holding]
-        // : [holding, ...holdingList]
-      );
+
+      holdingMap.set(phoneId, [...holdingList, holding]);
     }
   }
 
@@ -73,21 +66,19 @@ const HoldingPageContainer: React.FC<Props> = (props) => {
   const holdingItems = (holdings?.items ?? []).map((holding) => {
     const prevHolders: Api.Models.Holder[] = [];
     for (const id of holding.phoneIds) {
-      // TODO: Проверить даты и прочую чушь
+      // Получаем все движения сс по ID средств связи, отсортированные по дате документа
       const prevItems = [...(holdingMap.get(id) ?? [])].sort((a, b) =>
         (a.orderDate as string) < (b.orderDate as string) ? -1 : 1
       );
-      for (const prevItem of prevItems) {
-        if (!prevItem || prevItem.holderId === holding.holderId) break;
+      // Определяется порядковый номер назначения для СС
+      const holderIndex = prevItems.findIndex((item) => item.id === holding.id);
 
-        if (
-          prevItem?.holder &&
-          !prevHolders.find((h) => h.id === prevItem.holderId)
-        )
-          prevHolders.push(prevItem.holder as Api.Models.Holder);
+      // Если это не первый владелец, то следует вывести его
+      if (holderIndex > 0) {
+        const holder = prevItems[holderIndex - 1].holder as Api.Models.Holder;
+        if (prevHolders.every((h) => h.id !== holder.id))
+          prevHolders.push(holder);
       }
-
-      console.log(`#${id}: `, prevHolders);
     }
 
     return { ...holding, prevHolders };

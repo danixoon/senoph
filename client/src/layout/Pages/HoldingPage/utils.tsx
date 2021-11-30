@@ -4,7 +4,7 @@ import Layout from "components/Layout";
 import Link from "components/Link";
 import Span from "components/Span";
 import { TableColumn } from "components/Table";
-import { splitHolderName } from "hooks/misc/useHolderName";
+import { splitHolderName } from "hooks/misc/holder";
 import React from "react";
 import { HoldingTableItem } from ".";
 

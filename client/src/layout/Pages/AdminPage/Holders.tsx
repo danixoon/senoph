@@ -8,8 +8,8 @@ import Input from "components/Input";
 import Layout from "components/Layout";
 import SpoilerPopup, { SpoilerPopupButton } from "components/SpoilerPopup";
 import Table, { TableColumn } from "components/Table";
-import { useDepartmentName } from "hooks/misc/useDepartmentName";
-import { useHolderName } from "hooks/misc/useHolderName";
+import { useDepartment } from "hooks/misc/department";
+import { splitHolderName, useHolder } from "hooks/misc/holder";
 import { useInput } from "hooks/useInput";
 import { NoticeContext } from "providers/NoticeProvider";
 import React from "react";
@@ -22,7 +22,7 @@ const useContainer = () => {
   const holders = api.useFetchHoldersQuery({});
   const [deleteHolder, deleteStatus] = api.useDeleteHolderMutation();
   const [createHolder, createStatus] = api.useCreateHolderMutation();
-  const getHolderName = useHolderName();
+  const getHolderName = useHolder();
 
   return {
     holders: { ...holders, items: holders.data?.items ?? [] },
@@ -88,7 +88,7 @@ const Holders: React.FC<HoldersProps> = (props) => {
     {
       key: "name",
       header: "ФИО",
-      mapper: (v, item: Api.Models.Holder) => getHolderName(item),
+      mapper: (v, item: Api.Models.Holder) => splitHolderName(item),
     },
   ];
 

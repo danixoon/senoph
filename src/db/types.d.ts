@@ -70,7 +70,7 @@ declare namespace DB {
 
   type PhoneCategoryAttributes = Attributes<{
     categoryKey: string;
-    actDate: Date;
+    actDate: string;
 
     actUrl: string;
     phoneId: number;
@@ -136,7 +136,7 @@ declare namespace DB {
     // holders?: HolderAttributes[];
     categories?: PhoneCategoryAttributes[];
     holdings?: HoldingAttributes[];
-    holders?: HolderAttributes[];
+    // holders?: HolderAttributes[];
   }> &
     WithCommit &
     WithAuthor;

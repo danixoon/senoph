@@ -11,8 +11,8 @@ import Link from "components/Link";
 import Span from "components/Span";
 import Table, { TableColumn } from "components/Table";
 import HolderSelectionPopupContainer from "containers/HolderSelectionPopup";
-import { useDepartmentName } from "hooks/misc/useDepartmentName";
-import { splitHolderName, useHolderName } from "hooks/misc/useHolderName";
+import { useDepartment } from "hooks/misc/department";
+import { splitHolderName, useHolder } from "hooks/misc/holder";
 
 import { useFileInput, useInput } from "hooks/useInput";
 import PopupLayer from "providers/PopupLayer";

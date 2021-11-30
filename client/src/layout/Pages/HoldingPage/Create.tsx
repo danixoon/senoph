@@ -1,7 +1,7 @@
 import { api } from "store/slices/api";
 import Table, { TableColumn } from "components/Table";
-import { useDepartmentName } from "hooks/misc/useDepartmentName";
-import { useHolderName } from "hooks/misc/useHolderName";
+import { getDepartmentName, useDepartment } from "hooks/misc/department";
+import { splitHolderName, useHolder } from "hooks/misc/holder";
 import { useInput, useFileInput } from "hooks/useInput";
 import { useTogglePopup } from "hooks/useTogglePopup";
 import React from "react";
@@ -21,6 +21,7 @@ import HolderSelectionPopupContainer from "containers/HolderSelectionPopup";
 import PopupLayer from "providers/PopupLayer";
 import { getTableColumns, reasonMap } from "./utils";
 import { parseItems } from "store/utils";
+import { getLastHolding } from "hooks/misc/holding";
 
 const CreateContent: React.FC<HoldingPageProps> = (props) => {
   const { phones, holdingCreationStatus, onSubmitHolding: onSubmit } = props;
@@ -40,8 +41,8 @@ const CreateContent: React.FC<HoldingPageProps> = (props) => {
     { key: "holderName", header: "Владелец" },
     { key: "departmentName", header: "Отделение" },
   ];
-  const getHolderName = useHolderName();
-  const getDepartmentName = useDepartmentName();
+  const getHolder = useHolder();
+  const getDepartment = useDepartment();
 
   const [bind, setInput] = useInput({
     departmentId: null,
@@ -52,16 +53,17 @@ const CreateContent: React.FC<HoldingPageProps> = (props) => {
 
   const [bindFile] = useFileInput();
 
-  const tableItems = phones.map((phone) => ({
-    ...phone,
-    modelName: phone.model?.name,
-    holderName: getHolderName(phone.holder),
-    departmentName: getDepartmentName(
-      phone.holdings && phone.holdings.length > 0
-        ? phone.holdings[0].departmentId
-        : undefined
-    ),
-  }));
+  const tableItems = phones.map((phone) => {
+    const lastHolding = getLastHolding(phone.holdings);
+    return {
+      ...phone,
+      modelName: phone.model?.name,
+      holderName: splitHolderName(getHolder(lastHolding?.holderId)),
+      departmentName: getDepartmentName(
+        getDepartment(lastHolding?.departmentId)
+      ),
+    };
+  });
 
   const bindHoldingPopup = useTogglePopup();
 

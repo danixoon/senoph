@@ -31,7 +31,10 @@ import HoldingItem from "./HoldingItem";
 
 import "./style.styl";
 import { useFetchHolder, useLastHolder } from "hooks/api/useFetchHolder";
-import { useHolderName } from "hooks/misc/useHolderName";
+import { splitHolderName, useHolder } from "hooks/misc/holder";
+import { getLastHolding } from "hooks/misc/holding";
+import { getDepartmentName, useDepartment } from "hooks/misc/department";
+import { usePhoneType } from "hooks/misc/phoneType";
 
 export type PhonePopupProps = {
   phone: Api.Models.Phone | null;
@@ -65,19 +68,22 @@ const Content: React.FC<
     undoChanges,
     onDelete,
   } = props;
-  const { types, departments } = useFetchConfig();
+
+  const getHolder = useHolder();
+  const getDepartment = useDepartment();
+  const getType = usePhoneType();
 
   const [bind] = useInput({ tab: "category" });
 
-  const typeName = types.find((t) => phone.model?.phoneTypeId === t.id)?.name;
+  const typeName = getType(phone.model?.phoneTypeId);
   const modelName = phone.model?.name;
 
-  const departmentName = departments.find(
-    (d) => (phone.holdings ?? [{ departmentId: null }])[0].departmentId == d.id
-  )?.name;
+  const lastHolding = getLastHolding(phone.holdings);
 
-  const holder = phone?.holder;
-  const holderName = `${holder?.lastName} ${holder?.firstName} ${holder?.middleName}`;
+  const holder = getHolder(lastHolding?.holderId);
+  const departmentName = getDepartmentName(
+    getDepartment(lastHolding.departmentId)
+  );
 
   const { accountingDate, commissioningDate, assemblyDate } = phone;
 
@@ -96,8 +102,6 @@ const Content: React.FC<
       <Header align="center">Категории отсутствуют.</Header>
     );
 
-  const getHolderName = useHolderName();
-
   const renderHoldings = () =>
     (phone.holdings?.length ?? 0) > 0 ? (
       phone.holdings?.map((hold) => (
@@ -105,7 +109,7 @@ const Content: React.FC<
           onSelect={() => onSelectHolding(hold.id)}
           key={hold.id}
           orderDate={new Date(hold.orderDate ?? Date.now())}
-          holder={getHolderName(hold.holder)}
+          holder={splitHolderName(hold.holder)}
         />
       ))
     ) : (
@@ -295,7 +299,7 @@ const Content: React.FC<
                 </ListItem>
                 <ListItem label="Материально-ответственное лицо">
                   <Link href="/phone/edit" isMonospace>
-                    {holderName}
+                    {splitHolderName(holder)}
                   </Link>
                 </ListItem>
               </>

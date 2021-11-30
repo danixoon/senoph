@@ -63,14 +63,14 @@ router.get(
         PhoneCategory,
         { model: Holding, include: [Holder] },
       ],
-      order: [[Sequelize.literal('`holdings.orderDate`'), "ASC"]]
+      order: [[Sequelize.literal("`holdings.orderDate`"), "ASC"]],
     });
 
     // TODO: Сделать проверку на статус правильной
-    if (phone != null) {
-      const withHolder = await Phone.withHolders([phone]);
-      res.send(withHolder[0]);
-    } else res.sendStatus(404);
+    // if (phone != null) {
+    //   const withHolder = await Phone.withHolders([phone]);
+    if (phone) res.send(phone as Api.Models.Phone);
+    else res.sendStatus(404);
   })
 );
 
@@ -140,11 +140,9 @@ router.get(
     const filter = new Filter(req.query);
     filter.add("status");
 
-    const phones = await Phone.withHolders(
-      await Phone.scope("commit").findAll({ where: filter.where })
-    );
+    const phones = await Phone.scope("commit").findAll({ where: filter.where });
 
-    res.send(prepareItems(phones, phones.length, 0));
+    res.send(prepareItems(phones as Api.Models.Phone[], phones.length, 0));
   })
 );
 
@@ -256,15 +254,19 @@ router.get(
     const items = await Phone.findAll({
       order,
       where: filter.where,
-      include: [PhoneCategory, { model: PhoneModel, where: modelFilter.where }],
+      include: [
+        PhoneCategory,
+        { model: PhoneModel, where: modelFilter.where },
+        Holding,
+      ],
       //attributes: ["id"],
     });
 
-    const ofsetted = items.slice(offset, offset + amount);
+    const phones = items.slice(offset, offset + amount);
 
-    const phones = await Phone.withHolders(ofsetted);
+    // const phones = await Phone.withHolders(ofsetted);
 
-    res.send(prepareItems(phones, items.length, amount));
+    res.send(prepareItems(phones as Api.Models.Phone[], items.length, amount));
 
     // const phoneIds = items.map((phone) => phone.id);
 

@@ -346,7 +346,7 @@ export const fillDevDatabase = async (full?: boolean, size: number = 150) => {
       const date = randomDate();
       return PhoneCategory.create({
         categoryKey: "1",
-        actDate: date,
+        actDate: date.toISOString(),
         phoneId,
         actUrl: "test.pdf",
         status: null,

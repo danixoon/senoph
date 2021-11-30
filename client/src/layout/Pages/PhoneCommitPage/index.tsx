@@ -18,9 +18,10 @@ import ButtonGroup from "components/ButtonGroup";
 import { groupBy } from "utils";
 import Dropdown from "components/Dropdown";
 import Link from "components/Link";
-import { useHolderName } from "hooks/misc/useHolderName";
+import { splitHolderName, useHolder } from "hooks/misc/holder";
 import { usePhoneTypeByModel } from "hooks/misc/phoneType";
 import Spoiler from "components/Spoiler";
+import { getLastHolding } from "hooks/misc/holding";
 
 export type PhoneCommitPageTab = "create" | "delete" | "edit";
 export type PhoneCommitChange = {
@@ -59,9 +60,9 @@ export type PhoneCommitPageProps = {
 const CommitItemContent: React.FC<{
   item: Api.Models.Phone;
   getTypeName: (id: number) => string;
-  getHolderName: (holder?: Api.Models.Holder) => string;
+  getHolder: (id: number) => Api.Models.Holder | undefined;
 }> = (props) => {
-  const { item, getHolderName, getTypeName } = props;
+  const { item, getTypeName, getHolder } = props;
 
   return (
     <Layout flow="row">
@@ -103,7 +104,9 @@ const CommitItemContent: React.FC<{
         </ListItem>
         <Hr />
         <ListItem label="Владелец">
-          <Span>{getHolderName(item.holder as Api.Models.Holder)}</Span>
+          <Span>
+            {splitHolderName(getHolder(getLastHolding(item.holdings).holderId))}
+          </Span>
         </ListItem>
       </Layout>
     </Layout>
@@ -113,9 +116,8 @@ const CommitItemContent: React.FC<{
 const CommitEditedItemContent: React.FC<{
   item: { original: Api.Models.Phone; changes: Partial<Api.Models.Phone> };
   getTypeName: (id: number) => string;
-  getHolderName: (holder?: Api.Models.Holder) => string;
 }> = (props) => {
-  const { item, getHolderName, getTypeName } = props;
+  const { item, getTypeName } = props;
   const { original, changes } = item;
 
   const { id, createdAt, ...trueChanges } = changes;
@@ -201,7 +203,7 @@ const PhoneCommitPage: React.FC<PhoneCommitPageProps> = (props) => {
     i: number;
   } | null>(() => null);
 
-  const getHolderName = useHolderName();
+  const getHolder = useHolder();
   const getTypeName = usePhoneTypeByModel();
 
   const mapCommits = (
@@ -283,13 +285,12 @@ const PhoneCommitPage: React.FC<PhoneCommitPageProps> = (props) => {
               <CommitEditedItemContent
                 item={{ original: info.commit, changes: info.changes ?? {} }}
                 getTypeName={getTypeName}
-                getHolderName={getHolderName}
               />
             ) : (
               <CommitItemContent
                 item={info.commit}
                 getTypeName={getTypeName}
-                getHolderName={getHolderName}
+                getHolder={getHolder}
               />
             )}
           </CommitItem>
@@ -331,7 +332,7 @@ const CommitItem: React.FC<{
           <ButtonGroup style={{ marginLeft: "auto" }}>
             <Button color="primary" onClick={() => onCommit("approve")}>
               Подтвердить
-              <Icon.Check />  
+              <Icon.Check />
             </Button>
             <Button onClick={() => onCommit("decline")}>
               Отменить

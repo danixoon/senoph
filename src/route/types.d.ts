@@ -60,7 +60,7 @@ declare namespace Api {
   // type ExpressHandler = import("express").Request;
   namespace Models {
     // declare namespace Api.Model {
-    type Phone = RequiredId<DB.PhoneAttributes> & { holder?: Holder };
+    type Phone = RequiredId<DB.PhoneAttributes>;
     type PhoneType = RequiredId<DB.PhoneTypeAttributes>;
     type PhoneCategory = RequiredId<DB.PhoneCategoryAttributes>;
     type PhoneModel = RequiredId<DB.PhoneModelAttributes>;

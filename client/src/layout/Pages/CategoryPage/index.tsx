@@ -14,8 +14,8 @@ import Span from "components/Span";
 import Table, { TableColumn } from "components/Table";
 import HolderSelectionPopupContainer from "containers/HolderSelectionPopup";
 import DepartmentSelectionPopupContainer from "containers/DepartmentSelectionPopup";
-import { useDepartmentName } from "hooks/misc/useDepartmentName";
-import { useHolderName } from "hooks/misc/useHolderName";
+import { getDepartmentName, useDepartment } from "hooks/misc/department";
+import { splitHolderName, useHolder } from "hooks/misc/holder";
 
 import { useFileInput, useInput } from "hooks/useInput";
 import { useQueryInput } from "hooks/useQueryInput";
@@ -35,6 +35,7 @@ import { useLastHolder } from "hooks/api/useFetchHolder";
 import Badge from "components/Badge";
 import SpoilerPopup, { SpoilerPopupButton } from "components/SpoilerPopup";
 import InfoBanner from "components/InfoBanner";
+import { getLastHolding } from "hooks/misc/holding";
 
 export type CategoryPageProps = {
   phones: Api.Models.Phone[];
@@ -65,23 +66,24 @@ const CreateContent: React.FC<CategoryPageProps> = (props) => {
     { key: "holderName", header: "Владелец" },
     { key: "departmentName", header: "Отделение" },
   ];
-  const getHolderName = useHolderName();
-  const getDepartmentName = useDepartmentName();
+  const getHolder = useHolder();
+  const getDepartment = useDepartment();
 
   const [bind] = useInput({});
 
   const [bindFile] = useFileInput();
 
-  const tableItems = phones.map((phone) => ({
-    ...phone,
-    modelName: phone.model?.name,
-    holderName: getHolderName(phone.holder),
-    departmentName: getDepartmentName(
-      phone.holdings && phone.holdings.length > 0
-        ? phone.holdings[0].departmentId
-        : undefined
-    ),
-  }));
+  const tableItems = phones.map((phone) => {
+    const lastHolding = getLastHolding(phone.holdings);
+    return {
+      ...phone,
+      modelName: phone.model?.name,
+      holderName: splitHolderName(getHolder(lastHolding?.holderId)),
+      departmentName: getDepartmentName(
+        getDepartment(lastHolding?.departmentId)
+      ),
+    };
+  });
 
   // TODO: Make proper typing for POST request params & form inputs
   return (
@@ -193,7 +195,7 @@ const ActionBox = (props: { commit: (action: CommitActionType) => void }) => {
 
 const ViewContent: React.FC<CategoryPageProps> = (props) => {
   const [commitCategory, status] = api.useCommitCategoryMutation();
-  const getDepartmentName = useDepartmentName();
+  const getDepartment = useDepartment();
 
   const columns: TableColumn[] = [
     {
@@ -240,9 +242,7 @@ const ViewContent: React.FC<CategoryPageProps> = (props) => {
     return {
       ...category,
       departmentName: getDepartmentName(
-        phone?.holdings && phone.holdings.length > 0
-          ? phone.holdings[0].departmentId
-          : undefined
+        getDepartment(getLastHolding(phone?.holdings)?.departmentId)
       ),
     };
   });
