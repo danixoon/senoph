@@ -32,31 +32,29 @@ const SideBar: React.FC<SideBar> = (props) => {
         label="Средства связи"
       >
         <Layout className="sidebar__group">
-          <LinkItemContainer href="/phone/view">
+          <LinkItemContainer
+            href="/phone/view"
+            withQuery={(loc) => loc.pathname.startsWith("/phone/edit")}
+          >
             Просмотр
             <Icon.Eye style={{ marginLeft: "auto" }} />
           </LinkItemContainer>
-          <LinkItemContainer href="/phone/edit">
+          <LinkItemContainer
+            href="/phone/edit"
+            withQuery={(loc) => loc.pathname.startsWith("/phone/view")}
+          >
             Управление
             <Icon.Settings style={{ marginLeft: "auto" }} />
           </LinkItemContainer>
-        </Layout>
-      </Spoiler>
-      <Spoiler
-        opened={page === "commit"}
-        onToggle={page === "commit" ? handleSpoilerToggle : undefined}
-        label="Действия"
-      >
-        <Layout className="sidebar__group">
-          <LinkItemContainer href="/commit/phone/create">
-            Внесения <Icon.Check style={{ marginLeft: "auto" }} />
+          <LinkItemContainer href="/phone/commit/actions">
+            Действия <Icon.DownloadCloud style={{ marginLeft: "auto" }} />
           </LinkItemContainer>
-          <LinkItemContainer href="/commit/phone/delete">
+          {/* <LinkItemContainer href="/phone/commit/delete">
             Удаления <Icon.X style={{ marginLeft: "auto" }} />
           </LinkItemContainer>
-          <LinkItemContainer href="/commit/phone/edit">
+          <LinkItemContainer href="/phone/commit/edit">
             Изменения <Icon.Edit3 style={{ marginLeft: "auto" }} />
-          </LinkItemContainer>
+          </LinkItemContainer> */}
         </Layout>
       </Spoiler>
       <Spoiler
@@ -67,6 +65,12 @@ const SideBar: React.FC<SideBar> = (props) => {
         <Layout className="sidebar__group">
           <LinkItemContainer href="/holding/view">
             Просмотр <Icon.Eye style={{ marginLeft: "auto" }} />
+          </LinkItemContainer>
+          <LinkItemContainer href="/holding/commit">
+            Подтверждения <Icon.Check style={{ marginLeft: "auto" }} />
+          </LinkItemContainer>
+          <LinkItemContainer href="/holding/phone/commit">
+            Изменения <Icon.Edit3 style={{ marginLeft: "auto" }} />
           </LinkItemContainer>
           <LinkItemContainer href="/holding/create">
             Создание <Icon.Plus size="md" style={{ marginLeft: "auto" }} />
@@ -93,18 +97,25 @@ const SideBar: React.FC<SideBar> = (props) => {
         >
           <Layout className="sidebar__group">
             <LinkItemContainer href="/admin/users">
-              Пользователи
+              Пользователи <Icon.User style={{ marginLeft: "auto" }} />
             </LinkItemContainer>
             <LinkItemContainer href="/admin/departments">
-              Подразделения
+              Подразделения <Icon.Home style={{ marginLeft: "auto" }} />
+            </LinkItemContainer>
+            <LinkItemContainer href="/admin/placements">
+              Местоположения <Icon.Globe style={{ marginLeft: "auto" }} />
             </LinkItemContainer>
             <LinkItemContainer href="/admin/holders">
-              Владельцы
+              Владельцы <Icon.Star style={{ marginLeft: "auto" }} />
             </LinkItemContainer>
-            <LinkItemContainer href="/admin/phone">Типы</LinkItemContainer>
-            <LinkItemContainer href="/admin/models">Модели</LinkItemContainer>
+            <LinkItemContainer href="/admin/phone">
+              Типы <Icon.Folder style={{ marginLeft: "auto" }} />
+            </LinkItemContainer>
+            <LinkItemContainer href="/admin/models">
+              Модели <Icon.Phone style={{ marginLeft: "auto" }} />
+            </LinkItemContainer>
             <LinkItemContainer href="/admin/logs">
-              История (логи)
+              История (логи) <Icon.Cloud style={{ marginLeft: "auto" }} />
             </LinkItemContainer>
           </Layout>
         </Spoiler>

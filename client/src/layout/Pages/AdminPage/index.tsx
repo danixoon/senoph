@@ -1,6 +1,7 @@
 import React from "react";
 import { Route, Switch, useRouteMatch } from "react-router";
 import Departments from "./Departments";
+import Placements from "./Placements";
 import Holders from "./Holders";
 import Logs from "./Logs";
 import PhoneModels from "./PhoneModels";
@@ -19,6 +20,9 @@ const AdminPage: React.FC<AdminPageProps> = (props) => {
       </Route>
       <Route path={`${path}/holders`}>
         <Holders />
+      </Route>
+      <Route path={`${path}/placements`}>
+        <Placements />
       </Route>
       <Route path={`${path}/departments`}>
         <Departments />

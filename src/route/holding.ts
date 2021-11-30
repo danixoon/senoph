@@ -7,7 +7,7 @@ import PhoneType from "@backend/db/models/phoneType.model";
 import Department from "@backend/db/models/department.model";
 import PhoneModel from "@backend/db/models/phoneModel.model";
 import { AppRouter } from "../router";
-import { handler, prepareItems } from "../utils";
+import { groupBy, transactionHandler, prepareItems } from "../utils";
 import { access, owner } from "@backend/middleware/auth";
 import { tester, validate } from "@backend/middleware/validator";
 import { upload } from "@backend/middleware/upload";
@@ -34,9 +34,9 @@ router.get(
       // latest: tester().isBoolean(),
     },
   }),
-  handler(async (req, res) => {
+  transactionHandler(async (req, res) => {
     // const { latest, phoneIds } = req.query;
-
+    const { user } = req.params;
     const filter = new Filter(req.query).add("status");
     // const phoneFilter = new Filter({ id: req.query.phoneIds }).add("id", Op.in);
 
@@ -46,10 +46,12 @@ router.get(
           model: Phone,
           // where: phoneFilter.where,
           attributes: ["id"],
+          required: false,
           // required: (req.query.phoneIds ?? []).length > 0,
         },
         Holder,
       ],
+      order: [["orderDate", "ASC"]],
       where: filter.where,
     });
 
@@ -60,7 +62,10 @@ router.get(
           holderId: holding.holderId,
           phoneIds: holding.phones?.map((phone) => phone.id) ?? [],
           reasonId: holding.reasonId,
-          // orderKey: holding.orderKey,
+          status: holding.status,
+          authorId: holding.authorId,
+          departmentId: holding.departmentId,
+          orderKey: holding.orderKey,
           orderDate: holding.orderDate,
           orderUrl: holding.orderUrl,
           holder: holding.holder,
@@ -72,6 +77,49 @@ router.get(
   })
 );
 
+router.get(
+  "/holdings/commit",
+  access("user"),
+  validate({
+    query: {
+      status: tester(),
+    },
+  }),
+  transactionHandler(async (req, res) => {
+    const holdingPhones = await HoldingPhone.findAll({
+      where: { status: { [Op.not]: null } },
+    });
+
+    const groupedItems = groupBy(holdingPhones, (item) => item.holdingId);
+    const items: {
+      holderId: number;
+      commits: ({ phoneId: number } & WithCommit)[];
+    }[] = [];
+
+    for (const [key, value] of groupedItems)
+      items.push({
+        holderId: key,
+        commits: value.map(({ holdingId, ...rest }) => rest),
+      });
+
+    return prepareItems(items, items.length, 0);
+  })
+);
+
+router.delete(
+  "/holding",
+  access("user"),
+  validate({
+    query: { id: tester().isNumber() },
+  }),
+  transactionHandler(async (req, res) => {
+    const { id } = req.query;
+    await Holding.update({ status: "delete-pending" }, { where: { id } });
+
+    res.send();
+  })
+);
+
 router.post(
   "/holding",
   access("user"),
@@ -80,32 +128,41 @@ router.post(
     body: {
       description: tester(),
       orderDate: tester().isDate().required(),
-      holderId: tester().isNumeric().required(),
+      holderId: tester().isNumber().required(),
+      departmentId: tester().isNumber().required(),
       reasonId: tester()
-        .isIn(["initial", "write-off", "movement", "dismissal"])
+        .isIn([
+          "initial",
+          "write-off",
+          "movement",
+          "dismissal",
+          "order",
+          "other",
+        ])
         .required(),
       phoneIds: tester().array().required(),
-      orderFile: tester().required(),
+      orderFile: tester(),
+      orderKey: tester().required(),
     },
   }),
   owner("phone", (req) => req.body.phoneIds),
-  handler(async (req, res) => {
+  transactionHandler(async (req, res) => {
     // TODO: Make file validation
     const { user } = req.params;
     const { file } = req;
-    if (!file)
-      throw new ApiError(errorType.INVALID_BODY, {
-        description: "Файл приказа обязателен",
-      });
 
-    const { holderId, phoneIds, reasonId, description, orderDate } = req.body;
+    const { holderId, phoneIds, reasonId, description, orderDate, orderKey, departmentId } =
+      req.body;
 
     const holding = await Holding.create({
       holderId,
-      orderUrl: file.path,
-      orderDate: orderDate.toISOString(),
+      orderUrl: file ? file.path : undefined,
+      orderDate: (orderDate as any).toISOString(),
+      orderKey,
+      authorId: user.id,
       reasonId,
       description,
+      departmentId,
     });
 
     // TODO: Make holding create validation
@@ -117,6 +174,75 @@ router.post(
     Log.log("holding", [holding.id], "create", user.id);
 
     res.send({ holdingId: holding.id });
+  })
+);
+
+router.put(
+  "/holding",
+  access("admin"),
+  validate({
+    query: {
+      action: tester().isIn(["add", "remove"]).required(),
+      phoneIds: tester().array("int").required(),
+      holdingId: tester().isNumber().required(),
+    },
+  }),
+  transactionHandler(async (req, res) => {
+    const { action, phoneIds, holdingId } = req.query;
+
+    if (action === "remove") {
+      const holdings = await HoldingPhone.findAll({
+        where: {
+          phoneId: { [Op.in]: phoneIds },
+          holdingId,
+          status: null,
+        },
+      });
+
+      if (holdings.length !== phoneIds.length)
+        throw new ApiError(errorType.INVALID_QUERY, {
+          description: "Один или более ID средств связи указан неверно.",
+        });
+
+      const holdingPhonesIds = holdings.map((h) => h.id);
+      const [row, updated] = await HoldingPhone.update(
+        {
+          status: "delete-pending",
+          statusAt: new Date().toISOString(),
+        },
+        { where: { id: { [Op.in]: holdingPhonesIds } } }
+      );
+    } else {
+      const holdings = await HoldingPhone.findAll({
+        where: {
+          phoneId: { [Op.in]: phoneIds },
+          holdingId,
+        },
+      });
+
+      if (holdings.length > 0)
+        throw new ApiError(errorType.INVALID_QUERY, {
+          description: "Один или более ID средств связи указан неверно.",
+        });
+
+      const holding = await Holding.findByPk(holdingId);
+      if (!holding)
+        throw new ApiError(errorType.INVALID_QUERY, {
+          description: "Указан ID несуществующего движения.",
+        });
+
+      const creations: DB.HoldingPhoneAttributes[] = phoneIds.map(
+        (phoneId) => ({
+          phoneId,
+          holdingId,
+          status: "create-pending",
+        })
+      );
+
+      await HoldingPhone.bulkCreate(creations);
+    }
+
+    res.send();
   })
 );
 

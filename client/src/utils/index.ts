@@ -1,5 +1,7 @@
 // import { getAction } from "../redux/types";
 
+import { extractStatus } from "store/utils";
+
 export const mergeClassNames = (
   ...names: (string | undefined | boolean | null)[]
 ) => {
@@ -17,13 +19,13 @@ export const mergeProps = <P extends MergingProps, T>(
 ): T & P => {
   return {
     ...ownProps,
-    ...(newProps ?? {} as any),
+    ...(newProps ?? ({} as any)),
     className: mergeClassNames(
       ownProps.className,
       (newProps as MergingProps)?.className
     ),
     style: {
-      ...(ownProps.style ?? {} as any),
+      ...(ownProps.style ?? ({} as any)),
       ...((newProps as MergingProps)?.style ?? {}),
     },
   };
@@ -41,12 +43,13 @@ export const clearObject = function <T>(obj: T) {
   const filtered = { ...obj };
   for (const k in filtered) {
     const v = filtered[k];
+    if (typeof v === "number") if (isNaN(v)) delete filtered[k];
     if (Array.isArray(v) && v.length === 0) delete filtered[k];
     else if (typeof v === "string" && v.trim().length === 0) delete filtered[k];
     else if (v === null) delete filtered[k];
   }
 
-  return filtered as { [K in keyof T]: Exclude<T[K], null> };
+  return filtered as { [K in keyof T]: Exclude<T[K], null | undefined> };
 };
 
 type ExtractOnly<T, P> = UnionToIntersection<
@@ -77,28 +80,21 @@ export const groupBy = <T, K extends keyof T>(
   return map;
 };
 
-// export const groupBy = <
-//   T,
-//   K extends keyof ExtractOnly<T, string | boolean | number>,
-//   P extends K extends keyof T ? K : never
-// >(
-//   list: T[],
-//   key: K
-// ) =>
-//   list.reduce(
-//     (p, c) => ({
-//       ...p,
-//       [(c as any)[key]]: [...((p as any)[(p as any)[key]] ?? []), c],
-//     }),
-//     {} as Record<T[P], T[]>
-//   );
+export function isResponse<T extends any>(res: T): res is Exclude<T, void> {
+  return typeof res !== "undefined";
+}
 
-// export const t = groupBy(
-//   [
-//     { owo: true, foo: "sv" },
-//     { owo: false, foo: "sf" },
-//   ],
-//   "owo"
-// );
+export const extractItemsHook = <T>(hook: {
+  data?: ItemsResponse<T>;
+  isError?: boolean;
+  isLoading?: boolean;
+  isIdle?: boolean;
+  isSuccess?: boolean;
+  isFetching?: boolean;
+  error?: any;
+}) => {
+  const status = extractStatus(hook);
+  const items = hook.data ?? { items: [], offset: 0, total: 0 };
 
-// console.log(t);
+  return { status, items };
+};

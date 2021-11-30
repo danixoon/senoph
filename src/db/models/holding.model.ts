@@ -21,8 +21,9 @@ import Holder from "./holder.model";
 import HoldingPhone from "./holdingPhone.model";
 import Phone from "./phone.model";
 import PhoneType from "./phoneType.model";
+import User from "./user.model";
 
-@Table
+@Table({ indexes: [{ unique: true, fields: ["orderDate", "orderKey"] }] })
 export default class Holding extends Model<
   DB.HoldingAttributes,
   DB.CreateAttributes<DB.HoldingAttributes>
@@ -31,9 +32,13 @@ export default class Holding extends Model<
   @Column(DataType.DATE)
   orderDate: string;
 
+  @AllowNull(true)
+  @Column(DataType.STRING)
+  orderUrl?: string;
+
   @AllowNull(false)
   @Column(DataType.STRING)
-  orderUrl: string;
+  orderKey: string;
 
   @AllowNull(false)
   @Column(DataType.STRING)
@@ -47,6 +52,22 @@ export default class Holding extends Model<
   @AllowNull(false)
   @Column(DataType.INTEGER)
   holderId: number;
+
+  @BelongsTo(() => Holder)
+  holder?: Holder;
+
+  @ForeignKey(() => Department)
+  @AllowNull(false)
+  @Column(DataType.INTEGER)
+  departmentId: number;
+
+  @BelongsTo(() => Department)
+  department?: Department;
+
+  @AllowNull(false)
+  @ForeignKey(() => User)
+  @Column(DataType.INTEGER)
+  authorId: number;
 
   @AllowNull(true)
   @Validate({ isIn: [["create-pending", "delete-pending"]] })
@@ -64,9 +85,6 @@ export default class Holding extends Model<
     args.fields.push("statusAt");
     args.attributes.statusAt = new Date().toISOString();
   }
-
-  @BelongsTo(() => Holder)
-  holder: Holder;
 
   @BelongsToMany(() => Phone, () => HoldingPhone)
   phones?: Phone[];

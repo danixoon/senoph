@@ -5,13 +5,15 @@ export type InputBind<T = any> = {
   onChange: HookOnChange;
 };
 
+export type SetInput<T = any> = (input: T) => void;
+
 export type InputFileBind<T = any> = {
   input: PartialNullable<T>;
   files: PartialNullable<{ [key: string]: FileList | null }>;
   onChange: HookOnChange;
 };
 
-export type InputHook<T = any> = [InputBind<T>, (input: T) => void];
+export type InputHook<T = any> = [InputBind<T>, SetInput<T>];
 export type InputFileHook<T = any> = [
   InputFileBind<T> & { ref: (e: HTMLInputElement) => void },
   (input: T) => void,
@@ -19,7 +21,7 @@ export type InputFileHook<T = any> = [
 ];
 
 export type InputHookPrepare<P> = <
-  T extends PartialNullable<P>,
+  T extends PartialType<P, null | string>,
   K extends keyof T
 >(
   key: K,
@@ -62,11 +64,20 @@ export const handleChangeEvent = <T>(
   return changedInput;
 };
 
-export const useInput = function <P = any, T = PartialNullable<P>>(
-  defaultValue: T = {} as T,
-  prepareValue: InputHookPrepare<T> = (key, value, input) => input
-): InputHook<T> {
-  const [input, setInput] = React.useState<T>(() => defaultValue);
+export const useInput = function <T>(
+  defaultValue: PartialType<T, null | string> = {} as PartialType<
+    T,
+    null | string
+  >,
+  prepareValue: InputHookPrepare<PartialType<T, null | string>> = (
+    key,
+    value,
+    input
+  ) => input
+): InputHook<PartialType<T, null | string>> {
+  const [input, setInput] = React.useState<PartialType<T, null | string>>(
+    () => defaultValue
+  );
 
   const onChange: HookOnChange = (e) => {
     let changedInput = handleChangeEvent(input, e);
@@ -100,19 +111,20 @@ export const useFileInput = function <
   const textInput = {} as any;
 
   for (const prop in input) {
-    textInput[prop] = (input[prop] as any)[0].name ?? "Не выбрано";
+    const propValue = (input[prop] as any) ?? [{}];
+    textInput[prop] = propValue[0]?.name ?? "Не выбрано";
   }
 
-  const ref = React.useRef<HTMLInputElement | null>(null);
+  const [ref, setRef] = React.useState<HTMLInputElement | null>(null);
 
   return [
     {
       input: textInput,
       files: input,
       onChange,
-      ref: (e: HTMLInputElement) => (ref.current = e),
+      ref: (e: HTMLInputElement) => setRef(e),
     },
     setInput,
-    ref.current,
+    ref,
   ];
 };

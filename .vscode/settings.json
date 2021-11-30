@@ -1,0 +1,18 @@
+{
+    "sqltools.connections": [
+        {
+            "mysqlOptions": {
+                "authProtocol": "default"
+            },
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 33060,
+            "driver": "MySQL",
+            "database": "senoph",
+            "name": "default",
+            "username": "root",
+            "password": "",
+            "connectString": "Server=localhost;Database=senoph;Uid=root;Pwd=;"
+        }
+    ]
+}

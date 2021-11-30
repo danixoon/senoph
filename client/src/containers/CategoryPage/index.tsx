@@ -1,6 +1,7 @@
 import { useQueryInput } from "hooks/useQueryInput";
 import CategoryPage from "layout/Pages/CategoryPage";
 import HoldingPage from "layout/Pages/HoldingPage";
+import { NoticeContext } from "providers/NoticeProvider";
 import React from "react";
 import { QueryStatus } from "react-query";
 import { getStatusProps } from "react-query/types/core/utils";
@@ -48,34 +49,26 @@ const CategoryPageContainer: React.FC<Props> = (props) => {
   for (const phone of categoriesPhones?.items ?? [])
     categoriesPhonesMap.set(phone.id, phone);
 
-  // const holdingPhoneIds = Array.from(
-  //   // TODO: Flat map..?
-  //   (categories?.items ?? [])
-  //     .reduce((set, v) => set.add(v.phoneId), new Set<number>())
-  //     .values()
-  // );
-  // const { data: phoneHoldings, ...phoneHoldingsRest } =
-  //   api.useFetchPhoneHoldingsQuery(
-  //     {
-  //       phoneIds: holdingPhoneIds,
-  //     },
-  //     { skip: (categories?.items ?? []).length === 0 }
-  //   );
-
-  // const categoriesMap = new Map<number, Api.Models.PhoneCategory[]>();
-  // for (const holding of phoneHoldings?.items ?? []) {
-  //   for (const phoneId of holding.phoneIds) {
-  //     // const { phoneIds, ...rest } = holding;
-  //     // if(holding)
-  //     const holdingList = categoriesMap.get(phoneId) ?? [];
-  //     categoriesMap.set(phoneId, [...holdingList, holding]);
-  //   }
-  // }
-
   const phonesStatus = extractStatus(phonesRest);
   const categoriesStatus = extractStatus(categoriesRest);
 
-  const [createCategory] = api.useCreateCategoryMutation();
+  const [createCategory, categoryCreationInfo] =
+    api.useCreateCategoryMutation();
+
+  const noticeContext = React.useContext(NoticeContext);
+
+  const categoryCreationStatus = extractStatus(categoryCreationInfo);
+
+  React.useEffect(() => {
+    if (categoryCreationStatus.isLoading)
+      noticeContext.createNotice("Категория создаётся..");
+    if (categoryCreationStatus.isSuccess)
+      noticeContext.createNotice("Категория создана.");
+    if (categoryCreationStatus.isError)
+      noticeContext.createNotice(
+        "Ошибка создания категории: " + categoryCreationStatus.error?.message
+      );
+  }, [categoryCreationInfo.status]);
 
   return (
     <CategoryPage
@@ -86,6 +79,7 @@ const CategoryPageContainer: React.FC<Props> = (props) => {
       categories={categories?.items ?? []}
       phonesStatus={phonesStatus}
       categoriesStatus={categoriesStatus}
+      categoryCreationStatus={categoryCreationStatus}
       categoriesPhones={categoriesPhonesMap}
     />
   );

@@ -4,7 +4,7 @@ import { fillDevDatabase, fillProdDatabase } from "@backend/utils/db";
 import { Sequelize } from "sequelize-typescript";
 import { logger } from "@backend/utils/index";
 
-let sequelize: Sequelize;
+export let sequelize: Sequelize;
 let dbLogger: fs.FileHandle;
 
 export const getModel = (name: string) => sequelize.models[name];
@@ -23,17 +23,18 @@ export const init = async () => {
     models: [
       path.resolve(
         __dirname,
-        `./models/*.model.${process.env.NODE_ENV === "production" ? "js" : "ts"
+        `./models/*.model.${
+          process.env.NODE_ENV === "production" ? "js" : "ts"
         }`
       ),
     ],
     dialectOptions:
       process.env.DB_DIALECT === "mssql"
         ? {
-          options: {
-            encrypt: false,
-          },
-        }
+            options: {
+              encrypt: false,
+            },
+          }
         : {},
 
     logging: (sql) => {
@@ -56,12 +57,24 @@ export const init = async () => {
     // return close();
   }
 
-  // Disable logging for syncing
-  if (process.env.NODE_ENV !== "test") {
-    await sequelize.drop({});
-    await sequelize.sync({ logging: () => { }, force: true });
-    if (process.env.NODE_ENV === "production") await fillProdDatabase();
-    else await fillDevDatabase();
+  const isProd = process.env.NODE_ENV === "production";
+  const isTest = process.env.NODE_ENV === "test";
+  const isFill = process.env.DEV_DB_FILL === "true";
+  const isDrop = process.env.DEV_DB_DROP === "true";
+
+  if (!isTest) {
+    if (!isProd && isDrop) await sequelize.drop({});
+    await sequelize.sync({
+      logging: (sql) => {
+        const t = new Date();
+        const log = `[${t.toLocaleDateString()} ${t.toLocaleTimeString()} | sync] ${sql}\n`;
+        dbLogger.write(log);
+      },
+      force: !isProd && isFill,
+    });
+
+    if (isProd) await fillProdDatabase();
+    else await fillDevDatabase(isFill);
   }
 };
 

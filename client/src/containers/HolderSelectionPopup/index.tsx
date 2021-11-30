@@ -5,40 +5,45 @@ import ItemSelectionPopup, {
   ItemSelectionPopupProps,
 } from "layout/Popups/ItemSelectionPopup";
 import { useFetchHolder } from "hooks/api/useFetchHolder";
-import { useInput } from "hooks/useInput";
+import { InputBind, useInput } from "hooks/useInput";
+import DepartmentSelectionPopupContainer from "containers/DepartmentSelectionPopup";
+import { splitHolderName, useHolder } from "hooks/misc/holder";
+import ClickInput from "components/ClickInput";
+import PopupLayer from "providers/PopupLayer";
+import Dropdown, { DropdownProps } from "components/Dropdown";
+import { api } from "store/slices/api";
 
 export type HolderSelectionPopupContainerProps = {
   onToggle: () => void;
-  departmentId?: any;
   isOpen: boolean;
-} & Pick<ItemSelectionPopupProps, "name" | "targetBind">;
-
-const HolderSelectionPopupContainer: React.FC<HolderSelectionPopupContainerProps> = (
-  props
-) => {
-  const { targetBind, departmentId, ...rest } = props;
-
-  const [searchBind] = useInput({ search: "" });
-
-  const name = searchBind.input.search;
-  const query = clearObject({ name, departmentId });
-
-  const { holders } = useFetchHolder(query);
-
-  return (
-    <ItemSelectionPopup
-      {...rest}
-      searchBind={searchBind}
-      targetBind={targetBind}
-      items={
-        holders?.items.map((item) => ({
-          name: `${item.firstName} ${item.lastName} ${item.middleName}`,
-          ...item,
-        })) ?? []
-      }
-      header="Выбор владельца"
-    />
-  );
+  onSelect: (id: any, name: string) => void;
+  dropdownProps?: Omit<DropdownProps, "name" | "input" | "onChange" | "items">;
 };
+
+const HolderSelectionPopupContainer: React.FC<HolderSelectionPopupContainerProps> =
+  (props) => {
+    const { onSelect, dropdownProps = {}, ...rest } = props;
+
+    const [searchBind] = useInput({ departmentId: null, holderName: null });
+    const { departmentId } = searchBind.input;
+
+    const { holders } = useFetchHolder({});
+
+    return (
+      <ItemSelectionPopup
+        items={
+          holders?.items.map((item) => ({
+            name: splitHolderName(item),
+            ...item,
+          })) ?? []
+        }
+        onSelect={(item) => {
+          onSelect(item.id, item.name);
+        }}
+        header="Выбор владельца"
+        {...rest}
+      />
+    );
+  };
 
 export default HolderSelectionPopupContainer;

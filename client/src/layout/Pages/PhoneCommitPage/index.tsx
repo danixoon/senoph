@@ -10,7 +10,7 @@ import Header from "components/Header";
 import Span from "components/Span";
 import Badge from "components/Badge";
 import Hr from "components/Hr";
-import { useFilterConfig } from "hooks/api/useFetchConfig";
+import { useFetchConfig } from "hooks/api/useFetchConfig";
 import ListItem from "components/ListItem";
 import Button from "components/Button";
 import Icon from "components/Icon";
@@ -18,8 +18,10 @@ import ButtonGroup from "components/ButtonGroup";
 import { groupBy } from "utils";
 import Dropdown from "components/Dropdown";
 import Link from "components/Link";
-import { useHolderName } from "hooks/misc/useHolderName";
-import { usePhoneTypeName } from "hooks/misc/usePhoneTypeName";
+import { splitHolderName, useHolder } from "hooks/misc/holder";
+import { usePhoneTypeByModel } from "hooks/misc/phoneType";
+import Spoiler from "components/Spoiler";
+import { getLastHolding } from "hooks/misc/holding";
 
 export type PhoneCommitPageTab = "create" | "delete" | "edit";
 export type PhoneCommitChange = {
@@ -34,7 +36,7 @@ export const getPhonePropertyName = (property: keyof Api.Models.Phone) => {
     accountingDate: "Дата принятия к учёту",
     commissioningDate: "Дата ввода в эксплуатацию",
     factoryKey: "Заводской номер",
-    assemblyDate: "Дата сборки",
+    assemblyDate: "Год сборки",
   };
 
   return propMap[property] ?? property;
@@ -58,9 +60,9 @@ export type PhoneCommitPageProps = {
 const CommitItemContent: React.FC<{
   item: Api.Models.Phone;
   getTypeName: (id: number) => string;
-  getHolderName: (holder?: Api.Models.Holder) => string;
+  getHolder: (id: number) => Api.Models.Holder | undefined;
 }> = (props) => {
-  const { item, getHolderName, getTypeName } = props;
+  const { item, getTypeName, getHolder } = props;
 
   return (
     <Layout flow="row">
@@ -102,7 +104,9 @@ const CommitItemContent: React.FC<{
         </ListItem>
         <Hr />
         <ListItem label="Владелец">
-          <Span>{getHolderName(item.holder as Api.Models.Holder)}</Span>
+          <Span>
+            {splitHolderName(getHolder(getLastHolding(item.holdings).holderId))}
+          </Span>
         </ListItem>
       </Layout>
     </Layout>
@@ -112,9 +116,8 @@ const CommitItemContent: React.FC<{
 const CommitEditedItemContent: React.FC<{
   item: { original: Api.Models.Phone; changes: Partial<Api.Models.Phone> };
   getTypeName: (id: number) => string;
-  getHolderName: (holder?: Api.Models.Holder) => string;
 }> = (props) => {
-  const { item, getHolderName, getTypeName } = props;
+  const { item, getTypeName } = props;
   const { original, changes } = item;
 
   const { id, createdAt, ...trueChanges } = changes;
@@ -200,8 +203,8 @@ const PhoneCommitPage: React.FC<PhoneCommitPageProps> = (props) => {
     i: number;
   } | null>(() => null);
 
-  const getHolderName = useHolderName();
-  const getTypeName = usePhoneTypeName();
+  const getHolder = useHolder();
+  const getTypeName = usePhoneTypeByModel();
 
   const mapCommits = (
     commits: PhoneCommitChange[] | Api.Models.Phone[],
@@ -256,8 +259,7 @@ const PhoneCommitPage: React.FC<PhoneCommitPageProps> = (props) => {
       ([key, commits]) => {
         // return items.map((commit, i) => {
         // return mapCommits(commi)\\
-
-        return mapCommits(commits, (info) => (
+        const mapped = mapCommits(commits, (info) => (
           <CommitItem
             key={info.commit.id}
             // item={{ ...commit, type:  }}
@@ -283,22 +285,25 @@ const PhoneCommitPage: React.FC<PhoneCommitPageProps> = (props) => {
               <CommitEditedItemContent
                 item={{ original: info.commit, changes: info.changes ?? {} }}
                 getTypeName={getTypeName}
-                getHolderName={getHolderName}
               />
             ) : (
               <CommitItemContent
                 item={info.commit}
                 getTypeName={getTypeName}
-                getHolderName={getHolderName}
+                getHolder={getHolder}
               />
             )}
           </CommitItem>
         ));
 
-        // );
-        // });
+        return (
+          <Spoiler label={`Средства связи (${mapped.length})`}>
+            {mapped}
+          </Spoiler>
+        );
       }
     );
+
     return commits;
   };
 

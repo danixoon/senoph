@@ -1,6 +1,7 @@
 import {
   AllowNull,
   BeforeBulkUpdate,
+  BelongsTo,
   Column,
   DataType,
   Default,
@@ -54,6 +55,10 @@ export default class PhoneCategory extends Model<
   @AllowNull(false)
   @Column(DataType.INTEGER)
   phoneId: number;
+
+  @BelongsTo(() => Phone, { onDelete: "CASCADE" })
+  phone?: Phone;
+
 
   @AllowNull(true)
   @Column(DataType.STRING)

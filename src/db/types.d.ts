@@ -18,7 +18,12 @@ declare type CommitTargetName = keyof Pick<
 declare type ChangedDataType = "string" | "date" | "number";
 declare type CommitActionType = "approve" | "decline";
 declare type CommitStatus = "delete-pending" | "create-pending";
-declare type HoldingReason = "dismissal" | "movement" | "write-off" | "initial";
+declare type HoldingReason =
+  | "dismissal"
+  | "movement"
+  | "write-off"
+  | "other"
+  | "order";
 
 declare type WithCommit = {
   status?: CommitStatus | null;
@@ -46,8 +51,9 @@ declare namespace DB {
 
   type PhoneModelAttributes = Attributes<{
     name: string;
-    accountingDate: string;
+
     phoneTypeId: number;
+    phoneType?: PhoneTypeAttributes;
     description?: string;
   }>;
 
@@ -59,50 +65,65 @@ declare namespace DB {
     units: string;
 
     modelId: number;
+    phoneModel?: DB.PhoneModelAttributes;
   }>;
 
   type PhoneCategoryAttributes = Attributes<{
     categoryKey: string;
-    actDate: Date;
+    actDate: string;
+
     actUrl: string;
     phoneId: number;
     description?: string;
+    phone?: PhoneAttributes;
   }> &
     WithCommit;
 
   type HoldingAttributes = Attributes<{
     orderDate: string;
-    orderUrl: string;
+    orderUrl?: string;
+    orderKey: string;
     reasonId: HoldingReason;
     description?: string;
 
+    departmentId: number;
     holderId: number;
     phones?: PhoneAttributes[];
     holder?: HolderAttributes;
+    department?: DepartmentAttributes;
   }> &
-    WithCommit;
+    WithCommit &
+    WithAuthor;
 
   type HoldingPhoneAttributes = Attributes<{
     holdingId: number;
     phoneId: number;
     holding?: HoldingAttributes;
-  }>;
+    phone?: PhoneAttributes;
+  }> &
+    WithCommit;
 
   type HolderAttributes = Attributes<{
     firstName: string;
     lastName: string;
     middleName: string;
-    departmentId: number;
   }>;
 
   type DepartmentAttributes = Attributes<{
     name: string;
     description?: string;
+    placementId?: number;
+    placement?: PlacementAttributes;
+  }>;
+
+  type PlacementAttributes = Attributes<{
+    name: string;
+    description?: string;
   }>;
 
   type PhoneAttributes = Attributes<{
-    inventoryKey: string;
-    factoryKey: string;
+    inventoryKey?: string;
+    factoryKey?: string;
 
     accountingDate: string;
     assemblyDate: string;
@@ -115,6 +136,7 @@ declare namespace DB {
     // holders?: HolderAttributes[];
     categories?: PhoneCategoryAttributes[];
     holdings?: HoldingAttributes[];
+    // holders?: HolderAttributes[];
   }> &
     WithCommit &
     WithAuthor;
@@ -147,8 +169,10 @@ declare namespace DB {
     | "phone"
     | "category"
     | "holding"
+    | "holdingPhone"
     | "phoneType"
     | "department"
+    | "placement"
     | "holder"
     | "model";
   type LogType = "create" | "delete" | "commit";

@@ -6,6 +6,7 @@ import {
   Table,
   DataType,
   Scopes,
+  Unique,
 } from "sequelize-typescript";
 
 import { Optional } from "sequelize/types";
@@ -19,6 +20,7 @@ export default class PhoneType extends Model<
   DB.CreateAttributes<DB.PhoneTypeAttributes>
 > {
   @AllowNull(false)
+  @Unique
   @Column(DataType.STRING)
   name: string;
 

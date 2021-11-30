@@ -17,6 +17,7 @@ export type TableColumn<T = any> = {
   header: React.ReactChild;
   size?: string;
   sortable?: boolean;
+  props?: React.TdHTMLAttributes<HTMLElement>;
   mapper?: (v: any, row: T) => any;
 } & (
   | { type?: "date" }
@@ -52,8 +53,8 @@ type TableCellProps = OverrideProps<
 >;
 
 const TableCell: React.FC<TableCellProps> = ({ children, ...rest }) => {
-  const mergedProps = mergeProps({}, rest);
-  return <td {...mergedProps}>{children}</td>;
+  // const mergedProps = mergeProps({}, rest);
+  return <td {...rest}>{children}</td>;
 };
 
 const Table: React.FC<React.PropsWithChildren<TableProps>> = (
@@ -118,33 +119,44 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
 
   // console.log(sortDir);
 
+  // TODO: Unique key error
   return (
     <table {...mergedProps}>
       <thead>
         <tr>
-          {columns.map((column) => (
-            <TableCell
-              title={column.header.toString()}
-              className={mergeClassNames(
-                column.type === "checkbox" && "cell_checkbox",
-                column.sortable && "cell_sortable",
-                sortKey === column.key && `sort_${sortDir}`
-              )}
-              onClick={() =>
-                column.sortable &&
-                onSort &&
-                onSort(column.key, sortDir === "asc" ? "desc" : "asc")
-              }
-              key={column.key}
-              style={{ width: column.size }}
-            >
-              {column.header}
-            </TableCell>
-          ))}
+          {columns.map((column) => {
+            const mergedProps = mergeProps(
+              {
+                className: mergeClassNames(
+                  column.type === "checkbox" && "cell_checkbox",
+                  column.sortable && "cell_sortable",
+                  sortKey === column.key && `sort_${sortDir}`
+                ),
+                style: { width: column.size },
+              },
+              column.props ?? {}
+            );
+            return (
+              <TableCell
+                title={
+                  typeof column.header === "string" ? column.header : undefined
+                }
+                onClick={() =>
+                  column.sortable &&
+                  onSort &&
+                  onSort(column.key, sortDir === "asc" ? "desc" : "asc")
+                }
+                key={column.key}
+                {...mergedProps}
+              >
+                {column.header}
+              </TableCell>
+            );
+          })}
         </tr>
       </thead>
       <tbody>
-        {items.map((item) => (
+        {items.map((item, i) => (
           <tr
             className={mergeClassNames(
               onSelect && "row_selectable",
@@ -152,22 +164,30 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
             )}
             // TODO: Make rows selectable with keyboard
             tabIndex={onSelect ? 0 : undefined}
-            key={item.id}
+            key={`${item.id ?? "id"}-${i}`}
             {...item.props}
           >
-            {columns.map((column) => (
-              <TableCell
-                className={mergeClassNames(
-                  column.type === "checkbox" && "cell_checkbox"
-                )}
-                key={column.key}
-                onClick={() =>
-                  column.type != "checkbox" && onSelect && onSelect(item)
-                }
-              >
-                {convertValue(column, item, item[column.key])}
-              </TableCell>
-            ))}
+            {columns.map((column, i) => {
+              const mergedProps = mergeProps(
+                {
+                  className: mergeClassNames(
+                    column.type === "checkbox" && "cell_checkbox"
+                  ),
+                },
+                column.props ?? {}
+              );
+              return (
+                <TableCell
+                  key={`${column.key}-${i}`}
+                  onClick={() =>
+                    column.type != "checkbox" && onSelect && onSelect(item)
+                  }
+                  {...mergedProps}
+                >
+                  {convertValue(column, item, item[column.key])}
+                </TableCell>
+              );
+            })}
           </tr>
         ))}
       </tbody>

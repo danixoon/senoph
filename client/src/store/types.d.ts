@@ -6,7 +6,8 @@ declare type WithItems<I> = {
   items: I[];
 };
 
-declare type PartialNullable<T> = { [P in keyof T]: T[P] | null };
+declare type PartialNullable<T> = PartialType<T, null>;
+declare type PartialType<T, K> = { [P in keyof T]: T[P] | K };
 
 declare type StoreType = ReturnType<typeof import("./index").store.getState>;
 
@@ -22,4 +23,5 @@ declare type ApiStatus =
     isIdle: boolean;
     isSuccess: boolean;
     isError: boolean;
+    status?: "idle" | "loading" | "success" | "error";
   };

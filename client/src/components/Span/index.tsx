@@ -5,8 +5,9 @@ import "./styles.styl";
 
 type SpanProps = OverrideProps<
   {
-    color?: "secondary" | "primary";
+    color?: "secondary" | "primary" | "alter";
     font?: "monospace" | "normal" | "italic";
+    weight?: "normal" | "medium" | "bold";
     center?: boolean;
     size?: Size;
     inline?: boolean;
@@ -23,6 +24,7 @@ const Span: React.FC<SpanProps> = (props) => {
     strike,
     color = "secondary",
     font = "normal",
+    weight = "normal",
     size = "sm",
     ...rest
   } = props;
@@ -34,6 +36,7 @@ const Span: React.FC<SpanProps> = (props) => {
         `span_${color}`,
         `span_${font}`,
         `span_${size}`,
+        `weight_${weight}`,
         inline && "span_inline",
         center && "span_center",
         strike && "span_strike"

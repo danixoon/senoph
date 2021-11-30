@@ -7,10 +7,11 @@ import { AppRouter } from "../router";
 
 import Model from "../db/models/phoneModel.model";
 import { Filter } from "@backend/utils/db";
-import { Op } from "sequelize";
+import { ForeignKeyConstraintError, Op } from "sequelize";
 import Holder from "@backend/db/models/holder.model";
-import { handler, prepareItems } from "../utils";
+import { transactionHandler, prepareItems } from "../utils";
 import Log from "@backend/db/models/log.model";
+import { ApiError, errorType } from "@backend/utils/errors";
 
 const router = AppRouter();
 
@@ -21,10 +22,9 @@ router.get(
     query: {
       id: tester().isNumeric(),
       name: tester(),
-      departmentId: tester().isNumeric(),
     },
   }),
-  handler(async (req, res, next) => {
+  transactionHandler(async (req, res, next) => {
     const { name } = req.query;
     const filter = new Filter(req.query);
 
@@ -37,7 +37,7 @@ router.get(
           .addWith("lastName", name, Op.substring)
           .addWith("middleName", name, Op.substring)
       )
-      .add("departmentId")
+
       .add("id");
 
     const holders = await Holder.findAndCountAll({
@@ -60,18 +60,16 @@ router.post(
       firstName: tester().required(),
       lastName: tester().required(),
       middleName: tester().required(),
-      departmentId: tester().required().isNumber(),
     },
   }),
-  handler(async (req, res) => {
+  transactionHandler(async (req, res) => {
     const { user } = req.params;
-    const { firstName, lastName, middleName, departmentId } = req.query;
+    const { firstName, lastName, middleName } = req.query;
 
     const holder = await Holder.create({
       firstName,
       lastName,
       middleName,
-      departmentId,
     });
 
     Log.log("holder", [holder.id], "create", user.id);
@@ -88,14 +86,20 @@ router.delete(
       id: tester().required().isNumber(),
     },
   }),
-  handler(async (req, res) => {
+  transactionHandler(async (req, res) => {
     const { user } = req.params;
     const { id } = req.query;
 
-    const holder = await Holder.destroy({ where: { id } });
-
-    Log.log("holder", [id], "delete", user.id);
-
+    try {
+      const holder = await Holder.destroy({ where: { id } });
+      Log.log("holder", [id], "delete", user.id);
+    } catch (err) {
+      if (err instanceof ForeignKeyConstraintError) {
+        throw new ApiError(errorType.VALIDATION_ERROR, {
+          description: "Невозможно удаление владельца участвующего в движениях",
+        });
+      }
+    }
     res.send();
   })
 );

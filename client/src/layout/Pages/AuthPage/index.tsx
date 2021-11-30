@@ -19,7 +19,7 @@ import Spoiler from "components/Spoiler";
 import Switch from "components/Switch";
 import Toggle from "components/Toggle";
 import LinkItemContainer from "containers/LinkItem";
-import { useFilterConfig } from "hooks/api/useFetchConfig";
+import { useFetchConfig } from "hooks/api/useFetchConfig";
 
 import { useInput } from "hooks/useInput";
 import { useTimeout } from "hooks/useTimeout";

@@ -7,7 +7,7 @@ import PhoneType from "@backend/db/models/phoneType.model";
 import Department from "@backend/db/models/department.model";
 import PhoneModel from "@backend/db/models/phoneModel.model";
 import { AppRouter } from "../router";
-import { handler, prepareItems } from "../utils";
+import { transactionHandler, prepareItems } from "../utils";
 import { access, owner } from "@backend/middleware/auth";
 import { tester, validate } from "@backend/middleware/validator";
 import { upload } from "@backend/middleware/upload";
@@ -32,7 +32,7 @@ router.get(
       ids: tester().array("int"),
     },
   }),
-  handler(async (req, res) => {
+  transactionHandler(async (req, res) => {
     const filter = new Filter(req.query).add("status");
     const categories = await PhoneCategory.findAll({
       // include: [
@@ -49,7 +49,7 @@ router.get(
       prepareItems(
         categories.map((category) => ({
           id: category.id,
-          actDate: new Date(category.actDate),
+          actDate: category.actDate,
           actUrl: category.actUrl,
           categoryKey: category.categoryKey,
           phoneId: category.phoneId,
@@ -69,13 +69,13 @@ router.post(
     body: {
       description: tester(),
       categoryKey: tester().required(),
-      phoneIds: tester().array().required(),
-      actFile: tester().required(),
-      actDate: tester().isISO8601().required(),
+      phoneIds: tester().array("int").required(),
+      actFile: tester(),
+      actDate: tester().isDate().required(),
     },
   }),
   owner("phone", (req) => req.body.phoneIds),
-  handler(async (req, res) => {
+  transactionHandler(async (req, res) => {
     // TODO: Make file validation
     const { file } = req;
     if (!file)
@@ -91,11 +91,25 @@ router.post(
         actUrl: file.path,
         description,
         categoryKey,
-        actDate
+        actDate: actDate.toISOString(),
       }))
     );
 
     // TODO: Make holding create validation
+    res.send();
+  })
+);
+
+router.delete(
+  "/category",
+  access("user"),
+  validate({
+    query: { id: tester().isNumber() },
+  }),
+  transactionHandler(async (req, res) => {
+    const { id } = req.query;
+    await PhoneCategory.update({ status: "delete-pending" }, { where: { id } });
+
     res.send();
   })
 );

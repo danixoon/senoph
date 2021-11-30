@@ -14,78 +14,64 @@ import qs from "query-string";
 import "./style.styl";
 import Paginator from "components/Paginator";
 import PhoneEditActions from "layout/PhoneEditActions";
+import PopupLayer from "providers/PopupLayer";
 
+export type Item = { id: any; name: string; href?: string };
 export type ItemSelectionPopupProps = OverrideProps<
   PopupProps,
   {
-    searchBind: InputBind<{ search: string }>;
-    targetBind: InputBind;
-    name: string;
-    items: { id: any; name: string; href?: string }[];
+    items: Item[];
     header: string;
+    zIndex?: number;
+    onSelect: (item: Item) => void;
   }
 >;
 
 const Item: React.FC<{
   id: any;
   name: string;
-  href?: string;
   onSelect: (id: any) => void;
 }> = (props) => {
-  const { id, name, href, onSelect } = props;
+  const { id, name, onSelect } = props;
   return (
-    <Layout flow="row">
-      <Link isMonospace href={href}>
-        #{id}
-      </Link>
-      <Hr vertical />
-      <Link
-        isMonospace
-        onClick={() => onSelect(id)}
-        style={{ marginRight: "2rem" }}
-      >
-        {name}
-      </Link>
+    <>
+      <Hr />
       <Button
-        style={{ marginLeft: "auto" }}
-        color="primary"
         inverted
         onClick={() => onSelect(id)}
+        className="items-list__item"
       >
-        <Icon.Check />
+        <Label className="items-list__item-label">{name}</Label>
+        <Header className="items-list__item-id">#{id}</Header>
       </Button>
-    </Layout>
+    </>
   );
 };
 
 const ItemSelectionPopup: React.FC<ItemSelectionPopupProps> = (props) => {
-  // const [searchBind] = useInput<{ search: string }>({ search: null });
-  const { items, searchBind, targetBind, name, header, ...rest } = props;
+  const { items, onSelect, zIndex, header, children, ...rest } = props;
 
   return (
-    <Popup {...rest} size="sm" closeable noPadding>
+    <Popup {...rest} size="md" closeable noPadding>
       <PopupTopBar>
         <Layout flex="1">
           <Header align="center" hr style={{ flex: 1 }}>
             {header}
           </Header>
-          <Input
-            name="search"
-            {...searchBind}
-            inputProps={{ placeholder: "Запрос.." }}
-          />
         </Layout>
       </PopupTopBar>
       <Layout padding="md" flex="1" className="items-list">
+        {children}
+        {/* <Hr /> */}
         {items
           // .filter((item) => isIncludes(item.name))
           .map((item) => (
             <Item
               key={item.id}
-              href={item.href }
+              href={item.href}
               {...item}
-              onSelect={(id) => {
-                targetBind.onChange({ target: { name, value: id } });
+              onSelect={() => {
+                onSelect(item);
                 if (rest.onToggle) rest.onToggle(false);
               }}
             />

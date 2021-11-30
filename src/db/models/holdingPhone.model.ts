@@ -3,11 +3,13 @@ import {
   BelongsTo,
   Column,
   DataType,
+  Default,
   ForeignKey,
   HasOne,
   Model,
   Table,
   Unique,
+  Validate,
 } from "sequelize-typescript";
 import { Optional } from "sequelize/types";
 
@@ -33,6 +35,19 @@ export default class HoldingPhone extends Model<
   @Column(DataType.INTEGER)
   phoneId: number;
 
-  @BelongsTo(() => Holding)
-  holding: Holding;
+  @AllowNull(true)
+  @Validate({ isIn: [["create-pending", "delete-pending"]] })
+  @Default(null)
+  @Column(DataType.STRING)
+  status?: CommitStatus | null;
+
+  @AllowNull(true)
+  @Column(DataType.DATE)
+  statusAt?: string;
+
+  @BelongsTo(() => Holding, { onDelete: "CASCADE" })
+  holding?: Holding;
+
+  @BelongsTo(() => Phone, { onDelete: "CASCADE" })
+  phone?: Phone;
 }

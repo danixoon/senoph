@@ -14,8 +14,8 @@ import Span from "components/Span";
 import Table, { TableColumn } from "components/Table";
 import HolderSelectionPopupContainer from "containers/HolderSelectionPopup";
 import DepartmentSelectionPopupContainer from "containers/DepartmentSelectionPopup";
-import { useDepartmentName } from "hooks/misc/useDepartmentName";
-import { useHolderName } from "hooks/misc/useHolderName";
+import { getDepartmentName, useDepartment } from "hooks/misc/department";
+import { splitHolderName, useHolder } from "hooks/misc/holder";
 
 import { useFileInput, useInput } from "hooks/useInput";
 import { useQueryInput } from "hooks/useQueryInput";
@@ -34,11 +34,14 @@ import { Route, Switch, useRouteMatch } from "react-router";
 import { useLastHolder } from "hooks/api/useFetchHolder";
 import Badge from "components/Badge";
 import SpoilerPopup, { SpoilerPopupButton } from "components/SpoilerPopup";
+import InfoBanner from "components/InfoBanner";
+import { getLastHolding } from "hooks/misc/holding";
 
 export type CategoryPageProps = {
   phones: Api.Models.Phone[];
   categories: Api.Models.PhoneCategory[];
   categoriesPhones: Map<number, Api.Models.Phone>;
+  categoryCreationStatus: ApiStatus;
   phonesStatus: ApiStatus;
   categoriesStatus: ApiStatus;
 
@@ -46,7 +49,7 @@ export type CategoryPageProps = {
 };
 
 const CreateContent: React.FC<CategoryPageProps> = (props) => {
-  const { phones, onSubmitCategory: onSubmit } = props;
+  const { phones, categoryCreationStatus, onSubmitCategory: onSubmit } = props;
   const columns: TableColumn[] = [
     {
       key: "id",
@@ -63,21 +66,24 @@ const CreateContent: React.FC<CategoryPageProps> = (props) => {
     { key: "holderName", header: "Владелец" },
     { key: "departmentName", header: "Отделение" },
   ];
-  const getHolderName = useHolderName();
-  const getDepartmentName = useDepartmentName();
+  const getHolder = useHolder();
+  const getDepartment = useDepartment();
 
   const [bind] = useInput({});
 
   const [bindFile] = useFileInput();
 
-  const tableItems = phones.map((phone) => ({
-    ...phone,
-    modelName: phone.model?.name,
-    holderName: getHolderName(phone.holder),
-    departmentName: getDepartmentName(phone.holder?.departmentId),
-  }));
-
-  const noticeContext = React.useContext(NoticeContext);
+  const tableItems = phones.map((phone) => {
+    const lastHolding = getLastHolding(phone.holdings);
+    return {
+      ...phone,
+      modelName: phone.model?.name,
+      holderName: splitHolderName(getHolder(lastHolding?.holderId)),
+      departmentName: getDepartmentName(
+        getDepartment(lastHolding?.departmentId)
+      ),
+    };
+  });
 
   // TODO: Make proper typing for POST request params & form inputs
   return (
@@ -92,7 +98,7 @@ const CreateContent: React.FC<CategoryPageProps> = (props) => {
           }}
           onSubmit={(data) => {
             onSubmit(data);
-            noticeContext.createNotice("Категория создана");
+            // noticeContext.createNotice("Категория создана");
           }}
         >
           <Layout flow="row">
@@ -102,10 +108,10 @@ const CreateContent: React.FC<CategoryPageProps> = (props) => {
               label="Категория"
               name="categoryKey"
               items={[
-                { id: "1", label: "I (Создание)" },
-                { id: "2", label: "II (ТО)" },
-                { id: "3", label: "III (Ремонт)" },
-                { id: "4", label: "IV (Списано)" },
+                { id: "1", label: "I (Прибыло, на гарантии)" },
+                { id: "2", label: "II (Нет гарантии, исправно)" },
+                { id: "3", label: "III (Неисправно)" },
+                { id: "4", label: "IV (Подлежит списанию)" },
               ]}
               {...bind}
             />
@@ -137,8 +143,9 @@ const CreateContent: React.FC<CategoryPageProps> = (props) => {
               margin="md"
               type="submit"
               color="primary"
+              disabled={categoryCreationStatus.isLoading}
             >
-              Создать
+              {categoryCreationStatus.isLoading ? <LoaderIcon /> : "Создать"}
             </Button>
           </Layout>
         </Form>
@@ -188,7 +195,7 @@ const ActionBox = (props: { commit: (action: CommitActionType) => void }) => {
 
 const ViewContent: React.FC<CategoryPageProps> = (props) => {
   const [commitCategory, status] = api.useCommitCategoryMutation();
-  const getDepartmentName = useDepartmentName();
+  const getDepartment = useDepartment();
 
   const columns: TableColumn[] = [
     {
@@ -231,10 +238,11 @@ const ViewContent: React.FC<CategoryPageProps> = (props) => {
   ];
 
   const tableItems = props.categories.map((category) => {
+    const phone = props.categoriesPhones.get(category.phoneId);
     return {
       ...category,
       departmentName: getDepartmentName(
-        props.categoriesPhones.get(category.phoneId)?.holder?.departmentId
+        getDepartment(getLastHolding(phone?.holdings)?.departmentId)
       ),
     };
   });
@@ -246,7 +254,7 @@ const ViewContent: React.FC<CategoryPageProps> = (props) => {
 };
 
 const CategoryPage: React.FC<CategoryPageProps> = (props) => {
-  const { phones } = props;
+  const { phones, categories } = props;
 
   const { path } = useRouteMatch();
 
@@ -255,18 +263,25 @@ const CategoryPage: React.FC<CategoryPageProps> = (props) => {
       <Switch>
         <Route path={`${path}/create`}>
           {phones.length === 0 ? (
-            <Label style={{ margin: "auto" }}>
-              <Span>Для смены категории выберите</Span>
-              <Link href="/phone/edit" style={{ marginLeft: "0.2rem" }}>
-                средство связи
-              </Link>
-            </Label>
+            <InfoBanner
+              text="Для смены категории выберите"
+              hrefContent="средство связи"
+              href="/phone/edit"
+            />
           ) : (
             <CreateContent {...props} />
           )}
         </Route>
         <Route path={`${path}/view`}>
-          <ViewContent {...props} />
+          {categories.length === 0 ? (
+            <InfoBanner
+              text="Категории для подтверждения отсутствуют. Добавьте их, выбрав"
+              hrefContent="средство связи"
+              href="/phone/edit"
+            />
+          ) : (
+            <ViewContent {...props} />
+          )}
         </Route>
       </Switch>
     </Layout>

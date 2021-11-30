@@ -8,7 +8,9 @@ import PhoneModel from "@backend/db/models/phoneModel.model";
 import PhoneType from "@backend/db/models/phoneType.model";
 import User from "@backend/db/models/user.model";
 import { v4 as uuid } from "uuid";
-import { Op, WhereOperators, WhereOptions } from "sequelize";
+import { Op, fn, WhereOperators, WhereOptions } from "sequelize";
+import sequelize from "sequelize";
+import { Fn } from "sequelize/types/lib/utils";
 
 // import { sequelize } from "../db";
 
@@ -24,6 +26,55 @@ export interface Filter<T> {
     value: any,
     ...conditions: (keyof WhereOperators | WhereOperators)[]
   ) => this;
+}
+
+export class WhereField<T> {
+  private filter: WhereFilter<T>;
+
+  private key: keyof T;
+
+  constructor(filter: WhereFilter<T>, key: keyof T) {
+    this.filter = filter;
+    this.key = key;
+  }
+
+  optional = (op: keyof WhereOperators, value: any) => {
+    if (typeof value !== "undefined") {
+      if (!this.filter.whereMap[this.key])
+        this.filter.whereMap[this.key] = { [op]: value };
+      else this.filter.whereMap[this.key][op] = value;
+    }
+    return this;
+  };
+}
+type WhereType<T> = Record<keyof T, Partial<Record<keyof WhereOperators, any>>>;
+export class WhereFilter<T> {
+  public whereMap: WhereType<T> = {} as WhereType<T>;
+  on: (key: keyof T) => WhereField<T> = (key) => {
+    return new WhereField(this, key);
+  };
+
+  private fns: sequelize.Utils.Where[] = [];
+
+  fn = (where: sequelize.Utils.Where) => {
+    this.fns.push(where);
+  };
+
+  public set where(value: undefined | typeof this.whereMap) {
+    this.whereMap = value ?? ({} as any);
+  }
+
+  public get where(): undefined | typeof this.whereMap {
+    let where =
+      Object.keys(this.whereMap).length === 0 ? undefined : this.whereMap;
+    if (this.fns.length > 0) {
+      where = where
+        ? ({ [Op.and]: [...this.fns, where] } as any)
+        : { [Op.and]: [...this.fns] };
+    }
+
+    return where;
+  }
 }
 
 export class Filter<T extends object = any> {
@@ -97,7 +148,7 @@ export class Filter<T extends object = any> {
     return this;
   };
   get where() {
-    return this.conditions;
+    return this.conditions as WhereOptions<T>;
   }
 }
 
@@ -118,7 +169,9 @@ const mapGenerated = <T = any>(size: number, f: (i: number) => T) =>
   new Array(size).fill(0).map((_, i) => f(i));
 
 export const fillProdDatabase = async () => {
-  const user = await User.create({
+  const adminUser = await User.findOne({ where: { role: "admin" } });
+  if (adminUser) return;
+  await User.create({
     name: "Администратор",
     username: "admin",
     passwordHash:
@@ -127,7 +180,9 @@ export const fillProdDatabase = async () => {
   });
 };
 
-export const fillDevDatabase = async (size: number = 100) => {
+export const fillDevDatabase = async (full?: boolean, size: number = 150) => {
+  const adminUser = await User.findOne({ where: { role: "admin" } });
+  if (adminUser) return;
   const user = await User.create({
     name: "Админушка",
     username: "admin",
@@ -135,6 +190,8 @@ export const fillDevDatabase = async (size: number = 100) => {
       "$2b$13$PwLX48c7HTCmRfqbsd8pq.f6BCkNYnQcyfYg95hx7p2jgLCd2jkqC",
     role: "admin",
   });
+
+  if (!full) return;
 
   const depsNames = [
     "Кардиологическое отделение",
@@ -157,7 +214,7 @@ export const fillDevDatabase = async (size: number = 100) => {
   );
 
   const holdersNames = [
-    "Ариша Козлова Юрьевна",
+    "Козлова Ариша Юрьевна",
     "Антонов Иван Михайлович",
     "Афанасьева Валерия Андреевна",
     "Афанасьева Ника Львовна",
@@ -271,8 +328,11 @@ export const fillDevDatabase = async (size: number = 100) => {
   const holding = await Holding.create({
     holderId: getRandomItem(holders).id,
     orderUrl: "sample.pdf",
+    authorId: user.id,
+    departmentId: getRandomItem(deps).id,
+    orderKey: Math.floor(10 + Math.random() * 200).toString(),
     orderDate: new Date().toISOString(),
-    reasonId: "initial" as const,
+    reasonId: "movement" as const,
     status: null,
   });
 
@@ -280,46 +340,17 @@ export const fillDevDatabase = async (size: number = 100) => {
     phones.map((phone) => ({ phoneId: phone.id, holdingId: holding.id }))
   );
 
-  const categories = Promise.all(
+  const categories = await Promise.all(
     mapGenerated(size - 5, (i) => {
       const phoneId = phones[i].id;
       const date = randomDate();
       return PhoneCategory.create({
         categoryKey: "1",
-        actDate: date,
+        actDate: date.toISOString(),
         phoneId,
         actUrl: "test.pdf",
         status: null,
       });
-      // return PhoneCategory.bulkCreate(
-      //   mapGenerated(Math.floor(Math.random() * 5), (i) => ({
-      //     categoryKey: (i + 1).toString(),
-      //     date: new Date(
-      //       date.getFullYear() + i,
-      //       date.getMonth(),
-      //       date.getDay()
-      //     ).toString(),
-      //     phoneId,
-      //     actKey: "12",
-      //     actUrl: "test.pdf",
-      //     status: null,
-      //   }))
-      // );
     })
   );
-
-  // const holdingData = mapGenerated(size - 10, () => {
-  //   const randomHolders = getRandomItems(size - 10, holders);
-  //   const randomPhones = getRandomItems(size - 10, phones);
-  //   return {
-  //     actKey: `#${Math.floor(10 + Math.random() * 100)}`,
-  //     actDate: randomDate().toString(),
-  //     holderId: getRandomItem(randomHolders).id,
-  //     phoneId: getRandomItem(randomPhones).id,
-  //   };
-  // });
-
-  // const holdings = await Holding.bulkCreate(holdingData);
-
-  // console.log("fill complete.");
 };

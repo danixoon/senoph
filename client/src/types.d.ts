@@ -11,9 +11,6 @@ declare module "*.png" {
   export default content;
 }
 
-declare type WithRandomId = {
-  randomId?: string;
-};
 
 declare type ArrayElement<ArrayType extends readonly unknown[]> =
   ArrayType[number];

@@ -22,8 +22,10 @@ export const api = createApi({
     "holder",
     "phone",
     "holding",
+    "holdingPhone",
     "holder",
     "category",
+    "placement",
     "user",
     "department",
     "phoneType",
@@ -177,7 +179,7 @@ export const api = createApi({
       }),
       invalidatesTags: (r, e, a) => ["phone", "commit", "log"],
     }),
-    phoneDelete: builder.mutation<
+    deletePhone: builder.mutation<
       Api.GetResponse<"delete", "/phone">,
       Api.GetQuery<"delete", "/phone">
     >({
@@ -202,6 +204,17 @@ export const api = createApi({
       }),
       invalidatesTags: (r, e, a) => ["holding", "log"],
     }),
+    deleteHolding: builder.mutation<
+      Api.GetResponse<"delete", "/holding">,
+      Api.GetBody<"delete", "/holding">
+    >({
+      query: (params) => ({
+        url: "holding",
+        params,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["holding", "log"],
+    }),
     fetchHoldings: builder.query<
       Api.GetResponse<"get", "/holdings">,
       Api.GetQuery<"get", "/holdings">
@@ -224,6 +237,17 @@ export const api = createApi({
       }),
       providesTags: ["holding"],
     }),
+    fetchHoldingPhoneCommits: builder.query<
+      Api.GetResponse<"get", "/holdings/commit">,
+      Api.GetQuery<"get", "/holdings/commit">
+    >({
+      query: (params) => ({
+        url: "holdings/commit",
+        params,
+        method: "GET",
+      }),
+      providesTags: ["holding", "holdingPhone"],
+    }),
     commitHolding: builder.mutation<
       Api.GetResponse<"put", "/commit/holding">,
       Api.GetBody<"put", "/commit/holding">
@@ -234,6 +258,17 @@ export const api = createApi({
         method: "PUT",
       }),
       invalidatesTags: (r, e, a) => ["holding", "phone", "log"],
+    }),
+    commitHoldingPhone: builder.mutation<
+      Api.GetResponse<"put", "/commit/holding/phone">,
+      Api.GetBody<"put", "/commit/holding/phone">
+    >({
+      query: (params) => ({
+        url: "commit/holding/phone",
+        body: params,
+        method: "PUT",
+      }),
+      invalidatesTags: (r, e, a) => ["holding", "phone", "log", "holdingPhone"],
     }),
     fetchCategories: builder.query<
       Api.GetResponse<"get", "/categories">,
@@ -254,6 +289,17 @@ export const api = createApi({
         url: "category",
         body,
         method: "POST",
+      }),
+      invalidatesTags: ["category", "log"],
+    }),
+    deleteCategory: builder.mutation<
+      Api.GetResponse<"delete", "/category">,
+      Api.GetBody<"delete", "/category">
+    >({
+      query: (params) => ({
+        url: "category",
+        params,
+        method: "DELETE",
       }),
       invalidatesTags: ["category", "log"],
     }),
@@ -304,7 +350,7 @@ export const api = createApi({
         params,
         method: "GET",
       }),
-      providesTags: ["department"],
+      providesTags: ["department", "placement"],
     }),
     deleteDepartment: builder.mutation<
       Api.GetResponse<"delete", "/department">,
@@ -319,6 +365,33 @@ export const api = createApi({
     >({
       query: (params) => ({ url: "department", params, method: "POST" }),
       invalidatesTags: ["department", "log"],
+    }),
+
+    //*****//
+    fetchPlacements: builder.query<
+      Api.GetResponse<"get", "/placements">,
+      Api.GetQuery<"get", "/placements">
+    >({
+      query: (params) => ({
+        url: "placements",
+        params,
+        method: "GET",
+      }),
+      providesTags: ["placement"],
+    }),
+    deletePlacement: builder.mutation<
+      Api.GetResponse<"delete", "/placement">,
+      Api.GetQuery<"delete", "/placement">
+    >({
+      query: (params) => ({ url: "placement", params, method: "DELETE" }),
+      invalidatesTags: ["placement", "log", "department"],
+    }),
+    createPlacement: builder.mutation<
+      Api.GetResponse<"post", "/placement">,
+      Api.GetQuery<"post", "/placement">
+    >({
+      query: (params) => ({ url: "placement", params, method: "POST" }),
+      invalidatesTags: ["placement", "log"],
     }),
     //*****//
     fetchPhoneTypes: builder.query<

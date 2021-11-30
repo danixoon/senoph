@@ -13,12 +13,14 @@ import Popup, { PopupProps, PopupTopBar } from "components/Popup";
 import Span from "components/Span";
 import Switch from "components/Switch";
 import WithLoader from "components/WithLoader";
-import { useChanges } from "hooks/api/useChanges";
-import { useFilterConfig } from "hooks/api/useFetchConfig";
+import { ChangeStatus, useChanges } from "hooks/api/useChanges";
+import { useFetchConfig } from "hooks/api/useFetchConfig";
 import { useMakeChanges } from "hooks/api/useMakeChanges";
 import { useUndoChanges } from "hooks/api/useUndoChanges";
 import { useInput } from "hooks/useInput";
-import FieldEditPopup from "layout/Popups/FieldEditPopup";
+import FieldEditPopup, {
+  FieldEditPopupType,
+} from "layout/Popups/FieldEditPopup";
 import PhoneEditActions from "layout/PhoneEditActions";
 import PopupLayer from "providers/PopupLayer";
 import * as React from "react";
@@ -29,7 +31,10 @@ import HoldingItem from "./HoldingItem";
 
 import "./style.styl";
 import { useFetchHolder, useLastHolder } from "hooks/api/useFetchHolder";
-import { useHolderName } from "hooks/misc/useHolderName";
+import { splitHolderName, useHolder } from "hooks/misc/holder";
+import { getLastHolding } from "hooks/misc/holding";
+import { getDepartmentName, useDepartment } from "hooks/misc/department";
+import { usePhoneType } from "hooks/misc/phoneType";
 
 export type PhonePopupProps = {
   phone: Api.Models.Phone | null;
@@ -38,8 +43,13 @@ export type PhonePopupProps = {
   makeChanges: (targetId: number, changes: any) => void;
   undoChanges: (targetId: number, keys: string[]) => void;
   onDelete: () => void;
+  onDeleteCategory: (id: any) => void;
+  onSelectHolding: (id: any) => void;
   changes: any[];
-} & PopupProps;
+  popupProps?: PopupProps;
+  fetchPhoneStatus: ApiStatus;
+  deletePhoneStatus: ApiStatus;
+};
 
 const Content: React.FC<
   Omit<PhonePopupProps, "phone"> & {
@@ -51,43 +61,39 @@ const Content: React.FC<
     changes,
     isEditMode: edit,
     changeEditMode,
+    onDeleteCategory,
+    deletePhoneStatus,
+    onSelectHolding,
     makeChanges,
     undoChanges,
     onDelete,
   } = props;
-  const { types, departments } = useFilterConfig();
 
-  const [bind] = useInput({ search: "", tab: "category" });
+  const getHolder = useHolder();
+  const getDepartment = useDepartment();
+  const getType = usePhoneType();
 
-  // const holder = useFetchHolder({ id:  })
-  // const holder =
+  const [bind] = useInput({ tab: "category" });
 
-  // const holding = u
-
-  // const { holder } = useLastHolder(
-  //   (phone.holdings as Api.Models.Holding[]) ?? []
-  // );
-  const typeName = types.find((t) => phone.model?.phoneTypeId === t.id)?.name;
+  const typeName = getType(phone.model?.phoneTypeId);
   const modelName = phone.model?.name;
-  // const departmentName = departments.find(
-  const departmentName = departments.find(
-    (d) => phone.holder?.departmentId == d.id
-  )?.name;
-  const holderName = `${phone?.holder?.lastName} ${phone?.holder?.firstName} ${phone?.holder?.middleName}`;
 
-  const {
-    // factoryKey,
-    // inventoryKey,
-    accountingDate,
-    commissioningDate,
-    assemblyDate,
-  } = phone;
+  const lastHolding = getLastHolding(phone.holdings);
+
+  const holder = getHolder(lastHolding?.holderId);
+  const departmentName = getDepartmentName(
+    getDepartment(lastHolding.departmentId)
+  );
+
+  const { accountingDate, commissioningDate, assemblyDate } = phone;
 
   const renderCategories = () =>
     (phone.categories?.length ?? 0) > 0 ? (
       phone.categories?.map((cat) => (
         <CategoryItem
+          onDelete={() => onDeleteCategory(cat.id)}
           key={cat.id}
+          deletable={edit}
           actDate={new Date(cat.actDate)}
           category={Number.parseInt(cat.categoryKey)}
         />
@@ -96,15 +102,14 @@ const Content: React.FC<
       <Header align="center">Категории отсутствуют.</Header>
     );
 
-  const getHolderName = useHolderName();
-
   const renderHoldings = () =>
     (phone.holdings?.length ?? 0) > 0 ? (
       phone.holdings?.map((hold) => (
         <HoldingItem
+          onSelect={() => onSelectHolding(hold.id)}
           key={hold.id}
           orderDate={new Date(hold.orderDate ?? Date.now())}
-          holder={getHolderName(hold.holder)}
+          holder={splitHolderName(hold.holder)}
         />
       ))
     ) : (
@@ -113,7 +118,7 @@ const Content: React.FC<
 
   const [field, setFieldEdit] = React.useState<{
     isEdit: boolean;
-    type: "text";
+    type: FieldEditPopupType;
     key: string;
     label: null | string;
     targetId: number;
@@ -126,7 +131,7 @@ const Content: React.FC<
   }));
 
   const handleFieldEdit =
-    (label = field.label, type = "text" as const) =>
+    (label = field.label, type: FieldEditPopupType = "text" as const) =>
     (targetId: number, key: string) =>
       setFieldEdit({
         type,
@@ -183,9 +188,33 @@ const Content: React.FC<
                 {edit ? "Изменение" : "Просмотр"}
               </Badge>
             </ButtonGroup>
-            {/* <Edit3 color="#C5C5C5" /> */}
             <span style={{ margin: "auto" }}>
-              Средство связи №{phone.id} ({phone.model?.name})
+              Средство связи #{phone.id} ({phone.model?.name})
+              {phone.status === "create-pending" ? (
+                <Link href={`/phone/commit/actions?id=${phone.id}`}>
+                  <Span
+                    style={{ marginLeft: "1rem" }}
+                    inline
+                    color="primary"
+                    weight="bold"
+                  >
+                    ПОДЛЕЖИТ СОЗДАНИЮ
+                  </Span>
+                </Link>
+              ) : phone.status === "delete-pending" ? (
+                <Link href={`/phone/commit/actions?id=${phone.id}`}>
+                  <Span
+                    style={{ marginLeft: "1rem" }}
+                    inline
+                    color="primary"
+                    weight="bold"
+                  >
+                    ПОДЛЕЖИТ УДАЛЕНИЮ
+                  </Span>
+                </Link>
+              ) : (
+                ""
+              )}
             </span>
           </Header>
           <Switch
@@ -212,15 +241,7 @@ const Content: React.FC<
               <Span>{typeName}</Span>
             </ListItem>
             <ListItem label="Модель">
-              <Span
-                altLabel={{
-                  text: "Модель устройства!",
-                  zIndex: "popup",
-                  position: "right",
-                }}
-              >
-                {modelName}
-              </Span>
+              <Span>{modelName}</Span>
             </ListItem>
             <EditableListItem
               label="Заводской номер"
@@ -240,43 +261,54 @@ const Content: React.FC<
             </EditableListItem>
             <Hr />
             <EditableListItem
-              label="Дата ввода в эксплуатацию"
-              onOpen={handleFieldEdit("Новая дата ввода в эксплуатацию")}
+              label="Год сборки"
+              onOpen={handleFieldEdit("Новый год сборки", "number")}
               propertyKey="assemblyDate"
               editable={edit}
+              mapper={(v) => new Date(v).getFullYear()}
             >
-              {new Date(assemblyDate).toLocaleDateString()}
+              {assemblyDate}
             </EditableListItem>
             <Hr />
             <EditableListItem
               label="Дата принятия к учёту"
-              onOpen={handleFieldEdit("Новая дата принятия к учёту")}
+              onOpen={handleFieldEdit("Новая дата принятия к учёту", "date")}
               propertyKey="accountingDate"
               editable={edit}
+              mapper={(v) => new Date(v).toLocaleDateString()}
             >
-              {new Date(accountingDate).toLocaleDateString()}
+              {accountingDate}
             </EditableListItem>
             <EditableListItem
               label="Дата ввода в эксплуатацию"
-              onOpen={handleFieldEdit("Новая дата ввода в эксплуатацию")}
+              onOpen={handleFieldEdit(
+                "Новая дата ввода в эксплуатацию",
+                "date"
+              )}
               propertyKey="commissioningDate"
               editable={edit}
+              mapper={(v) => new Date(v).toLocaleDateString()}
             >
-              {new Date(commissioningDate).toLocaleDateString()}
+              {commissioningDate}
             </EditableListItem>
             <Hr />
-            <ListItem label="Подразделение">
-              <Span>{departmentName}</Span>
-            </ListItem>
-            <ListItem label="Материально-ответственное лицо">
-              <Link
-                href="/phone/edit"
-                altLabel={{ text: "Точно хочешь узнать?", zIndex: "popup" }}
-                isMonospace
-              >
-                {holderName}
-              </Link>
-            </ListItem>
+            {holder ? (
+              <>
+                <ListItem label="Подразделение">
+                  <Span>{departmentName}</Span>
+                </ListItem>
+                <ListItem label="Материально-ответственное лицо">
+                  <Link href="/phone/edit" isMonospace>
+                    {splitHolderName(holder)}
+                  </Link>
+                </ListItem>
+              </>
+            ) : (
+              <Header align="center">
+                Материально-ответственное лицо отсутствует. Создайте его с
+                помощью движения
+              </Header>
+            )}
             <Hr />
           </Layout>
           {edit ? (
@@ -287,8 +319,9 @@ const Content: React.FC<
                   color="primary"
                   style={{ marginTop: "auto" }}
                   onClick={onDelete}
+                  disabled={deletePhoneStatus.isLoading}
                 >
-                  Удалить
+                  {deletePhoneStatus.isLoading ? <LoaderIcon /> : "Удалить"}
                 </Button>
               </PhoneEditActions>
             </>
@@ -297,11 +330,6 @@ const Content: React.FC<
           )}
           <Hr vertical />
           <Layout flex="0 0 250px" padding="md">
-            <Input
-              {...bind}
-              name="search"
-              inputProps={{ placeholder: "Фильтр.." }}
-            />
             {bind.input.tab === "category"
               ? renderCategories()
               : renderHoldings()}
@@ -313,16 +341,20 @@ const Content: React.FC<
 };
 
 const PhonePopup: React.FC<PhonePopupProps> = (props) => {
-  const { phone, isEditMode, changeEditMode, ...rest } = props;
+  const {
+    phone,
+    popupProps = {},
+    fetchPhoneStatus: phoneStatus,
+    ...rest
+  } = props;
 
   return (
-    <Popup {...rest} size="lg" closeable noPadding>
-      <WithLoader isLoading={!phone}>
+    <Popup {...popupProps} size="lg" closeable noPadding>
+      <WithLoader isLoading={phoneStatus.isLoading}>
         <Content
           phone={phone as Api.Models.Phone}
-          isEditMode={isEditMode}
-          changeEditMode={changeEditMode}
           {...rest}
+          fetchPhoneStatus={phoneStatus}
         />
       </WithLoader>
     </Popup>

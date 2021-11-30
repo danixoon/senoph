@@ -7,15 +7,17 @@ type HeaderProps = OverrideProps<
   {
     hr?: boolean;
     align?: React.CSSProperties["textAlign"];
+    bottom?: boolean;
+    unsized?: boolean;
   }
 >;
 
 const Header: React.FC<HeaderProps> = (props: HeaderProps) => {
-  const { children, hr, align, ...rest } = props;
+  const { children, hr, align, unsized, bottom, ...rest } = props;
 
   const mergedProps = mergeProps(
     {
-      className: mergeClassNames("header", hr && "header_hr"),
+      className: mergeClassNames("header", hr && "header_hr", bottom && "header_bottom", unsized && "header_unsized"),
       style: { textAlign: align },
     },
     rest

@@ -3,39 +3,49 @@ import React from "react";
 import ItemSelectionPopup, {
   ItemSelectionPopupProps,
 } from "layout/Popups/ItemSelectionPopup";
-import { useFilterConfig } from "hooks/api/useFetchConfig";
-import { useInput } from "hooks/useInput";
+import { useFetchConfig } from "hooks/api/useFetchConfig";
+import { InputBind, useInput } from "hooks/useInput";
+import Dropdown from "components/Dropdown";
 
 export type ModelSelectionPopupContainerProps = {
   onToggle: () => void;
   isOpen: boolean;
-} & Pick<ItemSelectionPopupProps, "name" | "targetBind">;
-
-const ModelSelectionPopupContainer: React.FC<ModelSelectionPopupContainerProps> = (
-  props
-) => {
-  const { targetBind, ...rest } = props;
-
-  const { models } = useFilterConfig();
-  const [searchBind] = useInput({ search: "" });
-
-  const isIncludes = (str: string) =>
-    searchBind.input.search
-      ? str
-          .trim()
-          .toLowerCase()
-          .includes(searchBind.input.search.trim().toLowerCase())
-      : true;
-
-  return (
-    <ItemSelectionPopup
-      {...rest}
-      searchBind={searchBind}
-      targetBind={targetBind}
-      items={models.filter((item) => isIncludes(item.name))}
-      header="Выбор модели"
-    />
-  );
+  onSelect: (id: any, name: string) => void;
 };
+
+const ModelSelectionPopupContainer: React.FC<ModelSelectionPopupContainerProps> =
+  (props) => {
+    const { onSelect, ...rest } = props;
+
+    const { models, types } = useFetchConfig();
+    const [searchBind] = useInput({ phoneTypeId: null });
+
+    const modelItems = searchBind.input.phoneTypeId
+      ? models.filter(
+          (model) => model.phoneTypeId === Number(searchBind.input.phoneTypeId)
+        )
+      : models;
+
+    return (
+      <ItemSelectionPopup
+        onSelect={(item) => {
+          onSelect(item.id, item.name);
+        }}
+        items={modelItems}
+        header="Выбор модели"
+        {...rest}
+      >
+        <Dropdown
+          {...searchBind}
+          name="phoneTypeId"
+          label="Тип"
+          items={types.map((type) => ({
+            label: type.name,
+            id: type.id,
+          }))}
+        />
+      </ItemSelectionPopup>
+    );
+  };
 
 export default ModelSelectionPopupContainer;

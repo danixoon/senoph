@@ -4,8 +4,10 @@
   margin: margin.md
   position: relative
  
-
-  
+  &__clear-button
+    position: absolute
+    bottom: -2px
+    right: -4px
 
   &__info
     @extend .monospace
@@ -42,6 +44,9 @@
       text-overflow: ellipsis
       overflow: hidden
       // word-wrap: nowrap
+
+    &_clearable
+      padding-right: 20px
       
   &_xs  
     font-size: fontSize.xs

@@ -7,7 +7,7 @@ import PhoneType from "@backend/db/models/phoneType.model";
 import Department from "@backend/db/models/department.model";
 import PhoneModel from "@backend/db/models/phoneModel.model";
 import { AppRouter } from "../router";
-import { handler, prepareItems } from "../utils";
+import { transactionHandler, prepareItems } from "../utils";
 import { access, owner } from "@backend/middleware/auth";
 import { tester, validate } from "@backend/middleware/validator";
 import { upload } from "@backend/middleware/upload";
@@ -31,7 +31,7 @@ router.get(
   validate({
     query: {},
   }),
-  handler(async (req, res) => {
+  transactionHandler(async (req, res) => {
     const filter = new Filter({}); //.add("id", Op.in);
     const logs = await Log.findAll({
       where: filter.where,

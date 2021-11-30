@@ -18,25 +18,19 @@ const CommitPageContainer: React.FC<Props> = (props) => {
 
   return (
     <Switch>
-      <Route path={`${path}/phone/create`}>
+      <Route path={`${path}/create`}>
         <PhoneCommitPageContainer tab="create" />
       </Route>
-      <Route path={`${path}/phone/edit`}>
+      <Route path={`${path}/edit`}>
         <PhoneCommitPageContainer tab="edit" />
       </Route>
-      <Route path={`${path}/phone/delete`}>
+      <Route path={`${path}/delete`}>
         <PhoneCommitPageContainer tab="delete" />
-      </Route>
-      <Route path={`${path}/holding/create`}>
-        <HoldingCommitContainer />
       </Route>
     </Switch>
   );
 };
 
-const HoldingCommitContainer: React.FC<{}> = (props) => {
-  return <></>;
-};
 
 const PhoneCommitPageContainer: React.FC<{ tab: PhoneCommitPageTab }> = (
   props
@@ -66,9 +60,9 @@ const PhoneCommitPageContainer: React.FC<{ tab: PhoneCommitPageTab }> = (
 
   const changes = isSuccess
     ? changeCommits.map((changes) => ({
-        original: originals?.items.find((o) => o.id === changes.id),
-        changes,
-      }))
+      original: originals?.items.find((o) => o.id === changes.id),
+      changes,
+    }))
     : [];
 
   const [approveCommitChanges] = api.useCommitChangesApproveMutation();

@@ -1,5 +1,6 @@
 import { useQueryInput } from "hooks/useQueryInput";
 import HoldingPage from "layout/Pages/HoldingPage";
+import { NoticeContext } from "providers/NoticeProvider";
 import React from "react";
 import { QueryStatus } from "react-query";
 import { getStatusProps } from "react-query/types/core/utils";
@@ -20,14 +21,12 @@ const HoldingPageContainer: React.FC<Props> = (props) => {
     {
       amount: phoneIds.length,
       offset: 0,
-      ids: phoneIds,
+      ids: phoneIds.length > 0 ? undefined : phoneIds,
     },
     { skip: (bind.input.phoneIds?.length ?? 0) === 0 }
   );
 
-  const { data: holdings, ...holdingsRest } = api.useFetchHoldingsQuery({
-    status: "create-pending",
-  });
+  const { data: holdings, ...holdingsRest } = api.useFetchHoldingsQuery({});
 
   const holdingPhoneIds = Array.from(
     // TODO: Flat map..?
@@ -43,15 +42,14 @@ const HoldingPageContainer: React.FC<Props> = (props) => {
       {
         phoneIds: holdingPhoneIds,
       },
-      { skip: (holdings?.items ?? []).length === 0 }
+      { skip: holdingPhoneIds.length === 0 }
     );
 
   const holdingMap = new Map<number, Api.Models.Holding[]>();
   for (const holding of phoneHoldings?.items ?? []) {
     for (const phoneId of holding.phoneIds) {
-      // const { phoneIds, ...rest } = holding;
-      // if(holding)
       const holdingList = holdingMap.get(phoneId) ?? [];
+
       holdingMap.set(phoneId, [...holdingList, holding]);
     }
   }
@@ -59,7 +57,44 @@ const HoldingPageContainer: React.FC<Props> = (props) => {
   const phonesStatus = extractStatus(phonesRest);
   const holdingsStatus = extractStatus(holdingsRest);
 
-  const [createHolding] = api.useCreateHoldingMutation();
+  const noticeContext = React.useContext(NoticeContext);
+
+  const [createHolding, holdingCreationInfo] = api.useCreateHoldingMutation();
+
+  const holdingCreationStatus = extractStatus(holdingCreationInfo);
+
+  const holdingItems = (holdings?.items ?? []).map((holding) => {
+    const prevHolders: Api.Models.Holder[] = [];
+    for (const id of holding.phoneIds) {
+      // Получаем все движения сс по ID средств связи, отсортированные по дате документа
+      const prevItems = [...(holdingMap.get(id) ?? [])].sort((a, b) =>
+        (a.orderDate as string) < (b.orderDate as string) ? -1 : 1
+      );
+      // Определяется порядковый номер назначения для СС
+      const holderIndex = prevItems.findIndex((item) => item.id === holding.id);
+
+      // Если это не первый владелец, то следует вывести его
+      if (holderIndex > 0) {
+        const holder = prevItems[holderIndex - 1].holder as Api.Models.Holder;
+        if (prevHolders.every((h) => h.id !== holder.id))
+          prevHolders.push(holder);
+      }
+    }
+
+    return { ...holding, prevHolders };
+  });
+
+  React.useEffect(() => {
+    if (holdingCreationStatus.isLoading)
+      noticeContext.createNotice("Движение создаётся..");
+    if (holdingCreationStatus.isSuccess)
+      noticeContext.createNotice("Движение создано.");
+    if (holdingCreationStatus.isError)
+      noticeContext.createNotice(
+        "Ошибка создание движения: " + holdingCreationStatus.error?.message,
+        "danger"
+      );
+  }, [holdingCreationInfo.status]);
 
   return (
     <HoldingPage
@@ -67,10 +102,10 @@ const HoldingPageContainer: React.FC<Props> = (props) => {
         createHolding(data);
       }}
       phones={phones?.items ?? []}
-      holdings={holdings?.items ?? []}
+      holdings={holdingItems}
       phonesStatus={phonesStatus}
+      holdingCreationStatus={holdingCreationStatus}
       holdingsStatus={holdingsStatus}
-      holdingHistory={holdingMap}
     />
   );
 };

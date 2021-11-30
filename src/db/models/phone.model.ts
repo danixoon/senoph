@@ -1,5 +1,6 @@
 import { logger } from "@backend/utils/index";
 import { Sequelize } from "sequelize";
+import { QueryTypes } from "sequelize";
 import { Op } from "sequelize";
 import {
   AllowNull,
@@ -24,6 +25,7 @@ import {
   BeforeCreate,
   BeforeBulkUpdate,
 } from "sequelize-typescript";
+import { sequelize } from "..";
 
 import { getChanges, getChangesById } from "../commit";
 import Change from "./change.model";
@@ -35,26 +37,6 @@ import HoldingPhone from "./holdingPhone.model";
 import PhoneCategory from "./phoneCategory.model";
 import PhoneModel from "./phoneModel.model";
 import User from "./user.model";
-
-// class CommitedModel<T, K> extends Model<T, K> {
-//   @ForeignKey(() => Commit)
-//   @AllowNull(true)
-//   @Column(DataType.INTEGER)
-//   commitId: number | null;
-
-//   @BelongsTo(() => Commit)
-//   commit: Commit | null;
-
-//   onInit = () => {
-//     // bindHooks()
-//   };
-// }
-
-// CommitedModel.addHook("beforeBulkCreate", )
-
-// @DefaultScope(() => ({
-//   ,
-// }))
 
 @Table({
   scopes: {
@@ -69,16 +51,6 @@ import User from "./user.model";
           model: PhoneModel,
           as: "model",
         },
-        // {
-        //   model: Holder,
-        //   as: "holder",
-        // },
-        // {
-        //   model: PhoneModel,
-        // },
-        // {
-        //   model: PhoneModel,
-        // },
       ],
     },
   },
@@ -93,14 +65,14 @@ export default class Phone extends Model<
   DB.CreateAttributes<DB.PhoneAttributes>
 > {
   @Unique
-  @AllowNull(false)
+  @AllowNull(true)
   @Column(DataType.STRING)
-  inventoryKey: string;
+  inventoryKey?: string;
 
   @Unique
-  @AllowNull(false)
+  @AllowNull(true)
   @Column(DataType.STRING)
-  factoryKey: string;
+  factoryKey?: string;
 
   @AllowNull(false)
   @Column(DataType.DATE)
@@ -118,11 +90,6 @@ export default class Phone extends Model<
   @AllowNull(false)
   @Column(DataType.INTEGER)
   phoneModelId: number;
-
-  // @ForeignKey(() => Holder)
-  // @AllowNull(false)
-  // @Column(DataType.INTEGER)
-  // holderId: number;
 
   @AllowNull(true)
   @Validate({ isIn: [["create-pending", "delete-pending"]] })
@@ -149,24 +116,26 @@ export default class Phone extends Model<
   @HasMany(() => PhoneCategory)
   categories: PhoneCategory[];
 
-  // @HasMany(() => HoldingPhone)
-  // holdings: HoldingPhone[];
-
   @BeforeBulkUpdate
   static onBeforeUpdate(args: any) {
     args.fields.push("statusAt");
     args.attributes.statusAt = new Date().toISOString();
   }
 
-  static async withHolders(phones: Phone[]) {
-    const holders = await Holder.getByPhones(phones.map((phone) => phone.id));
-    const mappedPhones = phones.map((phone) => ({
-      ...phone.toJSON(),
-      holder: holders.get(phone.id)?.toJSON(),
-    })) as Api.Models.Phone[];
+  // static async withHolders(phones: Phone[]) {
+  //   const holders = await Holder.getByPhones(phones.map((phone) => phone.id));
+  //   const mappedPhones: Api.Models.Phone[] = [];
+  //   phones.forEach((phone) => {
+  //     const holder = holders.get(phone.id);
+  //     const p: Api.Models.Phone = {
+  //       ...phone.toJSON(),
+  //       holder: holder?.toJSON(),
+  //     };
+  //     mappedPhones.push(p);
+  //   });
 
-    return mappedPhones;
-  }
+  //   return mappedPhones;
+  // }
 
   async getChanges(userId: number) {
     const changes = await getChangesById(userId, "phone", this.id);

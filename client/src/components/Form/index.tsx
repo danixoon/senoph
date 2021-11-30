@@ -18,6 +18,7 @@ export type FormProps = OverrideProps<
   React.HTMLAttributes<HTMLFormElement>,
   {
     onSubmit?: (data: FormData | any) => void;
+    mapper?: (data: any) => any;
     preventDefault?: boolean;
     input: any;
     inputError?: FormError;
@@ -39,6 +40,7 @@ const Form: React.FC<React.PropsWithChildren<FormProps>> = (
     input = {},
     inputError,
     onSubmit,
+    mapper,
     json = true,
     ...rest
   } = props;
@@ -67,29 +69,37 @@ const Form: React.FC<React.PropsWithChildren<FormProps>> = (
     if (preventDefault) e.preventDefault();
 
     if (!onSubmit) return;
-    const data = new FormData(e.target as HTMLFormElement);
+    const data = new FormData();
+    let errored = false;
     for (const key in validators.current) {
-      const validationResult = validators.current[key].find((isInvalid) =>
+      const validator = validators.current[key].find((isInvalid) =>
         isInvalid(input[key])
       );
 
-      if (validationResult) {
+      const result = validator ? validator(input[key]) : false;
+
+      if (result) {
         setLocalErrors({
           ...localErrors,
           [key]: {
-            message:
-              typeof validationResult === "string"
-                ? validationResult
-                : "Неверное значение",
+            message: typeof result === "string" ? result : "Неверное значение",
           },
         });
-        return;
+        errored = true;
+        break;
       }
     }
 
-    for (const key in input) {
-      if (input[key] instanceof FileList) data.append(key, input[key]);
-      else data.set(key, input[key]);
+    if (errored) {
+      validators.current = {};
+      return;
+    }
+
+    const mappedInput = mapper ? mapper(input) : input;
+    for (const key in mappedInput) {
+      if (mappedInput[key] instanceof FileList)
+        data.append(key, mappedInput[key][0]);
+      else data.set(key, mappedInput[key]);
     }
 
     setLocalErrors({});

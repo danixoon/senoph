@@ -7,6 +7,8 @@ import {
   DataType,
   Scopes,
   HasMany,
+  Unique,
+  BelongsTo,
 } from "sequelize-typescript";
 import { Optional } from "sequelize/types";
 import PhoneModelDetail from "./phoneModelDetail.model";
@@ -24,17 +26,17 @@ export default class PhoneModel extends Model<
   DB.CreateAttributes<DB.PhoneModelAttributes>
 > {
   @AllowNull(false)
+  @Unique
   @Column(DataType.STRING)
   name: string;
-
-  @AllowNull(false)
-  @Column(DataType.DATE)
-  accountingDate: string;
 
   @ForeignKey(() => PhoneType)
   @AllowNull(false)
   @Column(DataType.INTEGER)
   phoneTypeId: number;
+
+  @BelongsTo(() => PhoneType)
+  phoneType?: PhoneType;
 
   @HasMany(() => PhoneModelDetail)
   details: PhoneModelDetail[];

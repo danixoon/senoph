@@ -41,9 +41,12 @@ export const locationQueryReducer = <T extends { filter: F }, F>(
     if (middlware) middlware(state, action);
   });
 
-export const updateQuery = <T>(query: Partial<T>) => {
+export const updateQuery = <T>(query: Partial<T>, pathname?: string) => {
   const q = clearObject(query);
-  return push({ search: qs.stringify(q) });
+  const search = qs.stringify(q).trim();
+  // if (pathname)
+  // return push({ pathname: `${pathname}${search ? `/${search}` : ""}` });
+  return push({ search, pathname });
 };
 
 export function isApiError(type: any): type is Api.Error {
@@ -73,25 +76,63 @@ export const getErrorMessage = (
   return err?.description ?? err?.message ?? "Ошибка";
 };
 
-export const extractStatus = ({
-  isError,
-  isLoading,
-  isIdle,
-  isSuccess,
-  error,
-}: {
+// export const getIdleStatus: ApiStatus = splitStatus("idle");
+
+export function isItemsResponse<T>(type: any): type is ItemsResponse<T> {
+  return type.items && Array.isArray(type.items);
+}
+
+export const parseQuery = <T extends { data?: K } & Statusable, K>(
+  query: T
+) => {
+  const { data, ...info } = query;
+  const status = extractStatus(info);
+
+  return { data, status };
+};
+
+type ParseItems = <K>(query: { data?: ItemsResponse<K> } & Statusable) => {
+  data: ItemsResponse<K>;
+  status: ApiStatus;
+};
+
+export const parseItems: ParseItems = (query) => {
+  const { data, ...info } = query;
+  const status = extractStatus(info);
+
+  return {
+    data: data ?? { items: [], total: 0, offset: 0 },
+    status,
+  };
+};
+
+type Statusable = {
   isError?: boolean;
   isLoading?: boolean;
   isIdle?: boolean;
   isSuccess?: boolean;
+  isFetching?: boolean;
   error?: any;
-}) =>
+};
+export const extractStatus = (
+  { isError, isLoading, isIdle, isSuccess, isFetching, error }: Statusable,
+  fetchCheck?: boolean
+) =>
   ({
-    isLoading: isLoading === true,
+    isLoading: isLoading === true || (fetchCheck && isFetching),
     isSuccess: isSuccess === true,
     isError: isError === true,
     isIdle: isIdle === true,
-    error: isApiError(error) ? error : null,
+    error: isApiError(error?.data?.error) ? error?.data?.error : null,
+    status: isLoading
+      ? "loading"
+      : isSuccess
+      ? "success"
+      : isIdle
+      ? "idle"
+      : isError
+      ? "error"
+      : null,
   } as ApiStatus);
 export const splitStatus: (status: ActionStatus) => ApiStatus = (status) => {
   if (isApiError(status))
@@ -101,6 +142,7 @@ export const splitStatus: (status: ActionStatus) => ApiStatus = (status) => {
       isLoading: false,
       isIdle: false,
       isSuccess: false,
+      status: "error",
     };
   else
     switch (status) {
@@ -111,6 +153,7 @@ export const splitStatus: (status: ActionStatus) => ApiStatus = (status) => {
           isSuccess: false,
           isError: false,
           error: null,
+          status,
         };
       case "loading":
         return {
@@ -119,6 +162,7 @@ export const splitStatus: (status: ActionStatus) => ApiStatus = (status) => {
           isSuccess: false,
           isError: false,
           error: null,
+          status,
         };
 
       case "success":
@@ -128,6 +172,7 @@ export const splitStatus: (status: ActionStatus) => ApiStatus = (status) => {
           isSuccess: true,
           isError: false,
           error: null,
+          status,
         };
     }
 };

@@ -11,7 +11,7 @@
     "backend:test:debug": "NODE_ENV=test node --inspect -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand --forceExit",
     "watch": "concurrently --names 'server,client' 'yarn backend:watch' 'cd client && yarn watch'",
     "deploy": "bash ./deploy.sh",
-    "deploy:zip": "bash ./deploy.sh",
+    "deploy:zip": "bash ./deploy.sh -z",
     "start": "NODE_ENV=production node ./deploy/build/index.js",
     "test": "node --inspect -r ts-node/register -r tsconfig-paths/register src/parser.ts"
   },

@@ -10,7 +10,7 @@ import Header from "components/Header";
 import Span from "components/Span";
 import Badge from "components/Badge";
 import Hr from "components/Hr";
-import { useFilterConfig } from "hooks/api/useFetchConfig";
+import { useFetchConfig } from "hooks/api/useFetchConfig";
 import ListItem from "components/ListItem";
 import Button from "components/Button";
 import Icon from "components/Icon";
@@ -18,6 +18,8 @@ import ButtonGroup from "components/ButtonGroup";
 import { groupBy } from "utils";
 import Dropdown from "components/Dropdown";
 import Link from "components/Link";
+import { splitHolderName, useHolder } from "hooks/misc/holder";
+import { getLastHolding } from "hooks/misc/holding";
 
 export type CommitPageTab = "create" | "delete" | "edit";
 export type CommitChange = {
@@ -32,7 +34,7 @@ export const getPhonePropertyName = (property: keyof Api.Models.Phone) => {
     accountingDate: "Дата принятия к учёту",
     commissioningDate: "Дата ввода в эксплуатацию",
     factoryKey: "Заводской номер",
-    assemblyDate: "Дата сборки",
+    assemblyDate: "Год сборки",
   };
 
   return propMap[property] ?? property;
@@ -56,9 +58,9 @@ export type CommitPageProps = {
 const CommitItemContent: React.FC<{
   item: Api.Models.Phone;
   getTypeName: (id: number) => string;
-  getHolderName: (holder?: Api.Models.Holder) => string;
+  getHolder: (id: number) => Api.Models.Holder | undefined;
 }> = (props) => {
-  const { item, getHolderName, getTypeName } = props;
+  const { item, getHolder, getTypeName } = props;
 
   return (
     <Layout flow="row">
@@ -78,7 +80,7 @@ const CommitItemContent: React.FC<{
       <Hr vertical />
       <Layout flex="2">
         <ListItem label={getPhonePropertyName("assemblyDate")}>
-          <Span>{item.assemblyDate}</Span>
+          <Span>{new Date(item.assemblyDate).getFullYear()}</Span>
         </ListItem>
         <Hr />
         <ListItem label={getPhonePropertyName("commissioningDate")}>
@@ -100,7 +102,9 @@ const CommitItemContent: React.FC<{
         </ListItem>
         <Hr />
         <ListItem label="Владелец">
-          <Span>{getHolderName(item.holder as Api.Models.Holder)}</Span>
+          <Span>
+            {splitHolderName(getHolder(getLastHolding(item.holdings).holderId))}
+          </Span>
         </ListItem>
       </Layout>
     </Layout>
@@ -110,9 +114,8 @@ const CommitItemContent: React.FC<{
 const CommitEditedItemContent: React.FC<{
   item: { original: Api.Models.Phone; changes: Partial<Api.Models.Phone> };
   getTypeName: (id: number) => string;
-  getHolderName: (holder?: Api.Models.Holder) => string;
 }> = (props) => {
-  const { item, getHolderName, getTypeName } = props;
+  const { item, getTypeName } = props;
   const { original, changes } = item;
 
   const { id, createdAt, ...trueChanges } = changes;
@@ -162,11 +165,7 @@ const CommitPage: React.FC<CommitPageProps> = (props) => {
   const { commits, tab, onCommit, onCommitChanges } = props;
 
   const [bind] = useInput({ author: "me" });
-
-  // const createdCommits: Api.Models.Phone[] = [];
-  // const deletedCommits: Api.Models.Phone[] = [];
-
-  // for
+  const getHolder = useHolder();
 
   const getTargetCommits = (tab: CommitPageTab) => {
     switch (tab) {
@@ -181,7 +180,7 @@ const CommitPage: React.FC<CommitPageProps> = (props) => {
 
   const { author } = bind.input;
 
-  const { models, types } = useFilterConfig();
+  const { models, types } = useFetchConfig();
 
   const getTypeName = (modelId: number) => {
     const model = models.find((model) => model.id === modelId);
@@ -198,19 +197,16 @@ const CommitPage: React.FC<CommitPageProps> = (props) => {
 
   const targetCommits = getTargetCommits(tab);
 
-  const commitGroup = (isEditCommits(targetCommits)
-    ? groupBy(targetCommits, (item) => item.changes?.createdAt)
-    : groupBy(targetCommits, (item) => item.statusAt)) as Map<
-    any,
-    CommitChange[] | Api.Models.Phone[]
-  >;
+  const commitGroup = (
+    isEditCommits(targetCommits)
+      ? groupBy(targetCommits, (item) => item.changes?.createdAt)
+      : groupBy(targetCommits, (item) => item.statusAt)
+  ) as Map<any, CommitChange[] | Api.Models.Phone[]>;
 
   const [lastDeleted, setLastDeleted] = React.useState<{
     commit: Api.Models.Phone;
     i: number;
   } | null>(() => null);
-
-  const getHolderName = useHolderName();
 
   const mapCommits = (
     commits: CommitChange[] | Api.Models.Phone[],
@@ -292,13 +288,12 @@ const CommitPage: React.FC<CommitPageProps> = (props) => {
               <CommitEditedItemContent
                 item={{ original: info.commit, changes: info.changes ?? {} }}
                 getTypeName={getTypeName}
-                getHolderName={getHolderName}
               />
             ) : (
               <CommitItemContent
                 item={info.commit}
                 getTypeName={getTypeName}
-                getHolderName={getHolderName}
+                getHolder={getHolder}
               />
             )}
           </CommitItem>
@@ -349,18 +344,6 @@ const CommitPage: React.FC<CommitPageProps> = (props) => {
       </Layout>
     </Layout>
   );
-};
-
-const useHolderName = () => {
-  const { departments } = useFilterConfig();
-
-  return (holder?: Api.Models.Holder) => {
-    if (!holder) return "Имя не определено";
-    const dep = departments.find((dep) => dep.id === holder.departmentId);
-    return `${holder.lastName} ${holder.firstName} ${holder.middleName} ${
-      dep ? `(${dep.name})` : ""
-    }`.trim();
-  };
 };
 
 const CommitItem: React.FC<{

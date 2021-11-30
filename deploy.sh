@@ -5,7 +5,7 @@ yarn backend:build
 cd client && yarn build && cd ..
 
 # Перемещение билда фронта
-mkdir ./client/build/public
+mkdir ./build/public
 mv ./client/build/* ./build/public
 
 # Проверка на -z флаг создания .zip архива прода
@@ -18,7 +18,8 @@ do
 done
 
 # Перемещение кода билда и зависимостей в директорию прода
-rm -rf ./deploy || mkdir ./deploy
+rm -rf ./deploy
+mkdir ./deploy
 cp -r ./node_modules ./deploy
 mv ./build ./deploy
 

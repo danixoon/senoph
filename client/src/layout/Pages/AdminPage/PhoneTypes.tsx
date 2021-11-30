@@ -3,32 +3,63 @@ import Dropdown from "components/Dropdown";
 import Form from "components/Form";
 import Header from "components/Header";
 import Hr from "components/Hr";
-import Icon from "components/Icon";
+import Icon, { LoaderIcon } from "components/Icon";
 import Input from "components/Input";
 import Layout from "components/Layout";
 import SpoilerPopup, { SpoilerPopupButton } from "components/SpoilerPopup";
 import Table, { TableColumn } from "components/Table";
 import { useInput } from "hooks/useInput";
+import { NoticeContext } from "providers/NoticeProvider";
 import React from "react";
 import { api } from "store/slices/api";
+import { extractStatus } from "store/utils";
 
 export type PhoneTypesProps = {};
 
 const useContainer = () => {
   const phoneTypes = api.useFetchPhoneTypesQuery({});
-  const [deletePhoneType] = api.useDeletePhoneTypeMutation();
-  const [createPhoneType] = api.useCreatePhoneTypeMutation();
+  const [deletePhoneType, deleteStatus] = api.useDeletePhoneTypeMutation();
+  const [createPhoneType, createStatus] = api.useCreatePhoneTypeMutation();
 
   return {
     phoneTypes: { ...phoneTypes, items: phoneTypes.data?.items ?? [] },
     deletePhoneType,
+    deleteStatus: extractStatus(deleteStatus),
+    createStatus: extractStatus(createStatus),
     createPhoneType,
   };
 };
 
 const PhoneTypes: React.FC<PhoneTypesProps> = (props) => {
-  const { phoneTypes, deletePhoneType, createPhoneType } =
-    useContainer();
+  const {
+    phoneTypes,
+    deletePhoneType,
+    createPhoneType,
+    createStatus,
+    deleteStatus,
+  } = useContainer();
+
+  const noticeContext = React.useContext(NoticeContext);
+
+  React.useEffect(() => {
+    if (createStatus.isLoading) noticeContext.createNotice("Создание типа...");
+    if (createStatus.isSuccess)
+      noticeContext.createNotice("Тип успешно создан.");
+    if (createStatus.isError)
+      noticeContext.createNotice(
+        `Произошла ошибка при создании типа: (${createStatus.error?.name}) ${createStatus.error?.description}`
+      );
+  }, [createStatus.status]);
+
+  React.useEffect(() => {
+    if (deleteStatus.isLoading) noticeContext.createNotice("Удаление типа...");
+    if (deleteStatus.isSuccess)
+      noticeContext.createNotice("Тип успешно удален.");
+    if (deleteStatus.isError)
+      noticeContext.createNotice(
+        `Произошла ошибка при удалении типа: (${deleteStatus.error?.name}) ${deleteStatus.error?.description}`
+      );
+  }, [deleteStatus.status]);
 
   const columns: TableColumn[] = [
     {
@@ -36,7 +67,10 @@ const PhoneTypes: React.FC<PhoneTypesProps> = (props) => {
       header: "",
       size: "30px",
       mapper: (v, item) => (
-        <ActionBox onDelete={() => deletePhoneType({ id: item.id })} />
+        <ActionBox
+          status={deleteStatus}
+          onDelete={() => deletePhoneType({ id: item.id })}
+        />
       ),
     },
     {
@@ -78,6 +112,7 @@ const PhoneTypes: React.FC<PhoneTypesProps> = (props) => {
             <Input
               required
               label="Наименование"
+              placeholder="Средство связи"
               {...bind}
               name="name"
               style={{ flex: "1" }}
@@ -85,6 +120,7 @@ const PhoneTypes: React.FC<PhoneTypesProps> = (props) => {
             <Input
               label="Описание"
               {...bind}
+              placeholder="Дополнительная информация"
               name="description"
               style={{ flex: "1" }}
             />
@@ -98,7 +134,7 @@ const PhoneTypes: React.FC<PhoneTypesProps> = (props) => {
               type="submit"
               color="primary"
             >
-              Создать
+              {createStatus.isLoading ? <LoaderIcon /> : "Создать"}
             </Button>
           </Layout>
         </Form>
@@ -112,8 +148,8 @@ const PhoneTypes: React.FC<PhoneTypesProps> = (props) => {
   );
 };
 
-const ActionBox = (props: { onDelete: () => void }) => {
-  // const { commit } = props;
+const ActionBox = (props: { status: ApiStatus; onDelete: () => void }) => {
+  const { status } = props;
   const [target, setTarget] = React.useState<HTMLElement | null>(() => null);
 
   const [isOpen, setIsOpen] = React.useState(() => false);
@@ -135,8 +171,10 @@ const ActionBox = (props: { onDelete: () => void }) => {
           else setIsOpen(false);
         }}
       >
-        <SpoilerPopupButton onClick={() => props.onDelete()}>
-          Удалить
+        <SpoilerPopupButton
+          onClick={() => !status.isLoading && props.onDelete()}
+        >
+          {status.isLoading ? <LoaderIcon /> : "Удалить"}
         </SpoilerPopupButton>
       </SpoilerPopup>
     </Button>
