@@ -22,7 +22,6 @@ router.get(
     query: {
       id: tester().isNumeric(),
       name: tester(),
-      departmentId: tester().isNumeric(),
     },
   }),
   transactionHandler(async (req, res, next) => {
@@ -38,7 +37,7 @@ router.get(
           .addWith("lastName", name, Op.substring)
           .addWith("middleName", name, Op.substring)
       )
-      .add("departmentId")
+
       .add("id");
 
     const holders = await Holder.findAndCountAll({
@@ -61,18 +60,16 @@ router.post(
       firstName: tester().required(),
       lastName: tester().required(),
       middleName: tester().required(),
-      departmentId: tester().required().isNumber(),
     },
   }),
   transactionHandler(async (req, res) => {
     const { user } = req.params;
-    const { firstName, lastName, middleName, departmentId } = req.query;
+    const { firstName, lastName, middleName } = req.query;
 
     const holder = await Holder.create({
       firstName,
       lastName,
       middleName,
-      departmentId,
     });
 
     Log.log("holder", [holder.id], "create", user.id);

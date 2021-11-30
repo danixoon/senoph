@@ -20,34 +20,28 @@ export type HoldersProps = {};
 
 const useContainer = () => {
   const holders = api.useFetchHoldersQuery({});
-  const departments = api.useFetchDepartmentsQuery({});
   const [deleteHolder, deleteStatus] = api.useDeleteHolderMutation();
   const [createHolder, createStatus] = api.useCreateHolderMutation();
   const getHolderName = useHolderName();
-  const getDepartmentName = useDepartmentName();
 
   return {
     holders: { ...holders, items: holders.data?.items ?? [] },
-    departments: { ...departments, items: departments.data?.items ?? [] },
     deleteHolder,
     createHolder,
     deleteStatus: extractStatus(deleteStatus),
     createStatus: extractStatus(createStatus),
     getHolderName,
-    getDepartmentName,
   };
 };
 
 const Holders: React.FC<HoldersProps> = (props) => {
   const {
     holders,
-    departments,
     deleteHolder,
     createHolder,
     createStatus,
     deleteStatus,
     getHolderName,
-    getDepartmentName,
   } = useContainer();
 
   const noticeContext = React.useContext(NoticeContext);
@@ -95,14 +89,6 @@ const Holders: React.FC<HoldersProps> = (props) => {
       key: "name",
       header: "ФИО",
       mapper: (v, item: Api.Models.Holder) => getHolderName(item),
-
-      // size: "150px",
-    },
-    {
-      key: "departmentId",
-      header: "Подразделение",
-      mapper: (v) => getDepartmentName(v),
-      // size: "150px",
     },
   ];
 
@@ -148,17 +134,6 @@ const Holders: React.FC<HoldersProps> = (props) => {
               {...bind}
               name="middleName"
               style={{ flex: "1" }}
-            />
-            <Dropdown
-              required
-              style={{ flex: "1" }}
-              label="Подразделение"
-              name="departmentId"
-              items={departments.items.map((dep) => ({
-                id: dep.id,
-                label: dep.name,
-              }))}
-              {...bind}
             />
             <Button
               style={{

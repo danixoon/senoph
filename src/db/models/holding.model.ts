@@ -56,6 +56,14 @@ export default class Holding extends Model<
   @BelongsTo(() => Holder)
   holder?: Holder;
 
+  @ForeignKey(() => Department)
+  @AllowNull(false)
+  @Column(DataType.INTEGER)
+  departmentId: number;
+
+  @BelongsTo(() => Department)
+  department?: Department;
+
   @AllowNull(false)
   @ForeignKey(() => User)
   @Column(DataType.INTEGER)

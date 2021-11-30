@@ -73,7 +73,7 @@ const Content: React.FC<
   const modelName = phone.model?.name;
 
   const departmentName = departments.find(
-    (d) => phone.holder?.departmentId == d.id
+    (d) => (phone.holdings ?? [{ departmentId: null }])[0].departmentId == d.id
   )?.name;
 
   const holder = phone?.holder;

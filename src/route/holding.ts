@@ -46,7 +46,7 @@ router.get(
           model: Phone,
           // where: phoneFilter.where,
           attributes: ["id"],
-          required: false
+          required: false,
           // required: (req.query.phoneIds ?? []).length > 0,
         },
         Holder,
@@ -64,6 +64,7 @@ router.get(
           reasonId: holding.reasonId,
           status: holding.status,
           authorId: holding.authorId,
+          departmentId: holding.departmentId,
           orderKey: holding.orderKey,
           orderDate: holding.orderDate,
           orderUrl: holding.orderUrl,
@@ -128,6 +129,7 @@ router.post(
       description: tester(),
       orderDate: tester().isDate().required(),
       holderId: tester().isNumber().required(),
+      departmentId: tester().isNumber().required(),
       reasonId: tester()
         .isIn([
           "initial",
@@ -149,7 +151,7 @@ router.post(
     const { user } = req.params;
     const { file } = req;
 
-    const { holderId, phoneIds, reasonId, description, orderDate, orderKey } =
+    const { holderId, phoneIds, reasonId, description, orderDate, orderKey, departmentId } =
       req.body;
 
     const holding = await Holding.create({
@@ -160,6 +162,7 @@ router.post(
       authorId: user.id,
       reasonId,
       description,
+      departmentId,
     });
 
     // TODO: Make holding create validation
@@ -186,27 +189,58 @@ router.put(
   }),
   transactionHandler(async (req, res) => {
     const { action, phoneIds, holdingId } = req.query;
-    const holdings = await HoldingPhone.findAll({
-      where: {
-        phoneId: { [Op.in]: phoneIds },
-        holdingId,
-        status: null,
-      },
-    });
 
-    if (holdings.length !== phoneIds.length)
-      throw new ApiError(errorType.INVALID_QUERY, {
-        description: "Один или более ID средств связи указан неверно.",
+    if (action === "remove") {
+      const holdings = await HoldingPhone.findAll({
+        where: {
+          phoneId: { [Op.in]: phoneIds },
+          holdingId,
+          status: null,
+        },
       });
 
-    const holdingPhonesIds = holdings.map((h) => h.id);
-    const [row, updated] = await HoldingPhone.update(
-      {
-        status: action === "add" ? "create-pending" : "delete-pending",
-        statusAt: new Date().toISOString(),
-      },
-      { where: { id: { [Op.in]: holdingPhonesIds } } }
-    );
+      if (holdings.length !== phoneIds.length)
+        throw new ApiError(errorType.INVALID_QUERY, {
+          description: "Один или более ID средств связи указан неверно.",
+        });
+
+      const holdingPhonesIds = holdings.map((h) => h.id);
+      const [row, updated] = await HoldingPhone.update(
+        {
+          status: "delete-pending",
+          statusAt: new Date().toISOString(),
+        },
+        { where: { id: { [Op.in]: holdingPhonesIds } } }
+      );
+    } else {
+      const holdings = await HoldingPhone.findAll({
+        where: {
+          phoneId: { [Op.in]: phoneIds },
+          holdingId,
+        },
+      });
+
+      if (holdings.length > 0)
+        throw new ApiError(errorType.INVALID_QUERY, {
+          description: "Один или более ID средств связи указан неверно.",
+        });
+
+      const holding = await Holding.findByPk(holdingId);
+      if (!holding)
+        throw new ApiError(errorType.INVALID_QUERY, {
+          description: "Указан ID несуществующего движения.",
+        });
+
+      const creations: DB.HoldingPhoneAttributes[] = phoneIds.map(
+        (phoneId) => ({
+          phoneId,
+          holdingId,
+          status: "create-pending",
+        })
+      );
+
+      await HoldingPhone.bulkCreate(creations);
+    }
 
     res.send();
   })

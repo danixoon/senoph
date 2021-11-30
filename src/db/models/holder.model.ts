@@ -35,14 +35,6 @@ export default class Holder extends Model<
   @Column(DataType.STRING)
   middleName: string;
 
-  @ForeignKey(() => Department)
-  @AllowNull(false)
-  @Column(DataType.INTEGER)
-  departmentId: number;
-
-  @BelongsTo(() => Department)
-  department: Department;
-
   // @HasMany(() => Holding)
   // holdings: Holding[];
 

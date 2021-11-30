@@ -63,6 +63,7 @@ router.get(
         PhoneCategory,
         { model: Holding, include: [Holder] },
       ],
+      order: [[Sequelize.literal('`holdings.orderDate`'), "ASC"]]
     });
 
     // TODO: Сделать проверку на статус правильной
@@ -102,6 +103,7 @@ router.get(
         },
         Holder,
       ],
+      order: [["orderDate", "ASC"]],
       // where: filter.where,
     });
 
@@ -113,6 +115,7 @@ router.get(
           phoneIds: holding.phones?.map((phone) => phone.id) ?? [],
           reasonId: holding.reasonId,
           authorId: user.id,
+          departmentId: holding.departmentId,
           orderKey: holding.orderKey,
           orderDate: holding.orderDate,
           orderUrl: holding.orderUrl,

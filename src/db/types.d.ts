@@ -86,9 +86,11 @@ declare namespace DB {
     reasonId: HoldingReason;
     description?: string;
 
+    departmentId: number;
     holderId: number;
     phones?: PhoneAttributes[];
     holder?: HolderAttributes;
+    department?: DepartmentAttributes;
   }> &
     WithCommit &
     WithAuthor;
@@ -105,7 +107,6 @@ declare namespace DB {
     firstName: string;
     lastName: string;
     middleName: string;
-    departmentId: number;
   }>;
 
   type DepartmentAttributes = Attributes<{

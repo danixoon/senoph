@@ -76,10 +76,12 @@ const CreateContent: React.FC<CategoryPageProps> = (props) => {
     ...phone,
     modelName: phone.model?.name,
     holderName: getHolderName(phone.holder),
-    departmentName: getDepartmentName(phone.holder?.departmentId),
+    departmentName: getDepartmentName(
+      phone.holdings && phone.holdings.length > 0
+        ? phone.holdings[0].departmentId
+        : undefined
+    ),
   }));
-
-
 
   // TODO: Make proper typing for POST request params & form inputs
   return (
@@ -234,10 +236,13 @@ const ViewContent: React.FC<CategoryPageProps> = (props) => {
   ];
 
   const tableItems = props.categories.map((category) => {
+    const phone = props.categoriesPhones.get(category.phoneId);
     return {
       ...category,
       departmentName: getDepartmentName(
-        props.categoriesPhones.get(category.phoneId)?.holder?.departmentId
+        phone?.holdings && phone.holdings.length > 0
+          ? phone.holdings[0].departmentId
+          : undefined
       ),
     };
   });

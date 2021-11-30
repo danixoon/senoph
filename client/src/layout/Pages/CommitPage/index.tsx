@@ -354,11 +354,7 @@ const useHolderName = () => {
   const { departments } = useFetchConfig();
 
   return (holder?: Api.Models.Holder) => {
-    if (!holder) return "Имя не определено";
-    const dep = departments.find((dep) => dep.id === holder.departmentId);
-    return `${holder.lastName} ${holder.firstName} ${holder.middleName} ${
-      dep ? `(${dep.name})` : ""
-    }`.trim();
+    return "NOT_IMPLEMENTED";
   };
 };
 

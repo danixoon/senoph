@@ -224,7 +224,6 @@ declare namespace Api {
           {
             id?: number;
             name?: string;
-            departmentId?: number;
           },
           {}
         >)
@@ -321,6 +320,7 @@ declare namespace Api {
                 phones: Omit<DB.PhoneAttributes, "authorId">[];
                 holdings: {
                   holderId: number;
+                  departmentId: number;
                   orderDate: string;
                   orderKey: string;
                   phoneRandomIds: string[];
@@ -335,6 +335,7 @@ declare namespace Api {
                 phones: WithRandomId<Omit<DB.PhoneAttributes, "authorId">>[];
                 holdings: {
                   holderId: number;
+                  departmentId: number;
                   orderDate: string;
                   orderKey: string;
                   phoneRandomIds: string[];
@@ -372,6 +373,7 @@ declare namespace Api {
             orderFile?: FileList;
             phoneIds: number[];
             holderId: number;
+            departmentId: number;
 
             reasonId: HoldingReason;
             description?: string;
@@ -434,7 +436,6 @@ declare namespace Api {
             firstName: string;
             lastName: string;
             middleName: string;
-            departmentId: number;
           },
           {}
         >);

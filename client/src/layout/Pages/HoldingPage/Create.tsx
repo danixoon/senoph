@@ -20,6 +20,7 @@ import Span from "components/Span";
 import HolderSelectionPopupContainer from "containers/HolderSelectionPopup";
 import PopupLayer from "providers/PopupLayer";
 import { getTableColumns, reasonMap } from "./utils";
+import { parseItems } from "store/utils";
 
 const CreateContent: React.FC<HoldingPageProps> = (props) => {
   const { phones, holdingCreationStatus, onSubmitHolding: onSubmit } = props;
@@ -55,15 +56,16 @@ const CreateContent: React.FC<HoldingPageProps> = (props) => {
     ...phone,
     modelName: phone.model?.name,
     holderName: getHolderName(phone.holder),
-    departmentName: getDepartmentName(phone.holder?.departmentId),
+    departmentName: getDepartmentName(
+      phone.holdings && phone.holdings.length > 0
+        ? phone.holdings[0].departmentId
+        : undefined
+    ),
   }));
 
   const bindHoldingPopup = useTogglePopup();
 
-  const { data: selectedHolder } = api.useFetchHoldersQuery(
-    { id: bind.input.holderId as any },
-    { skip: bind.input.holderId === null }
-  );
+  const { data: departments } = parseItems(api.useFetchDepartmentsQuery({}));
 
   // TODO: Make proper typing for POST request params & form inputs
   return (
@@ -76,7 +78,6 @@ const CreateContent: React.FC<HoldingPageProps> = (props) => {
             ...bindFile.files,
             phoneIds: phones.map((phone) => phone.id),
           }}
-          mapper={({ departmentId, ...input }) => input}
           onSubmit={(data) => {
             onSubmit(data);
           }}
@@ -86,9 +87,20 @@ const CreateContent: React.FC<HoldingPageProps> = (props) => {
               required
               {...bind}
               name="holderName"
-              label="Новый владелец"
+              label="Владещец"
               onActive={() => bindHoldingPopup.onToggle()}
               style={{ flex: "2" }}
+            />
+            <Dropdown
+              {...bind}
+              required
+              name="departmentId"
+              label="Подразделение"
+              style={{ flex: "2" }}
+              items={departments.items.map((item) => ({
+                label: item.name,
+                id: item.id,
+              }))}
             />
             <Input
               required

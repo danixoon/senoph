@@ -101,6 +101,7 @@ type InputType = {
   phoneModelId: number;
 
   holderId: number;
+  departmentId: number;
   holderName: string;
   assemblyYear: number;
   phoneModelName: string;
@@ -114,6 +115,7 @@ type AddedItem = {
 };
 type AddedHolding = {
   holderId: number;
+  departmentId: number;
   orderDate: string;
   orderKey: string;
   phoneRandomIds: string[];
@@ -133,6 +135,7 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
   const [bindHolding, setBindHolding] = useInput<{
     isHolded: boolean;
     holderName: string;
+    departmentId: number;
     holderId: number;
     orderDate: string;
     orderKey: string;
@@ -140,6 +143,7 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
     isHolded: false,
     holderName: null,
     holderId: null,
+    departmentId: null,
     orderDate: null,
     orderKey: null,
   });
@@ -222,6 +226,7 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
         .filter((v) => v) as number[];
       createHoldings({
         holderId: holding.holderId,
+        departmentId: holding.departmentId,
         phoneIds,
         orderDate: holding.orderDate,
         orderKey: holding.orderKey,

@@ -27,12 +27,7 @@ const HolderSelectionPopupContainer: React.FC<HolderSelectionPopupContainerProps
     const [searchBind] = useInput({ departmentId: null, holderName: null });
     const { departmentId } = searchBind.input;
 
-    const { holders } = useFetchHolder(
-      clearObject({
-        departmentId: parseInt(departmentId as string),
-      })
-    );
-    const { data: departments } = api.useFetchDepartmentsQuery({});
+    const { holders } = useFetchHolder({});
 
     return (
       <ItemSelectionPopup
@@ -47,18 +42,9 @@ const HolderSelectionPopupContainer: React.FC<HolderSelectionPopupContainerProps
         }}
         header="Выбор владельца"
         {...rest}
-      >
-        <Dropdown
-          {...searchBind}
-          name="departmentId"
-          label="Подразделение"
-          items={(departments?.items ?? []).map((item) => ({
-            label: item.name,
-            id: item.id,
-          }))}
-          {...dropdownProps}
-        />
-      </ItemSelectionPopup>
+       />
+
+
     );
   };
 

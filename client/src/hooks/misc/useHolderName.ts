@@ -5,12 +5,9 @@ export const useHolderName = () => {
 
   return (holder?: WithoutId<Api.Models.Holder>, withDepartment?: boolean) => {
     if (!holder) return "Имя не определено";
-    let dep: { id: any; name: string } | null = null;
-    if (withDepartment)
-      dep = departments.find((dep) => dep.id === holder.departmentId) ?? null;
 
     const fullName = splitHolderName(holder);
-    return `${fullName}${dep ? ` (${dep.name})` : ""}`.trim();
+    return fullName.trim();
   };
 };
 export const splitHolderName = (holder: WithoutId<Api.Models.Holder>) => {

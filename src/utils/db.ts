@@ -329,6 +329,7 @@ export const fillDevDatabase = async (full?: boolean, size: number = 150) => {
     holderId: getRandomItem(holders).id,
     orderUrl: "sample.pdf",
     authorId: user.id,
+    departmentId: getRandomItem(deps).id,
     orderKey: Math.floor(10 + Math.random() * 200).toString(),
     orderDate: new Date().toISOString(),
     reasonId: "movement" as const,
