@@ -12,8 +12,10 @@ import { SpoilerPopupButton } from "components/SpoilerPopup";
 import Table from "components/Table";
 import { getTableColumns } from "./utils";
 
-const ViewContent: React.FC<HoldingPageProps> = (props) => {
-  const { holdings } = props;
+const ViewContent: React.FC<
+  HoldingPageProps & { onEdit: (id: number) => void }
+> = (props) => {
+  const { holdings, onEdit } = props;
   const [deleteHolding, deleteHoldingStatus] = api.useDeleteHoldingMutation();
   const { holders } = useFetchConfigMap();
 
@@ -26,16 +28,20 @@ const ViewContent: React.FC<HoldingPageProps> = (props) => {
       <ActionBox icon={Icon.Box} status={extractStatus(deleteHoldingStatus)}>
         {item.status !== null ? (
           <>
-            <SpoilerPopupButton onClick={() => {}}>Изменить</SpoilerPopupButton>
             <SpoilerPopupButton
               onClick={() => dispatch(push("/holding/commit"))}
             >
               Просмотреть
             </SpoilerPopupButton>
+            <SpoilerPopupButton onClick={() => onEdit(item.id)}>
+              Изменить
+            </SpoilerPopupButton>
           </>
         ) : (
           <>
-            <SpoilerPopupButton onClick={() => {}}>Изменить</SpoilerPopupButton>
+            <SpoilerPopupButton onClick={() => onEdit(item.id)}>
+              Изменить
+            </SpoilerPopupButton>
             <SpoilerPopupButton onClick={() => deleteHolding({ id: item.id })}>
               Удалить
             </SpoilerPopupButton>

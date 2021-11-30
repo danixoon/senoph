@@ -6,6 +6,8 @@ import Span from "components/Span";
 import { TableColumn } from "components/Table";
 import { splitHolderName } from "hooks/misc/holder";
 import React from "react";
+import { useAppDispatch } from "store";
+import { updateQuery } from "store/utils";
 import { HoldingTableItem } from ".";
 
 export const reasonMap = [
@@ -66,9 +68,17 @@ export const getTableColumns: (args: {
         </>
       ));
 
+      const dispatch = useAppDispatch();
+
       if (items.length === maxItems)
         items.push(
-          <Link inline style={{ float: "right" }}>
+          <Link
+            onClick={() => {
+              dispatch(updateQuery({ id: item.id }));
+            }}
+            inline
+            style={{ float: "right" }}
+          >
             <small> +{item.phoneIds.length - maxItems} элемент(ов)</small>
           </Link>
         );

@@ -12,7 +12,7 @@ import { api } from "store/slices/api";
 
 export type DepartmentSelectionPopupContainerProps = {
   onToggle: () => void;
-  onSelect: (id: any, name: string) => void;
+  onSelect: (id: any) => void;
   isOpen: boolean;
   zIndex?: number;
 };
@@ -27,9 +27,13 @@ const DepartmentSelectionPopupContainer: React.FC<DepartmentSelectionPopupContai
     return (
       <ItemSelectionPopup
         {...rest}
-        onSelect={(item) => onSelect(item.id, item.name)}
+        onSelect={(item) => onSelect(item.id)}
         zIndex={zIndex}
-        items={departments}
+        items={departments.map((item) => ({
+          content: item.name,
+          id: item.id,
+          name: item.name,
+        }))}
         header="Выбор подразделения"
       />
     );

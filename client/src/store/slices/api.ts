@@ -215,6 +215,18 @@ export const api = createApi({
       }),
       invalidatesTags: ["holding", "log"],
     }),
+    createHoldingChange: builder.mutation<
+      Api.GetResponse<"put", "/holding">,
+      Api.GetQuery<"put", "/holding">
+    >({
+      query: (params) => ({
+        url: "holding",
+        params,
+        method: "PUT",
+        // body,
+      }),
+      invalidatesTags: (r, e, a) => ["holding", "phone", "log"],
+    }),
     fetchHoldings: builder.query<
       Api.GetResponse<"get", "/holdings">,
       Api.GetQuery<"get", "/holdings">
