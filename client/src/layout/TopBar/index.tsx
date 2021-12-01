@@ -6,7 +6,7 @@ import { useInput } from "hooks/useInput";
 
 import "./style.styl";
 
-export type TopBarProps = { label?: string };
+export type TopBarProps = React.PropsWithChildren<{ label?: string }>;
 
 const TopBar = React.forwardRef<HTMLDivElement, TopBarProps>((props, ref) => {
   const { label, children } = props;

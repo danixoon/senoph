@@ -28,8 +28,11 @@ const useContainer = () => {
 
   const { selectedId } = location.state ?? {};
   const { phoneIds } = qs.parse(location.search);
+
+  // console.log(phoneIds);
   const [input, updateInput] = React.useState(() => ({
-    phoneIds: [] as number[],
+    phoneIds:
+      (phoneIds as string)?.split(",").map((v) => parseInt(v.trim())) ?? [],
   }));
   const [queryBind] = useStoreQueryInput(input, (q) =>
     updateInput({
@@ -39,15 +42,31 @@ const useContainer = () => {
     })
   );
 
+  React.useEffect(() => {
+    if (!selectedId && input.phoneIds.length > 0)
+      dispatch(
+        push({
+          pathname: "/holding/view",
+          state: {
+            referrer: location.pathname,
+            header: "Выберите движения для прикрепления",
+            act: "select",
+            referrerSearch: location.search,
+          },
+        })
+      );
+  }, []);
+
   return { selectedId, queryBind, phoneIds: input.phoneIds };
 };
 
 const UpdateContent: React.FC<HoldingPageProps> = (props) => {
   const { holdings } = props;
-
   const { selectedId, phoneIds } = useContainer();
 
-  console.log(phoneIds);
+  // if(!selectedId && phoneIds.length > 0)
+
+  console.log("OK");
 
   return (
     <>

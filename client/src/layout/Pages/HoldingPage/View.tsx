@@ -21,7 +21,7 @@ const ViewContent: React.FC<
   const [deleteHolding, deleteHoldingStatus] = api.useDeleteHoldingMutation();
   const { holders, departments } = useFetchConfigMap();
 
-  const isSelecting = act !== "select";
+  const isSelecting = act === "select";
   const dispatch = useAppDispatch();
 
   const location = useLocation<any>();
@@ -76,17 +76,19 @@ const ViewContent: React.FC<
           onSelect={
             isSelecting
               ? (item) => {
-                  const { referrer } = location.state ?? {};
+                  const { referrer, referrerSearch } = location.state ?? {};
                   if (!referrer) return;
-
-                  history.replace({
-                    pathname: referrer,
-                    state: { selectedId: item.id },
-                  });
+                  dispatch(
+                    push({
+                      pathname: referrer,
+                      search: referrerSearch,
+                      state: { selectedId: item.id },
+                    })
+                  );
                 }
               : undefined
           }
-          selectedId={2}  
+          selectedId={2}
           columns={columns}
           items={holdings}
         />

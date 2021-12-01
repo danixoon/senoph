@@ -50,7 +50,7 @@ export type HoldingTableItem = Api.Models.Holding & {
 const useContainer = (props: { holdings: Api.Models.Holding[] }) => {
   const { holdings } = props;
   const { path } = useRouteMatch();
-  const location = useLocation();
+  const location = useLocation<{ act?: "select" }>();
   const history = useHistory();
   const query = qs.parse(location.search);
 
@@ -80,6 +80,7 @@ const useContainer = (props: { holdings: Api.Models.Holding[] }) => {
         search: qs.stringify({ ...query, id }),
       });
     },
+    act: location.state?.act,
     onCommit: (action: "add" | "remove", holdingId: number, phoneId: number) =>
       commit({ action, holdingId, phoneIds: [phoneId] }),
     // onSelect: (id: string) =>
@@ -98,6 +99,7 @@ const HoldingPage: React.FC<HoldingPageProps> = (props) => {
     isOpen,
     onToggle,
     onCommit,
+    act,
     path,
   } = useContainer({ holdings });
 
@@ -158,7 +160,11 @@ const HoldingPage: React.FC<HoldingPageProps> = (props) => {
             />
           </Route>
           <Route path={`${path}/view`}>
-            <ViewContent {...props} onEdit={(id) => onToggle(id)} />
+            <ViewContent
+              {...props}
+              onEdit={(id) => onToggle(id)}
+              act={act}
+            />
           </Route>
           <Route path={`${path}/update`}>
             <UpdateContent {...props} />

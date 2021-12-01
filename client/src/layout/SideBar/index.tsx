@@ -75,6 +75,10 @@ const SideBar: React.FC<SideBar> = (props) => {
           <LinkItemContainer href="/holding/create">
             Создание <Icon.Plus size="md" style={{ marginLeft: "auto" }} />
           </LinkItemContainer>
+          <LinkItemContainer href="/holding/update">
+            Обновление
+            <Icon.UserPlus size="md" style={{ marginLeft: "auto" }} />
+          </LinkItemContainer>
         </Layout>
       </Spoiler>
       <Spoiler
