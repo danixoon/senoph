@@ -7,6 +7,7 @@ import {
   ForeignKey,
   HasOne,
   Model,
+  PrimaryKey,
   Table,
   Unique,
   Validate,
@@ -19,11 +20,14 @@ import Holding from "./holding.model";
 import Phone from "./phone.model";
 import PhoneType from "./phoneType.model";
 
-@Table
+@Table({ defaultScope: { where: { status: null } } })
 export default class HoldingPhone extends Model<
   DB.HoldingPhoneAttributes,
   DB.CreateAttributes<DB.HoldingPhoneAttributes>
 > {
+  @Column({ type: DataType.INTEGER, primaryKey: true, autoIncrement: true })
+  id: number;
+
   // TODO: On Delete Cascade
   @ForeignKey(() => Holding)
   @AllowNull(false)

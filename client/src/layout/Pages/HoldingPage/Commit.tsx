@@ -13,13 +13,14 @@ import { getTableColumns } from "./utils";
 const CommitContent: React.FC<HoldingPageProps> = (props) => {
   const { holdings } = props;
   const [commitHolding, status] = api.useCommitHoldingMutation();
-  const { holders } = useFetchConfigMap();
+  const { holders, departments } = useFetchConfigMap();
 
   const handleCommit = (action: CommitActionType, id: number) =>
     !status.isLoading && commitHolding({ action, ids: [id] });
 
   const columns = getTableColumns({
     holders,
+    departments,
     status: extractStatus(status),
     controlMapper: (v, item) => (
       <ActionBox icon={Icon.Box} status={extractStatus(status)}>

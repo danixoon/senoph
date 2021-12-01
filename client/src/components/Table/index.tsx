@@ -158,6 +158,7 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
       <tbody>
         {items.map((item, i) => (
           <tr
+            id={item.id}
             className={mergeClassNames(
               onSelect && "row_selectable",
               onSelect && selectedId === item.id && "row_selected"

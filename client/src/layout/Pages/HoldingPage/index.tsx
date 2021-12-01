@@ -25,6 +25,8 @@ import { api } from "store/slices/api";
 import Link from "components/Link";
 import Button from "components/Button";
 import Icon from "components/Icon";
+import { NoticeContext } from "providers/NoticeProvider";
+import UpdateContent from "./Update";
 
 export type HoldingItem = Api.Models.Holding & {
   prevHolders: Api.Models.Holder[];
@@ -42,6 +44,7 @@ export type HoldingPageProps = {
 
 export type HoldingTableItem = Api.Models.Holding & {
   prevHolders: Api.Models.Holder[];
+  prevDepartments: Api.Models.Department[];
 };
 
 const useContainer = (props: { holdings: Api.Models.Holding[] }) => {
@@ -98,6 +101,8 @@ const HoldingPage: React.FC<HoldingPageProps> = (props) => {
     path,
   } = useContainer({ holdings });
 
+  const noticeContext = React.useContext(NoticeContext);
+
   return (
     <>
       <PopupLayer>
@@ -112,9 +117,13 @@ const HoldingPage: React.FC<HoldingPageProps> = (props) => {
             content: (
               <>
                 <Button
-                  onClick={() =>
-                    holderId && onCommit("remove", holderId, item.id)
-                  }
+                  onClick={() => {
+                    if (holdingPhones.data.items.length === 1)
+                      noticeContext.createNotice(
+                        "Ошибка: Невозможно удалить последнее средство связи из движения. \nВероятно, вы хотите удалить движение полностью?"
+                      );
+                    else if (holderId) onCommit("remove", holderId, item.id);
+                  }}
                   inverted
                   style={{ marginRight: "1rem" }}
                 >
@@ -150,6 +159,9 @@ const HoldingPage: React.FC<HoldingPageProps> = (props) => {
           </Route>
           <Route path={`${path}/view`}>
             <ViewContent {...props} onEdit={(id) => onToggle(id)} />
+          </Route>
+          <Route path={`${path}/update`}>
+            <UpdateContent {...props} />
           </Route>
           <Route path={`${path}/phone/commit`}>
             <CommitPhoneContent {...props} />

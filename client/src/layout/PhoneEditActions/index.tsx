@@ -25,6 +25,13 @@ const PopupEditActions: React.FC<PopupEditActionsProps> = (props) => {
         <Icon.User size="md" /> Создать движение
       </Link>
       <Link
+        href={`/holding/update?phoneIds=${phoneIds.join()}`}
+        size="sm"
+        style={{ display: "flex", margin: "0.25rem" }}
+      >
+        <Icon.UserPlus size="md" /> Прикрепить к движению
+      </Link>
+      <Link
         href={`/category/create?phoneIds=${phoneIds.join()}`}
         style={{ display: "flex", margin: "0.25rem" }}
       >

@@ -159,7 +159,11 @@ router.put(
     const { user } = req.params;
     const { action, phoneIds, holdingId } = req.body;
     const holdingPhones = await HoldingPhone.findAll({
-      where: { phoneId: { [Op.in]: phoneIds }, holdingId },
+      where: {
+        phoneId: { [Op.in]: phoneIds },
+        holdingId,
+        status: { [Op.not]: null },
+      },
     });
 
     if (holdingPhones.length !== phoneIds.length)

@@ -11,44 +11,56 @@ import InfoBanner from "components/InfoBanner";
 import { SpoilerPopupButton } from "components/SpoilerPopup";
 import Table from "components/Table";
 import { getTableColumns } from "./utils";
+import Link from "components/Link";
+import { useHistory, useLocation, useRouteMatch } from "react-router";
 
 const ViewContent: React.FC<
-  HoldingPageProps & { onEdit: (id: number) => void }
+  HoldingPageProps & { onEdit: (id: number) => void; act?: "view" | "select" }
 > = (props) => {
-  const { holdings, onEdit } = props;
+  const { holdings, onEdit, act = "view" } = props;
   const [deleteHolding, deleteHoldingStatus] = api.useDeleteHoldingMutation();
-  const { holders } = useFetchConfigMap();
+  const { holders, departments } = useFetchConfigMap();
 
+  const isSelecting = act !== "select";
   const dispatch = useAppDispatch();
+
+  const location = useLocation<any>();
+  const history = useHistory();
 
   const columns = getTableColumns({
     status: extractStatus(deleteHoldingStatus),
     holders,
-    controlMapper: (v, item) => (
-      <ActionBox icon={Icon.Box} status={extractStatus(deleteHoldingStatus)}>
-        {item.status !== null ? (
-          <>
-            <SpoilerPopupButton
-              onClick={() => dispatch(push("/holding/commit"))}
-            >
-              Просмотреть
-            </SpoilerPopupButton>
-            <SpoilerPopupButton onClick={() => onEdit(item.id)}>
-              Изменить
-            </SpoilerPopupButton>
-          </>
-        ) : (
-          <>
-            <SpoilerPopupButton onClick={() => onEdit(item.id)}>
-              Изменить
-            </SpoilerPopupButton>
-            <SpoilerPopupButton onClick={() => deleteHolding({ id: item.id })}>
-              Удалить
-            </SpoilerPopupButton>
-          </>
-        )}
-      </ActionBox>
-    ),
+    departments,
+    controlMapper: (v, item) =>
+      isSelecting ? (
+        <> </>
+      ) : (
+        <ActionBox icon={Icon.Box} status={extractStatus(deleteHoldingStatus)}>
+          {item.status !== null ? (
+            <>
+              <SpoilerPopupButton
+                onClick={() => dispatch(push("/holding/commit"))}
+              >
+                Просмотреть
+              </SpoilerPopupButton>
+              <SpoilerPopupButton onClick={() => onEdit(item.id)}>
+                Изменить
+              </SpoilerPopupButton>
+            </>
+          ) : (
+            <>
+              <SpoilerPopupButton onClick={() => onEdit(item.id)}>
+                Изменить
+              </SpoilerPopupButton>
+              <SpoilerPopupButton
+                onClick={() => deleteHolding({ id: item.id })}
+              >
+                Удалить
+              </SpoilerPopupButton>
+            </>
+          )}
+        </ActionBox>
+      ),
   });
 
   return (
@@ -60,7 +72,24 @@ const ViewContent: React.FC<
           text="Движения отсутствуют. Создайте их, выбрав"
         />
       ) : (
-        <Table columns={columns} items={holdings} />
+        <Table
+          onSelect={
+            isSelecting
+              ? (item) => {
+                  const { referrer } = location.state ?? {};
+                  if (!referrer) return;
+
+                  history.replace({
+                    pathname: referrer,
+                    state: { selectedId: item.id },
+                  });
+                }
+              : undefined
+          }
+          selectedId={2}  
+          columns={columns}
+          items={holdings}
+        />
       )}
     </>
   );

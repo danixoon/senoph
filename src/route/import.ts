@@ -90,7 +90,7 @@ const templates: {
       )
         throw new ApiError(errorType.VALIDATION_ERROR, {
           description:
-            "Дубликат имени владельца с одинаковой парой 'дата приказа' и 'номер приказа'",
+            "Дубликат имени владельца с одинаковой парой 'дата документа' и 'номер документа'",
         });
 
       // const differentOrderDate = this.items.find(
@@ -203,7 +203,7 @@ const templates: {
         },
       },
       {
-        label: "Дата приказа",
+        label: "Дата документа",
         key: "orderDate",
         validator: tester().isDate(),
         mutator: function (v, target) {
@@ -213,7 +213,7 @@ const templates: {
         },
       },
       {
-        label: "Номер приказа",
+        label: "Номер документа",
         key: "orderKey",
         validator: tester(),
         mutator: function (v, target) {

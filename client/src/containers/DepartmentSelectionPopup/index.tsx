@@ -27,6 +27,7 @@ const DepartmentSelectionPopupContainer: React.FC<DepartmentSelectionPopupContai
     return (
       <ItemSelectionPopup
         {...rest}
+        selectable
         onSelect={(item) => onSelect(item.id)}
         zIndex={zIndex}
         items={departments.map((item) => ({

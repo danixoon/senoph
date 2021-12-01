@@ -38,6 +38,7 @@ const HolderSelectionPopupContainer: React.FC<HolderSelectionPopupContainerProps
             ...item,
           })) ?? []
         }
+        selectable
         onSelect={(item) => {
           onSelect(item.id, item.name);
         }}

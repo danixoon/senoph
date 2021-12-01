@@ -24,16 +24,21 @@ export const getReason = (id: string) =>
 export const getTableColumns: (args: {
   status: ApiStatus;
   holders: Map<number, Api.Models.Holder>;
+  departments: Map<number, Api.Models.Department>;
   controlMapper: (v: any, item: HoldingTableItem) => React.ReactNode;
-}) => TableColumn[] = ({ status, holders, controlMapper }) => [
+}) => TableColumn[] = ({ status, departments, holders, controlMapper }) => [
   {
     key: "control",
     size: "30px",
     header: "",
     mapper: controlMapper,
   },
-
-  { key: "orderDate", header: "Приказ от", size: "100px", type: "date" },
+  {
+    key: "id",
+    size: "30px",
+    header: "ID",
+  },
+  { key: "orderDate", header: "Документ от", size: "100px", type: "date" },
   {
     key: "holderId",
     header: "Владелец",
@@ -47,6 +52,23 @@ export const getTableColumns: (args: {
             </Span>
           ))}
           <Span>{holder ? splitHolderName(holder) : <LoaderIcon />}</Span>
+        </Layout>
+      );
+    },
+  },
+  {
+    key: "departmentId",
+    header: "Подраздение",
+    mapper: (v, item: HoldingTableItem) => {
+      const department = departments.get(item.departmentId);
+      return (
+        <Layout>
+          {item.prevDepartments.map((department) => (
+            <Span strike key={department.id}>
+              {department.name}
+            </Span>
+          ))}
+          <Span>{department ? department.name : <LoaderIcon />}</Span>
         </Layout>
       );
     },
@@ -86,6 +108,7 @@ export const getTableColumns: (args: {
       return items;
     },
   },
+
   {
     key: "reasonId",
     header: "Причина",

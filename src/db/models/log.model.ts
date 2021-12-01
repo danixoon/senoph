@@ -17,6 +17,7 @@ export const validLogTargetTypes: DB.LogTarget[] = [
   "user",
   "category",
   "phone",
+  "holdingPhone",
   "holding",
   "model",
   "department",

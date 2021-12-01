@@ -406,7 +406,7 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
                   type="date"
                   name="orderDate"
                   placeholder="2008"
-                  label="Дата приказа"
+                  label="Дата документа"
                   disabled={!bindHolding.input.isHolded}
                   required
                 />
@@ -414,7 +414,7 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
                   {...bindHolding}
                   name="orderKey"
                   disabled={!bindHolding.input.isHolded}
-                  label="Номер приказа"
+                  label="Номер документа"
                   required
                   style={{ flex: "1" }}
                 />

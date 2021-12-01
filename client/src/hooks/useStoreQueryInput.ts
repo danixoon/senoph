@@ -3,7 +3,7 @@ import { handleChangeEvent, InputBind, InputHook } from "./useInput";
 
 export const useStoreQueryInput = <T>(
   query: T,
-  updater: (query: Partial<T>) => any
+  updater: (query: Partial<Record<keyof T, string>>) => any
 ) => {
   const bind: InputBind<T> = {
     input: query,

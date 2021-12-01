@@ -82,7 +82,7 @@ const Content: React.FC<
 
   const holder = getHolder(lastHolding?.holderId);
   const departmentName = getDepartmentName(
-    getDepartment(lastHolding.departmentId)
+    getDepartment(lastHolding?.departmentId)
   );
 
   const { accountingDate, commissioningDate, assemblyDate } = phone;
@@ -106,9 +106,14 @@ const Content: React.FC<
     (phone.holdings?.length ?? 0) > 0 ? (
       phone.holdings?.map((hold) => (
         <HoldingItem
+          departmentId={hold.departmentId}
+          holderId={hold.holderId}
+          orderUrl={hold.orderUrl}
+          department={getDepartmentName(getDepartment(hold.departmentId))}
           onSelect={() => onSelectHolding(hold.id)}
           key={hold.id}
           orderDate={new Date(hold.orderDate ?? Date.now())}
+          orderKey={hold.orderKey}
           holder={splitHolderName(hold.holder)}
         />
       ))

@@ -106,7 +106,7 @@ const CreateContent: React.FC<HoldingPageProps> = (props) => {
             />
             <Input
               required
-              label="Дата приказа"
+              label="Дата документа"
               {...bind}
               type="date"
               name="orderDate"
@@ -114,13 +114,13 @@ const CreateContent: React.FC<HoldingPageProps> = (props) => {
             />
             <Input
               required
-              label="Номер приказа"
+              label="Номер документа"
               {...bind}
               name="orderKey"
               style={{ flex: "1" }}
             />
             <Input
-              label="Файл приказа"
+              label="Файл документа"
               {...bindFile}
               name="orderFile"
               style={{ flex: "1" }}

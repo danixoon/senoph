@@ -1,4 +1,5 @@
 import path from "path";
+import { v4 as uuid } from "uuid";
 import multer from "multer";
 import { ApiError, errorType } from "@backend/utils/errors";
 
@@ -10,9 +11,21 @@ type MapUpload<P, RB = any, Q = any, B = any, T = ReturnType<typeof multer>> = {
 
 const memoryStorage = multer.memoryStorage();
 
+export const discStorage = multer.diskStorage({
+  destination: path.resolve(__dirname, "../../uploads/"),
+  filename: (req, file, cb) => {
+    const { user } = req.params as any;
+    const filename = `${user ? `${user.id}_` : ""}${uuid()}${path.extname(
+      file.originalname
+    )}`;
+    cb(null, filename);
+  },
+});
+
 export const upload = (...ext: string[]) =>
   multer({
-    dest: path.resolve(__dirname, "../../uploads/"),
+    storage: discStorage,
+
     fileFilter: (req, file, cb) => {
       if (!ext.find((e) => file.originalname.endsWith(e)))
         cb(

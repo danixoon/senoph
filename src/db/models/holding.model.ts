@@ -86,7 +86,9 @@ export default class Holding extends Model<
     args.attributes.statusAt = new Date().toISOString();
   }
 
-  @BelongsToMany(() => Phone, () => HoldingPhone)
+  @BelongsToMany(() => Phone, {
+    through: { model: () => HoldingPhone, scope: { status: null } },
+  })
   phones?: Phone[];
 
   static async getLast(phoneIds: number[]) {
