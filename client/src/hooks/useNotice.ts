@@ -23,8 +23,8 @@ export const useNotice = (
       if (config.onError) config.onError(status.error as Api.Error);
       const message = status.error?.description ?? status.error?.message;
       noticeContext.createNotice(
-        `Ошибка [${status.error?.name}]${message ? ` ${message}` : ""}: ${
-          config.error
+        `Ошибка [${status.error?.name}]${message ? ` ${message}` : ""}${
+          config.error ? ": " + config.error : ""
         }`
       );
     }

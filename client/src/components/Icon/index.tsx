@@ -49,10 +49,10 @@ const Icon: {
 //   return;
 // };
 
-export const LoaderIcon: React.FC<GetProps<typeof Loader>> = (props) => {
-  const { className, ...rest } = props;
+export const LoaderIcon: React.FC<GetProps<typeof Loader> & { size?: Size }> = (props) => {
+  const { className, size, ...rest } = props;
   return (
-    <Loader {...rest} className={mergeClassNames(className, "loader-icon")} />
+    <Loader {...rest} className={mergeClassNames(className, "loader-icon", size && "icon_" + size)} />
   );
 };
 export default Icon;

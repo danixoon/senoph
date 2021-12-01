@@ -4,33 +4,36 @@ import { LoaderIcon } from "components/Icon";
 import Label from "components/Label";
 import Layout from "components/Layout";
 import React from "react";
+import { mergeClassNames } from "utils";
+import "./style.styl";
 
-const WithLoader: React.FC<{ isLoading?: boolean; error?: Api.Error }> = (
-  props
-) => {
-  const { isLoading, error, children } = props;
-  return isLoading || error ? (
-    <Layout
-      style={{
-        justifyContent: "center",
-        alignItems: "center",
-        height: "50vh",
-      }}
-    >
-      {error ? (
-        <Layout style={{ alignItems: "center" }}>
-          <Header align="center">Ошибка: {error.name}</Header>
-          <Hr />
-          <Label weight="bold" color="primary">
-            {error.description ?? error.message}
-          </Label>
+const WithLoader: React.FC<{ status: ApiStatus }> = (props) => {
+  const { status, children } = props;
+  return (
+    <div className="loader-banner">
+      {children}
+      {status.isLoading && (
+        <Layout
+          className={mergeClassNames("loader-banner__container")}
+          style={{
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          {status.error ? (
+            <Layout style={{ alignItems: "center" }}>
+              <Header align="center">Ошибка: {status.error.name}</Header>
+              <Hr />
+              <Label weight="bold" color="primary">
+                {status.error.description ?? status.error.message}
+              </Label>
+            </Layout>
+          ) : (
+            <LoaderIcon size="md" className="loader-banner__icon" />
+          )}
         </Layout>
-      ) : (
-        <LoaderIcon />
       )}
-    </Layout>
-  ) : (
-    <> {children} </>
+    </div>
   );
 };
 

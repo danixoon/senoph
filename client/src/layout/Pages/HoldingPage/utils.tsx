@@ -44,15 +44,26 @@ export const getTableColumns: (args: {
     header: "Владелец",
     mapper: (v, item: HoldingTableItem) => {
       const holder = holders.get(item.holderId);
+      const name = splitHolderName(holder);
       return (
-        <Layout>
+        <>
           {item.prevHolders.map((holder) => (
-            <Span strike key={holder.id}>
-              {splitHolderName(holder)}
-            </Span>
+            <>
+              <Span
+                title={splitHolderName(holder)}
+                inline
+                strike
+                key={holder.id}
+              >
+                {splitHolderName(holder)}
+              </Span>
+              <br />
+            </>
           ))}
-          <Span>{holder ? splitHolderName(holder) : <LoaderIcon />}</Span>
-        </Layout>
+          <Span inline title={name}>
+            {holder ? name : <LoaderIcon />}
+          </Span>
+        </>
       );
     },
   },
@@ -62,14 +73,19 @@ export const getTableColumns: (args: {
     mapper: (v, item: HoldingTableItem) => {
       const department = departments.get(item.departmentId);
       return (
-        <Layout>
+        <>
           {item.prevDepartments.map((department) => (
-            <Span strike key={department.id}>
-              {department.name}
-            </Span>
+            <>
+              <Span title={department.name} inline strike key={department.id}>
+                {department.name}
+              </Span>
+              <br />
+            </>
           ))}
-          <Span>{department ? department.name : <LoaderIcon />}</Span>
-        </Layout>
+          <Span inline title={department?.name}>
+            {department ? department.name : <LoaderIcon />}
+          </Span>
+        </>
       );
     },
   },
@@ -112,13 +128,13 @@ export const getTableColumns: (args: {
   {
     key: "reasonId",
     header: "Причина",
-    size: "150px",
+    size: "100px",
     mapper: (v, item) => <Badge>{getReason(item.reasonId)}</Badge>,
   },
   {
     key: "status",
     header: "Статус",
-    size: "150px",
+    size: "100px",
     mapper: (v, item) => {
       let status = "Произвидено";
       if (item.status === "create-pending") status = "Ожидает создания";

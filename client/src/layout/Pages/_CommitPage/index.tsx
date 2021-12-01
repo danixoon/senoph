@@ -12,7 +12,7 @@ import { SpoilerPopupButton } from "components/SpoilerPopup";
 import { useInput } from "hooks/useInput";
 import Dropdown from "components/Dropdown";
 import Form from "components/Form";
-import { clearObject } from "utils";
+import { clearObject, getLocalDate } from "utils";
 import { defaultColumns as phonePageColumns } from "../PhonePage/Items";
 import Checkbox from "components/Checkbox";
 import TopBarLayer from "providers/TopBarLayer";
@@ -119,28 +119,7 @@ const ActionCommits: React.FC<{}> = (props) => {
       header: "Добавлено",
       size: "100px",
       mapper: (v, item) => {
-        const date = item.createdAt ? new Date(item.createdAt) : null;
-        if (!date) return "Не определено";
-
-        const isCurrentDay = () => {
-          const current = new Date();
-          const [day, month, year] = [
-            current.getDay(),
-            current.getMonth(),
-            current.getFullYear(),
-          ];
-          const [_day, _month, _year] = [
-            date.getDay(),
-            date.getMonth(),
-            date.getFullYear(),
-          ];
-
-          return _day === day && _month === month && _year === year;
-        };
-
-        return isCurrentDay()
-          ? date.toTimeString().split(/\s+/)[0]
-          : date.toDateString();
+        return getLocalDate(item.createdAt);
       },
     },
     {

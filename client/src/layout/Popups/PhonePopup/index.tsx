@@ -355,9 +355,18 @@ const PhonePopup: React.FC<PhonePopupProps> = (props) => {
 
   return (
     <Popup {...popupProps} size="lg" closeable noPadding>
-      <WithLoader isLoading={phoneStatus.isLoading}>
+      <WithLoader status={phoneStatus}>
         <Content
-          phone={phone as Api.Models.Phone}
+          phone={
+            phone ?? {
+              id: 0,
+              accountingDate: "10.10.2003",
+              assemblyDate: "10.10.2003",
+              authorId: 0,
+              commissioningDate: "10.10.2003",
+              phoneModelId: 0,
+            }
+          }
           {...rest}
           fetchPhoneStatus={phoneStatus}
         />

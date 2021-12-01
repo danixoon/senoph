@@ -15,6 +15,8 @@ import "./style.styl";
 import Paginator from "components/Paginator";
 import PhoneEditActions from "layout/PhoneEditActions";
 import PopupLayer from "providers/PopupLayer";
+import WithLoader from "components/WithLoader";
+import { splitStatus } from "store/utils";
 
 export type Item = { id: any; content?: React.ReactChild; name: string };
 export type ItemSelectionPopupProps = OverrideProps<
@@ -78,13 +80,12 @@ const ItemSelectionPopup: React.FC<ItemSelectionPopupProps> = (props) => {
           </Header>
         </Layout>
       </PopupTopBar>
-      <Layout padding="md" flex="1" className="items-list">
-        {children}
-        {/* <Hr /> */}
-        {status?.isLoading ? (
-          <LoaderIcon />
-        ) : (
-          items
+      <WithLoader status={status ?? splitStatus("idle")}>
+        <Layout padding="md" flex="1" className="items-list">
+          {children}
+          {/* <Hr /> */}
+
+          {items
             // .filter((item) => isIncludes(item.name))
             .map((item) => {
               const content = item.content ?? item.name;
@@ -101,9 +102,9 @@ const ItemSelectionPopup: React.FC<ItemSelectionPopupProps> = (props) => {
                   {content}
                 </Item>
               );
-            })
-        )}
-      </Layout>
+            })}
+        </Layout>
+      </WithLoader>
     </Popup>
   );
 };

@@ -46,7 +46,7 @@ const NoticeLayerProvider: React.FC<
     >
       {children}
       <PopupLayer>
-        <Layout className="notice-container" flow="column-reverse">
+        <Layout className="notice-container" flow="column">
           <AnimatePresence initial={false}>
             {notices.map(({ lifeTime, message, createTime, ...rest }) => (
               <motion.div

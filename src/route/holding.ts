@@ -229,7 +229,8 @@ router.put(
 
       if (holdings.length > 0)
         throw new ApiError(errorType.INVALID_QUERY, {
-          description: "Один или более ID средств связи указан неверно.",
+          description:
+            "Один или более ID средств связи указан неверно, либо уже существует в движении",
         });
 
       const holding = await Holding.unscoped().findByPk(holdingId);
@@ -243,6 +244,7 @@ router.put(
           phoneId,
           holdingId,
           status: "create-pending",
+          statusAt: new Date().toISOString(),
         })
       );
 
