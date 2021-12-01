@@ -34,25 +34,19 @@ const config = {
         test: /\.styl$/i,
         use: [
           MiniCssExtractPlugin.loader,
-          // Creates `style` nodes from JS strings
-          // "style-loader",
-          // Translates CSS into CommonJS
           "css-loader",
-
-          // Compiles Styl to CSS
           {
             loader: "stylus-loader",
             options: {
               stylusOptions: {
-                define: [
-                  ["$development", process.env.NODE_ENV === "development"],
-                ],
+                define: [["$darkTheme", isProduction]],
               },
             },
           },
         ],
         exclude: /node_modules/,
       },
+
       {
         test: /\.(png|jpe?g|gif|svg)$/i,
         use: ["@svgr/webpack", "file-loader"],
@@ -82,10 +76,10 @@ const config = {
       title: "ИС учета средств связи",
       template: path.resolve(__dirname, "public/index.pug"),
     }),
-
     new MiniCssExtractPlugin({
       filename: "[name].css",
       chunkFilename: "[id].css",
+      // attributes: { id: "theme" },
     }),
   ],
   devServer: {

@@ -105,7 +105,7 @@ const UpdateContent: React.FC<HoldingPageProps> = (props) => {
         <InfoBanner
           href="/phone/edit"
           hrefContent="средства связи"
-          text="Для начала выберите добавляемые в движение"
+          text="Выберите добавляемые в движение"
         />
       ) : (
         <WithLoader status={change.status}>
