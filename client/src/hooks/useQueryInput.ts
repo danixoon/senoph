@@ -19,19 +19,13 @@ export const useQueryInput = <T>(
   prepare: InputHookPrepare<T> = (k, v, i) => i
 ) => {
   const dispatch = useDispatch();
-  const { pathname, search } = useLocation();
+  const { pathname, search, ...rest } = useLocation();
 
   const dispatchQuery = (input: PartialType<T, null | string>) => {
     const urlSearch = { ...input };
     const search = clearObject(urlSearch);
 
-    dispatch(
-      push(
-        Object.keys(search).length === 0
-          ? pathname
-          : `${pathname}?${qs.stringify(search)}`
-      )
-    );
+    dispatch(push({ ...rest, pathname, search: qs.stringify(search) }));
   };
 
   const [bind, setInput] = useInput<PartialType<T, null | string>>(

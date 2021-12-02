@@ -16,8 +16,8 @@ import Holding from "@backend/db/models/holding.model";
 import HoldingPhone from "@backend/db/models/holdingPhone.model";
 import { convertValues } from "@backend/middleware/converter";
 import Holder from "@backend/db/models/holder.model";
-import { Op } from "sequelize";
-import { Filter } from "@backend/utils/db";
+import { Op, Sequelize } from "sequelize";
+import { Filter, WhereFilter } from "@backend/utils/db";
 import Phone from "@backend/db/models/phone.model";
 import Log from "@backend/db/models/log.model";
 
@@ -30,14 +30,37 @@ router.get(
     query: {
       status: tester(),
       ids: tester().array("int"),
+      orderKey: tester(),
+      orderDate: tester().isDate(),
       // phoneIds: tester().array("int"),
       // latest: tester().isBoolean(),
     },
   }),
   transactionHandler(async (req, res) => {
-    // const { latest, phoneIds } = req.query;
+    const { orderKey, orderDate, status, ids } = req.query;
     const { user } = req.params;
-    const filter = new Filter(req.query).add("status");
+
+    // const filter = new Filter({
+    //   ...req.query,
+    // })
+    //   .add("status")
+    //   .add("orderKey", Op.substring)
+    //   .add("orderDate");
+
+    const filter = new WhereFilter<DB.HoldingAttributes>();
+
+    filter.on("orderKey").optional(Op.eq, orderKey);
+    filter.on("status").optional(Op.eq, status === "based" ? null : status);
+    // filter.on("orderDate").optional(Op.eq, orderDate);
+
+    if (orderDate?.getFullYear())
+      filter.fn(
+        Sequelize.where(
+          Sequelize.fn("YEAR", Sequelize.col("orderDate")),
+          orderDate.getFullYear().toString()
+        )
+      );
+
     // const phoneFilter = new Filter({ id: req.query.phoneIds }).add("id", Op.in);
 
     const holdings = await Holding.findAll({

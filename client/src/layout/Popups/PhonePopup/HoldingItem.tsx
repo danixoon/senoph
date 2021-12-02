@@ -20,12 +20,12 @@ const HoldingItem: React.FC<{
     <Layout flow="row" className="holding-item">
       <Layout>
         <ListItem label="Владелец">
-          <Link href={`/holding?holderId=${props.holderId}`}>
+          <Link href={`/holding/view?holderId=${props.holderId}`}>
             {props.holder}
           </Link>
         </ListItem>
         <ListItem label="Подразделение">
-          <Link href={`/holding?departmentId=${props.holderId}`}>
+          <Link href={`/holding/view?departmentId=${props.holderId}`}>
             {props.department}
           </Link>
         </ListItem>
@@ -41,7 +41,7 @@ const HoldingItem: React.FC<{
           <Label weight="bold" style={{ margin: "0 0.5rem" }}>
             от
           </Label>
-          <Link href={`/holding?orderDate=${props.orderDate}`}>
+          <Link href={`/holding/view?orderDate=${props.orderDate}`}>
             {props.orderDate.toLocaleDateString()}
           </Link>
         </ListItem>

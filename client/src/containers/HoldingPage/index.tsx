@@ -8,6 +8,7 @@ import { getStatusProps } from "react-query/types/core/utils";
 import { useAppDispatch, useAppSelector } from "store";
 import { api } from "store/slices/api";
 import { extractStatus, isApiError } from "store/utils";
+import { clearObject } from "utils";
 
 type Props = {};
 const HoldingPageContainer: React.FC<Props> = (props) => {
@@ -29,7 +30,15 @@ const HoldingPageContainer: React.FC<Props> = (props) => {
     { skip: (bind.input.phoneIds?.length ?? 0) === 0 }
   );
 
-  const { data: holdings, ...holdingsRest } = api.useFetchHoldingsQuery({});
+  const [bindFilter] = useQueryInput<{ orderKey?: string; orderDate?: string }>(
+    {}
+  );
+
+  // TODO: Possible weak?
+  const filterData = clearObject(bindFilter.input) as any;
+  const { data: holdings, ...holdingsRest } = api.useFetchHoldingsQuery({
+    ...filterData,
+  });
 
   const holdingPhoneIds = Array.from(
     // TODO: Flat map..?
@@ -39,11 +48,13 @@ const HoldingPageContainer: React.FC<Props> = (props) => {
         new Set<number>()
       )
       .values()
-  );
+  ).sort((a, b) => (a > b ? 1 : -1));
+
   const { data: phoneHoldings, ...phoneHoldingsRest } =
     api.useFetchPhoneHoldingsQuery(
       {
         phoneIds: holdingPhoneIds,
+        // ...filterData,
       },
       { skip: holdingPhoneIds.length === 0 }
     );
@@ -125,6 +136,7 @@ const HoldingPageContainer: React.FC<Props> = (props) => {
       phonesStatus={phonesStatus}
       holdingCreationStatus={holdingCreationStatus}
       holdingsStatus={holdingsStatus}
+      bindFilter={bindFilter}
     />
   );
 };

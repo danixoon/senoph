@@ -236,7 +236,7 @@ declare namespace Api {
       | (() => RouteHandler<
           "/phone/holdings",
           ItemsResponse<Api.Models.Holding>,
-          { phoneIds: number[] },
+          { phoneIds: number[]; orderDate?: string; orderKey?: string },
           {}
         >)
       | (() => RouteHandler<
@@ -244,7 +244,9 @@ declare namespace Api {
           ItemsResponse<Api.Models.Holding>,
           {
             ids?: number[];
-            status?: CommitStatus;
+            status?: CommitStatus | "based";
+            orderDate?: Date;
+            orderKey?: string;
           },
           {}
         >)

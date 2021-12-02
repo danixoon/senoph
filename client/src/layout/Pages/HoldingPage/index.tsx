@@ -27,6 +27,8 @@ import Button from "components/Button";
 import Icon from "components/Icon";
 import { NoticeContext } from "providers/NoticeProvider";
 import UpdateContent from "./Update";
+import Span from "components/Span";
+import { InputBind } from "hooks/useInput";
 
 export type HoldingItem = Api.Models.Holding & {
   prevHolders: Api.Models.Holder[];
@@ -40,6 +42,8 @@ export type HoldingPageProps = {
   holdingCreationStatus: ApiStatus;
 
   onSubmitHolding: (data: any) => void;
+
+  bindFilter: InputBind<any>;
 };
 
 export type HoldingTableItem = Api.Models.Holding & {
@@ -134,6 +138,13 @@ const HoldingPage: React.FC<HoldingPageProps> = (props) => {
                 <Link href={`/phone/view?selectedId=${item.id}`}>
                   {item.model?.name ?? `#${item.id}`}
                 </Link>
+                <Span
+                  size="xs"
+                  style={{ marginLeft: "auto", marginRight: "1rem" }}
+                  font="monospace"
+                >
+                  {item.inventoryKey ?? "Инвентарный отсутствует"}
+                </Span>
               </>
             ),
             name: item.model?.name ?? `#${item.id}`,
@@ -160,11 +171,7 @@ const HoldingPage: React.FC<HoldingPageProps> = (props) => {
             />
           </Route>
           <Route path={`${path}/view`}>
-            <ViewContent
-              {...props}
-              onEdit={(id) => onToggle(id)}
-              act={act}
-            />
+            <ViewContent {...props} onEdit={(id) => onToggle(id)} act={act} />
           </Route>
           <Route path={`${path}/update`}>
             <UpdateContent {...props} />

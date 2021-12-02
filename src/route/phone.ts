@@ -82,16 +82,23 @@ router.get(
       // status: tester(),
       // ids: tester().array("int"),
       phoneIds: tester().array("int"),
+      orderDate: tester().isDate(),
+      orderKey: tester(),
       // latest: tester().isBoolean(),
     },
   }),
   transactionHandler(async (req, res) => {
     // const { latest, phoneIds } = req.query;
-
+    const { phoneIds, orderDate, orderKey } = req.query;
     const { user } = req.params;
 
     // const filter = new Filter(req.query).add("status");
-    const filter = new Filter({ id: req.query.phoneIds }).add("id", Op.in);
+    const filter = new Filter({ id: phoneIds }).add("id", Op.in);
+    const holdingFilter = new Filter({ orderKey, orderDate })
+      .add("orderKey", Op.substring)
+      .add("orderDate");
+    // .add("orderKey", Op.substring)
+    // .add("orderDate");
 
     const holdings = await Holding.findAll({
       include: [
@@ -99,12 +106,12 @@ router.get(
           model: Phone,
           where: filter.where,
           attributes: ["id"],
-          // required: (req.query.phoneIds ?? []).length > 0,
+          required: (req.query.phoneIds ?? []).length > 0,
         },
         Holder,
       ],
       order: [["orderDate", "ASC"]],
-      // where: filter.where,
+      where: holdingFilter.where,
     });
 
     res.send(

@@ -1,7 +1,7 @@
 import * as React from "react";
 
 export type InputBind<T = any> = {
-  input: PartialNullable<T>;
+  input: PartialType<T, null | string>;
   onChange: HookOnChange;
 };
 

@@ -38,6 +38,7 @@ export const getTableColumns: (args: {
     size: "30px",
     header: "ID",
   },
+  { key: "orderKey", header: "Номер документа", size: "100px" },
   { key: "orderDate", header: "Документ от", size: "100px", type: "date" },
   {
     key: "holderId",
@@ -134,6 +135,7 @@ export const getTableColumns: (args: {
   {
     key: "status",
     header: "Статус",
+    props: { style: { whiteSpace: "normal", textAlign: "center" } },
     size: "100px",
     mapper: (v, item) => {
       let status = "Произвидено";
