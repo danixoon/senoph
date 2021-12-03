@@ -88,7 +88,7 @@ router.post(
     const categories = await PhoneCategory.bulkCreate(
       phoneIds.map((phoneId) => ({
         phoneId,
-        actUrl: file.path,
+        actUrl: file.filename,
         description,
         categoryKey,
         actDate: actDate.toISOString(),

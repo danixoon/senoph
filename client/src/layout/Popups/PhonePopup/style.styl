@@ -1,9 +1,13 @@
 @require 'stylus/theme.styl'
 
-.category-item
-  align-items: center
+.category-item  
   &__level
-    width: 1.5rem
+    flex: 1
+
+  &:not(:last-child)
+    border-bottom: 1px solid colors.light
+    margin-bottom: margin.md
+
 
 .holding-item
   padding-bottom: margin.md

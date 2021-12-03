@@ -16,7 +16,19 @@ const HoldingPageContainer: React.FC<Props> = (props) => {
 
   const { departments } = useFetchConfigMap();
 
-  const [bind] = useQueryInput<{ phoneIds: "" }>({ phoneIds: null });
+  const [bind] = useQueryInput<
+    Partial<
+      Record<
+        | "holderId"
+        | "departmentId"
+        | "orderDate"
+        | "orderKey"
+        | "status"
+        | "phoneIds",
+        string
+      >
+    >
+  >({});
 
   const phoneIds =
     bind.input.phoneIds?.split(",").map((id) => Number(id)) ?? [];
@@ -30,9 +42,11 @@ const HoldingPageContainer: React.FC<Props> = (props) => {
     { skip: (bind.input.phoneIds?.length ?? 0) === 0 }
   );
 
-  const [bindFilter] = useQueryInput<{ orderKey?: string; orderDate?: string }>(
+  const filterHook = useQueryInput<{ orderKey?: string; orderDate?: string }>(
     {}
   );
+
+  const [bindFilter] = filterHook;
 
   // TODO: Possible weak?
   const filterData = clearObject(bindFilter.input) as any;
@@ -136,7 +150,7 @@ const HoldingPageContainer: React.FC<Props> = (props) => {
       phonesStatus={phonesStatus}
       holdingCreationStatus={holdingCreationStatus}
       holdingsStatus={holdingsStatus}
-      bindFilter={bindFilter}
+      filterHook={filterHook}
     />
   );
 };

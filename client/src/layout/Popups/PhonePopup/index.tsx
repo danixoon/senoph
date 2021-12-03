@@ -94,6 +94,7 @@ const Content: React.FC<
           onDelete={() => onDeleteCategory(cat.id)}
           key={cat.id}
           deletable={edit}
+          actUrl={cat.actUrl}
           actDate={new Date(cat.actDate)}
           category={Number.parseInt(cat.categoryKey)}
         />

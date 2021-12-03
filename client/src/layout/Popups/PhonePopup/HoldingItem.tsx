@@ -16,6 +16,8 @@ const HoldingItem: React.FC<{
   orderUrl?: string;
   onSelect: () => void;
 }> = (props) => {
+  const date = new Date(props.orderDate).toISOString().split("T")[0];
+
   return (
     <Layout flow="row" className="holding-item">
       <Layout>
@@ -41,7 +43,7 @@ const HoldingItem: React.FC<{
           <Label weight="bold" style={{ margin: "0 0.5rem" }}>
             от
           </Label>
-          <Link href={`/holding/view?orderDate=${props.orderDate}`}>
+          <Link href={`/holding/view?orderDate=${date}`}>
             {props.orderDate.toLocaleDateString()}
           </Link>
         </ListItem>

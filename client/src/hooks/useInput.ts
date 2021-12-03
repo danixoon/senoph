@@ -20,13 +20,8 @@ export type InputFileHook<T = any> = [
   HTMLInputElement | null
 ];
 
-export type InputHookPrepare<P> = <
-  T extends PartialType<P, null | string>,
-  K extends keyof T
->(
-  key: K,
-  value: T[K],
-  input: T
+export type InputHookPrepare<P> = <T extends PartialType<P, null | string>>(
+  nextInput: T
 ) => T;
 
 export const handleChangeEvent = <T>(
@@ -69,11 +64,8 @@ export const useInput = function <T>(
     T,
     null | string
   >,
-  prepareValue: InputHookPrepare<PartialType<T, null | string>> = (
-    key,
-    value,
-    input
-  ) => input
+  prepareValue: InputHookPrepare<PartialType<T, null | string>> = (nextInput) =>
+    nextInput
 ): InputHook<PartialType<T, null | string>> {
   const [input, setInput] = React.useState<PartialType<T, null | string>>(
     () => defaultValue
@@ -82,16 +74,21 @@ export const useInput = function <T>(
   const onChange: HookOnChange = (e) => {
     let changedInput = handleChangeEvent(input, e);
 
-    changedInput = prepareValue(
-      e.target.name as any,
-      e.target.value as any,
-      changedInput
-    ) as any;
+    changedInput = prepareValue(changedInput) as any;
 
     setInput(changedInput);
   };
 
-  return [{ input, onChange }, setInput];
+  return [
+    { input, onChange },
+    (values) => {
+      // let result = { ...values };
+      // for (const key in values)
+      const result = prepareValue(values);
+
+      setInput(result);
+    },
+  ];
 };
 
 export const useFileInput = function <

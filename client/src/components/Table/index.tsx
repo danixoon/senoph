@@ -146,7 +146,7 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
                   onSort &&
                   onSort(column.key, sortDir === "asc" ? "desc" : "asc")
                 }
-                key={column.key}
+                key={`${column.key}`}
                 {...mergedProps}
               >
                 {column.header}
@@ -179,7 +179,7 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
               );
               return (
                 <TableCell
-                  key={`${column.key}-${i}`}
+                  key={`${column.key}-${item.id}`}
                   onClick={() =>
                     column.type != "checkbox" && onSelect && onSelect(item)
                   }

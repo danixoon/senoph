@@ -81,9 +81,31 @@ const Popup: React.FC<PopupProps> = (props: PopupProps) => {
     } else prevRef.current?.focus();
   }, [!closeRef]);
 
+  const containerRef = React.useRef<null | HTMLElement>(null);
+
+  React.useEffect(() => {
+    const handler = function (this: HTMLElement, ev: KeyboardEvent) {
+      if (
+        ev.key === "Escape" &&
+        onToggle &&
+        containerRef.current &&
+        containerRef.current.contains(document.activeElement)
+      )
+        onToggle(false);
+    };
+
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  });
+
   return (
     <PopupContext.Provider value={ref}>
-      <div className="popup-container" style={rest.style}>
+      <div
+        ref={(e) => (containerRef.current = e)}
+        className="popup-container"
+        style={rest.style}
+        tabIndex={0}
+      >
         <AnimatePresence>
           {isOpen && (
             <motion.div

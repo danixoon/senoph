@@ -1,4 +1,4 @@
-import { push } from "connected-react-router";
+import { push, replace } from "connected-react-router";
 import * as React from "react";
 import { useDispatch } from "react-redux";
 import { InputHook, InputHookPrepare, useInput } from "./useInput";
@@ -16,7 +16,7 @@ const isEqual = (a: any, b: any) => {
 
 export const useQueryInput = <T>(
   defaultInput: PartialType<T, string | null>,
-  prepare: InputHookPrepare<T> = (k, v, i) => i
+  prepare: InputHookPrepare<T> = (i) => i
 ) => {
   const dispatch = useDispatch();
   const { pathname, search, ...rest } = useLocation();
@@ -25,28 +25,29 @@ export const useQueryInput = <T>(
     const urlSearch = { ...input };
     const search = clearObject(urlSearch);
 
-    dispatch(push({ ...rest, pathname, search: qs.stringify(search) }));
+    dispatch(replace({ ...rest, pathname, search: qs.stringify(search) }));
   };
 
   const [bind, setInput] = useInput<PartialType<T, null | string>>(
     defaultInput as PartialType<T, null | string>,
-    (k, v, i) => {
-      i = prepare(k, v, i);
-      dispatchQuery(i);
-      return i;
+    (i) => {
+      const result = prepare(i);
+      // dispatchQuery(result);
+      return result;
     }
   );
 
   React.useEffect(() => {
-    const q = qs.parse(search) as any;
+    const q = prepare(qs.parse(search) as any);
     if (!isEqual(q, bind.input)) setInput({ ...q });
   }, [pathname, search]);
 
   return [
     bind,
     (v: T) => {
-      dispatchQuery(v);
-      return setInput(v);
+      const input = prepare(v);
+      dispatchQuery(input);
+      return setInput(input);
     },
   ] as InputHook<T>;
 };

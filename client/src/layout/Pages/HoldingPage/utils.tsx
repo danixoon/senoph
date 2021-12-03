@@ -100,6 +100,7 @@ export const getTableColumns: (args: {
       const items = sliced.map((id, i) => (
         <>
           <Link
+            key={id}
             style={{ display: "inline" }}
             href={`/phone/view?selectedId=${id}`}
           >{`#${id}`}</Link>

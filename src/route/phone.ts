@@ -181,7 +181,8 @@ router.get(
       amount: tester().isNumber(),
       factoryKey: tester(),
       category: tester(),
-      departmentId: tester(),
+      departmentId: tester().isNumber(),
+      holderId: tester().isNumber(),
       inventoryKey: tester(),
       offset: tester().isNumber(),
       phoneModelId: tester().isNumber(),
@@ -203,6 +204,7 @@ router.get(
       amount = 50,
       offset = 0,
       category,
+      holderId,
       phoneModelId,
       departmentId,
       phoneTypeId,
@@ -258,22 +260,49 @@ router.get(
     modelFilter.on("id").optional(Op.eq, phoneModelId);
     modelFilter.on("phoneTypeId").optional(Op.eq, phoneTypeId);
 
+    const categoryFilter = new WhereFilter<DB.PhoneCategoryAttributes>();
+    categoryFilter.on("categoryKey").optional(Op.eq, category);
+
     const items = await Phone.findAll({
       order,
       where: filter.where,
       include: [
-        PhoneCategory,
+        { model: PhoneCategory, where: categoryFilter.where },
         { model: PhoneModel, where: modelFilter.where },
-        Holding,
+        { model: Holding },
       ],
       //attributes: ["id"],
     });
 
-    const phones = items.slice(offset, offset + amount);
+    const filteredItems =
+      // typeof departmentId === "undefined"
+      // ? items
+      items.filter((item) => {
+        const lastHolding = [...(item.holdings ?? [])].sort((a, b) =>
+          a.orderDate > b.orderDate ? 1 : -1
+        )[0];
+
+        const isDepartment = typeof departmentId !== "undefined";
+        const isHolder = typeof holderId !== "undefined";
+
+        // if (isDepartment && lastHolding?.departmentId !== departmentId)
+        // return false;
+        // if (isHolder && lastHolding?.holderId !== holderId) return false;
+
+        return (
+          (isHolder ? lastHolding?.holderId === holderId : true) &&
+          (isDepartment ? lastHolding?.departmentId === departmentId : true)
+        );
+
+        // return true;
+      });
+    const phones = filteredItems.slice(offset, offset + amount);
 
     // const phones = await Phone.withHolders(ofsetted);
 
-    res.send(prepareItems(phones as Api.Models.Phone[], items.length, amount));
+    res.send(
+      prepareItems(phones as Api.Models.Phone[], filteredItems.length, offset)
+    );
 
     // const phoneIds = items.map((phone) => phone.id);
 

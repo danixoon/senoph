@@ -204,6 +204,7 @@ declare namespace Api {
             comissioningDate: Date;
             assemblyDate: Date;
             departmentId: number;
+            holderId: number;
             category: number;
             sortKey: string;
             sortDir: "asc" | "desc";
@@ -245,6 +246,8 @@ declare namespace Api {
           {
             ids?: number[];
             status?: CommitStatus | "based";
+            departmentId?: number;
+            holderId?: number;
             orderDate?: Date;
             orderKey?: string;
           },

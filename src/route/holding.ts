@@ -32,12 +32,13 @@ router.get(
       ids: tester().array("int"),
       orderKey: tester(),
       orderDate: tester().isDate(),
-      // phoneIds: tester().array("int"),
-      // latest: tester().isBoolean(),
+      holderId: tester().isNumber(),
+      departmentId: tester().isNumber(),
     },
   }),
   transactionHandler(async (req, res) => {
-    const { orderKey, orderDate, status, ids } = req.query;
+    const { orderKey, holderId, departmentId, orderDate, status, ids } =
+      req.query;
     const { user } = req.params;
 
     // const filter = new Filter({
@@ -51,7 +52,8 @@ router.get(
 
     filter.on("orderKey").optional(Op.eq, orderKey);
     filter.on("status").optional(Op.eq, status === "based" ? null : status);
-    // filter.on("orderDate").optional(Op.eq, orderDate);
+    filter.on("departmentId").optional(Op.eq, departmentId);
+    filter.on("holderId").optional(Op.eq, holderId);
 
     if (orderDate?.getFullYear())
       filter.fn(

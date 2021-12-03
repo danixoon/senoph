@@ -28,7 +28,7 @@ import Icon from "components/Icon";
 import { NoticeContext } from "providers/NoticeProvider";
 import UpdateContent from "./Update";
 import Span from "components/Span";
-import { InputBind } from "hooks/useInput";
+import { InputBind, InputHook } from "hooks/useInput";
 
 export type HoldingItem = Api.Models.Holding & {
   prevHolders: Api.Models.Holder[];
@@ -43,7 +43,7 @@ export type HoldingPageProps = {
 
   onSubmitHolding: (data: any) => void;
 
-  bindFilter: InputBind<any>;
+  filterHook: InputHook<any>;
 };
 
 export type HoldingTableItem = Api.Models.Holding & {

@@ -20,13 +20,19 @@ import Button from "components/Button";
 import Hr from "components/Hr";
 import Header from "components/Header";
 import Dropdown from "components/Dropdown";
+import HolderSelectionPopupContainer from "containers/HolderSelectionPopup";
+import { useTogglePopup } from "hooks/useTogglePopup";
+import ClickInput from "components/ClickInput";
+import PopupLayer from "providers/PopupLayer";
 
 const ViewContent: React.FC<
   HoldingPageProps & { onEdit: (id: number) => void; act?: "view" | "select" }
 > = (props) => {
-  const { holdings, onEdit, act = "view", bindFilter } = props;
+  const { holdings, onEdit, act = "view", filterHook } = props;
   const [deleteHolding, deleteHoldingStatus] = api.useDeleteHoldingMutation();
   const { holders, departments } = useFetchConfigMap();
+
+  const [bindFilter, setFilter] = filterHook;
 
   const isSelecting = act === "select";
   const dispatch = useAppDispatch();
@@ -42,7 +48,7 @@ const ViewContent: React.FC<
       isSelecting ? (
         <> </>
       ) : (
-        <ActionBox icon={Icon.Box} status={extractStatus(deleteHoldingStatus)}>
+        <ActionBox key="ok" icon={Icon.Box} status={extractStatus(deleteHoldingStatus)}>
           {item.status !== null ? (
             <>
               <SpoilerPopupButton
@@ -70,12 +76,25 @@ const ViewContent: React.FC<
       ),
   });
 
+  const holderPopup = useTogglePopup();
+
+  const holderName = React.useRef<string | undefined>(undefined);
+
   return (
     <>
+      <PopupLayer>
+        <HolderSelectionPopupContainer
+          {...holderPopup}
+          onSelect={(id, name) => {
+            holderName.current = name;
+            setFilter({ ...bindFilter.input, holderId: id });
+          }}
+        />
+      </PopupLayer>
       <Header unsized align="right">
         Фильтр
       </Header>
-      <Form style={{ flexFlow: "row" }} input={{}}>
+      <Form style={{ flexFlow: "column wrap", maxHeight: "100px" }} input={{}}>
         <Input
           {...bindFilter}
           name="orderKey"
@@ -87,6 +106,31 @@ const ViewContent: React.FC<
           type="date"
           name="orderDate"
           label="Дата документа"
+        />
+        <Dropdown
+          {...bindFilter}
+          style={{ flex: "1" }}
+          items={Array.from(departments.values()).map((v) => ({
+            label: v.name,
+            id: v.id,
+          }))}
+          name="departmentId"
+          label="Подразделение"
+        />
+        <ClickInput
+          input={{ holderName: holderName.current }}
+          name="holderName"
+          label="Владелец"
+          clearable
+          onClear={() => {
+            holderName.current = undefined;
+            setFilter({
+              ...bindFilter.input,
+              holderId: undefined,
+              holderName: undefined,
+            });
+          }}
+          onActive={() => holderPopup.onToggle()}
         />
         <Dropdown
           {...bindFilter}

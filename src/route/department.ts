@@ -38,6 +38,7 @@ router.get(
     const departments = await Department.findAll({
       where: filter.where,
       include: [Placement],
+      order: [["name", "ASC"]],
     });
 
     res.send(
