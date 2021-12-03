@@ -32,22 +32,22 @@ export const useQueryInput = <T>(
     defaultInput as PartialType<T, null | string>,
     (i) => {
       const result = prepare(i);
-      // dispatchQuery(result);
-      return result;
+      if (result) dispatchQuery(result);
+      return null;
     }
   );
 
   React.useEffect(() => {
     const q = prepare(qs.parse(search) as any);
-    if (!isEqual(q, bind.input)) setInput({ ...q });
+    setInput({ ...q }, true);
   }, [pathname, search]);
 
   return [
     bind,
     (v: T) => {
       const input = prepare(v);
-      dispatchQuery(input);
-      return setInput(input);
+      if (input) dispatchQuery(input);
+      // return setInput(input);
     },
   ] as InputHook<T>;
 };

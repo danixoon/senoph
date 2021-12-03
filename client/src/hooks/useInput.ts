@@ -5,7 +5,7 @@ export type InputBind<T = any> = {
   onChange: HookOnChange;
 };
 
-export type SetInput<T = any> = (input: T) => void;
+export type SetInput<T = any> = (input: T, force?: boolean) => void;
 
 export type InputFileBind<T = any> = {
   input: PartialNullable<T>;
@@ -22,7 +22,7 @@ export type InputFileHook<T = any> = [
 
 export type InputHookPrepare<P> = <T extends PartialType<P, null | string>>(
   nextInput: T
-) => T;
+) => T | null;
 
 export const handleChangeEvent = <T>(
   input: T,
@@ -74,19 +74,22 @@ export const useInput = function <T>(
   const onChange: HookOnChange = (e) => {
     let changedInput = handleChangeEvent(input, e);
 
-    changedInput = prepareValue(changedInput) as any;
-
-    setInput(changedInput);
+    changedInput = prepareValue(changedInput);
+    if (changedInput) setInput(changedInput);
   };
 
   return [
     { input, onChange },
-    (values) => {
+    (values, force) => {
       // let result = { ...values };
       // for (const key in values)
-      const result = prepareValue(values);
+      if (force) {
+        setInput(values);
+        return;
+      }
 
-      setInput(result);
+      const result = prepareValue(values);
+      if (result) setInput(result);
     },
   ];
 };
