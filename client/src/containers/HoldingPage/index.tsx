@@ -1,4 +1,6 @@
+import { push } from "connected-react-router";
 import { useFetchConfigMap } from "hooks/api/useFetchConfigMap";
+import { useNotice } from "hooks/useNotice";
 import { useQueryInput } from "hooks/useQueryInput";
 import HoldingPage from "layout/Pages/HoldingPage";
 import { NoticeContext } from "providers/NoticeProvider";
@@ -128,17 +130,9 @@ const HoldingPageContainer: React.FC<Props> = (props) => {
     return { ...holding, prevHolders, prevDepartments };
   });
 
-  React.useEffect(() => {
-    if (holdingCreationStatus.isLoading)
-      noticeContext.createNotice("Движение создаётся..");
-    if (holdingCreationStatus.isSuccess)
-      noticeContext.createNotice("Движение создано.");
-    if (holdingCreationStatus.isError)
-      noticeContext.createNotice(
-        "Ошибка создание движения: " + holdingCreationStatus.error?.message,
-        "danger"
-      );
-  }, [holdingCreationInfo.status]);
+  useNotice(holdingCreationStatus, {
+    onSuccess: () => dispatch(push("/holding/commit")),
+  });
 
   return (
     <HoldingPage
