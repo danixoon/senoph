@@ -39,7 +39,7 @@ import { getLastHolding } from "hooks/misc/holding";
 
 export type CategoryPageProps = {
   phones: Api.Models.Phone[];
-  categories: Api.Models.PhoneCategory[];
+  categories: Api.Models.Category[];
   categoriesPhones: Map<number, Api.Models.Phone>;
   categoryCreationStatus: ApiStatus;
   phonesStatus: ApiStatus;

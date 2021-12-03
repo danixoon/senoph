@@ -6,7 +6,7 @@ import Holder from "./models/holder.model";
 import Holding from "./models/holding.model";
 import Phone from "./models/phone.model";
 import CommitModel from "./models/commit.model";
-import PhoneCategory from "./models/phoneCategory.model";
+import Category from "./models/category.model";
 // import { models } from "./models";
 import { logger } from "../utils";
 import { getModel } from ".";

@@ -69,6 +69,9 @@ export default class Holding extends Model<
   @Column(DataType.INTEGER)
   authorId: number;
 
+  @BelongsTo(() => User)
+  author?: User;
+
   @AllowNull(true)
   @Validate({ isIn: [["create-pending", "delete-pending"]] })
   @Default("create-pending")

@@ -10,18 +10,21 @@ import {
 import { Optional } from "sequelize/types";
 import User from "./user.model";
 
-// TODO: Реализовать строгую динамическую типизацию с помощью рефлексии тайпскрипта 
+// TODO: Реализовать строгую динамическую типизацию с помощью рефлексии тайпскрипта
 export const validTableNames: readonly ChangesTargetName[] = [
   "department",
   "holder",
   "holding",
   "phone",
-  "phoneCategory",
+  "category",
 ];
-export const validDataTypes: readonly ChangedDataType[] = ["date", "number", "string"];
+export const validDataTypes: readonly ChangedDataType[] = [
+  "date",
+  "number",
+  "string",
+];
 
-
-class DbModel<T, K> extends Model<T, K>  {
+class DbModel<T, K> extends Model<T, K> {
   createdAt: string;
 }
 

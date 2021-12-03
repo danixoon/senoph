@@ -6,7 +6,7 @@ import { transactionHandler, prepareItems } from "@backend/utils/index";
 import PhoneModel from "../db/models/phoneModel.model";
 import Holder from "@backend/db/models/holder.model";
 import { Op, Order, OrderItem, WhereOperators } from "sequelize";
-import PhoneCategory from "@backend/db/models/phoneCategory.model";
+import Category from "@backend/db/models/category.model";
 import Department from "@backend/db/models/department.model";
 import { convertValues } from "@backend/middleware/converter";
 import { AppRouter } from "../router";

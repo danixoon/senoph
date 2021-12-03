@@ -17,9 +17,10 @@ import HoldingPhone from "@backend/db/models/holdingPhone.model";
 import { convertValues } from "@backend/middleware/converter";
 import Holder from "@backend/db/models/holder.model";
 import { Op } from "sequelize";
-import { Filter } from "@backend/utils/db";
+import { Filter, WhereFilter } from "@backend/utils/db";
 import Phone from "@backend/db/models/phone.model";
-import PhoneCategory from "@backend/db/models/phoneCategory.model";
+import Category from "@backend/db/models/category.model";
+import category from "@backend/db/queries/category";
 
 const router = AppRouter();
 
@@ -30,18 +31,25 @@ router.get(
     query: {
       status: tester(),
       ids: tester().array("int"),
+      orderDate: tester().isDate(),
+      orderKey: tester().isDate(),
     },
   }),
   transactionHandler(async (req, res) => {
-    const filter = new Filter(req.query).add("status");
-    const categories = await PhoneCategory.findAll({
-      // include: [
-      //   {
-      //     model: Phone,
-      //     attributes: ["id"],
-      //   },
-      //   Holder,
-      // ],
+    // const filter = new Filter(req.query).add("status");
+    const { ids, status, orderDate, orderKey } = req.query;
+    const filter = new WhereFilter<DB.CategoryAttributes>();
+
+    filter.on("id").optional(Op.in, ids);
+    filter.on("status").optional(Op.eq, status);
+
+    const categories = await Category.findAll({
+      include: [
+        {
+          model: Phone,
+          attributes: ["id"],
+        },
+      ],
       where: filter.where,
     });
 
@@ -49,10 +57,14 @@ router.get(
       prepareItems(
         categories.map((category) => ({
           id: category.id,
+          actKey: category.actKey,
           actDate: category.actDate,
           actUrl: category.actUrl,
           categoryKey: category.categoryKey,
-          phoneId: category.phoneId,
+          phoneIds: category.phones?.map((v) => v.id) ?? [],
+          status: category.status,
+          statusAt: category.statusAt,
+          authorId: category.authorId,
         })),
         categories.length,
         0
@@ -68,10 +80,11 @@ router.post(
   validate({
     body: {
       description: tester(),
-      categoryKey: tester().required(),
+      categoryKey: tester().isIn(["1", "2", "3", "4"]).required(),
       phoneIds: tester().array("int").required(),
       actFile: tester(),
       actDate: tester().isDate().required(),
+      actKey: tester().required(),
     },
   }),
   owner("phone", (req) => req.body.phoneIds),
@@ -83,20 +96,19 @@ router.post(
         description: "Файл акта обязателен",
       });
 
-    const { categoryKey, actDate, phoneIds, description } = req.body;
+    const { user } = req.params;
+    const { categoryKey, actDate, phoneIds, actKey, description } = req.body;
 
-    const categories = await PhoneCategory.bulkCreate(
-      phoneIds.map((phoneId) => ({
-        phoneId,
-        actUrl: file.filename,
-        description,
-        categoryKey,
-        actDate: actDate.toISOString(),
-      }))
-    );
+    const cat = await category.create(user.id, {
+      actDate,
+      phoneIds,
+      actKey,
+      actUrl: file.filename,
+      categoryKey,
+    });
 
     // TODO: Make holding create validation
-    res.send();
+    res.send({ id: cat.id });
   })
 );
 
@@ -108,7 +120,7 @@ router.delete(
   }),
   transactionHandler(async (req, res) => {
     const { id } = req.query;
-    await PhoneCategory.update({ status: "delete-pending" }, { where: { id } });
+    await Category.update({ status: "delete-pending" }, { where: { id } });
 
     res.send();
   })

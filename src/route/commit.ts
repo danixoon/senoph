@@ -17,7 +17,7 @@ import { transactionHandler, prepareItems } from "../utils";
 import Phone from "@backend/db/models/phone.model";
 import { ApiError, errorType } from "@backend/utils/errors";
 import Holding from "@backend/db/models/holding.model";
-import PhoneCategory from "@backend/db/models/phoneCategory.model";
+import Category from "@backend/db/models/category.model";
 import Log from "@backend/db/models/log.model";
 import HoldingPhone from "@backend/db/models/holdingPhone.model";
 
@@ -214,15 +214,27 @@ router.put(
   /* owner("") ,*/ transactionHandler(async (req, res) => {
     const { user } = req.params;
     const { action, ids } = req.body;
-    if (action === "approve")
-      await PhoneCategory.unscoped().update(
-        { status: null },
-        { where: { phoneId: { [Op.in]: ids }, status: "create-pending" } }
-      );
-    else
-      await PhoneCategory.unscoped().destroy({
-        where: { phoneId: { [Op.in]: ids }, status: "create-pending" },
-      });
+    const categories = await Category.findAll({
+      where: { id: { [Op.in]: ids } },
+    });
+
+    await Promise.all(
+      categories.map(async (category) => {
+        if (action === "approve") {
+          if (category.status === "create-pending") {
+            await category.update({ status: null });
+          } else if (category.status === "delete-pending") {
+            await category.destroy();
+          }
+        } else {
+          if (category.status === "create-pending") {
+            await category.destroy();
+          } else if (category.status === "delete-pending") {
+            await category.update({ status: null });
+          }
+        }
+      })
+    );
 
     Log.log("category", ids, "commit", user.id, { action });
 

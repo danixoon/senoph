@@ -2,6 +2,7 @@ import {
   AllowNull,
   BeforeBulkUpdate,
   BelongsTo,
+  BelongsToMany,
   Column,
   DataType,
   Default,
@@ -11,16 +12,18 @@ import {
   Validate,
 } from "sequelize-typescript";
 import { Optional } from "sequelize/types";
+import CategoryPhone from "./categoryPhone.model";
 
 import Department from "./department.model";
 import Holder from "./holder.model";
 import Phone from "./phone.model";
 import PhoneType from "./phoneType.model";
+import User from "./user.model";
 
 @Table
-export default class PhoneCategory extends Model<
-  DB.PhoneCategoryAttributes,
-  DB.CreateAttributes<DB.PhoneCategoryAttributes>
+export default class Category extends Model<
+  DB.CategoryAttributes,
+  DB.CreateAttributes<DB.CategoryAttributes>
 > {
   @AllowNull(false)
   @Column(DataType.DATE)
@@ -28,7 +31,11 @@ export default class PhoneCategory extends Model<
 
   @AllowNull(false)
   @Column(DataType.STRING)
-  categoryKey: string;
+  actKey: string;
+
+  @AllowNull(false)
+  @Column(DataType.STRING)
+  categoryKey: CategoryKey;
 
   @AllowNull(false)
   @Column(DataType.STRING)
@@ -45,22 +52,19 @@ export default class PhoneCategory extends Model<
   @Column(DataType.DATE)
   statusAt?: string;
 
-  @BeforeBulkUpdate
-  static onBeforeUpdate(args: any) {
-    args.fields.push("statusAt");
-    args.attributes.statusAt = new Date().toISOString();
-  }
-
-  @ForeignKey(() => Phone)
-  @AllowNull(false)
-  @Column(DataType.INTEGER)
-  phoneId: number;
-
-  @BelongsTo(() => Phone, { onDelete: "CASCADE" })
-  phone?: Phone;
-
+  @BelongsToMany(() => Phone, {
+    through: { model: () => CategoryPhone, scope: { status: null } },
+  })
+  phones?: Phone[];
 
   @AllowNull(true)
   @Column(DataType.STRING)
   description?: string;
+
+  @AllowNull(false)
+  @Column(DataType.NUMBER)
+  authorId: number;
+
+  @BelongsTo(() => User)
+  author?: User;
 }

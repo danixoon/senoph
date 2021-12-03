@@ -19,7 +19,7 @@ import Holder from "@backend/db/models/holder.model";
 import { Op } from "sequelize";
 import { Filter } from "@backend/utils/db";
 import Phone from "@backend/db/models/phone.model";
-import PhoneCategory from "@backend/db/models/phoneCategory.model";
+import Category from "@backend/db/models/category.model";
 import Log from "@backend/db/models/log.model";
 import Placement from "@backend/db/models/placement.model";
 

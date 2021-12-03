@@ -34,7 +34,7 @@ import Commit from "./commit.model";
 import Holder from "./holder.model";
 import Holding from "./holding.model";
 import HoldingPhone from "./holdingPhone.model";
-import PhoneCategory from "./phoneCategory.model";
+import Category from "./category.model";
 import PhoneModel from "./phoneModel.model";
 import User from "./user.model";
 
@@ -113,8 +113,8 @@ export default class Phone extends Model<
   @BelongsTo(() => PhoneModel)
   model: PhoneModel;
 
-  @HasMany(() => PhoneCategory)
-  categories: PhoneCategory[];
+  @HasMany(() => Category)
+  categories: Category[];
 
   @BeforeBulkUpdate
   static onBeforeUpdate(args: any) {

@@ -4,7 +4,7 @@ import Department from "./department.model";
 import Holder from "./holder.model";
 import Holding from "./holding.model";
 import Phone from "./phone.model";
-import PhoneCategory from "./phoneCategory.model";
+import Category from "./category.model";
 import PhoneModel from "./phoneModel.model";
 
 // export const models = {

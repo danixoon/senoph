@@ -62,7 +62,7 @@ declare namespace Api {
     // declare namespace Api.Model {
     type Phone = RequiredId<DB.PhoneAttributes>;
     type PhoneType = RequiredId<DB.PhoneTypeAttributes>;
-    type PhoneCategory = RequiredId<DB.PhoneCategoryAttributes>;
+    type Category = RequiredId<DB.CategoryAttributes> & { phoneIds: number[] };
     type PhoneModel = RequiredId<DB.PhoneModelAttributes>;
     type Department = RequiredId<DB.DepartmentAttributes>;
     type Placement = RequiredId<DB.PlacementAttributes>;
@@ -78,7 +78,7 @@ declare namespace Api {
     phoneType: Models.PhoneType;
     phoneModel: Models.PhoneModel;
     department: Models.Department;
-    phoneCategory: Models.PhoneCategory;
+    category: Models.Category;
     user: Models.User;
     holder: Models.Holder;
     holding: Models.Holder;
@@ -241,6 +241,12 @@ declare namespace Api {
           {}
         >)
       | (() => RouteHandler<
+          "/phone/categories",
+          ItemsResponse<Api.Models.Category>,
+          { phoneIds: number[]; actDate?: string; actKey?: string },
+          {}
+        >)
+      | (() => RouteHandler<
           "/holdings",
           ItemsResponse<Api.Models.Holding>,
           {
@@ -267,10 +273,12 @@ declare namespace Api {
         >)
       | (() => RouteHandler<
           "/categories",
-          ItemsResponse<Api.Models.PhoneCategory>,
+          ItemsResponse<Api.Models.Category>,
           {
             ids?: number[];
-            status?: CommitStatus;
+            status?: CommitStatus | "based";
+            orderDate?: Date;
+            orderKey?: string;
           },
           {}
         >)
@@ -389,12 +397,13 @@ declare namespace Api {
         >)
       | (() => RouteHandler<
           "/category",
-          {},
+          { id: number },
           {},
           {
-            categoryKey: string;
+            categoryKey: CategoryKey;
             actFile: FileList;
             actDate: Date;
+            actKey: string;
             phoneIds: number[];
 
             description?: string;
@@ -463,6 +472,16 @@ declare namespace Api {
           {}
         >)
       | (() => RouteHandler<
+          "/category",
+          {},
+          {
+            action: "remove" | "add";
+            phoneIds: number[];
+            categoryId: number;
+          },
+          {}
+        >)
+      | (() => RouteHandler<
           "/phone",
           {},
           { id: number },
@@ -491,23 +510,13 @@ declare namespace Api {
           {},
           {},
           { phoneIds: number[]; holdingId: number; action: CommitActionType }
+        >)
+      | (() => RouteHandler<
+          "/commit/category/phone",
+          {},
+          {},
+          { phoneIds: number[]; categoryId: number; action: CommitActionType }
         >);
-    // | (() => RouteHandler<
-    // "/commit/holding",
-    // {},
-    // { holdingId: number; action: CommitActionType },
-    // {}
-    // >);
-    // | (() => RouteHandler<
-    //     "/commit/entity",
-    //     {},
-    //     {
-    //       target: CommitTargetName;
-    //       targetId: number;
-    //       action: CommitActionType;
-    //     },
-    //     any
-    //   >);
 
     delete:
       | (() => RouteHandler<

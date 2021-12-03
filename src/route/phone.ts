@@ -12,7 +12,7 @@ import {
   UniqueConstraintError,
   WhereOperators,
 } from "sequelize";
-import PhoneCategory from "@backend/db/models/phoneCategory.model";
+import Category from "@backend/db/models/category.model";
 import Department from "@backend/db/models/department.model";
 import { convertValues } from "@backend/middleware/converter";
 import { AppRouter } from "../router";
@@ -58,11 +58,7 @@ router.get(
   transactionHandler(async (req, res) => {
     const { id } = req.query;
     const phone = await Phone.unscoped().findByPk(id, {
-      include: [
-        PhoneModel,
-        PhoneCategory,
-        { model: Holding, include: [Holder] },
-      ],
+      include: [PhoneModel, Category, { model: Holding, include: [Holder] }],
       order: [[Sequelize.literal("`holdings.orderDate`"), "ASC"]],
     });
 
@@ -225,7 +221,7 @@ router.get(
       ? [
           orderByKey(sortKey, sortDir ?? "asc", {
             modelName: [PhoneModel, "model", "name"],
-            category: [PhoneCategory, "category", "category"],
+            category: [Category, "category", "category"],
             id: "id",
             inventoryKey: "inventoryKey",
             factoryKey: "factoryKey",
@@ -260,14 +256,14 @@ router.get(
     modelFilter.on("id").optional(Op.eq, phoneModelId);
     modelFilter.on("phoneTypeId").optional(Op.eq, phoneTypeId);
 
-    const categoryFilter = new WhereFilter<DB.PhoneCategoryAttributes>();
-    categoryFilter.on("categoryKey").optional(Op.eq, category);
+    // const categoryFilter = new WhereFilter<DB.CategoryAttributes>();
+    // categoryFilter.on("categoryKey").optional(Op.eq, category);
 
     const items = await Phone.findAll({
       order,
       where: filter.where,
       include: [
-        { model: PhoneCategory, where: categoryFilter.where },
+        // { model: Category, where: categoryFilter.where },
         { model: PhoneModel, where: modelFilter.where },
         { model: Holding },
       ],
