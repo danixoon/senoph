@@ -369,15 +369,15 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
                 <Input
                   {...bind}
                   type="date"
-                  name="commissioningDate"
-                  label="Дата ввода в эксплуатацию"
+                  name="accountingDate"
+                  label="Дата учёта"
                   required
                 />
                 <Input
                   {...bind}
                   type="date"
-                  name="accountingDate"
-                  label="Дата учёта"
+                  name="commissioningDate"
+                  label="Дата ввода в эксплуатацию"
                   required
                 />
               </Layout>

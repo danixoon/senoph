@@ -62,7 +62,8 @@ export default class Category extends Model<
   description?: string;
 
   @AllowNull(false)
-  @Column(DataType.NUMBER)
+  @ForeignKey(() => User)
+  @Column(DataType.INTEGER)
   authorId: number;
 
   @BelongsTo(() => User)

@@ -21,7 +21,11 @@ export const defaultColumns: TableColumn[] = [
     header: "ID",
     sortable: true,
     size: "30px",
-    mapper: (v, item) => <Link tabIndex={-1} href={`/phone?selectedId=${v}`}>#{v}</Link>,
+    mapper: (v, item) => (
+      <Link tabIndex={-1} href={`/phone?selectedId=${v}`}>
+        #{v}
+      </Link>
+    ),
   },
   {
     key: "modelName",

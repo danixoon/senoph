@@ -1,11 +1,7 @@
 @require 'stylus/theme.styl'
 
 
-.cell_checkbox
-  padding: 0px
-  width: 2rem
-  // display: flex
-  
+
 
 tr
   height: 2rem
@@ -69,7 +65,15 @@ td
       &:after
         transform: scaleY(1)
         visibility: visible
-      
+
+
+.cell
+  &_checkbox
+    padding: 0px
+    width: 2rem
+  &_wrap
+    white-space: normal !important
+  
         
     
 
@@ -94,3 +98,4 @@ thead
     white-space: pre
     overflow: hidden
     text-overflow: ellipsis
+

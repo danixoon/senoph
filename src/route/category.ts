@@ -65,6 +65,8 @@ router.get(
           status: category.status,
           statusAt: category.statusAt,
           authorId: category.authorId,
+          createdAt: category.createdAt,
+          // updatedAt: category.updated
         })),
         categories.length,
         0

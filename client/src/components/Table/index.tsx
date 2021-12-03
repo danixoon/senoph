@@ -17,6 +17,7 @@ export type TableColumn<T = any> = {
   header: React.ReactChild;
   size?: string;
   sortable?: boolean;
+  wrap?: boolean;
   props?: React.TdHTMLAttributes<HTMLElement>;
   mapper?: (v: any, row: T) => any;
 } & (
@@ -172,14 +173,15 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
               const mergedProps = mergeProps(
                 {
                   className: mergeClassNames(
-                    column.type === "checkbox" && "cell_checkbox"
+                    column.type === "checkbox" && "cell_checkbox",
+                    column.wrap && "cell_wrap"
                   ),
                 },
                 column.props ?? {}
               );
               return (
                 <TableCell
-                  key={`${column.key}-${item.id}`}
+                  key={`${column.key}-${item.id}-${i}`}
                   onClick={() =>
                     column.type != "checkbox" && onSelect && onSelect(item)
                   }
