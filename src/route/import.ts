@@ -6,7 +6,7 @@ import { transactionHandler, prepareItems } from "@backend/utils/index";
 import PhoneModel from "../db/models/phoneModel.model";
 import Holder from "@backend/db/models/holder.model";
 import { Op, Order, OrderItem, WhereOperators } from "sequelize";
-import PhoneCategory from "@backend/db/models/phoneCategory.model";
+import Category from "@backend/db/models/category.model";
 import Department from "@backend/db/models/department.model";
 import { convertValues } from "@backend/middleware/converter";
 import { AppRouter } from "../router";
@@ -90,7 +90,7 @@ const templates: {
       )
         throw new ApiError(errorType.VALIDATION_ERROR, {
           description:
-            "Дубликат имени владельца с одинаковой парой 'дата приказа' и 'номер приказа'",
+            "Дубликат имени владельца с одинаковой парой 'дата документа' и 'номер документа'",
         });
 
       // const differentOrderDate = this.items.find(
@@ -203,7 +203,7 @@ const templates: {
         },
       },
       {
-        label: "Дата приказа",
+        label: "Дата документа",
         key: "orderDate",
         validator: tester().isDate(),
         mutator: function (v, target) {
@@ -213,7 +213,7 @@ const templates: {
         },
       },
       {
-        label: "Номер приказа",
+        label: "Номер документа",
         key: "orderKey",
         validator: tester(),
         mutator: function (v, target) {

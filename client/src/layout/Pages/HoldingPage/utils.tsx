@@ -6,6 +6,8 @@ import Span from "components/Span";
 import { TableColumn } from "components/Table";
 import { splitHolderName } from "hooks/misc/holder";
 import React from "react";
+import { useAppDispatch } from "store";
+import { updateQuery } from "store/utils";
 import { HoldingTableItem } from ".";
 
 export const reasonMap = [
@@ -22,30 +24,69 @@ export const getReason = (id: string) =>
 export const getTableColumns: (args: {
   status: ApiStatus;
   holders: Map<number, Api.Models.Holder>;
+  departments: Map<number, Api.Models.Department>;
   controlMapper: (v: any, item: HoldingTableItem) => React.ReactNode;
-}) => TableColumn[] = ({ status, holders, controlMapper }) => [
+}) => TableColumn[] = ({ status, departments, holders, controlMapper }) => [
   {
     key: "control",
     size: "30px",
     header: "",
     mapper: controlMapper,
   },
-
-  { key: "orderDate", header: "Приказ от", size: "100px", type: "date" },
+  {
+    key: "id",
+    size: "30px",
+    header: "ID",
+  },
+  { key: "orderKey", header: "Номер документа", size: "100px" },
+  { key: "orderDate", header: "Документ от", size: "100px", type: "date" },
   {
     key: "holderId",
     header: "Владелец",
     mapper: (v, item: HoldingTableItem) => {
       const holder = holders.get(item.holderId);
+      const name = splitHolderName(holder);
       return (
-        <Layout>
+        <>
           {item.prevHolders.map((holder) => (
-            <Span strike key={holder.id}>
-              {splitHolderName(holder)}
-            </Span>
+            <>
+              <Span
+                title={splitHolderName(holder)}
+                inline
+                strike
+                key={holder.id}
+              >
+                {splitHolderName(holder)}
+              </Span>
+              <br />
+            </>
           ))}
-          <Span>{holder ? splitHolderName(holder) : <LoaderIcon />}</Span>
-        </Layout>
+          <Span inline title={name}>
+            {holder ? name : <LoaderIcon />}
+          </Span>
+        </>
+      );
+    },
+  },
+  {
+    key: "departmentId",
+    header: "Подраздение",
+    mapper: (v, item: HoldingTableItem) => {
+      const department = departments.get(item.departmentId);
+      return (
+        <>
+          {item.prevDepartments.map((department) => (
+            <>
+              <Span title={department.name} inline strike key={department.id}>
+                {department.name}
+              </Span>
+              <br />
+            </>
+          ))}
+          <Span inline title={department?.name}>
+            {department ? department.name : <LoaderIcon />}
+          </Span>
+        </>
       );
     },
   },
@@ -59,6 +100,7 @@ export const getTableColumns: (args: {
       const items = sliced.map((id, i) => (
         <>
           <Link
+            key={id}
             style={{ display: "inline" }}
             href={`/phone/view?selectedId=${id}`}
           >{`#${id}`}</Link>
@@ -66,9 +108,17 @@ export const getTableColumns: (args: {
         </>
       ));
 
+      const dispatch = useAppDispatch();
+
       if (items.length === maxItems)
         items.push(
-          <Link inline style={{ float: "right" }}>
+          <Link
+            onClick={() => {
+              dispatch(updateQuery({ id: item.id }));
+            }}
+            inline
+            style={{ float: "right" }}
+          >
             <small> +{item.phoneIds.length - maxItems} элемент(ов)</small>
           </Link>
         );
@@ -76,16 +126,18 @@ export const getTableColumns: (args: {
       return items;
     },
   },
+
   {
     key: "reasonId",
     header: "Причина",
-    size: "150px",
+    size: "100px",
     mapper: (v, item) => <Badge>{getReason(item.reasonId)}</Badge>,
   },
   {
     key: "status",
     header: "Статус",
-    size: "150px",
+    props: { style: { whiteSpace: "normal", textAlign: "center" } },
+    size: "100px",
     mapper: (v, item) => {
       let status = "Произвидено";
       if (item.status === "create-pending") status = "Ожидает создания";

@@ -11,6 +11,7 @@ export type IconProps = OverrideProps<
   Feather.IconProps,
   {
     size?: Size;
+    inline?: boolean;
   }
 >;
 
@@ -20,11 +21,16 @@ const Icon: {
   get: (t: any, p: any) => {
     const IconComponent = t[p] as Feather.Icon;
     return (props: IconProps) => {
-      const { size = "sm", color, ...rest } = props;
+      const { size = "sm", inline, color, ...rest } = props;
 
       const mergedProps = mergeProps(
         {
-          className: mergeClassNames("icon", `icon_${size}`, `col_${color}`),
+          className: mergeClassNames(
+            "icon",
+            `icon_${size}`,
+            inline && `icon_inline`,
+            `col_${color}`
+          ),
         },
         rest
       );
@@ -49,10 +55,19 @@ const Icon: {
 //   return;
 // };
 
-export const LoaderIcon: React.FC<GetProps<typeof Loader>> = (props) => {
-  const { className, ...rest } = props;
+export const LoaderIcon: React.FC<GetProps<typeof Loader> & { size?: Size }> = (
+  props
+) => {
+  const { className, size, ...rest } = props;
   return (
-    <Loader {...rest} className={mergeClassNames(className, "loader-icon")} />
+    <Loader
+      {...rest}
+      className={mergeClassNames(
+        className,
+        "loader-icon",
+        size && "icon_" + size
+      )}
+    />
   );
 };
 export default Icon;

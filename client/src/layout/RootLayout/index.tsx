@@ -14,11 +14,11 @@ import { useAppDispatch, useAppSelector } from "store";
 import { useIsFirstEffect } from "hooks/useIsFirstEffect";
 import { login } from "store/slices/app";
 import { replace } from "connected-react-router";
-import CommitPageContainer from "containers/CommitPage";
+import CategoryPage from "layout/Pages/CategoryPage";
 import HoldingPageContainer from "containers/HoldingPage";
-import CategoryPageContainer from "containers/CategoryPage";
+// import CategoryPageContainer from "containers/CategoryPage";
 import AdminPage from "layout/Pages/AdminPage";
-import TestPage from "layout/Pages/_CommitPage";
+import CommitPage from "layout/Pages/CommitPage";
 import "./style.styl";
 import Span from "components/Span";
 
@@ -79,11 +79,9 @@ const RootLayout: React.FC<{}> = (props) => {
                       <Span> Добро пожаловать, {user.name}! </Span>
                     </Layout>
                   </Route>
-                  <Route path="/test">
-                    <TestPage />
-                  </Route>
+
                   <Route path="/phone/commit">
-                    <TestPage />
+                    <CommitPage />
                   </Route>
                   <Route path="/phone">
                     <PhonePageContainer />
@@ -92,7 +90,7 @@ const RootLayout: React.FC<{}> = (props) => {
                     <HoldingPageContainer />
                   </Route>
                   <Route path="/category">
-                    <CategoryPageContainer />
+                    <CategoryPage />
                   </Route>
                   <Route path="/admin">
                     {user.role === "admin" ? (

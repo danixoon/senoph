@@ -7,7 +7,7 @@ import PhoneType from "@backend/db/models/phoneType.model";
 import Department from "@backend/db/models/department.model";
 import PhoneModel from "@backend/db/models/phoneModel.model";
 import { AppRouter } from "../router";
-import { transactionHandler, prepareItems } from "../utils";
+import { transactionHandler, prepareItems, groupBy } from "../utils";
 import { access, owner } from "@backend/middleware/auth";
 import { tester, validate } from "@backend/middleware/validator";
 import { upload } from "@backend/middleware/upload";
@@ -16,10 +16,12 @@ import Holding from "@backend/db/models/holding.model";
 import HoldingPhone from "@backend/db/models/holdingPhone.model";
 import { convertValues } from "@backend/middleware/converter";
 import Holder from "@backend/db/models/holder.model";
-import { Op } from "sequelize";
-import { Filter } from "@backend/utils/db";
+import { Op, Sequelize } from "sequelize";
+import { Filter, WhereFilter } from "@backend/utils/db";
 import Phone from "@backend/db/models/phone.model";
-import PhoneCategory from "@backend/db/models/phoneCategory.model";
+import Category from "@backend/db/models/category.model";
+import category from "@backend/db/queries/category";
+import CategoryPhone from "@backend/db/models/categoryPhone.model";
 
 const router = AppRouter();
 
@@ -30,18 +32,40 @@ router.get(
     query: {
       status: tester(),
       ids: tester().array("int"),
+      actDate: tester().isDate(),
+      actKey: tester(),
+      categoryKey: tester(),
+      pending: tester().isBoolean(),
     },
   }),
   transactionHandler(async (req, res) => {
-    const filter = new Filter(req.query).add("status");
-    const categories = await PhoneCategory.findAll({
-      // include: [
-      //   {
-      //     model: Phone,
-      //     attributes: ["id"],
-      //   },
-      //   Holder,
-      // ],
+    // const filter = new Filter(req.query).add("status");
+    const { ids, status, actDate, actKey, categoryKey, pending } = req.query;
+    const filter = new WhereFilter<DB.CategoryAttributes>();
+
+    filter.on("id").optional(Op.in, ids);
+    filter
+      .on("status")
+      .optional(Op.eq, status === "based" ? null : status)
+      .optional(Op.not, pending ? null : undefined);
+    filter.on("actKey").optional(Op.substring, actKey);
+    filter.on("categoryKey").optional(Op.eq, categoryKey);
+
+    if (actDate?.getFullYear())
+      filter.fn(
+        Sequelize.where(
+          Sequelize.fn("YEAR", Sequelize.col("actDate")),
+          actDate.getFullYear().toString()
+        )
+      );
+
+    const categories = await Category.findAll({
+      include: [
+        {
+          model: Phone,
+          attributes: ["id"],
+        },
+      ],
       where: filter.where,
     });
 
@@ -49,10 +73,16 @@ router.get(
       prepareItems(
         categories.map((category) => ({
           id: category.id,
+          actKey: category.actKey,
           actDate: category.actDate,
           actUrl: category.actUrl,
           categoryKey: category.categoryKey,
-          phoneId: category.phoneId,
+          phoneIds: category.phones?.map((v) => v.id) ?? [],
+          status: category.status,
+          statusAt: category.statusAt,
+          authorId: category.authorId,
+          createdAt: category.createdAt,
+          // updatedAt: category.updated
         })),
         categories.length,
         0
@@ -68,10 +98,11 @@ router.post(
   validate({
     body: {
       description: tester(),
-      categoryKey: tester().required(),
+      categoryKey: tester().isIn(["1", "2", "3", "4"]).required(),
       phoneIds: tester().array("int").required(),
       actFile: tester(),
       actDate: tester().isDate().required(),
+      actKey: tester().required(),
     },
   }),
   owner("phone", (req) => req.body.phoneIds),
@@ -83,19 +114,118 @@ router.post(
         description: "Файл акта обязателен",
       });
 
-    const { categoryKey, actDate, phoneIds, description } = req.body;
+    const { user } = req.params;
+    const { categoryKey, actDate, phoneIds, actKey, description } = req.body;
 
-    const categories = await PhoneCategory.bulkCreate(
-      phoneIds.map((phoneId) => ({
-        phoneId,
-        actUrl: file.path,
-        description,
-        categoryKey,
-        actDate: actDate.toISOString(),
-      }))
-    );
+    const cat = await category.create(user.id, {
+      actDate,
+      phoneIds,
+      actKey,
+      actUrl: file.filename,
+      categoryKey,
+      description,
+    });
 
-    // TODO: Make holding create validation
+    res.send({ id: cat.id });
+  })
+);
+
+router.get(
+  "/categories/commit",
+  access("user"),
+  validate({
+    query: {
+      status: tester(),
+    },
+  }),
+  transactionHandler(async (req, res) => {
+    const categoryPhones = await CategoryPhone.unscoped().findAll({
+      where: { status: { [Op.not]: null } },
+    });
+
+    const groupedItems = groupBy(categoryPhones, (item) => item.categoryId);
+    const items: {
+      categoryId: number;
+      commits: ({ phoneId: number } & WithCommit)[];
+    }[] = [];
+
+    for (const [key, value] of groupedItems)
+      items.push({
+        categoryId: key,
+        commits: value.map((item) => item.toJSON()),
+      });
+
+    res.send(prepareItems(items, items.length, 0));
+  })
+);
+
+router.put(
+  "/category",
+  access("admin"),
+  validate({
+    query: {
+      action: tester().isIn(["add", "remove"]).required(),
+      phoneIds: tester().array("int").required(),
+      categoryId: tester().isNumber().required(),
+    },
+  }),
+  transactionHandler(async (req, res) => {
+    const { action, phoneIds, categoryId } = req.query;
+
+    if (action === "remove") {
+      const categories = await CategoryPhone.unscoped().findAll({
+        where: {
+          phoneId: { [Op.in]: phoneIds },
+          categoryId,
+          status: null,
+        },
+      });
+
+      if (categories.length !== phoneIds.length)
+        throw new ApiError(errorType.INVALID_QUERY, {
+          description: "Один или более ID средств связи указан неверно.",
+        });
+
+      const categoryPhonesIds = categories.map((h) => h.id);
+      const [row, updated] = await CategoryPhone.unscoped().update(
+        {
+          status: "delete-pending",
+          statusAt: new Date().toISOString(),
+        },
+        { where: { id: { [Op.in]: categoryPhonesIds } } }
+      );
+    } else {
+      const categories = await CategoryPhone.unscoped().findAll({
+        where: {
+          phoneId: { [Op.in]: phoneIds },
+          categoryId,
+        },
+      });
+
+      if (categories.length > 0)
+        throw new ApiError(errorType.INVALID_QUERY, {
+          description:
+            "Один или более ID средств связи указан неверно, либо уже существует в категории с данным актом",
+        });
+
+      const category = await Category.unscoped().findByPk(categoryId);
+      if (!category)
+        throw new ApiError(errorType.INVALID_QUERY, {
+          description: "Указан ID несуществующего акта категории.",
+        });
+
+      const creations: DB.CategoryPhoneAttributes[] = phoneIds.map(
+        (phoneId) => ({
+          phoneId,
+          categoryId,
+          status: "create-pending",
+          statusAt: new Date().toISOString(),
+        })
+      );
+
+      await CategoryPhone.bulkCreate(creations);
+    }
+
     res.send();
   })
 );
@@ -108,7 +238,7 @@ router.delete(
   }),
   transactionHandler(async (req, res) => {
     const { id } = req.query;
-    await PhoneCategory.update({ status: "delete-pending" }, { where: { id } });
+    await Category.update({ status: "delete-pending" }, { where: { id } });
 
     res.send();
   })

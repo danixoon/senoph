@@ -3,7 +3,7 @@ import Holder from "@backend/db/models/holder.model";
 import Holding from "@backend/db/models/holding.model";
 import HoldingPhone from "@backend/db/models/holdingPhone.model";
 import Phone from "@backend/db/models/phone.model";
-import PhoneCategory from "@backend/db/models/phoneCategory.model";
+import Category from "@backend/db/models/category.model";
 import PhoneModel from "@backend/db/models/phoneModel.model";
 import PhoneType from "@backend/db/models/phoneType.model";
 import User from "@backend/db/models/user.model";
@@ -11,6 +11,7 @@ import { v4 as uuid } from "uuid";
 import { Op, fn, WhereOperators, WhereOptions } from "sequelize";
 import sequelize from "sequelize";
 import { Fn } from "sequelize/types/lib/utils";
+import CategoryPhone from "@backend/db/models/categoryPhone.model";
 
 // import { sequelize } from "../db";
 
@@ -340,17 +341,16 @@ export const fillDevDatabase = async (full?: boolean, size: number = 150) => {
     phones.map((phone) => ({ phoneId: phone.id, holdingId: holding.id }))
   );
 
-  const categories = await Promise.all(
-    mapGenerated(size - 5, (i) => {
-      const phoneId = phones[i].id;
-      const date = randomDate();
-      return PhoneCategory.create({
-        categoryKey: "1",
-        actDate: date.toISOString(),
-        phoneId,
-        actUrl: "test.pdf",
-        status: null,
-      });
-    })
+  const category = await Category.create({
+    categoryKey: "1",
+    actDate: randomDate().toISOString(),
+    actKey: (100 + Math.floor(Math.random() * 200)).toString(),
+    authorId: user.id,
+    actUrl: "test.pdf",
+    status: null,
+  });
+
+  const categoryPhones = await CategoryPhone.bulkCreate(
+    phones.map((phone) => ({ phoneId: phone.id, categoryId: category.id }))
   );
 };

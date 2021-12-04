@@ -369,15 +369,15 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
                 <Input
                   {...bind}
                   type="date"
-                  name="commissioningDate"
-                  label="Дата ввода в эксплуатацию"
+                  name="accountingDate"
+                  label="Дата учёта"
                   required
                 />
                 <Input
                   {...bind}
                   type="date"
-                  name="accountingDate"
-                  label="Дата учёта"
+                  name="commissioningDate"
+                  label="Дата ввода в эксплуатацию"
                   required
                 />
               </Layout>
@@ -406,7 +406,7 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
                   type="date"
                   name="orderDate"
                   placeholder="2008"
-                  label="Дата приказа"
+                  label="Дата документа"
                   disabled={!bindHolding.input.isHolded}
                   required
                 />
@@ -414,7 +414,7 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
                   {...bindHolding}
                   name="orderKey"
                   disabled={!bindHolding.input.isHolded}
-                  label="Номер приказа"
+                  label="Номер документа"
                   required
                   style={{ flex: "1" }}
                 />

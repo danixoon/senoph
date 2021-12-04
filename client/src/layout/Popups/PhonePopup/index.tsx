@@ -82,7 +82,7 @@ const Content: React.FC<
 
   const holder = getHolder(lastHolding?.holderId);
   const departmentName = getDepartmentName(
-    getDepartment(lastHolding.departmentId)
+    getDepartment(lastHolding?.departmentId)
   );
 
   const { accountingDate, commissioningDate, assemblyDate } = phone;
@@ -94,6 +94,7 @@ const Content: React.FC<
           onDelete={() => onDeleteCategory(cat.id)}
           key={cat.id}
           deletable={edit}
+          actUrl={cat.actUrl}
           actDate={new Date(cat.actDate)}
           category={Number.parseInt(cat.categoryKey)}
         />
@@ -106,9 +107,14 @@ const Content: React.FC<
     (phone.holdings?.length ?? 0) > 0 ? (
       phone.holdings?.map((hold) => (
         <HoldingItem
+          departmentId={hold.departmentId}
+          holderId={hold.holderId}
+          orderUrl={hold.orderUrl}
+          department={getDepartmentName(getDepartment(hold.departmentId))}
           onSelect={() => onSelectHolding(hold.id)}
           key={hold.id}
           orderDate={new Date(hold.orderDate ?? Date.now())}
+          orderKey={hold.orderKey}
           holder={splitHolderName(hold.holder)}
         />
       ))
@@ -350,9 +356,18 @@ const PhonePopup: React.FC<PhonePopupProps> = (props) => {
 
   return (
     <Popup {...popupProps} size="lg" closeable noPadding>
-      <WithLoader isLoading={phoneStatus.isLoading}>
+      <WithLoader status={phoneStatus}>
         <Content
-          phone={phone as Api.Models.Phone}
+          phone={
+            phone ?? {
+              id: 0,
+              accountingDate: "10.10.2003",
+              assemblyDate: "10.10.2003",
+              authorId: 0,
+              commissioningDate: "10.10.2003",
+              phoneModelId: 0,
+            }
+          }
           {...rest}
           fetchPhoneStatus={phoneStatus}
         />

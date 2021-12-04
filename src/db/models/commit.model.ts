@@ -14,7 +14,7 @@ import User from "./user.model";
 export const validTargetNames: readonly CommitTargetName[] = [
   "holding",
   "phone",
-  "phoneCategory",
+  "category",
 ];
 export const validActionTypes: readonly CommitActionType[] = [
   "approve",

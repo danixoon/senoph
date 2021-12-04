@@ -2,28 +2,38 @@ import { api } from "store/slices/api";
 import Icon from "components/Icon";
 import { useFetchConfigMap } from "hooks/api/useFetchConfigMap";
 import React from "react";
-import { extractStatus } from "store/utils";
-import { HoldingPageProps } from ".";
+import { extractStatus, parseItems } from "store/utils";
+
 import ActionBox from "components/ActionBox";
 import InfoBanner from "components/InfoBanner";
 import { SpoilerPopupButton } from "components/SpoilerPopup";
-import Table from "components/Table";
-import { getTableColumns } from "./utils";
+import Table, { TableColumn } from "components/Table";
+import { getColumns } from "./utils";
 
-const CommitContent: React.FC<HoldingPageProps> = (props) => {
-  const { holdings } = props;
-  const [commitHolding, status] = api.useCommitHoldingMutation();
+const useContainer = () => {
+  const fetchCategories = api.useFetchCategoriesQuery({ pending: true });
+
+  const [commitCategory, status] = api.useCommitCategoryMutation();
   const { holders, departments } = useFetchConfigMap();
 
-  const handleCommit = (action: CommitActionType, id: number) =>
-    !status.isLoading && commitHolding({ action, ids: [id] });
+  return {
+    categories: parseItems(fetchCategories),
+    category: { commit: commitCategory, status },
+  };
+};
 
-  const columns = getTableColumns({
-    holders,
-    departments,
-    status: extractStatus(status),
-    controlMapper: (v, item) => (
-      <ActionBox icon={Icon.Box} status={extractStatus(status)}>
+export const CommitContent: React.FC<{}> = (props) => {
+  const { categories, category } = useContainer();
+
+  const handleCommit = (action: CommitActionType, id: number) =>
+    !category.status.isLoading && category.commit({ action, ids: [id] });
+
+  const actionBox: TableColumn<Api.Models.Category> = {
+    key: "actions",
+    header: "",
+    size: "30px",
+    mapper: (v, item) => (
+      <ActionBox status={extractStatus(category.status)}>
         <SpoilerPopupButton onClick={() => handleCommit("approve", item.id)}>
           Подтвердить
         </SpoilerPopupButton>
@@ -32,21 +42,22 @@ const CommitContent: React.FC<HoldingPageProps> = (props) => {
         </SpoilerPopupButton>
       </ActionBox>
     ),
-  });
+  };
 
   return (
     <>
-      {holdings.length === 0 ? (
+      {categories.data.items.length === 0 ? (
         <InfoBanner
           href="/phone/edit"
           hrefContent="средство связи"
           text="Движения для потдверждения отсутствуют. Создайте их, выбрав"
         />
       ) : (
-        <Table columns={columns} items={holdings} />
+        <Table
+          columns={[actionBox, ...getColumns()]}
+          items={categories.data.items}
+        />
       )}
     </>
   );
 };
-
-export default CommitContent;

@@ -2,6 +2,33 @@
 
 import { extractStatus } from "store/utils";
 
+export const getLocalDate = (checkDate?: Date | string) => {
+  let date: Date | undefined =
+    typeof checkDate === "string" ? new Date(checkDate) : checkDate;
+
+  if (!date || isNaN(date.getTime())) return "Не определено";
+
+  const isCurrentDay = () => {
+    const current = new Date();
+    const [day, month, year] = [
+      current.getDay(),
+      current.getMonth(),
+      current.getFullYear(),
+    ];
+    const [_day, _month, _year] = [
+      date?.getDay(),
+      date?.getMonth(),
+      date?.getFullYear(),
+    ];
+
+    return _day === day && _month === month && _year === year;
+  };
+
+  return isCurrentDay()
+    ? date.toTimeString().split(/\s+/)[0]
+    : date.toDateString();
+};
+
 export const mergeClassNames = (
   ...names: (string | undefined | boolean | null)[]
 ) => {

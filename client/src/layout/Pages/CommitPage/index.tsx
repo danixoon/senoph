@@ -1,389 +1,392 @@
-import * as React from "react";
-import Layout from "components/Layout";
+import React from "react";
 
-import "./style.styl";
-import TopBarLayer from "providers/TopBarLayer";
-import Switch from "components/Switch";
-import { useInput } from "hooks/useInput";
-import Label from "components/Label";
 import Header from "components/Header";
-import Span from "components/Span";
-import Badge from "components/Badge";
+import Layout from "components/Layout";
+import Table, { TableColumn } from "components/Table";
 import Hr from "components/Hr";
-import { useFetchConfig } from "hooks/api/useFetchConfig";
-import ListItem from "components/ListItem";
-import Button from "components/Button";
-import Icon from "components/Icon";
-import ButtonGroup from "components/ButtonGroup";
-import { groupBy } from "utils";
+import { Route, Switch, useRouteMatch } from "react-router";
+import { api } from "store/slices/api";
+import { extractStatus, parseItems, parseQuery } from "store/utils";
+import ActionBox from "components/ActionBox";
+import { SpoilerPopupButton } from "components/SpoilerPopup";
+import { useInput } from "hooks/useInput";
 import Dropdown from "components/Dropdown";
-import Link from "components/Link";
-import { splitHolderName, useHolder } from "hooks/misc/holder";
-import { getLastHolding } from "hooks/misc/holding";
+import Form from "components/Form";
+import { clearObject, getLocalDate } from "utils";
+import { defaultColumns as phonePageColumns } from "../PhonePage/Items";
+import Checkbox from "components/Checkbox";
+import TopBarLayer from "providers/TopBarLayer";
+import ButtonGroup from "components/ButtonGroup";
+import Button from "components/Button";
+import Badge from "components/Badge";
+import Icon, { LoaderIcon } from "components/Icon";
+import { useNotice } from "hooks/useNotice";
+import Span from "components/Span";
 
-export type CommitPageTab = "create" | "delete" | "edit";
-export type CommitChange = {
-  original: Api.Models.Phone;
-  changes?: Partial<Api.Models.Phone>;
+type CommitItem = {
+  id: any;
+};
+type CommitContentProps = {
+  columns: TableColumn[];
+  items: CommitItem[];
+  onCommit: (itemIds: any[], action: CommitActionType) => void;
 };
 
-export const getPhonePropertyName = (property: keyof Api.Models.Phone) => {
-  const propMap: Partial<{ [K in typeof property]: string }> = {
-    id: "Ид.",
-    inventoryKey: "Инвентарный номер",
-    accountingDate: "Дата принятия к учёту",
-    commissioningDate: "Дата ввода в эксплуатацию",
-    factoryKey: "Заводской номер",
-    assemblyDate: "Год сборки",
+const useChangesContainer = (query: {} = {}) => {
+  // const { status } = query;
+  const changes = api.useFetchChangesQuery({ target: "phone" });
+  const [approveChanges, approveChangesInfo] =
+    api.useCommitChangesApproveMutation();
+  const [declineChanges, declineChangesInfo] =
+    api.useCommitChangesDeclineMutation();
+  return {
+    changes: parseItems(changes),
+    approve: approveChanges,
+    decline: declineChanges,
+    declineStatus: extractStatus(declineChangesInfo),
+    approveStatus: extractStatus(approveChangesInfo),
   };
-
-  return propMap[property] ?? property;
 };
-
-export type CommitPageProps = {
-  tab: CommitPageTab;
-  commits: {
-    created: Api.Models.Phone[];
-    deleted: Api.Models.Phone[];
-    changes: CommitChange[];
-  };
-  onCommit: (ids: number[], action: CommitActionType) => void;
-  onCommitChanges: (
-    target: string,
-    targetId: number,
-    action: CommitActionType
-  ) => void;
-};
-
-const CommitItemContent: React.FC<{
-  item: Api.Models.Phone;
-  getTypeName: (id: number) => string;
-  getHolder: (id: number) => Api.Models.Holder | undefined;
-}> = (props) => {
-  const { item, getHolder, getTypeName } = props;
-
+export const CommitContent: React.FC<CommitContentProps> = (props) => {
+  const { children, columns, items } = props;
   return (
-    <Layout flow="row">
-      <Layout flex="1">
-        <ListItem label={getPhonePropertyName("id")}>
-          <Span>#{item.id}</Span>
-        </ListItem>
-        <Hr />
-        <ListItem label="Тип">
-          <Span>{getTypeName(item.phoneModelId)}</Span>
-        </ListItem>
-        <Hr />
-        <ListItem label="Модель">
-          <Span> {item.model?.name}</Span>
-        </ListItem>
-      </Layout>
-      <Hr vertical />
-      <Layout flex="2">
-        <ListItem label={getPhonePropertyName("assemblyDate")}>
-          <Span>{new Date(item.assemblyDate).getFullYear()}</Span>
-        </ListItem>
-        <Hr />
-        <ListItem label={getPhonePropertyName("commissioningDate")}>
-          <Span>{item.commissioningDate}</Span>
-        </ListItem>
-        <Hr />
-        <ListItem label={getPhonePropertyName("accountingDate")}>
-          <Span>{item.accountingDate}</Span>
-        </ListItem>
-      </Layout>
-      <Hr vertical />
-      <Layout flex="3">
-        <ListItem label={getPhonePropertyName("inventoryKey")}>
-          <Span>{item.inventoryKey}</Span>
-        </ListItem>
-        <Hr />
-        <ListItem label={getPhonePropertyName("factoryKey")}>
-          <Span>{item.factoryKey}</Span>
-        </ListItem>
-        <Hr />
-        <ListItem label="Владелец">
-          <Span>
-            {splitHolderName(getHolder(getLastHolding(item.holdings).holderId))}
-          </Span>
-        </ListItem>
+    <Layout>
+      {children}
+      <Hr />
+      <Header align="right">Элементы ({items.length})</Header>
+      <Layout>
+        <Table columns={columns} items={items} />
       </Layout>
     </Layout>
   );
 };
 
-const CommitEditedItemContent: React.FC<{
-  item: { original: Api.Models.Phone; changes: Partial<Api.Models.Phone> };
-  getTypeName: (id: number) => string;
-}> = (props) => {
-  const { item, getTypeName } = props;
-  const { original, changes } = item;
-
-  const { id, createdAt, ...trueChanges } = changes;
-
-  const changesList = Object.entries(trueChanges).map(([key, v]) => ({
-    key,
-    value: v,
-  }));
-
-  return (
-    <Layout flow="row" flex="1">
-      <Layout flex="1">
-        <ListItem label="Ид.">
-          <Span>#{original.id}</Span>
-        </ListItem>
-        <Hr />
-        <ListItem label="Тип">
-          <Span>{getTypeName(original.phoneModelId)}</Span>
-        </ListItem>
-        <Hr />
-        <ListItem label="Модель">
-          <Span> {item.original.model?.name}</Span>
-        </ListItem>
-      </Layout>
-      <Hr vertical />
-      <Layout flex="4">
-        {changesList.map(({ key, value }) => (
-          <>
-            <ListItem label={getPhonePropertyName(key as any)} key={key}>
-              <Badge>
-                <Icon.Minus size="md" />{" "}
-                {original[key as keyof typeof original]}
-              </Badge>
-              <Badge color="primary">
-                <Icon.Plus size="md" /> {value}
-              </Badge>
-            </ListItem>
-            <Hr />
-          </>
-        ))}
-      </Layout>
-    </Layout>
-  );
+const useActionsContainer = (query: { status?: CommitStatus } = {}) => {
+  const { status } = query;
+  const commits = api.useFetchPhonesCommitQuery({ status });
+  const [commitPhone, commitPhoneInfo] = api.useCommitPhoneMutation();
+  return {
+    commits: parseItems(commits),
+    commit: commitPhone,
+    status: extractStatus(commitPhoneInfo),
+  };
 };
+const ActionCommits: React.FC<{}> = (props) => {
+  type ItemType = ArrayElement<typeof commits.data.items>;
+  type FilterType = { status: CommitStatus };
 
-const CommitPage: React.FC<CommitPageProps> = (props) => {
-  const { commits, tab, onCommit, onCommitChanges } = props;
+  const [selectedIds, setSelection] = React.useState<number[]>(() => []);
 
-  const [bind] = useInput({ author: "me" });
-  const getHolder = useHolder();
+  const [bindFilter, setFilter] = useInput<FilterType>({
+    status: null,
+  });
 
-  const getTargetCommits = (tab: CommitPageTab) => {
-    switch (tab) {
-      case "create":
-        return commits.created;
-      case "delete":
-        return commits.deleted;
-      case "edit":
-        return commits.changes;
-    }
-  };
+  const { commits, commit, status } = useActionsContainer(
+    clearObject(bindFilter.input) as FilterType
+  );
 
-  const { author } = bind.input;
+  React.useEffect(() => {
+    const updatedSelection: number[] = [];
+    for (const commit of commits.data.items)
+      if (selectedIds.includes(commit.id)) updatedSelection.push(commit.id);
 
-  const { models, types } = useFetchConfig();
+    setSelection(updatedSelection);
+  }, [commits.data.items]);
 
-  const getTypeName = (modelId: number) => {
-    const model = models.find((model) => model.id === modelId);
-    const type = model
-      ? types.find((type) => model.phoneTypeId === type.id)
-      : undefined;
-
-    return type ? type.name : "Неизвестно";
-  };
-
-  function isEditCommits(commits: any[]): commits is CommitChange[] {
-    return tab === "edit";
-  }
-
-  const targetCommits = getTargetCommits(tab);
-
-  const commitGroup = (
-    isEditCommits(targetCommits)
-      ? groupBy(targetCommits, (item) => item.changes?.createdAt)
-      : groupBy(targetCommits, (item) => item.statusAt)
-  ) as Map<any, CommitChange[] | Api.Models.Phone[]>;
-
-  const [lastDeleted, setLastDeleted] = React.useState<{
-    commit: Api.Models.Phone;
-    i: number;
-  } | null>(() => null);
-
-  const mapCommits = (
-    commits: CommitChange[] | Api.Models.Phone[],
-    cb: (info: {
-      commit: Api.Models.Phone;
-      header?: string;
-      changes?: Partial<Api.Models.Phone>;
-      items: CommitChange[];
-      i: number;
-    }) => any
-  ) => {
-    let items: CommitChange[] = [];
-    if (isEditCommits(commits))
-      items = commits.filter(
-        (commit) => commit.original.id !== lastDeleted?.commit.id
-      );
-    else
-      items = commits
-        .filter((commit) => commit.id !== lastDeleted?.commit.id)
-        .map((c) => ({ original: c }));
-
-    if (lastDeleted)
-      items.splice(lastDeleted.i, 0, {
-        original: lastDeleted.commit,
-      });
-
-    return items.map((commit, i) => {
-      if (commit.original.id === lastDeleted?.commit.id)
-        return (
-          <Layout padding="md" className="commit-item">
-            <Link key={commit.original.id}>Отменить</Link>
-          </Layout>
-        );
-
-      const isHeader = i === 0;
-      const [date, time] = new Date(commit.original.createdAt ?? Date.now())
-        .toISOString()
-        .split(/[T.]/);
-
-      return cb({
-        commit: commit.original,
-        changes: commit.changes,
-        header: isHeader ? `${items.length} от ${date} в ${time}` : undefined,
-        items,
-        i,
-      });
-    });
-  };
-
-  const renderCommits = () => {
-    const commits = Array.from(commitGroup.entries()).flatMap(
-      ([key, commits]) => {
-        // return items.map((commit, i) => {
-        // return mapCommits(commi)\\
-
-        return mapCommits(commits, (info) => (
-          <CommitItem
-            key={info.commit.id}
-            // item={{ ...commit, type:  }}
-            // TODO: Костыль, сделать красиво
-            onCommit={(action) =>
-              isEditCommits(commits)
-                ? onCommitChanges("phone", info.commit.id, action)
-                : onCommit(
-                    info.items.map((c) => c.original.id),
-                    action
-                  )
-            }
-            header={info.header}
-            onCancel={() => {
-              if (!isEditCommits(commits))
-                onCommit([info.commit.id], "decline");
-              else onCommitChanges("phone", info.commit.id, "decline");
-
-              setLastDeleted({ commit: info.commit, i: info.i });
-            }}
+  const columns: TableColumn<ItemType>[] = [
+    {
+      key: "actions",
+      header: "",
+      size: "30px",
+      mapper: (v, item) => (
+        <ActionBox status={status}>
+          <SpoilerPopupButton
+            onClick={() => commit({ ids: [item.id], action: "approve" })}
           >
-            {isEditCommits(commits) ? (
-              <CommitEditedItemContent
-                item={{ original: info.commit, changes: info.changes ?? {} }}
-                getTypeName={getTypeName}
-              />
-            ) : (
-              <CommitItemContent
-                item={info.commit}
-                getTypeName={getTypeName}
-                getHolder={getHolder}
-              />
-            )}
-          </CommitItem>
-        ));
+            Подтвердить
+          </SpoilerPopupButton>
+          <SpoilerPopupButton
+            onClick={() => commit({ ids: [item.id], action: "decline" })}
+          >
+            Отменить
+          </SpoilerPopupButton>
+        </ActionBox>
+      ),
+    },
+    ...phonePageColumns,
+    {
+      key: "statusAt",
+      header: "Добавлено",
+      size: "100px",
+      mapper: (v, item) => {
+        return getLocalDate(item.createdAt);
+      },
+    },
+    {
+      key: "status",
+      header: "Статус",
+      mapper: (v, item) =>
+        item.status === "create-pending" ? (
+          <Span weight="bold">Создание</Span>
+        ) : item.status === "delete-pending" ? (
+          <Span weight="bold" color="primary">
+            Удаление
+          </Span>
+        ) : (
+          item.status
+        ),
+    },
 
-        // );
-        // });
-      }
-    );
-    return commits;
-  };
+    {
+      header: (
+        <Checkbox
+          name="selectedAll"
+          input={{
+            selectedAll: selectedIds.length === commits.data.items.length,
+          }}
+          onChange={(e) => {
+            setSelection(
+              selectedIds.length === commits.data.items.length
+                ? []
+                : commits.data.items.map((item) => item.id)
+            );
+          }}
+        />
+      ),
+      props: { style: { textAlign: "center" } },
+      mapper: (v, item) => {
+        const isSelected = selectedIds.includes(item.id);
+
+        if (isSelected && status.isLoading) return <LoaderIcon />;
+
+        return (
+          <Checkbox
+            containerProps={{ style: { margin: 0 } }}
+            name="isSelected"
+            input={{
+              isSelected,
+            }}
+            onChange={(e) =>
+              e.target.checked
+                ? setSelection([...selectedIds, item.id])
+                : setSelection(selectedIds.filter((v) => v !== item.id))
+            }
+          />
+        );
+      },
+      key: "selectedIds",
+      size: "30px",
+    },
+  ];
+
+  useNotice(status, {
+    // success: "",
+  });
 
   return (
-    <Layout flex="1" className="commit-page">
+    <>
       <TopBarLayer>
-        <Layout>
-          {/* <Switch
-            position="horizontal"
-            name="tab"
-            items={[
-              { id: "created", name: "Добавления" },
-              { id: "deleted", name: "Изменения" },
-              { id: "deleted", name: "Удаления" },
-            ]}
-            {...bind}
-          /> */}
-          {/* TODO: Администраторский интерфейс */}
-          {/* <Layout flow="row">
-            <Dropdown
-              label="Автор"
-              {...bind}
-              items={[
-                { id: "me", label: "Мои" },
-                { id: "all", label: "Все" },
-              ]}
-              name="author"
-            />
-          </Layout> */}
-          {/* <ButtonGroup style={{ marginLeft: "auto" }}>
-          <Button color="primary"> Добавить всё</Button>
-          <Button>Отменить всё</Button>
-        </ButtonGroup> */}
-        </Layout>
+        <ButtonGroup>
+          <Button
+            disabled={selectedIds.length === 0 || status.isLoading}
+            margin="none"
+            onClick={() => commit({ ids: selectedIds, action: "approve" })}
+          >
+            Подтвердить
+          </Button>
+          <Badge margin="none" color="secondary" style={{ borderRadius: 0 }}>
+            {status.isLoading ? <LoaderIcon /> : selectedIds.length}
+          </Badge>
+          <Button
+            disabled={selectedIds.length === 0 || status.isLoading}
+            margin="none"
+            onClick={() => commit({ ids: selectedIds, action: "decline" })}
+          >
+            Отменить
+          </Button>
+        </ButtonGroup>
       </TopBarLayer>
-
-      <Layout flex="1" className="commit-list">
-        {renderCommits()}
-      </Layout>
-    </Layout>
+      <CommitContent
+        onCommit={(ids, action) => commit({ ids, action })}
+        items={commits.data.items}
+        columns={columns}
+      >
+        <Layout>
+          <Header unsized bottom align="right">
+            Фильтр
+          </Header>
+          <Dropdown
+            {...bindFilter}
+            label="Статус действия"
+            name="status"
+            items={[
+              { label: "Удаления", id: "delete-pending" },
+              { label: "Создания", id: "create-pending" },
+            ]}
+          />
+        </Layout>
+      </CommitContent>
+    </>
   );
 };
 
-const CommitItem: React.FC<{
-  // item: Api.Models.Phone & { type: string };
-  onCommit: (action: CommitActionType) => void;
-  onCancel: () => void;
-  header?: string;
-}> = (props) => {
-  const { header, onCommit, onCancel, children } = props;
+const ChangeCommits: React.FC<{}> = (props) => {
+  type ItemType = ArrayElement<typeof changes.data.items>;
+
+  const [selectedIds, setSelection] = React.useState<number[]>(() => []);
+
+  const { approve, decline, approveStatus, declineStatus, changes } =
+    useChangesContainer();
+
+  React.useEffect(() => {
+    const updatedSelection: number[] = [];
+    for (const commit of changes.data.items)
+      if (selectedIds.includes(commit.id)) updatedSelection.push(commit.id);
+
+    setSelection(updatedSelection);
+  }, [changes.data.items]);
+
+  const columns: TableColumn<ItemType>[] = [
+    {
+      key: "actions",
+      header: "",
+      size: "30px",
+      mapper: (v, item) => (
+        <ActionBox status={approveStatus}>
+          <SpoilerPopupButton
+            onClick={() => approve({ targetId: item.id, target: "phone" })}
+          >
+            Подтвердить
+          </SpoilerPopupButton>
+          <SpoilerPopupButton
+            onClick={() =>
+              decline({ targetId: item.id, target: "phone", keys: [""] })
+            }
+          >
+            Отменить
+          </SpoilerPopupButton>
+        </ActionBox>
+      ),
+    },
+    ...phonePageColumns,
+    {
+      key: "statusAt",
+      header: "Добавлено",
+      size: "100px",
+      mapper: (v, item) => {
+        const date = item.createdAt ? new Date(item.createdAt) : null;
+        if (!date) return "Не определено";
+
+        const isCurrentDay = () => {
+          const current = new Date();
+          const [day, month, year] = [
+            current.getDay(),
+            current.getMonth(),
+            current.getFullYear(),
+          ];
+          const [_day, _month, _year] = [
+            date.getDay(),
+            date.getMonth(),
+            date.getFullYear(),
+          ];
+
+          return _day === day && _month === month && _year === year;
+        };
+
+        return isCurrentDay()
+          ? date.toTimeString().split(/\s+/)[0]
+          : date.toDateString();
+      },
+    },
+    {
+      key: "status",
+      header: "Статус",
+      mapper: (v, item) =>
+        item.status === "create-pending" ? (
+          <Span weight="bold">Создание</Span>
+        ) : item.status === "delete-pending" ? (
+          <Span weight="bold" color="primary">
+            Удаление
+          </Span>
+        ) : (
+          item.status
+        ),
+    },
+
+    {
+      header: (
+        <Checkbox
+          name="selectedAll"
+          input={{
+            selectedAll: selectedIds.length === changes.data.items.length,
+          }}
+          onChange={(e) => {
+            setSelection(
+              selectedIds.length === changes.data.items.length
+                ? []
+                : changes.data.items.map((item) => item.id)
+            );
+          }}
+        />
+      ),
+      props: { style: { textAlign: "center" } },
+      mapper: (v, item) => {
+        const isSelected = selectedIds.includes(item.id);
+
+        if (isSelected && approveStatus.isLoading) return <LoaderIcon />;
+
+        return (
+          <Checkbox
+            containerProps={{ style: { margin: 0 } }}
+            name="isSelected"
+            input={{
+              isSelected,
+            }}
+            onChange={(e) =>
+              e.target.checked
+                ? setSelection([...selectedIds, item.id])
+                : setSelection(selectedIds.filter((v) => v !== item.id))
+            }
+          />
+        );
+      },
+      key: "selectedIds",
+      size: "30px",
+    },
+  ];
+
+  useNotice(approveStatus, {
+    // success: "",
+  });
 
   return (
-    <Layout className="commit-item">
-      {header ? (
-        <Header className="commit-item__header">
-          {header}
-          <ButtonGroup style={{ marginLeft: "auto" }}>
-            <Button color="primary" onClick={() => onCommit("approve")}>
-              Подтвердить
-              <Icon.Check />
-            </Button>
-            <Button onClick={() => onCommit("decline")}>
-              Отменить
-              <Icon.X />
-            </Button>
-          </ButtonGroup>
-        </Header>
-      ) : (
-        ""
-      )}
-      <Hr />
-      <Layout flow="row">
+    <>
+      <CommitContent
+        onCommit={(ids, action) => {}}
+        items={changes.data.items}
+        columns={columns}
+      >
         <Layout>
-          <Button color="primary" inverted onClick={onCancel}>
-            <Icon.X />
-          </Button>
+          <Header unsized bottom align="right">
+            Фильтр
+          </Header>
         </Layout>
-        {children}
-      </Layout>
-      <Hr />
-    </Layout>
+      </CommitContent>
+    </>
+  );
+};
+
+const CommitPage: React.FC<{}> = (props) => {
+  const { path } = useRouteMatch();
+  return (
+    <Switch>
+      <Route path={`${path}/actions`}>
+        <ActionCommits />
+      </Route>
+      <Route path={`${path}/changes`}>
+        <ActionCommits />
+      </Route>
+    </Switch>
   );
 };
 

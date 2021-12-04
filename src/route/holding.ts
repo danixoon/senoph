@@ -16,8 +16,8 @@ import Holding from "@backend/db/models/holding.model";
 import HoldingPhone from "@backend/db/models/holdingPhone.model";
 import { convertValues } from "@backend/middleware/converter";
 import Holder from "@backend/db/models/holder.model";
-import { Op } from "sequelize";
-import { Filter } from "@backend/utils/db";
+import { Op, Sequelize } from "sequelize";
+import { Filter, WhereFilter } from "@backend/utils/db";
 import Phone from "@backend/db/models/phone.model";
 import Log from "@backend/db/models/log.model";
 
@@ -30,14 +30,39 @@ router.get(
     query: {
       status: tester(),
       ids: tester().array("int"),
-      // phoneIds: tester().array("int"),
-      // latest: tester().isBoolean(),
+      orderKey: tester(),
+      orderDate: tester().isDate(),
+      holderId: tester().isNumber(),
+      departmentId: tester().isNumber(),
     },
   }),
   transactionHandler(async (req, res) => {
-    // const { latest, phoneIds } = req.query;
+    const { orderKey, holderId, departmentId, orderDate, status, ids } =
+      req.query;
     const { user } = req.params;
-    const filter = new Filter(req.query).add("status");
+
+    // const filter = new Filter({
+    //   ...req.query,
+    // })
+    //   .add("status")
+    //   .add("orderKey", Op.substring)
+    //   .add("orderDate");
+
+    const filter = new WhereFilter<DB.HoldingAttributes>();
+
+    filter.on("orderKey").optional(Op.eq, orderKey);
+    filter.on("status").optional(Op.eq, status === "based" ? null : status);
+    filter.on("departmentId").optional(Op.eq, departmentId);
+    filter.on("holderId").optional(Op.eq, holderId);
+
+    if (orderDate?.getFullYear())
+      filter.fn(
+        Sequelize.where(
+          Sequelize.fn("YEAR", Sequelize.col("orderDate")),
+          orderDate.getFullYear().toString()
+        )
+      );
+
     // const phoneFilter = new Filter({ id: req.query.phoneIds }).add("id", Op.in);
 
     const holdings = await Holding.findAll({
@@ -49,7 +74,7 @@ router.get(
           required: false,
           // required: (req.query.phoneIds ?? []).length > 0,
         },
-        Holder,
+        { model: Holder },
       ],
       order: [["orderDate", "ASC"]],
       where: filter.where,
@@ -86,23 +111,23 @@ router.get(
     },
   }),
   transactionHandler(async (req, res) => {
-    const holdingPhones = await HoldingPhone.findAll({
+    const holdingPhones = await HoldingPhone.unscoped().findAll({
       where: { status: { [Op.not]: null } },
     });
 
     const groupedItems = groupBy(holdingPhones, (item) => item.holdingId);
     const items: {
-      holderId: number;
+      holdingId: number;
       commits: ({ phoneId: number } & WithCommit)[];
     }[] = [];
 
     for (const [key, value] of groupedItems)
       items.push({
-        holderId: key,
-        commits: value.map(({ holdingId, ...rest }) => rest),
+        holdingId: key,
+        commits: value.map((item) => item.toJSON()),
       });
 
-    return prepareItems(items, items.length, 0);
+    res.send(prepareItems(items, items.length, 0));
   })
 );
 
@@ -151,12 +176,19 @@ router.post(
     const { user } = req.params;
     const { file } = req;
 
-    const { holderId, phoneIds, reasonId, description, orderDate, orderKey, departmentId } =
-      req.body;
+    const {
+      holderId,
+      phoneIds,
+      reasonId,
+      description,
+      orderDate,
+      orderKey,
+      departmentId,
+    } = req.body;
 
     const holding = await Holding.create({
       holderId,
-      orderUrl: file ? file.path : undefined,
+      orderUrl: file ? file.filename : undefined,
       orderDate: (orderDate as any).toISOString(),
       orderKey,
       authorId: user.id,
@@ -191,7 +223,7 @@ router.put(
     const { action, phoneIds, holdingId } = req.query;
 
     if (action === "remove") {
-      const holdings = await HoldingPhone.findAll({
+      const holdings = await HoldingPhone.unscoped().findAll({
         where: {
           phoneId: { [Op.in]: phoneIds },
           holdingId,
@@ -205,7 +237,7 @@ router.put(
         });
 
       const holdingPhonesIds = holdings.map((h) => h.id);
-      const [row, updated] = await HoldingPhone.update(
+      const [row, updated] = await HoldingPhone.unscoped().update(
         {
           status: "delete-pending",
           statusAt: new Date().toISOString(),
@@ -213,7 +245,7 @@ router.put(
         { where: { id: { [Op.in]: holdingPhonesIds } } }
       );
     } else {
-      const holdings = await HoldingPhone.findAll({
+      const holdings = await HoldingPhone.unscoped().findAll({
         where: {
           phoneId: { [Op.in]: phoneIds },
           holdingId,
@@ -222,10 +254,11 @@ router.put(
 
       if (holdings.length > 0)
         throw new ApiError(errorType.INVALID_QUERY, {
-          description: "Один или более ID средств связи указан неверно.",
+          description:
+            "Один или более ID средств связи указан неверно, либо уже существует в движении",
         });
 
-      const holding = await Holding.findByPk(holdingId);
+      const holding = await Holding.unscoped().findByPk(holdingId);
       if (!holding)
         throw new ApiError(errorType.INVALID_QUERY, {
           description: "Указан ID несуществующего движения.",
@@ -236,6 +269,7 @@ router.put(
           phoneId,
           holdingId,
           status: "create-pending",
+          statusAt: new Date().toISOString(),
         })
       );
 

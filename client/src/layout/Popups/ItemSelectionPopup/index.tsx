@@ -1,7 +1,7 @@
 import Button from "components/Button";
 import Header from "components/Header";
 import Hr from "components/Hr";
-import Icon from "components/Icon";
+import Icon, { LoaderIcon } from "components/Icon";
 import Input from "components/Input";
 import Label from "components/Label";
 import Layout from "components/Layout";
@@ -15,13 +15,17 @@ import "./style.styl";
 import Paginator from "components/Paginator";
 import PhoneEditActions from "layout/PhoneEditActions";
 import PopupLayer from "providers/PopupLayer";
+import WithLoader from "components/WithLoader";
+import { splitStatus } from "store/utils";
 
-export type Item = { id: any; name: string; href?: string };
+export type Item = { id: any; content?: React.ReactChild; name: string };
 export type ItemSelectionPopupProps = OverrideProps<
   PopupProps,
   {
     items: Item[];
     header: string;
+    selectable?: boolean;
+    status?: ApiStatus;
     zIndex?: number;
     onSelect: (item: Item) => void;
   }
@@ -29,27 +33,43 @@ export type ItemSelectionPopupProps = OverrideProps<
 
 const Item: React.FC<{
   id: any;
-  name: string;
+  selectable?: boolean;
   onSelect: (id: any) => void;
 }> = (props) => {
-  const { id, name, onSelect } = props;
+  const { id, children, selectable, onSelect } = props;
   return (
     <>
       <Hr />
-      <Button
-        inverted
-        onClick={() => onSelect(id)}
-        className="items-list__item"
-      >
-        <Label className="items-list__item-label">{name}</Label>
-        <Header className="items-list__item-id">#{id}</Header>
-      </Button>
+      {selectable ? (
+        <Button
+          inverted
+          onClick={() => onSelect(id)}
+          className="items-list__item"
+        >
+          <Label className="items-list__item-label">{children}</Label>
+          <Header className="items-list__item-id">#{id}</Header>
+        </Button>
+      ) : (
+        <Layout flow="row" className="items-list__item">
+          <Label className="items-list__item-label">{children}</Label>
+          <Header className="items-list__item-id">#{id}</Header>
+        </Layout>
+      )}
     </>
   );
 };
 
 const ItemSelectionPopup: React.FC<ItemSelectionPopupProps> = (props) => {
-  const { items, onSelect, zIndex, header, children, ...rest } = props;
+  const {
+    items,
+    onSelect,
+    zIndex,
+    selectable,
+    header,
+    status,
+    children,
+    ...rest
+  } = props;
 
   return (
     <Popup {...rest} size="md" closeable noPadding>
@@ -60,23 +80,31 @@ const ItemSelectionPopup: React.FC<ItemSelectionPopupProps> = (props) => {
           </Header>
         </Layout>
       </PopupTopBar>
-      <Layout padding="md" flex="1" className="items-list">
-        {children}
-        {/* <Hr /> */}
-        {items
-          // .filter((item) => isIncludes(item.name))
-          .map((item) => (
-            <Item
-              key={item.id}
-              href={item.href}
-              {...item}
-              onSelect={() => {
-                onSelect(item);
-                if (rest.onToggle) rest.onToggle(false);
-              }}
-            />
-          ))}
-      </Layout>
+      <WithLoader status={status ?? splitStatus("idle")}>
+        <Layout padding="md" flex="1" className="items-list">
+          {children}
+          {/* <Hr /> */}
+
+          {items
+            // .filter((item) => isIncludes(item.name))
+            .map((item) => {
+              const content = item.content ?? item.name;
+              return (
+                <Item
+                  key={item.id}
+                  selectable={selectable}
+                  id={item.id}
+                  onSelect={() => {
+                    onSelect(item);
+                    if (rest.onToggle) rest.onToggle(false);
+                  }}
+                >
+                  {content}
+                </Item>
+              );
+            })}
+        </Layout>
+      </WithLoader>
     </Popup>
   );
 };

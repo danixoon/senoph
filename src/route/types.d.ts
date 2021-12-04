@@ -62,7 +62,7 @@ declare namespace Api {
     // declare namespace Api.Model {
     type Phone = RequiredId<DB.PhoneAttributes>;
     type PhoneType = RequiredId<DB.PhoneTypeAttributes>;
-    type PhoneCategory = RequiredId<DB.PhoneCategoryAttributes>;
+    type Category = RequiredId<DB.CategoryAttributes> & { phoneIds: number[] };
     type PhoneModel = RequiredId<DB.PhoneModelAttributes>;
     type Department = RequiredId<DB.DepartmentAttributes>;
     type Placement = RequiredId<DB.PlacementAttributes>;
@@ -78,7 +78,7 @@ declare namespace Api {
     phoneType: Models.PhoneType;
     phoneModel: Models.PhoneModel;
     department: Models.Department;
-    phoneCategory: Models.PhoneCategory;
+    category: Models.Category;
     user: Models.User;
     holder: Models.Holder;
     holding: Models.Holder;
@@ -204,6 +204,7 @@ declare namespace Api {
             comissioningDate: Date;
             assemblyDate: Date;
             departmentId: number;
+            holderId: number;
             category: number;
             sortKey: string;
             sortDir: "asc" | "desc";
@@ -236,7 +237,13 @@ declare namespace Api {
       | (() => RouteHandler<
           "/phone/holdings",
           ItemsResponse<Api.Models.Holding>,
-          { phoneIds: number[] },
+          { phoneIds: number[]; orderDate?: string; orderKey?: string },
+          {}
+        >)
+      | (() => RouteHandler<
+          "/phone/categories",
+          ItemsResponse<Api.Models.Category>,
+          { phoneIds: number[]; actDate?: string; actKey?: string },
           {}
         >)
       | (() => RouteHandler<
@@ -244,7 +251,11 @@ declare namespace Api {
           ItemsResponse<Api.Models.Holding>,
           {
             ids?: number[];
-            status?: CommitStatus;
+            status?: CommitStatus | "based";
+            departmentId?: number;
+            holderId?: number;
+            orderDate?: Date;
+            orderKey?: string;
           },
           {}
         >)
@@ -262,9 +273,25 @@ declare namespace Api {
         >)
       | (() => RouteHandler<
           "/categories",
-          ItemsResponse<Api.Models.PhoneCategory>,
+          ItemsResponse<Api.Models.Category>,
           {
             ids?: number[];
+            status?: CommitStatus | "based";
+            actDate?: Date;
+            actKey?: string;
+            categoryKey?: CategoryKey;
+            pending?: boolean;
+          },
+          {}
+        >)
+      | (() => RouteHandler<
+          "/categories/commit",
+          ItemsResponse<{
+            categoryId: number;
+            commits: ({ phoneId: number } & WithCommit)[];
+          }>,
+          {
+            // ids?: number[];
             status?: CommitStatus;
           },
           {}
@@ -384,12 +411,13 @@ declare namespace Api {
         >)
       | (() => RouteHandler<
           "/category",
-          {},
+          { id: number },
           {},
           {
-            categoryKey: string;
+            categoryKey: CategoryKey;
             actFile: FileList;
             actDate: Date;
+            actKey: string;
             phoneIds: number[];
 
             description?: string;
@@ -458,6 +486,16 @@ declare namespace Api {
           {}
         >)
       | (() => RouteHandler<
+          "/category",
+          {},
+          {
+            action: "remove" | "add";
+            phoneIds: number[];
+            categoryId: number;
+          },
+          {}
+        >)
+      | (() => RouteHandler<
           "/phone",
           {},
           { id: number },
@@ -486,23 +524,13 @@ declare namespace Api {
           {},
           {},
           { phoneIds: number[]; holdingId: number; action: CommitActionType }
+        >)
+      | (() => RouteHandler<
+          "/commit/category/phone",
+          {},
+          {},
+          { phoneIds: number[]; categoryId: number; action: CommitActionType }
         >);
-    // | (() => RouteHandler<
-    // "/commit/holding",
-    // {},
-    // { holdingId: number; action: CommitActionType },
-    // {}
-    // >);
-    // | (() => RouteHandler<
-    //     "/commit/entity",
-    //     {},
-    //     {
-    //       target: CommitTargetName;
-    //       targetId: number;
-    //       action: CommitActionType;
-    //     },
-    //     any
-    //   >);
 
     delete:
       | (() => RouteHandler<

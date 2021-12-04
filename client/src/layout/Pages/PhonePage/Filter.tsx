@@ -98,10 +98,10 @@ const Filter: React.FC<{
             name="category"
             label="Категория"
             items={[
-              { id: 1, label: "1" },
-              { id: 2, label: "2" },
-              { id: 3, label: "3" },
-              { id: 4, label: "4" },
+              { id: "1", label: "I (Прибыло, на гарантии)" },
+              { id: "2", label: "II (Нет гарантии, исправно)" },
+              { id: "3", label: "III (Неисправно)" },
+              { id: "4", label: "IV (Подлежит списанию)" },
             ]}
           />
 

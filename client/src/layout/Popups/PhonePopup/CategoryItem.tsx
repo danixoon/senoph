@@ -11,41 +11,55 @@ const CategoryItem: React.FC<{
   onDelete: () => void;
   deletable?: boolean;
   actDate: Date;
+  actUrl: string;
 }> = (props) => {
-  const { category, actDate, deletable, onDelete } = props;
+  const { category, actDate, actUrl, deletable, onDelete } = props;
+
   let cat = "?";
   switch (category) {
     case 1:
-      cat = "I";
+      cat = "I (Прибыло, на гарантии)";
       break;
     case 2:
-      cat = "II";
+      cat = "II (Нет гарантии, исправно)";
       break;
     case 3:
-      cat = "III";
+      cat = "III (Неисправно)";
       break;
     case 4:
-      cat = "IV";
+      cat = "IV (Подлежит списанию)";
       break;
   }
 
-  const labelStyle = { style: { margin: "0 0.25rem" }, weight: "bold" } as Pick<
-    LabelProps,
-    "style" | "weight"
-  >;
+  const labelStyle = {
+    style: { margin: "0 0.25rem", display: "inline" },
+    weight: "bold",
+  } as Pick<LabelProps, "style" | "weight">;
 
   return (
-    <Layout flow="row" className="category-item">
+    <Layout flow="column" className="category-item">
       <Badge onClick={() => {}} className="category-item__level">
         {cat}
       </Badge>
-      <Label {...labelStyle}>Акт от</Label>
-      <Link>{actDate.toLocaleDateString()}</Link>
-      {deletable && (
-        <Button onClick={onDelete} style={{ marginLeft: "auto" }} inverted color="primary">
-          <Icon.X />
-        </Button>
-      )}
+      <Layout flow="row">
+        <Label {...labelStyle}>
+          <Link native inline href={`/upload/${actUrl}`}>
+            Акт
+          </Link>{" "}
+          от
+        </Label>
+        <Link>{actDate.toLocaleDateString()}</Link>
+        {deletable && (
+          <Button
+            onClick={onDelete}
+            style={{ marginLeft: "auto" }}
+            inverted
+            color="primary"
+          >
+            <Icon.X />
+          </Button>
+        )}
+      </Layout>
     </Layout>
   );
 };

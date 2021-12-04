@@ -57,7 +57,7 @@ const AuthPage: React.FC<AuthPageProps> = (props) => {
         <Input
           {...bind}
           size="lg"
-          label="Имя пользователя"
+          label="Логин пользователя"
           name="username"
           type="username"
           disabled={status.isLoading}

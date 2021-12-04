@@ -34,7 +34,7 @@ type ValidatorConfig<Q = any, B = any> = {
 
 type TesterContext = { property: string; target: ValidationTarget };
 type Tester = {
-  mapper?: (this: TesterContext, value: string) => any;
+  mapper?: (this: TesterContext, value?: string) => any;
   test: (this: TesterContext, value: any) => boolean | string;
   message?: string;
 };
@@ -46,6 +46,7 @@ export const tester = () => {
     isDate: () => {
       testers.push({
         mapper: function (v) {
+          if (!v) return null;
           try {
             const date = new Date(v);
             return isNaN(date.getTime()) ? null : date;
@@ -79,7 +80,7 @@ export const tester = () => {
     isNumber: () => {
       testers.push({
         mapper: function (v) {
-          return parseInt(v);
+          return typeof v !== "undefined" ? parseInt(v) : NaN;
         },
         test: function (v) {
           return !isNaN(v)
@@ -127,7 +128,7 @@ export const tester = () => {
         mapper: function (v) {
           if (Array.isArray(v)) return v;
 
-          const value = v.toString() as string;
+          const value = v?.toString() ?? ("" as string);
           const values = value.split(",");
           return typeof schema === "string"
             ? values.map((value) =>
@@ -143,6 +144,12 @@ export const tester = () => {
       const result: ValidationResult = { isValid: true, value };
       // TODO: Доделать этот валидатор ААА
       if (!isRequired && value === undefined) return result;
+      else if (isRequired && value === undefined)
+        return {
+          isValid: false,
+          value: undefined,
+          message: `Параметр '${key}' обязателен`,
+        };
 
       for (const t of testers) {
         const self = { property: key, target };
@@ -170,15 +177,15 @@ export const tester = () => {
       return proxy;
     },
     required: () => {
-      testers.push({
-        test: function (v) {
-          const prop = this?.property;
-          return (
-            (v == null && `Параметр ${prop ? `'${prop}' ` : ""}обязателен`) ||
-            true
-          );
-        },
-      });
+      // testers.push({
+      //   test: function (v) {
+      //     const prop = this?.property;
+      //     return (
+      //       (v == null && `Параметр ${prop ? `'${prop}' ` : ""}обязателен`) ||
+      //       true
+      //     );
+      //   },
+      // });
       isRequired = true;
       return proxy;
     },

@@ -1,11 +1,11 @@
 import * as React from "react";
 
 export type InputBind<T = any> = {
-  input: PartialNullable<T>;
+  input: PartialType<T, null | string>;
   onChange: HookOnChange;
 };
 
-export type SetInput<T = any> = (input: T) => void;
+export type SetInput<T = any> = (input: T, force?: boolean) => void;
 
 export type InputFileBind<T = any> = {
   input: PartialNullable<T>;
@@ -20,14 +20,9 @@ export type InputFileHook<T = any> = [
   HTMLInputElement | null
 ];
 
-export type InputHookPrepare<P> = <
-  T extends PartialType<P, null | string>,
-  K extends keyof T
->(
-  key: K,
-  value: T[K],
-  input: T
-) => T;
+export type InputHookPrepare<P> = <T extends PartialType<P, null | string>>(
+  nextInput: T
+) => T | null;
 
 export const handleChangeEvent = <T>(
   input: T,
@@ -69,11 +64,8 @@ export const useInput = function <T>(
     T,
     null | string
   >,
-  prepareValue: InputHookPrepare<PartialType<T, null | string>> = (
-    key,
-    value,
-    input
-  ) => input
+  prepareValue: InputHookPrepare<PartialType<T, null | string>> = (nextInput) =>
+    nextInput
 ): InputHook<PartialType<T, null | string>> {
   const [input, setInput] = React.useState<PartialType<T, null | string>>(
     () => defaultValue
@@ -82,16 +74,24 @@ export const useInput = function <T>(
   const onChange: HookOnChange = (e) => {
     let changedInput = handleChangeEvent(input, e);
 
-    changedInput = prepareValue(
-      e.target.name as any,
-      e.target.value as any,
-      changedInput
-    ) as any;
-
-    setInput(changedInput);
+    changedInput = prepareValue(changedInput);
+    if (changedInput) setInput(changedInput);
   };
 
-  return [{ input, onChange }, setInput];
+  return [
+    { input, onChange },
+    (values, force) => {
+      // let result = { ...values };
+      // for (const key in values)
+      if (force) {
+        setInput(values);
+        return;
+      }
+
+      const result = prepareValue(values);
+      if (result) setInput(result);
+    },
+  ];
 };
 
 export const useFileInput = function <

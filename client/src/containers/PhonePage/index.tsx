@@ -47,7 +47,8 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
   const dispatch = useAppDispatch();
   const { filter, mode, ...rest } = useAppSelector((state) => state.phone);
   const filterHook = useStoreQueryInput(filter, (q) =>
-    dispatch(updateFilter(q))
+    // TODO: Избавиться от any
+    dispatch(updateFilter(q as any))
   );
 
   const { path, url, params } = useRouteMatch();

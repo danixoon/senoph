@@ -69,6 +69,9 @@ export default class Holding extends Model<
   @Column(DataType.INTEGER)
   authorId: number;
 
+  @BelongsTo(() => User)
+  author?: User;
+
   @AllowNull(true)
   @Validate({ isIn: [["create-pending", "delete-pending"]] })
   @Default("create-pending")
@@ -86,7 +89,9 @@ export default class Holding extends Model<
     args.attributes.statusAt = new Date().toISOString();
   }
 
-  @BelongsToMany(() => Phone, () => HoldingPhone)
+  @BelongsToMany(() => Phone, {
+    through: { model: () => HoldingPhone, scope: { status: null } },
+  })
   phones?: Phone[];
 
   static async getLast(phoneIds: number[]) {

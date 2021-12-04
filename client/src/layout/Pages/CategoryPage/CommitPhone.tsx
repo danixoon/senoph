@@ -3,54 +3,52 @@ import Icon from "components/Icon";
 import { useFetchConfigMap } from "hooks/api/useFetchConfigMap";
 import React from "react";
 import { extractStatus, parseItems } from "store/utils";
-import { HoldingPageProps } from ".";
+
 import ActionBox from "components/ActionBox";
 import InfoBanner from "components/InfoBanner";
 import { SpoilerPopupButton } from "components/SpoilerPopup";
 import Table, { TableColumn } from "components/Table";
-import { getTableColumns } from "./utils";
+
 import { extractItemsHook, getLocalDate } from "utils";
 import Link from "components/Link";
 import Span from "components/Span";
 
 const useContainer = () => {
   const { holders, departments } = useFetchConfigMap();
-  const [commit, commitInfo] = api.useCommitHoldingPhoneMutation();
-  const holdingPhoneCommits = parseItems(
-    api.useFetchHoldingPhoneCommitsQuery({})
+  const [commit, commitInfo] = api.useCommitCategoryPhoneMutation();
+  const categoryPhoneCommits = parseItems(
+    api.useFetchCategoryPhoneCommitsQuery({})
   );
 
-  const holdings = parseItems(
-    api.useFetchHoldingsQuery(
-      { ids: holdingPhoneCommits.data.items.map((v) => v.holdingId) },
-      { skip: holdingPhoneCommits.data.items.length === 0 }
+  const categories = parseItems(
+    api.useFetchCategoriesQuery(
+      { ids: categoryPhoneCommits.data.items.map((v) => v.categoryId) },
+      { skip: categoryPhoneCommits.data.items.length === 0 }
     )
   );
 
-  const mappedHoldings = holdingPhoneCommits.data.items.map((item) => {
-    const targetHolding = holdings.data.items.find(
-      (holding) => holding.id === item.holdingId
+  const mappedCategories = categoryPhoneCommits.data.items.map((item) => {
+    const targetCategory = categories.data.items.find(
+      (cat) => cat.id === item.categoryId
     );
-    return { ...item, ...targetHolding };
+    return { ...item, ...targetCategory };
   });
 
   return {
-    holdingPhoneCommits,
+    categoryPhoneCommits,
     commit,
     commitStatus: extractStatus(commitInfo),
     holders,
     departments,
-    holdings: mappedHoldings,
+    categories: mappedCategories,
   };
 };
 
-// type TableItem = GetItemType<Api.GetResponse<"get", "/holdings/commit">>;
-
-const CommitPhoneContent: React.FC<HoldingPageProps> = (props) => {
-  const { holdings, commit, commitStatus, departments, holders } =
+export const CommitPhoneContent: React.FC<{}> = (props) => {
+  const { categories, commit, commitStatus, departments, holders } =
     useContainer();
 
-  const columns: TableColumn<ArrayElement<typeof holdings>>[] = [
+  const columns: TableColumn<ArrayElement<typeof categories>>[] = [
     {
       key: "actions",
       header: "",
@@ -61,7 +59,7 @@ const CommitPhoneContent: React.FC<HoldingPageProps> = (props) => {
             onClick={() =>
               commit({
                 action: "approve",
-                holdingId: item.holdingId,
+                categoryId: item.categoryId,
                 phoneIds: item.commits.map((c) => c.phoneId),
               })
             }
@@ -72,7 +70,7 @@ const CommitPhoneContent: React.FC<HoldingPageProps> = (props) => {
             onClick={() =>
               commit({
                 action: "decline",
-                holdingId: item.holdingId,
+                categoryId: item.categoryId,
                 phoneIds: item.commits.map((c) => c.phoneId),
               })
             }
@@ -87,21 +85,23 @@ const CommitPhoneContent: React.FC<HoldingPageProps> = (props) => {
       key: "id",
       size: "30px",
       mapper: (v, item) => (
-        <Link href={`/holding/view#${item.holdingId}`}>#{item.holdingId}</Link>
+        <Link href={`/category/view#${item.categoryId}`}>
+          #{item.categoryId}
+        </Link>
       ),
     },
     {
-      header: "Номер документа",
-      key: "orderId",
+      header: "Номер акта",
+      key: "actKey",
       size: "150px",
-      mapper: (v, item) => item.orderKey,
+      mapper: (v, item) => item.actKey,
     },
     {
-      header: "Дата документа",
-      key: "orderDate",
+      header: "Дата акта",
+      key: "actDate",
       size: "150px",
       type: "date",
-      mapper: (v, item) => item.orderDate,
+      mapper: (v, item) => item.actDate,
     },
     {
       key: "addedIds",
@@ -141,17 +141,11 @@ const CommitPhoneContent: React.FC<HoldingPageProps> = (props) => {
 
   return (
     <>
-      {holdings.length === 0 ? (
-        <InfoBanner
-          // href="/phone/edit"
-          // hrefContent="средство связи"
-          text="Изменения движений отсутствуют."
-        />
+      {categories.length === 0 ? (
+        <InfoBanner text="Изменения категорий отсутствуют." />
       ) : (
-        <Table columns={columns} items={holdings} />
+        <Table columns={columns} items={categories} />
       )}
     </>
   );
 };
-
-export default CommitPhoneContent;

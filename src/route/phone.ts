@@ -12,7 +12,7 @@ import {
   UniqueConstraintError,
   WhereOperators,
 } from "sequelize";
-import PhoneCategory from "@backend/db/models/phoneCategory.model";
+import Category from "@backend/db/models/category.model";
 import Department from "@backend/db/models/department.model";
 import { convertValues } from "@backend/middleware/converter";
 import { AppRouter } from "../router";
@@ -58,11 +58,7 @@ router.get(
   transactionHandler(async (req, res) => {
     const { id } = req.query;
     const phone = await Phone.unscoped().findByPk(id, {
-      include: [
-        PhoneModel,
-        PhoneCategory,
-        { model: Holding, include: [Holder] },
-      ],
+      include: [PhoneModel, Category, { model: Holding, include: [Holder] }],
       order: [[Sequelize.literal("`holdings.orderDate`"), "ASC"]],
     });
 
@@ -82,16 +78,23 @@ router.get(
       // status: tester(),
       // ids: tester().array("int"),
       phoneIds: tester().array("int"),
+      orderDate: tester().isDate(),
+      orderKey: tester(),
       // latest: tester().isBoolean(),
     },
   }),
   transactionHandler(async (req, res) => {
     // const { latest, phoneIds } = req.query;
-
+    const { phoneIds, orderDate, orderKey } = req.query;
     const { user } = req.params;
 
     // const filter = new Filter(req.query).add("status");
-    const filter = new Filter({ id: req.query.phoneIds }).add("id", Op.in);
+    const filter = new Filter({ id: phoneIds }).add("id", Op.in);
+    const holdingFilter = new Filter({ orderKey, orderDate })
+      .add("orderKey", Op.substring)
+      .add("orderDate");
+    // .add("orderKey", Op.substring)
+    // .add("orderDate");
 
     const holdings = await Holding.findAll({
       include: [
@@ -99,12 +102,12 @@ router.get(
           model: Phone,
           where: filter.where,
           attributes: ["id"],
-          // required: (req.query.phoneIds ?? []).length > 0,
+          required: (req.query.phoneIds ?? []).length > 0,
         },
         Holder,
       ],
       order: [["orderDate", "ASC"]],
-      // where: filter.where,
+      where: holdingFilter.where,
     });
 
     res.send(
@@ -174,7 +177,8 @@ router.get(
       amount: tester().isNumber(),
       factoryKey: tester(),
       category: tester(),
-      departmentId: tester(),
+      departmentId: tester().isNumber(),
+      holderId: tester().isNumber(),
       inventoryKey: tester(),
       offset: tester().isNumber(),
       phoneModelId: tester().isNumber(),
@@ -196,6 +200,7 @@ router.get(
       amount = 50,
       offset = 0,
       category,
+      holderId,
       phoneModelId,
       departmentId,
       phoneTypeId,
@@ -216,7 +221,7 @@ router.get(
       ? [
           orderByKey(sortKey, sortDir ?? "asc", {
             modelName: [PhoneModel, "model", "name"],
-            category: [PhoneCategory, "category", "category"],
+            category: [Category, "category", "category"],
             id: "id",
             inventoryKey: "inventoryKey",
             factoryKey: "factoryKey",
@@ -225,7 +230,7 @@ router.get(
             accountingDate: "accountingDate",
           }),
         ]
-      : [["id", "DESC"] as OrderItem];
+      : [["id", "ASC"] as OrderItem];
 
     const filter = new WhereFilter<DB.PhoneAttributes>();
     filter.on("id").optional(Op.in, ids).optional(Op.notIn, exceptIds);
@@ -251,22 +256,49 @@ router.get(
     modelFilter.on("id").optional(Op.eq, phoneModelId);
     modelFilter.on("phoneTypeId").optional(Op.eq, phoneTypeId);
 
+    // const categoryFilter = new WhereFilter<DB.CategoryAttributes>();
+    // categoryFilter.on("categoryKey").optional(Op.eq, category);
+
     const items = await Phone.findAll({
       order,
       where: filter.where,
       include: [
-        PhoneCategory,
+        // { model: Category, where: categoryFilter.where },
         { model: PhoneModel, where: modelFilter.where },
-        Holding,
+        { model: Holding },
       ],
       //attributes: ["id"],
     });
 
-    const phones = items.slice(offset, offset + amount);
+    const filteredItems =
+      // typeof departmentId === "undefined"
+      // ? items
+      items.filter((item) => {
+        const lastHolding = [...(item.holdings ?? [])].sort((a, b) =>
+          a.orderDate > b.orderDate ? 1 : -1
+        )[0];
+
+        const isDepartment = typeof departmentId !== "undefined";
+        const isHolder = typeof holderId !== "undefined";
+
+        // if (isDepartment && lastHolding?.departmentId !== departmentId)
+        // return false;
+        // if (isHolder && lastHolding?.holderId !== holderId) return false;
+
+        return (
+          (isHolder ? lastHolding?.holderId === holderId : true) &&
+          (isDepartment ? lastHolding?.departmentId === departmentId : true)
+        );
+
+        // return true;
+      });
+    const phones = filteredItems.slice(offset, offset + amount);
 
     // const phones = await Phone.withHolders(ofsetted);
 
-    res.send(prepareItems(phones as Api.Models.Phone[], items.length, amount));
+    res.send(
+      prepareItems(phones as Api.Models.Phone[], filteredItems.length, offset)
+    );
 
     // const phoneIds = items.map((phone) => phone.id);
 

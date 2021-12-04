@@ -9,6 +9,7 @@ import HoldingPhone from "../models/holdingPhone.model";
 type HoldingCreation = {
   phoneIds: number[];
   holderId: number;
+  departmentId: number;
   orderDate: Date;
   orderKey: string;
   orderUrl?: string;

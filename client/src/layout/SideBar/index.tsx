@@ -29,25 +29,29 @@ const SideBar: React.FC<SideBar> = (props) => {
       <Spoiler
         opened={page === "phone"}
         onToggle={page === "phone" ? handleSpoilerToggle : undefined}
-        label="Средства связи"
+        label={
+          <>
+            Средства связи <Icon.Phone style={{ marginLeft: "auto" }} inline />
+          </>
+        }
       >
         <Layout className="sidebar__group">
           <LinkItemContainer
             href="/phone/view"
             withQuery={(loc) => loc.pathname.startsWith("/phone/edit")}
           >
+            <Icon.Eye style={{ marginRight: "0.5rem" }} />
             Просмотр
-            <Icon.Eye style={{ marginLeft: "auto" }} />
           </LinkItemContainer>
           <LinkItemContainer
             href="/phone/edit"
             withQuery={(loc) => loc.pathname.startsWith("/phone/view")}
           >
+            <Icon.Settings style={{ marginRight: "0.5rem" }} />
             Управление
-            <Icon.Settings style={{ marginLeft: "auto" }} />
           </LinkItemContainer>
           <LinkItemContainer href="/phone/commit/actions">
-            Действия <Icon.DownloadCloud style={{ marginLeft: "auto" }} />
+            <Icon.DownloadCloud style={{ marginRight: "0.5rem" }} /> Действия
           </LinkItemContainer>
           {/* <LinkItemContainer href="/phone/commit/delete">
             Удаления <Icon.X style={{ marginLeft: "auto" }} />
@@ -60,31 +64,58 @@ const SideBar: React.FC<SideBar> = (props) => {
       <Spoiler
         opened={page === "holding"}
         onToggle={page === "holding" ? handleSpoilerToggle : undefined}
-        label="Движения"
+        label={
+          <>
+            Движения
+            <Icon.User inline style={{ marginLeft: "auto" }} />
+          </>
+        }
       >
         <Layout className="sidebar__group">
           <LinkItemContainer href="/holding/view">
-            Просмотр <Icon.Eye style={{ marginLeft: "auto" }} />
+            <Icon.Eye style={{ marginRight: "0.5rem" }} /> Просмотр
           </LinkItemContainer>
           <LinkItemContainer href="/holding/commit">
-            Подтверждения <Icon.Check style={{ marginLeft: "auto" }} />
+            <Icon.Check style={{ marginRight: "0.5rem" }} /> Подтверждения
           </LinkItemContainer>
           <LinkItemContainer href="/holding/phone/commit">
-            Изменения <Icon.Edit3 style={{ marginLeft: "auto" }} />
+            <Icon.Edit3 style={{ marginRight: "0.5rem" }} /> Изменения
+          </LinkItemContainer>
+          <LinkItemContainer href="/holding/update">
+            <Icon.UserPlus size="md" style={{ marginRight: "0.5rem" }} />
+            Обновление
           </LinkItemContainer>
           <LinkItemContainer href="/holding/create">
-            Создание <Icon.Plus size="md" style={{ marginLeft: "auto" }} />
+            <Icon.Plus size="md" style={{ marginRight: "0.5rem" }} /> Создание
           </LinkItemContainer>
         </Layout>
       </Spoiler>
       <Spoiler
         opened={page === "category"}
         onToggle={page === "category" ? handleSpoilerToggle : undefined}
-        label="Категорирование"
+        label={
+          <>
+            Категорирование
+            <Icon.Key inline style={{ marginLeft: "auto" }} />
+          </>
+        }
       >
         <Layout className="sidebar__group">
-          <LinkItemContainer href="/category/view">Просмотр</LinkItemContainer>
+          <LinkItemContainer href="/category/view">
+            <Icon.Eye style={{ marginRight: "0.5rem" }} /> Просмотр
+          </LinkItemContainer>
+          <LinkItemContainer href="/category/commit">
+            <Icon.Check style={{ marginRight: "0.5rem" }} /> Подтверждения
+          </LinkItemContainer>
+          <LinkItemContainer href="/category/phone/commit">
+            <Icon.Edit3 style={{ marginRight: "0.5rem" }} /> Изменения
+          </LinkItemContainer>
+          <LinkItemContainer href="/category/update">
+            <Icon.UserPlus size="md" style={{ marginRight: "0.5rem" }} />
+            Обновление
+          </LinkItemContainer>
           <LinkItemContainer href="/category/create">
+            <Icon.Plus size="md" style={{ marginRight: "0.5rem" }} />
             Создание
           </LinkItemContainer>
         </Layout>
@@ -93,29 +124,34 @@ const SideBar: React.FC<SideBar> = (props) => {
         <Spoiler
           opened={page === "admin"}
           onToggle={page === "admin" ? handleSpoilerToggle : undefined}
-          label="Администрирование"
+          label={
+            <>
+              Администрирование{" "}
+              <Icon.Database inline style={{ marginLeft: "auto" }} />
+            </>
+          }
         >
           <Layout className="sidebar__group">
             <LinkItemContainer href="/admin/users">
-              Пользователи <Icon.User style={{ marginLeft: "auto" }} />
+              <Icon.User style={{ marginRight: "0.5rem" }} /> Пользователи
             </LinkItemContainer>
             <LinkItemContainer href="/admin/departments">
-              Подразделения <Icon.Home style={{ marginLeft: "auto" }} />
+              <Icon.Home style={{ marginRight: "0.5rem" }} /> Подразделения
             </LinkItemContainer>
             <LinkItemContainer href="/admin/placements">
-              Местоположения <Icon.Globe style={{ marginLeft: "auto" }} />
+              <Icon.Globe style={{ marginRight: "0.5rem" }} /> Местоположения
             </LinkItemContainer>
             <LinkItemContainer href="/admin/holders">
-              Владельцы <Icon.Star style={{ marginLeft: "auto" }} />
+              <Icon.Star style={{ marginRight: "0.5rem" }} /> Владельцы
             </LinkItemContainer>
             <LinkItemContainer href="/admin/phone">
-              Типы <Icon.Folder style={{ marginLeft: "auto" }} />
+              <Icon.Folder style={{ marginRight: "0.5rem" }} /> Типы
             </LinkItemContainer>
             <LinkItemContainer href="/admin/models">
-              Модели <Icon.Phone style={{ marginLeft: "auto" }} />
+              <Icon.Phone style={{ marginRight: "0.5rem" }} /> Модели
             </LinkItemContainer>
             <LinkItemContainer href="/admin/logs">
-              История (логи) <Icon.Cloud style={{ marginLeft: "auto" }} />
+              <Icon.Cloud style={{ marginRight: "0.5rem" }} /> История (логи)
             </LinkItemContainer>
           </Layout>
         </Spoiler>

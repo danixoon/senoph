@@ -33,10 +33,12 @@ const HolderSelectionPopupContainer: React.FC<HolderSelectionPopupContainerProps
       <ItemSelectionPopup
         items={
           holders?.items.map((item) => ({
+            content: splitHolderName(item),
             name: splitHolderName(item),
             ...item,
           })) ?? []
         }
+        selectable
         onSelect={(item) => {
           onSelect(item.id, item.name);
         }}

@@ -1,11 +1,7 @@
 @require 'stylus/theme.styl'
 
 
-.cell_checkbox
-  padding: 0px
-  width: 2rem
-  // display: flex
-  
+
 
 tr
   height: 2rem
@@ -18,8 +14,10 @@ tr
     &.row_selected
       
       @extend .focus
+      border: 0
       & > td
-
+        border-color: transparent
+/* 
         border-color: colors.primary
         
 
@@ -29,7 +27,7 @@ tr
           border-right-color: colors.primary
         
         border-right-color: transparent
-        border-left-color: transparent
+        border-left-color: transparent */
 
 td
   @extend .b_t, .padding_md
@@ -67,7 +65,15 @@ td
       &:after
         transform: scaleY(1)
         visibility: visible
-      
+
+
+.cell
+  &_checkbox
+    padding: 0px
+    width: 2rem
+  &_wrap
+    white-space: normal !important
+  
         
     
 
@@ -92,3 +98,4 @@ thead
     white-space: pre
     overflow: hidden
     text-overflow: ellipsis
+

@@ -98,7 +98,7 @@ type ParseItems = <K>(query: { data?: ItemsResponse<K> } & Statusable) => {
 
 export const parseItems: ParseItems = (query) => {
   const { data, ...info } = query;
-  const status = extractStatus(info);
+  const status = extractStatus(info, true);
 
   return {
     data: data ?? { items: [], total: 0, offset: 0 },

@@ -8,11 +8,11 @@ declare type ChangesTargetName =
   | "holder"
   | "holding"
   | "phone"
-  | "phoneCategory";
+  | "category";
 
 declare type CommitTargetName = keyof Pick<
   Api.ModelMap,
-  "phone" | "phoneCategory" | "phoneModel" | "holding"
+  "phone" | "category" | "phoneModel" | "holding"
 >;
 
 declare type ChangedDataType = "string" | "date" | "number";
@@ -25,13 +25,15 @@ declare type HoldingReason =
   | "other"
   | "order";
 
+declare type CategoryKey = "1" | "2" | "3" | "4";
+
 declare type WithCommit = {
   status?: CommitStatus | null;
   statusAt?: string;
 };
 
 // declare type WithCommitStatus = { status: CommitStatus };
-declare type WithAuthor = { authorId: number };
+declare type WithAuthor = { authorId: number; author?: DB.UserAttributes };
 
 // type SeqModel<A, B> = import("sequelize").Model<A, B>;
 
@@ -68,13 +70,21 @@ declare namespace DB {
     phoneModel?: DB.PhoneModelAttributes;
   }>;
 
-  type PhoneCategoryAttributes = Attributes<{
-    categoryKey: string;
+  type CategoryAttributes = Attributes<{
+    categoryKey: CategoryKey;
     actDate: string;
-
+    actKey: string;
     actUrl: string;
-    phoneId: number;
     description?: string;
+    phones?: PhoneAttributes[];
+  }> &
+    WithCommit &
+    WithAuthor;
+
+  type CategoryPhoneAttributes = Attributes<{
+    categoryId: number;
+    phoneId: number;
+    category?: CategoryAttributes;
     phone?: PhoneAttributes;
   }> &
     WithCommit;
@@ -134,7 +144,7 @@ declare namespace DB {
     model?: PhoneModelAttributes;
 
     // holders?: HolderAttributes[];
-    categories?: PhoneCategoryAttributes[];
+    categories?: CategoryAttributes[];
     holdings?: HoldingAttributes[];
     // holders?: HolderAttributes[];
   }> &
@@ -170,6 +180,7 @@ declare namespace DB {
     | "category"
     | "holding"
     | "holdingPhone"
+    | "categoryPhone"
     | "phoneType"
     | "department"
     | "placement"
