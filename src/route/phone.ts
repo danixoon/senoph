@@ -230,7 +230,7 @@ router.get(
             accountingDate: "accountingDate",
           }),
         ]
-      : [["id", "DESC"] as OrderItem];
+      : [["id", "ASC"] as OrderItem];
 
     const filter = new WhereFilter<DB.PhoneAttributes>();
     filter.on("id").optional(Op.in, ids).optional(Op.notIn, exceptIds);

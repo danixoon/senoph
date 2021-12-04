@@ -15,6 +15,7 @@ type CategoryCreation = {
   categoryKey: CategoryKey;
   actKey: string;
   actUrl: string;
+  description?: string;
 };
 
 const create = async (

@@ -26,6 +26,8 @@ import Input from "components/Input";
 import Layout from "components/Layout";
 import { getLastHolding } from "hooks/misc/holding";
 import Span from "components/Span";
+import InfoBanner from "components/InfoBanner";
+import { useNotice } from "hooks/useNotice";
 
 const useContainer = () => {
   const { search } = useLocation();
@@ -44,6 +46,7 @@ const useContainer = () => {
   const phones = parseItems(fetchedPhones);
   return {
     phones,
+    phoneIds,
     category: {
       create: createCategory,
       status: extractStatus(createCategoryInfo),
@@ -73,7 +76,7 @@ const columns: TableColumn[] = [
 ];
 
 export const CreateContent: React.FC<{}> = (props) => {
-  const { phones, category } = useContainer();
+  const { phones, category, phoneIds } = useContainer();
 
   const getHolder = useHolder();
   const getDepartment = useDepartment();
@@ -94,17 +97,28 @@ export const CreateContent: React.FC<{}> = (props) => {
     };
   });
 
-  return (
+  useNotice(category.status);
+
+  return phoneIds.length === 0 ? (
+    <InfoBanner
+      href="/phone/edit"
+      hrefContent="средство связи"
+      text="Для создания категории выберите"
+    />
+  ) : (
     <>
       {/* <Layout> */}
+
       <Form
         style={{ flexFlow: "row" }}
         json={false}
         input={{
           ...bind.input,
           ...bindFile.files,
+          phoneIds,
         }}
         onSubmit={(data) => {
+          category.create(data);
           // onSubmit(data);
           // noticeContext.createNotice("Категория создана");
         }}
@@ -164,7 +178,10 @@ export const CreateContent: React.FC<{}> = (props) => {
       </Form>
       {/* </Layout> */}
       <Hr />
-      <Header align="right">Затрагиваемые средства связи</Header>
+      <Header align="right">
+        Затрагиваемые средства связи (
+        {phones.data?.items.length ?? phoneIds.length})
+      </Header>
       <Table items={tableItems} columns={columns} />
     </>
   );

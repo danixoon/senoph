@@ -22,7 +22,7 @@ export type InputProps<T = any> = OverrideProps<
     required?: boolean;
     clearable?: boolean;
     onClear?: () => void;
-
+    blurrable?: boolean;
     inputProps?: React.InputHTMLAttributes<HTMLInputElement>;
   }
 >;
@@ -38,6 +38,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>((props, ref) => {
     required,
     placeholder,
     clearable,
+    blurrable,
     type,
     mapper,
     inputProps = {},
@@ -50,7 +51,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>((props, ref) => {
     { className: mergeClassNames(`input`, clearable && "input_clearable") },
     rest
   );
-  const value = input[name] ?? "";
+  const originalValue = input[name] ?? "";
 
   const handleOnChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     if (mapper) {
@@ -95,6 +96,11 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>((props, ref) => {
     toggleMessage(msg);
   }, [formContext.error[name]]);
 
+  const [capturedEvent, setCapturedEvent] =
+    React.useState<null | React.ChangeEvent<HTMLInputElement>>(null);
+
+  const value = (blurrable ? capturedEvent?.target.value : originalValue) ?? "";
+
   return (
     <div {...mergedProps}>
       {label && (
@@ -138,7 +144,15 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>((props, ref) => {
           clearable && "input__element_clearable"
         )}
         name={name as string}
-        onChange={handleOnChange}
+        onBlur={(e) => {
+          if (blurrable && capturedEvent) {
+            handleOnChange(capturedEvent);
+          }
+        }}
+        onChange={(e) => {
+          if (blurrable) setCapturedEvent(e);
+          else handleOnChange(e);
+        }}
         {...{
           ...inputProps,
           disabled,

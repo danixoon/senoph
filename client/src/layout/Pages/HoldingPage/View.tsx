@@ -1,5 +1,5 @@
 import { api } from "store/slices/api";
-import Icon from "components/Icon";
+import Icon, { LoaderIcon } from "components/Icon";
 import { push } from "connected-react-router";
 import { useFetchConfigMap } from "hooks/api/useFetchConfigMap";
 import React from "react";
@@ -24,11 +24,12 @@ import HolderSelectionPopupContainer from "containers/HolderSelectionPopup";
 import { useTogglePopup } from "hooks/useTogglePopup";
 import ClickInput from "components/ClickInput";
 import PopupLayer from "providers/PopupLayer";
+import WithLoader from "components/WithLoader";
 
 const ViewContent: React.FC<
   HoldingPageProps & { onEdit: (id: number) => void; act?: "view" | "select" }
 > = (props) => {
-  const { holdings, onEdit, act = "view", filterHook } = props;
+  const { holdings, holdingsStatus, onEdit, act = "view", filterHook } = props;
   const [deleteHolding, deleteHoldingStatus] = api.useDeleteHoldingMutation();
   const { holders, departments } = useFetchConfigMap();
 
@@ -48,7 +49,11 @@ const ViewContent: React.FC<
       isSelecting ? (
         <> </>
       ) : (
-        <ActionBox key="ok" icon={Icon.Box} status={extractStatus(deleteHoldingStatus)}>
+        <ActionBox
+          key="ok"
+          icon={Icon.Box}
+          status={extractStatus(deleteHoldingStatus)}
+        >
           {item.status !== null ? (
             <>
               <SpoilerPopupButton
@@ -106,6 +111,7 @@ const ViewContent: React.FC<
           type="date"
           name="orderDate"
           label="Дата документа"
+          blurrable
         />
         <Dropdown
           {...bindFilter}
@@ -145,37 +151,39 @@ const ViewContent: React.FC<
         />
       </Form>
       <Hr />
-      {holdings.length === 0 ? (
-        <InfoBanner
-          href="/phone/edit"
-          hrefContent="средства связи"
-          text="Движения по запросу отсутствуют. Вы можете создать их, выбрав"
-        />
-      ) : (
-        <>
-          <Header align="right">Результаты ({holdings.length})</Header>
-          <Table
-            onSelect={
-              isSelecting
-                ? (item) => {
-                    const { referrer, referrerSearch } = location.state ?? {};
-                    if (!referrer) return;
-                    dispatch(
-                      push({
-                        pathname: referrer,
-                        search: referrerSearch,
-                        state: { selectedId: item.id },
-                      })
-                    );
-                  }
-                : undefined
-            }
-            selectedId={2}
-            columns={columns}
-            items={holdings}
+      <WithLoader status={holdingsStatus}>
+        {holdings.length === 0 ? (
+          <InfoBanner
+            href="/phone/edit"
+            hrefContent="средства связи"
+            text="Движения по запросу отсутствуют. Вы можете создать их, выбрав"
           />
-        </>
-      )}
+        ) : (
+          <>
+            <Header align="right">Результаты ({holdings.length})</Header>
+            <Table
+              onSelect={
+                isSelecting
+                  ? (item) => {
+                      const { referrer, referrerSearch } = location.state ?? {};
+                      if (!referrer) return;
+                      dispatch(
+                        push({
+                          pathname: referrer,
+                          search: referrerSearch,
+                          state: { selectedId: item.id },
+                        })
+                      );
+                    }
+                  : undefined
+              }
+              // selectedId={2}
+              columns={columns}
+              items={holdings}
+            />
+          </>
+        )}
+      </WithLoader>
     </>
   );
 };

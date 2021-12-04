@@ -277,8 +277,22 @@ declare namespace Api {
           {
             ids?: number[];
             status?: CommitStatus | "based";
-            orderDate?: Date;
-            orderKey?: string;
+            actDate?: Date;
+            actKey?: string;
+            categoryKey?: CategoryKey;
+            pending?: boolean;
+          },
+          {}
+        >)
+      | (() => RouteHandler<
+          "/categories/commit",
+          ItemsResponse<{
+            categoryId: number;
+            commits: ({ phoneId: number } & WithCommit)[];
+          }>,
+          {
+            // ids?: number[];
+            status?: CommitStatus;
           },
           {}
         >)

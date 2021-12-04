@@ -84,8 +84,8 @@ const HoldingPageContainer: React.FC<Props> = (props) => {
     }
   }
 
-  const phonesStatus = extractStatus(phonesRest);
-  const holdingsStatus = extractStatus(holdingsRest);
+  const phonesStatus = extractStatus(phonesRest, true);
+  const holdingsStatus = extractStatus(holdingsRest, true);
 
   const noticeContext = React.useContext(NoticeContext);
 

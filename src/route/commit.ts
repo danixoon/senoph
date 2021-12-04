@@ -20,6 +20,7 @@ import Holding from "@backend/db/models/holding.model";
 import Category from "@backend/db/models/category.model";
 import Log from "@backend/db/models/log.model";
 import HoldingPhone from "@backend/db/models/holdingPhone.model";
+import CategoryPhone from "@backend/db/models/categoryPhone.model";
 
 const router = AppRouter();
 
@@ -197,6 +198,66 @@ router.put(
     );
 
     Log.log("holdingPhone", phoneIds, "commit", user.id, { action, holdingId });
+
+    res.send();
+  })
+);
+
+router.put(
+  "/commit/category/phone",
+  access("user"),
+  validate({
+    body: {
+      action: tester().isIn(["approve", "decline"]).required(),
+      phoneIds: tester().array("int"),
+      categoryId: tester().isNumber(),
+    },
+  }),
+  /* owner("") ,*/ transactionHandler(async (req, res) => {
+    const { user } = req.params;
+    const { action, phoneIds, categoryId } = req.body;
+    const categoryPhones = await CategoryPhone.findAll({
+      where: {
+        phoneId: { [Op.in]: phoneIds },
+        categoryId,
+        status: { [Op.not]: null },
+      },
+    });
+
+    if (categoryPhones.length !== phoneIds.length)
+      throw new ApiError(errorType.INVALID_QUERY, {
+        description:
+          "Один или несколько ID средств связи не ожидают изменения.",
+      });
+
+    await Promise.all(
+      categoryPhones.map(async (categoryPhone) => {
+        if (action === "approve") {
+          if (categoryPhone.status === "create-pending") {
+            await categoryPhone.update({
+              status: null,
+              statusAt: new Date().toISOString(),
+            });
+          } else if (categoryPhone.status === "delete-pending") {
+            await categoryPhone.destroy();
+          }
+        } else {
+          if (categoryPhone.status === "create-pending") {
+            await categoryPhone.destroy();
+          } else if (categoryPhone.status === "delete-pending") {
+            await categoryPhone.update({
+              status: null,
+              statusAt: new Date().toISOString(),
+            });
+          }
+        }
+      })
+    );
+
+    Log.log("categoryPhone", phoneIds, "commit", user.id, {
+      action,
+      categoryId,
+    });
 
     res.send();
   })

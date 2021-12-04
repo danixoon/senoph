@@ -29,7 +29,7 @@ const WithLoader: React.FC<{ status: ApiStatus }> = (props) => {
               </Label>
             </Layout>
           ) : (
-            <LoaderIcon size="md" className="loader-banner__icon" />
+            <LoaderIcon className="loader-banner__icon" />
           )}
         </Layout>
       )}

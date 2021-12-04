@@ -6,12 +6,10 @@ import { useFetchConfigMap } from "hooks/api/useFetchConfigMap";
 import React from "react";
 import { useAppDispatch } from "store";
 import { extractStatus, parseItems } from "store/utils";
-import { HoldingPageProps } from ".";
 import ActionBox from "components/ActionBox";
 import InfoBanner from "components/InfoBanner";
 import { SpoilerPopupButton } from "components/SpoilerPopup";
 import Table from "components/Table";
-import { getTableColumns } from "./utils";
 import Link from "components/Link";
 import { useHistory, useLocation, useRouteMatch } from "react-router";
 import { useQueryInput } from "hooks/useQueryInput";
@@ -43,10 +41,10 @@ const useContainer = () => {
     if (!selectedId && phoneIdsArray.length > 0)
       dispatch(
         replace({
-          pathname: "/holding/view",
+          pathname: "/category/view",
           state: {
             referrer: location.pathname,
-            header: "Выберите движения для прикрепления",
+            header: "Выберите акт категории для прикрепления",
             act: "select",
             referrerSearch: location.search,
           },
@@ -61,24 +59,24 @@ const useContainer = () => {
     )
   );
 
-  const holding = parseItems(
-    api.useFetchHoldingsQuery(
+  const categories = parseItems(
+    api.useFetchCategoriesQuery(
       { ids: [selectedId ?? 0] },
       { skip: typeof selectedId === "undefined" }
     )
   );
 
-  const [update, updateInfo] = api.useCreateHoldingChangeMutation();
+  const [update, updateInfo] = api.useCreateCategoryChangeMutation();
 
   React.useEffect(() => {
-    if (updateInfo.isSuccess) dispatch(push("/holding/phone/commit"));
+    if (updateInfo.isSuccess) dispatch(push("/category/phone/commit"));
   }, [updateInfo.status]);
 
   return {
     selectedId,
     phoneIds: phoneIdsArray,
     phones,
-    holding: { data: holding.data.items[0], status: holding.status },
+    category: { data: categories.data.items[0], status: categories.status },
     change: {
       update,
       status: extractStatus(updateInfo),
@@ -86,13 +84,13 @@ const useContainer = () => {
   };
 };
 
-const UpdateContent: React.FC<HoldingPageProps> = (props) => {
-  const { selectedId, phoneIds, phones, holding, change } = useContainer();
+export const UpdateContent: React.FC<{}> = (props) => {
+  const { selectedId, phoneIds, phones, category, change } = useContainer();
 
   const handleUpdate = () => {
     if (typeof selectedId === "undefined") return;
 
-    change.update({ action: "add", holdingId: selectedId, phoneIds });
+    change.update({ action: "add", categoryId: selectedId, phoneIds });
   };
 
   useNotice(change.status, {
@@ -105,7 +103,7 @@ const UpdateContent: React.FC<HoldingPageProps> = (props) => {
         <InfoBanner
           href="/phone/edit"
           hrefContent="средства связи"
-          text="Выберите добавляемые в движение"
+          text="Выберите добавляемые в категорию"
         />
       ) : (
         <WithLoader status={change.status}>
@@ -113,29 +111,20 @@ const UpdateContent: React.FC<HoldingPageProps> = (props) => {
             <Layout flow="row" style={{ alignItems: "center" }}>
               <Span inline>
                 Средства будут добавлены к{" "}
-                {holding.data?.orderUrl ? (
-                  <Link
-                    native
-                    inline
-                    href={`/upload/${holding.data?.orderUrl}`}
-                  >
-                    движению
-                  </Link>
-                ) : (
-                  "движению"
-                )}{" "}
-                с номером
-                <strong> {holding.data?.orderKey} </strong>
+                <Link inline native href={`/upload/${category.data?.actUrl}`}>
+                  акту категории
+                </Link>{" "}
+                с номером <strong> {category.data?.actKey} </strong>
                 от{" "}
                 <strong>
-                  {new Date(holding.data?.orderDate).toLocaleDateString()}
+                  {new Date(category.data?.actKey).toLocaleDateString()}
                 </strong>{" "}
               </Span>
               <Link
                 style={{ marginLeft: "auto" }}
-                href={`/holding/view#${holding.data?.id}`}
+                href={`/holding/view#${category.data?.id}`}
               >
-                выбранное движение #{holding.data?.id}
+                выбранный акт категории #{category.data?.id}
               </Link>
               <Button
                 type="submit"
@@ -159,5 +148,3 @@ const UpdateContent: React.FC<HoldingPageProps> = (props) => {
     </>
   );
 };
-
-export default UpdateContent;

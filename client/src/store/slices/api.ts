@@ -23,6 +23,7 @@ export const api = createApi({
     "phone",
     "holding",
     "holdingPhone",
+    "categoryPhone",
     "holder",
     "category",
     "placement",
@@ -293,6 +294,18 @@ export const api = createApi({
       }),
       providesTags: ["category"],
     }),
+    createCategoryChange: builder.mutation<
+      Api.GetResponse<"put", "/category">,
+      Api.GetQuery<"put", "/category">
+    >({
+      query: (params) => ({
+        url: "category",
+        params,
+        method: "PUT",
+        // body,
+      }),
+      invalidatesTags: (r, e, a) => ["category", "phone", "log"],
+    }),
     createCategory: builder.mutation<
       Api.GetResponse<"post", "/category">,
       Api.GetBody<"post", "/category">
@@ -325,6 +338,33 @@ export const api = createApi({
         method: "PUT",
       }),
       invalidatesTags: (r, e, a) => ["category", "phone", "log"],
+    }),
+    commitCategoryPhone: builder.mutation<
+      Api.GetResponse<"put", "/commit/category/phone">,
+      Api.GetBody<"put", "/commit/category/phone">
+    >({
+      query: (params) => ({
+        url: "commit/category/phone",
+        body: params,
+        method: "PUT",
+      }),
+      invalidatesTags: (r, e, a) => [
+        "category",
+        "phone",
+        "log",
+        "categoryPhone",
+      ],
+    }),
+    fetchCategoryPhoneCommits: builder.query<
+      Api.GetResponse<"get", "/categories/commit">,
+      Api.GetQuery<"get", "/categories/commit">
+    >({
+      query: (params) => ({
+        url: "categories/commit",
+        params,
+        method: "GET",
+      }),
+      providesTags: ["category", "categoryPhone"],
     }),
     fetchUsers: builder.query<
       Api.GetResponse<"get", "/accounts">,

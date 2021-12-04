@@ -9,7 +9,7 @@ import Button, { ButtonProps } from "components/Button";
 export type SpoilerProps = OverrideProps<
   React.HTMLAttributes<HTMLDivElement>,
   {
-    label: string;
+    label: React.ReactChild;
     opened?: boolean;
     onToggle?: (open?: boolean) => void;
   }
@@ -37,7 +37,12 @@ const Spoiler: React.FC<SpoilerProps> = (props) => {
 
   return (
     <div {...mergedProps}>
-      <Button tabIndex={0} onClick={handleToggleOpen} inverted className="spoiler__button">
+      <Button
+        tabIndex={0}
+        onClick={handleToggleOpen}
+        inverted
+        className="spoiler__button"
+      >
         <Header className="spoiler__label">{label}</Header>
       </Button>
       <div className="spoiler__container">{children}</div>
