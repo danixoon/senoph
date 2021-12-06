@@ -384,6 +384,13 @@ export const api = createApi({
       query: (params) => ({ url: "account", params, method: "DELETE" }),
       invalidatesTags: ["user", "log"],
     }),
+    editUser: builder.mutation<
+      Api.GetResponse<"put", "/account">,
+      Api.GetQuery<"put", "/account">
+    >({
+      query: (params) => ({ url: "account", params, method: "PUT" }),
+      invalidatesTags: ["user", "log"],
+    }),
     createUser: builder.mutation<
       Api.GetResponse<"post", "/account">,
       Api.GetQuery<"post", "/account">
@@ -409,6 +416,13 @@ export const api = createApi({
       Api.GetQuery<"delete", "/department">
     >({
       query: (params) => ({ url: "department", params, method: "DELETE" }),
+      invalidatesTags: ["department", "log"],
+    }),
+    editDepartment: builder.mutation<
+      Api.GetResponse<"put", "/department">,
+      Api.GetQuery<"put", "/department">
+    >({
+      query: (params) => ({ url: "department", params, method: "PUT" }),
       invalidatesTags: ["department", "log"],
     }),
     createDepartment: builder.mutation<
@@ -477,6 +491,13 @@ export const api = createApi({
       Api.GetQuery<"delete", "/holder">
     >({
       query: (params) => ({ url: "holder", params, method: "DELETE" }),
+      invalidatesTags: ["holder", "log"],
+    }),
+    editHolder: builder.mutation<
+      Api.GetResponse<"put", "/holder">,
+      Api.GetQuery<"put", "/holder">
+    >({
+      query: (params) => ({ url: "holder", params, method: "PUT" }),
       invalidatesTags: ["holder", "log"],
     }),
     createHolder: builder.mutation<

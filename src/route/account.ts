@@ -1,3 +1,4 @@
+import { clearObject } from "utils";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import User from "@backend/db/models/user.model";
@@ -7,6 +8,9 @@ import { ApiError, errorType } from "@backend/utils/errors";
 import { access } from "@backend/middleware/auth";
 import { transactionHandler, prepareItems } from "../utils";
 import Log from "@backend/db/models/log.model";
+
+// TODO: Передвинуть енто в модель пользователя
+const ALLOWED_ROLES = ["user", "admin"];
 
 const router = AppRouter();
 
@@ -47,6 +51,52 @@ router.delete(
     Log.log("user", [id], "delete", userId);
 
     res.send();
+  })
+);
+
+router.put(
+  "/account",
+  access("admin"),
+  validate({
+    query: {
+      id: tester().isNumber().required(),
+      username: tester(),
+      name: tester(),
+      password: tester(),
+      role: tester()
+        .isIn(ALLOWED_ROLES)
+        .message(`Разрешённые роли: ${ALLOWED_ROLES.join()}`),
+    },
+  }),
+  transactionHandler(async (req, res) => {
+    const { id } = req.params.user;
+    const { id: targetId, password, ...rest } = req.query;
+
+    const user = await User.findByPk(targetId);
+    if (!user)
+      throw new ApiError(errorType.NOT_FOUND, {
+        description: `Пользователь #${targetId} не найден.`,
+      });
+
+    const prevUser = user.toJSON();
+
+    let hash = null;
+    if (password) hash = await bcrypt.hash(password, await bcrypt.genSalt(13));
+
+    const updatedUser = await user?.update(
+      // clearObject({
+      // ...prevUser,
+      { ...rest, passwordHash: hash ? hash : undefined }
+      // })
+    );
+
+    Log.log("user", [targetId], "edit", id, {
+      before: prevUser,
+      after: user,
+      query: req.query,
+    });
+
+    res.send({ id: targetId });
   })
 );
 
@@ -110,9 +160,6 @@ router.get(
     res.send({ token, id: user.id, role: user.role });
   })
 );
-
-// TODO: Передвинуть енто в модель пользователя
-const ALLOWED_ROLES = ["user", "admin"];
 
 router.post(
   "/account",

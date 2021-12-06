@@ -60,7 +60,9 @@ export const mergeProps = <P extends MergingProps, T>(
 
 export const denullObject = function <T>(obj: T) {
   const filtered = { ...obj };
-  for (const k in filtered) if (filtered[k] === null) delete filtered[k];
+  for (const k in filtered)
+    if (filtered[k] === null || (filtered[k] as any) === "null")
+      delete filtered[k];
 
   return filtered as { [K in keyof T]: Exclude<T[K], null> };
 };
@@ -70,6 +72,7 @@ export const clearObject = function <T>(obj: T) {
   const filtered = { ...obj };
   for (const k in filtered) {
     const v = filtered[k];
+    if (v === undefined) delete filtered[k];
     if (typeof v === "number") if (isNaN(v)) delete filtered[k];
     if (Array.isArray(v) && v.length === 0) delete filtered[k];
     else if (typeof v === "string" && v.trim().length === 0) delete filtered[k];

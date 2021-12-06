@@ -476,6 +476,40 @@ declare namespace Api {
           {}
         >)
       | (() => RouteHandler<
+          "/account",
+          {},
+          {
+            id: number;
+            username?: string;
+            password?: string;
+            name?: string;
+            role?: Role;
+          },
+          {}
+        >)
+      | (() => RouteHandler<
+          "/department",
+          {},
+          {
+            id: number;
+            name?: string;
+            placementId?: number;
+            description?: string;
+          },
+          {}
+        >)
+      | (() => RouteHandler<
+          "/holder",
+          {},
+          {
+            id: number;
+            firstName?: string;
+            lastName?: string;
+            middleName?: string;
+          },
+          {}
+        >)
+      | (() => RouteHandler<
           "/holding",
           {},
           {

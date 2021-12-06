@@ -186,7 +186,7 @@ declare namespace DB {
     | "placement"
     | "holder"
     | "model";
-  type LogType = "create" | "delete" | "commit";
+  type LogType = "create" | "delete" | "commit" | "edit";
 
   type LogAttributes = Attributes<{
     target: LogTarget;

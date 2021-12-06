@@ -1,3 +1,4 @@
+import ActionBox from "components/ActionBox";
 import Button from "components/Button";
 import Dropdown from "components/Dropdown";
 import Form from "components/Form";
@@ -9,7 +10,11 @@ import Layout from "components/Layout";
 import SpoilerPopup, { SpoilerPopupButton } from "components/SpoilerPopup";
 import Table, { TableColumn } from "components/Table";
 import { useInput } from "hooks/useInput";
+import { useNotice } from "hooks/useNotice";
+import { useTogglePayloadPopup, useTogglePopup } from "hooks/useTogglePopup";
+import ItemEditPopup from "layout/Popups/ItemEditPopup";
 import { NoticeContext } from "providers/NoticeProvider";
+import PopupLayer from "providers/PopupLayer";
 import React from "react";
 import { api } from "store/slices/api";
 import { extractStatus } from "store/utils";
@@ -20,13 +25,16 @@ const useUsersContainer = () => {
   const users = api.useFetchUsersQuery({});
   const [deleteUser, deleteStatus] = api.useDeleteUserMutation();
   const [createUser, createStatus] = api.useCreateUserMutation();
+  const [editUser, editStatus] = api.useEditUserMutation();
 
   return {
     users: { ...users, items: users.data?.items ?? [] },
     deleteUser,
+    createUser,
+    editUser,
     deleteStatus: extractStatus(deleteStatus),
     createStatus: extractStatus(createStatus),
-    createUser,
+    editStatus: extractStatus(editStatus),
   };
 };
 
@@ -36,8 +44,15 @@ const roleNameMapper = (role: Role) =>
   ] ?? "Неизвестно");
 
 const Users: React.FC<UsersProps> = (props) => {
-  const { users, deleteUser, createUser, createStatus, deleteStatus } =
-    useUsersContainer();
+  const {
+    users,
+    deleteUser,
+    createUser,
+    editUser,
+    createStatus,
+    deleteStatus,
+    editStatus,
+  } = useUsersContainer();
 
   const noticeContext = React.useContext(NoticeContext);
 
@@ -63,16 +78,22 @@ const Users: React.FC<UsersProps> = (props) => {
       );
   }, [deleteStatus.status]);
 
+  const { state: editedUser, ...editPopup } = useTogglePayloadPopup();
+
   const columns: TableColumn[] = [
     {
       key: "actions",
       header: "",
       size: "30px",
       mapper: (v, item) => (
-        <ActionBox
-          status={deleteStatus}
-          onDelete={() => deleteUser({ id: item.id })}
-        />
+        <ActionBox status={deleteStatus}>
+          <SpoilerPopupButton onClick={() => editPopup.onToggle(true, item)}>
+            Изменить
+          </SpoilerPopupButton>
+          <SpoilerPopupButton onClick={() => deleteUser({ id: item.id })}>
+            Удалить
+          </SpoilerPopupButton>
+        </ActionBox>
       ),
     },
 
@@ -95,11 +116,52 @@ const Users: React.FC<UsersProps> = (props) => {
 
   const tableItems = users.items.map((user) => user);
 
-  // const noticeContext = React.useContext(NoticeContext);
-
   // TODO: Make proper typing for POST request params & form inputs
   return (
     <>
+      <PopupLayer>
+        <ItemEditPopup
+          {...editPopup}
+          status={editStatus}
+          defaults={editedUser}
+          onSubmit={(payload) => editUser({ id: editedUser.id, ...payload })}
+          items={[
+            {
+              name: "username",
+              content: ({ bind, name }) => (
+                <Input {...bind} required label="Логин" name={name} />
+              ),
+            },
+            {
+              name: "name",
+              content: ({ bind, name }) => (
+                <Input {...bind} required label="Имя" name={name} />
+              ),
+            },
+            {
+              name: "role",
+              content: ({ bind, name }) => (
+                <Dropdown
+                  {...bind}
+                  required
+                  items={[
+                    { label: "Администратор", id: "admin" },
+                    { label: "Пользователь", id: "user" },
+                  ]}
+                  label="Роль"
+                  name={name}
+                />
+              ),
+            },
+            {
+              name: "password",
+              content: ({ bind, name }) => (
+                <Input {...bind} label="Пароль" type="password" name={name} />
+              ),
+            },
+          ]}
+        />
+      </PopupLayer>
       <Layout>
         <Form
           input={bind.input}
@@ -170,36 +232,36 @@ const Users: React.FC<UsersProps> = (props) => {
   );
 };
 
-const ActionBox = (props: { status: ApiStatus; onDelete: () => void }) => {
-  // const { commit } = props;
-  const [target, setTarget] = React.useState<HTMLElement | null>(() => null);
-  const [isOpen, setIsOpen] = React.useState(() => false);
+// const ActionBox = (props: { status: ApiStatus; onDelete: () => void }) => {
+//   // const { commit } = props;
+//   const [target, setTarget] = React.useState<HTMLElement | null>(() => null);
+//   const [isOpen, setIsOpen] = React.useState(() => false);
 
-  return (
-    <Button
-      ref={(r) => setTarget(r)}
-      color="primary"
-      inverted
-      onClick={() => setIsOpen(true)}
-    >
-      <Icon.Box />
-      <SpoilerPopup
-        target={isOpen ? target : null}
-        position="right"
-        onBlur={(e) => {
-          if (e.currentTarget.contains(e.relatedTarget as any))
-            e.preventDefault();
-          else setIsOpen(false);
-        }}
-      >
-        <SpoilerPopupButton
-          onClick={() => !props.status.isLoading && props.onDelete()}
-        >
-          {props.status.isLoading ? <LoaderIcon /> : "Удалить"}
-        </SpoilerPopupButton>
-      </SpoilerPopup>
-    </Button>
-  );
-};
+//   return (
+//     <Button
+//       ref={(r) => setTarget(r)}
+//       color="primary"
+//       inverted
+//       onClick={() => setIsOpen(true)}
+//     >
+//       <Icon.Box />
+//       <SpoilerPopup
+//         target={isOpen ? target : null}
+//         position="right"
+//         onBlur={(e) => {
+//           if (e.currentTarget.contains(e.relatedTarget as any))
+//             e.preventDefault();
+//           else setIsOpen(false);
+//         }}
+//       >
+//         <SpoilerPopupButton
+//           onClick={() => !props.status.isLoading && props.onDelete()}
+//         >
+//           {props.status.isLoading ? <LoaderIcon /> : "Удалить"}
+//         </SpoilerPopupButton>
+//       </SpoilerPopup>
+//     </Button>
+//   );
+// };
 
 export default Users;

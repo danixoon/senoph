@@ -53,12 +53,6 @@ const SideBar: React.FC<SideBar> = (props) => {
           <LinkItemContainer href="/phone/commit/actions">
             <Icon.DownloadCloud style={{ marginRight: "0.5rem" }} /> Действия
           </LinkItemContainer>
-          {/* <LinkItemContainer href="/phone/commit/delete">
-            Удаления <Icon.X style={{ marginLeft: "auto" }} />
-          </LinkItemContainer>
-          <LinkItemContainer href="/phone/commit/edit">
-            Изменения <Icon.Edit3 style={{ marginLeft: "auto" }} />
-          </LinkItemContainer> */}
         </Layout>
       </Spoiler>
       <Spoiler
@@ -131,24 +125,24 @@ const SideBar: React.FC<SideBar> = (props) => {
             </>
           }
         >
+          <LinkItemContainer href="/admin/holders">
+            <Icon.Star style={{ marginRight: "0.5rem" }} /> Владельцы
+          </LinkItemContainer>
+          <LinkItemContainer href="/admin/placements">
+            <Icon.Globe style={{ marginRight: "0.5rem" }} /> Местоположения
+          </LinkItemContainer>
+          <LinkItemContainer href="/admin/departments">
+            <Icon.Home style={{ marginRight: "0.5rem" }} /> Подразделения
+          </LinkItemContainer>
           <Layout className="sidebar__group">
-            <LinkItemContainer href="/admin/users">
-              <Icon.User style={{ marginRight: "0.5rem" }} /> Пользователи
-            </LinkItemContainer>
-            <LinkItemContainer href="/admin/departments">
-              <Icon.Home style={{ marginRight: "0.5rem" }} /> Подразделения
-            </LinkItemContainer>
-            <LinkItemContainer href="/admin/placements">
-              <Icon.Globe style={{ marginRight: "0.5rem" }} /> Местоположения
-            </LinkItemContainer>
-            <LinkItemContainer href="/admin/holders">
-              <Icon.Star style={{ marginRight: "0.5rem" }} /> Владельцы
-            </LinkItemContainer>
             <LinkItemContainer href="/admin/phone">
               <Icon.Folder style={{ marginRight: "0.5rem" }} /> Типы
             </LinkItemContainer>
             <LinkItemContainer href="/admin/models">
               <Icon.Phone style={{ marginRight: "0.5rem" }} /> Модели
+            </LinkItemContainer>
+            <LinkItemContainer href="/admin/users">
+              <Icon.User style={{ marginRight: "0.5rem" }} /> Пользователи
             </LinkItemContainer>
             <LinkItemContainer href="/admin/logs">
               <Icon.Cloud style={{ marginRight: "0.5rem" }} /> История (логи)

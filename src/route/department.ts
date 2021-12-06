@@ -51,6 +51,41 @@ router.get(
   })
 );
 
+router.put(
+  "/department",
+  access("admin"),
+  validate({
+    query: {
+      id: tester().isNumber().required(),
+      name: tester(),
+      placementId: tester(),
+      description: tester(),
+    },
+  }),
+  transactionHandler(async (req, res) => {
+    const { id } = req.params.user;
+    const { id: targetId, ...rest } = req.query;
+
+    const dep = await Department.findByPk(targetId);
+    if (!dep)
+      throw new ApiError(errorType.NOT_FOUND, {
+        description: `Подразделение #${targetId} не найдено.`,
+      });
+
+    const prevDep = dep.toJSON();
+
+    const updatedDep = await dep?.update({ ...rest });
+
+    Log.log("department", [targetId], "edit", id, {
+      before: prevDep,
+      after: dep,
+      query: req.query,
+    });
+
+    res.send({ id: targetId });
+  })
+);
+
 router.post(
   "/department",
   access("admin"),

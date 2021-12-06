@@ -104,7 +104,7 @@ const Form: React.FC<React.PropsWithChildren<FormProps>> = (
 
     setLocalErrors({});
     validators.current = {};
-    onSubmit(json && data ? Object.fromEntries(data.entries()) : data);
+    onSubmit(json && data ? mappedInput : data);
   };
 
   return (

@@ -1,3 +1,4 @@
+import ActionBox from "components/ActionBox";
 import Button from "components/Button";
 import Dropdown from "components/Dropdown";
 import Form from "components/Form";
@@ -11,7 +12,10 @@ import Table, { TableColumn } from "components/Table";
 import { useDepartment } from "hooks/misc/department";
 import { splitHolderName, useHolder } from "hooks/misc/holder";
 import { useInput } from "hooks/useInput";
+import { useTogglePayloadPopup } from "hooks/useTogglePopup";
+import ItemEditPopup from "layout/Popups/ItemEditPopup";
 import { NoticeContext } from "providers/NoticeProvider";
+import PopupLayer from "providers/PopupLayer";
 import React from "react";
 import { api } from "store/slices/api";
 import { extractStatus } from "store/utils";
@@ -22,14 +26,17 @@ const useContainer = () => {
   const holders = api.useFetchHoldersQuery({});
   const [deleteHolder, deleteStatus] = api.useDeleteHolderMutation();
   const [createHolder, createStatus] = api.useCreateHolderMutation();
+  const [editHolder, editStatus] = api.useEditHolderMutation();
   const getHolderName = useHolder();
 
   return {
     holders: { ...holders, items: holders.data?.items ?? [] },
     deleteHolder,
     createHolder,
+    editHolder,
     deleteStatus: extractStatus(deleteStatus),
     createStatus: extractStatus(createStatus),
+    editStatus: extractStatus(editStatus),
     getHolderName,
   };
 };
@@ -39,8 +46,10 @@ const Holders: React.FC<HoldersProps> = (props) => {
     holders,
     deleteHolder,
     createHolder,
+    editHolder,
     createStatus,
     deleteStatus,
+    editStatus,
     getHolderName,
   } = useContainer();
 
@@ -68,16 +77,22 @@ const Holders: React.FC<HoldersProps> = (props) => {
       );
   }, [deleteStatus.status]);
 
+  const { state: editedHolder, ...editPopup } = useTogglePayloadPopup();
+
   const columns: TableColumn[] = [
     {
       key: "actions",
       header: "",
       size: "30px",
       mapper: (v, item) => (
-        <ActionBox
-          status={deleteStatus}
-          onDelete={() => deleteHolder({ id: item.id })}
-        />
+        <ActionBox status={deleteStatus}>
+          <SpoilerPopupButton onClick={() => editPopup.onToggle(true, item)}>
+            Изменить
+          </SpoilerPopupButton>
+          <SpoilerPopupButton onClick={() => deleteHolder({ id: item.id })}>
+            Удалить
+          </SpoilerPopupButton>
+        </ActionBox>
       ),
     },
     {
@@ -98,9 +113,43 @@ const Holders: React.FC<HoldersProps> = (props) => {
 
   // const noticeContext = React.useContext(NoticeContext);
 
+  /*
+
+
+  */
   // TODO: Make proper typing for POST request params & form inputs
   return (
     <>
+      <PopupLayer>
+        <ItemEditPopup
+          {...editPopup}
+          status={editStatus}
+          defaults={editedHolder}
+          onSubmit={(payload) => editHolder({ id: editedHolder.id, firstName: payload.firstName, lastName: payload.lastName, middleName: payload.middleName })}
+          items={[
+            {
+              name: "lastName",
+              content: ({ bind, name, disabled }) => (
+                <Input {...bind} required label="Фамилия" name={name} />
+              ),
+            },
+            {
+              name: "firstName",
+              nullable: true,
+              content: ({ bind, name }) => (
+                <Input {...bind} required label="Имя" name={name} />
+              ),
+            },
+            {
+              name: "middleName",
+              nullable: true,
+              content: ({ bind, name }) => (
+                <Input {...bind} required label="Отчество" name={name} />
+              ),
+            },
+          ]}
+        />
+      </PopupLayer>
       <Layout>
         <Form
           input={bind.input}
@@ -157,37 +206,6 @@ const Holders: React.FC<HoldersProps> = (props) => {
         <Table items={tableItems} columns={columns} />
       </Layout>
     </>
-  );
-};
-
-const ActionBox = (props: { status: ApiStatus; onDelete: () => void }) => {
-  // const { commit } = props;
-  const [target, setTarget] = React.useState<HTMLElement | null>(() => null);
-
-  const [isOpen, setIsOpen] = React.useState(() => false);
-
-  return (
-    <Button
-      ref={(r) => setTarget(r)}
-      color="primary"
-      inverted
-      onClick={() => setIsOpen(true)}
-    >
-      <Icon.Box />
-      <SpoilerPopup
-        target={isOpen ? target : null}
-        position="right"
-        onBlur={(e) => {
-          if (e.currentTarget.contains(e.relatedTarget as any))
-            e.preventDefault();
-          else setIsOpen(false);
-        }}
-      >
-        <SpoilerPopupButton onClick={() => props.onDelete()}>
-          {props.status.isLoading ? <LoaderIcon /> : "Удалить"}
-        </SpoilerPopupButton>
-      </SpoilerPopup>
-    </Button>
   );
 };
 

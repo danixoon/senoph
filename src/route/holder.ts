@@ -52,6 +52,41 @@ router.get(
   })
 );
 
+router.put(
+  "/holder",
+  access("admin"),
+  validate({
+    query: {
+      id: tester().isNumber().required(),
+      firstName: tester(),
+      lastName: tester(),
+      middleName: tester(),
+    },
+  }),
+  transactionHandler(async (req, res) => {
+    const { id } = req.params.user;
+    const { id: targetId, ...rest } = req.query;
+
+    const holder = await Holder.findByPk(targetId);
+    if (!holder)
+      throw new ApiError(errorType.NOT_FOUND, {
+        description: `Владелец #${targetId} не найден.`,
+      });
+
+    const prevHolder = holder.toJSON();
+
+    const updatedHolder = await holder?.update({ ...rest });
+
+    Log.log("holder", [targetId], "edit", id, {
+      before: prevHolder,
+      after: holder,
+      query: req.query,
+    });
+
+    res.send({ id: targetId });
+  })
+);
+
 router.post(
   "/holder",
   access("admin"),

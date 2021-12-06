@@ -1,3 +1,4 @@
+import ActionBox from "components/ActionBox";
 import Button from "components/Button";
 import Dropdown from "components/Dropdown";
 import Form from "components/Form";
@@ -9,7 +10,9 @@ import Layout from "components/Layout";
 import SpoilerPopup, { SpoilerPopupButton } from "components/SpoilerPopup";
 import Table, { TableColumn } from "components/Table";
 import { useInput } from "hooks/useInput";
+import ItemEditPopup from "layout/Popups/ItemEditPopup";
 import { NoticeContext } from "providers/NoticeProvider";
+import PopupLayer from "providers/PopupLayer";
 import React from "react";
 import { api } from "store/slices/api";
 import { extractStatus } from "store/utils";
@@ -67,10 +70,11 @@ const PhoneTypes: React.FC<PhoneTypesProps> = (props) => {
       header: "",
       size: "30px",
       mapper: (v, item) => (
-        <ActionBox
-          status={deleteStatus}
-          onDelete={() => deletePhoneType({ id: item.id })}
-        />
+        <ActionBox status={deleteStatus}>
+          <SpoilerPopupButton onClick={() => deletePhoneType({ id: item.id })}>
+            Удалить
+          </SpoilerPopupButton>
+        </ActionBox>
       ),
     },
     {
@@ -99,6 +103,43 @@ const PhoneTypes: React.FC<PhoneTypesProps> = (props) => {
   // TODO: Make proper typing for POST request params & form inputs
   return (
     <>
+      <PopupLayer>
+        <ItemEditPopup
+          {...editPopup}
+          status={editStatus}
+          defaults={editedHolder}
+          onSubmit={(payload) =>
+            editHolder({
+              id: editedHolder.id,
+              firstName: payload.firstName,
+              lastName: payload.lastName,
+              middleName: payload.middleName,
+            })
+          }
+          items={[
+            {
+              name: "lastName",
+              content: ({ bind, name, disabled }) => (
+                <Input {...bind} required label="Фамилия" name={name} />
+              ),
+            },
+            {
+              name: "firstName",
+              nullable: true,
+              content: ({ bind, name }) => (
+                <Input {...bind} required label="Имя" name={name} />
+              ),
+            },
+            {
+              name: "middleName",
+              nullable: true,
+              content: ({ bind, name }) => (
+                <Input {...bind} required label="Отчество" name={name} />
+              ),
+            },
+          ]}
+        />
+      </PopupLayer>
       <Layout>
         <Form
           input={bind.input}
@@ -145,39 +186,6 @@ const PhoneTypes: React.FC<PhoneTypesProps> = (props) => {
         <Table items={tableItems} columns={columns} />
       </Layout>
     </>
-  );
-};
-
-const ActionBox = (props: { status: ApiStatus; onDelete: () => void }) => {
-  const { status } = props;
-  const [target, setTarget] = React.useState<HTMLElement | null>(() => null);
-
-  const [isOpen, setIsOpen] = React.useState(() => false);
-
-  return (
-    <Button
-      ref={(r) => setTarget(r)}
-      color="primary"
-      inverted
-      onClick={() => setIsOpen(true)}
-    >
-      <Icon.Box />
-      <SpoilerPopup
-        target={isOpen ? target : null}
-        position="right"
-        onBlur={(e) => {
-          if (e.currentTarget.contains(e.relatedTarget as any))
-            e.preventDefault();
-          else setIsOpen(false);
-        }}
-      >
-        <SpoilerPopupButton
-          onClick={() => !status.isLoading && props.onDelete()}
-        >
-          {status.isLoading ? <LoaderIcon /> : "Удалить"}
-        </SpoilerPopupButton>
-      </SpoilerPopup>
-    </Button>
   );
 };
 

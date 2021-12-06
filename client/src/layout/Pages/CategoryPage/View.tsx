@@ -242,7 +242,7 @@ export const ViewContent: React.FC<{}> = (props) => {
           <InfoBanner
             href="/phone/edit"
             hrefContent="средства связи"
-            text="Движения по запросу отсутствуют. Вы можете создать их, выбрав"
+            text="Акты категорий по запросу отсутствуют. Вы можете создать их, выбрав"
           />
         ) : (
           <>

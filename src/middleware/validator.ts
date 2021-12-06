@@ -140,8 +140,10 @@ export const tester = () => {
 
       return proxy;
     },
-    test: (value, key, target) => {
+    test: (origValue, key, target) => {
+      const value = origValue === "null" ? null : origValue;
       const result: ValidationResult = { isValid: true, value };
+
       // TODO: Доделать этот валидатор ААА
       if (!isRequired && value === undefined) return result;
       else if (isRequired && value === undefined)

@@ -50,7 +50,7 @@ export const CommitContent: React.FC<{}> = (props) => {
         <InfoBanner
           href="/phone/edit"
           hrefContent="средство связи"
-          text="Движения для потдверждения отсутствуют. Создайте их, выбрав"
+          text="Акты категорий для потдверждения отсутствуют. Создайте их, выбрав"
         />
       ) : (
         <Table
