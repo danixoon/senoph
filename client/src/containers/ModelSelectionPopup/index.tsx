@@ -31,6 +31,7 @@ const ModelSelectionPopupContainer: React.FC<ModelSelectionPopupContainerProps> 
         onSelect={(item) => {
           onSelect(item.id, item.name);
         }}
+        selectable
         items={modelItems.map((item) => ({
           content: item.name,
           id: item.id,

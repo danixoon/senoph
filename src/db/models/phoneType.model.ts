@@ -27,4 +27,8 @@ export default class PhoneType extends Model<
   @AllowNull(true)
   @Column(DataType.STRING)
   description: string;
+
+  @AllowNull(true)
+  @Column(DataType.INTEGER)
+  lifespan: number;
 }

@@ -34,7 +34,7 @@ import { useFetchHolder, useLastHolder } from "hooks/api/useFetchHolder";
 import { splitHolderName, useHolder } from "hooks/misc/holder";
 import { getLastHolding } from "hooks/misc/holding";
 import { getDepartmentName, useDepartment } from "hooks/misc/department";
-import { usePhoneType } from "hooks/misc/phoneType";
+import { getPhoneTypeName, usePhoneType } from "hooks/misc/phoneType";
 
 export type PhonePopupProps = {
   phone: Api.Models.Phone | null;
@@ -75,7 +75,8 @@ const Content: React.FC<
 
   const [bind] = useInput({ tab: "category" });
 
-  const typeName = getType(phone.model?.phoneTypeId);
+  const type = getType(phone.model?.phoneTypeId);
+  const typeName = getPhoneTypeName(type);
   const modelName = phone.model?.name;
 
   const lastHolding = getLastHolding(phone.holdings);
@@ -152,6 +153,15 @@ const Content: React.FC<
   const changedValue = (changes.find(
     (c) => c.id.toString() === field.targetId.toString()
   ) ?? {})[field.key];
+
+  const lifespan = type?.lifespan;
+  // TODO: Расчитывать срок относительно даты списания
+  const now = Date.now() / 1000 / 60 / 60 / 24 / 30;
+  const comissioning =
+    new Date(phone.commissioningDate).getTime() / 1000 / 60 / 60 / 24 / 30;
+
+
+  const diff = lifespan ? now - (comissioning + lifespan) : null;
 
   return (
     <>
@@ -275,6 +285,15 @@ const Content: React.FC<
             >
               {assemblyDate}
             </EditableListItem>
+            <ListItem label="Переработка">
+              <Span>
+                {diff == null
+                  ? "Не указано"
+                  : diff < 0
+                  ? `Осталось ${Math.abs(diff).toFixed(2)} мес.`
+                  : `Переработано ${diff.toFixed(2)} мес.`}
+              </Span>
+            </ListItem>
             <Hr />
             <EditableListItem
               label="Дата принятия к учёту"

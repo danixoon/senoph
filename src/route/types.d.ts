@@ -514,7 +514,7 @@ declare namespace Api {
           {
             id: number;
             name?: string;
-
+            lifespan?: number;
             description?: string;
           },
           {}

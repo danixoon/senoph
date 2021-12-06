@@ -49,6 +49,7 @@ declare namespace DB {
   type PhoneTypeAttributes = Attributes<{
     name: string;
     description?: string;
+    lifespan?: number;
   }>;
 
   type PhoneModelAttributes = Attributes<{

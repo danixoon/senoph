@@ -70,7 +70,7 @@ const PhoneTypes: React.FC<PhoneTypesProps> = (props) => {
       );
   }, [deleteStatus.status]);
 
-  const columns: TableColumn[] = [
+  const columns: TableColumn<DB.PhoneTypeAttributes>[] = [
     {
       key: "actions",
       header: "",
@@ -80,7 +80,9 @@ const PhoneTypes: React.FC<PhoneTypesProps> = (props) => {
           <SpoilerPopupButton onClick={() => editPopup.onToggle(true, item)}>
             Изменить
           </SpoilerPopupButton>
-          <SpoilerPopupButton onClick={() => deletePhoneType({ id: item.id })}>
+          <SpoilerPopupButton
+            onClick={() => deletePhoneType({ id: item.id as number })}
+          >
             Удалить
           </SpoilerPopupButton>
         </ActionBox>
@@ -94,6 +96,22 @@ const PhoneTypes: React.FC<PhoneTypesProps> = (props) => {
     {
       key: "name",
       header: "Наименование типа",
+      // size: "150px",
+    },
+    {
+      key: "lifespan",
+      header: "Срок службы",
+      mapper: (v, item) => {
+        const { lifespan } = item;
+        if (lifespan == null) return "Не указан";
+
+        if (lifespan < 12) return `${lifespan} мес.`;
+
+        const years = Math.floor(lifespan / 12);
+        const months = lifespan % 12;
+
+        return `${years} л. ${months} мес.`;
+      },
       // size: "150px",
     },
     {
@@ -124,6 +142,7 @@ const PhoneTypes: React.FC<PhoneTypesProps> = (props) => {
               id: editedPhoneType.id,
               name: payload.name,
               description: payload.description,
+              lifespan: payload.lifespan,
             })
           }
           items={[
@@ -131,6 +150,17 @@ const PhoneTypes: React.FC<PhoneTypesProps> = (props) => {
               name: "name",
               content: ({ bind, name, disabled }) => (
                 <Input {...bind} required label="Наименование" name={name} />
+              ),
+            },
+            {
+              name: "lifespan",
+              content: ({ bind, name, disabled }) => (
+                <Input
+                  {...bind}
+                  label="Срок службы (в месяцах)"
+                  type="number"
+                  name={name}
+                />
               ),
             },
             {

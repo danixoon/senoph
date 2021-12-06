@@ -649,6 +649,7 @@ router.put(
       id: tester().isNumber().required(),
       name: tester(),
       description: tester(),
+      lifespan: tester(),
     },
   }),
   transactionHandler(async (req, res) => {
