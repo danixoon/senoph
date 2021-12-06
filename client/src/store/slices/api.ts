@@ -452,6 +452,13 @@ export const api = createApi({
       query: (params) => ({ url: "placement", params, method: "DELETE" }),
       invalidatesTags: ["placement", "log", "department"],
     }),
+    editPlacement: builder.mutation<
+      Api.GetResponse<"put", "/placement">,
+      Api.GetQuery<"put", "/placement">
+    >({
+      query: (params) => ({ url: "placement", params, method: "PUT" }),
+      invalidatesTags: ["placement", "log"],
+    }),
     createPlacement: builder.mutation<
       Api.GetResponse<"post", "/placement">,
       Api.GetQuery<"post", "/placement">
@@ -476,6 +483,13 @@ export const api = createApi({
       Api.GetQuery<"delete", "/phone/type">
     >({
       query: (params) => ({ url: "phone/type", params, method: "DELETE" }),
+      invalidatesTags: ["phoneType", "log"],
+    }),
+    editPhoneType: builder.mutation<
+      Api.GetResponse<"put", "/phone/type">,
+      Api.GetQuery<"put", "/phone/type">
+    >({
+      query: (params) => ({ url: "phone/type", params, method: "PUT" }),
       invalidatesTags: ["phoneType", "log"],
     }),
     createPhoneType: builder.mutation<
@@ -524,6 +538,25 @@ export const api = createApi({
       Api.GetQuery<"delete", "/phone/model">
     >({
       query: (params) => ({ url: "phone/model", params, method: "DELETE" }),
+      invalidatesTags: ["phoneModel", "log"],
+    }),
+    editPhoneModel: builder.mutation<
+      Api.GetResponse<"put", "/phone/model">,
+      Api.GetQuery<"put", "/phone/model"> & {
+        details: {
+          type: DB.PhoneModelDetailType;
+          name: string;
+          amount: number;
+          units: string;
+        }[];
+      }
+    >({
+      query: ({ details, ...params }) => ({
+        url: "phone/model",
+        params,
+        body: { details },
+        method: "PUT",
+      }),
       invalidatesTags: ["phoneModel", "log"],
     }),
     createPhoneModel: builder.mutation<

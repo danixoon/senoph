@@ -11,7 +11,10 @@ import SpoilerPopup, { SpoilerPopupButton } from "components/SpoilerPopup";
 import Table, { TableColumn } from "components/Table";
 import { useInput } from "hooks/useInput";
 import { useNotice } from "hooks/useNotice";
+import { useTogglePayloadPopup } from "hooks/useTogglePopup";
+import ItemEditPopup from "layout/Popups/ItemEditPopup";
 import { NoticeContext } from "providers/NoticeProvider";
+import PopupLayer from "providers/PopupLayer";
 import React from "react";
 import { api } from "store/slices/api";
 import { extractStatus } from "store/utils";
@@ -22,13 +25,16 @@ const usePlacementsContainer = () => {
   const placements = api.useFetchPlacementsQuery({});
   const [deletePlacement, deleteStatus] = api.useDeletePlacementMutation();
   const [createPlacement, createStatus] = api.useCreatePlacementMutation();
+  const [editPlacement, editStatus] = api.useEditPlacementMutation();
 
   return {
     placements: { ...placements, items: placements.data?.items ?? [] },
     deletePlacement,
     deleteStatus: extractStatus(deleteStatus),
     createStatus: extractStatus(createStatus),
+    editStatus: extractStatus(editStatus),
     createPlacement,
+    editPlacement,
   };
 };
 
@@ -39,6 +45,8 @@ const Departments: React.FC<PlacementsProps> = (props) => {
     createPlacement,
     deleteStatus,
     createStatus,
+    editPlacement,
+    editStatus,
   } = usePlacementsContainer();
 
   const noticeContext = React.useContext(NoticeContext);
@@ -60,6 +68,9 @@ const Departments: React.FC<PlacementsProps> = (props) => {
       size: "30px",
       mapper: (v, item: Api.Models.Placement) => (
         <ActionBox status={deleteStatus}>
+          <SpoilerPopupButton onClick={() => editPopup.onToggle(true, item)}>
+            Изменить
+          </SpoilerPopupButton>
           <SpoilerPopupButton onClick={() => deletePlacement({ id: item.id })}>
             Удалить
           </SpoilerPopupButton>
@@ -87,11 +98,50 @@ const Departments: React.FC<PlacementsProps> = (props) => {
 
   const tableItems = placements.items.map((department) => department);
 
-  // const noticeContext = React.useContext(NoticeContext);
+  const { state: editedPlacement, ...editPopup } = useTogglePayloadPopup();
 
   // TODO: Make proper typing for POST request params & form inputs
   return (
     <>
+      <PopupLayer>
+        <ItemEditPopup
+          {...editPopup}
+          status={editStatus}
+          defaults={editedPlacement}
+          onSubmit={(payload) =>
+            editPlacement({
+              id: editedPlacement.id,
+              name: payload.name,
+              description: payload.descriotion,
+            })
+          }
+          items={[
+            {
+              name: "name",
+              content: ({ bind, name, disabled }) => (
+                <Input
+                  {...bind}
+                  required
+                  label="Наименование"
+                  name={name}
+                  disabled={disabled}
+                />
+              ),
+            },
+            {
+              name: "description",
+              content: ({ bind, name, disabled }) => (
+                <Input
+                  {...bind}
+                  label="Описание"
+                  name={name}
+                  disabled={disabled}
+                />
+              ),
+            },
+          ]}
+        />
+      </PopupLayer>
       <Layout>
         <Form
           input={bind.input}

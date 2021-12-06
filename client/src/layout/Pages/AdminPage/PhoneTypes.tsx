@@ -10,6 +10,7 @@ import Layout from "components/Layout";
 import SpoilerPopup, { SpoilerPopupButton } from "components/SpoilerPopup";
 import Table, { TableColumn } from "components/Table";
 import { useInput } from "hooks/useInput";
+import { useTogglePayloadPopup } from "hooks/useTogglePopup";
 import ItemEditPopup from "layout/Popups/ItemEditPopup";
 import { NoticeContext } from "providers/NoticeProvider";
 import PopupLayer from "providers/PopupLayer";
@@ -23,13 +24,16 @@ const useContainer = () => {
   const phoneTypes = api.useFetchPhoneTypesQuery({});
   const [deletePhoneType, deleteStatus] = api.useDeletePhoneTypeMutation();
   const [createPhoneType, createStatus] = api.useCreatePhoneTypeMutation();
+  const [editPhoneType, editStatus] = api.useEditPhoneTypeMutation();
 
   return {
     phoneTypes: { ...phoneTypes, items: phoneTypes.data?.items ?? [] },
     deletePhoneType,
     deleteStatus: extractStatus(deleteStatus),
     createStatus: extractStatus(createStatus),
+    editStatus: extractStatus(editStatus),
     createPhoneType,
+    editPhoneType,
   };
 };
 
@@ -38,8 +42,10 @@ const PhoneTypes: React.FC<PhoneTypesProps> = (props) => {
     phoneTypes,
     deletePhoneType,
     createPhoneType,
+    editPhoneType,
     createStatus,
     deleteStatus,
+    editStatus,
   } = useContainer();
 
   const noticeContext = React.useContext(NoticeContext);
@@ -71,6 +77,9 @@ const PhoneTypes: React.FC<PhoneTypesProps> = (props) => {
       size: "30px",
       mapper: (v, item) => (
         <ActionBox status={deleteStatus}>
+          <SpoilerPopupButton onClick={() => editPopup.onToggle(true, item)}>
+            Изменить
+          </SpoilerPopupButton>
           <SpoilerPopupButton onClick={() => deletePhoneType({ id: item.id })}>
             Удалить
           </SpoilerPopupButton>
@@ -98,6 +107,8 @@ const PhoneTypes: React.FC<PhoneTypesProps> = (props) => {
 
   const tableItems = phoneTypes.items.map((type) => type);
 
+  const { state: editedPhoneType, ...editPopup } = useTogglePayloadPopup();
+
   // const noticeContext = React.useContext(NoticeContext);
 
   // TODO: Make proper typing for POST request params & form inputs
@@ -107,34 +118,25 @@ const PhoneTypes: React.FC<PhoneTypesProps> = (props) => {
         <ItemEditPopup
           {...editPopup}
           status={editStatus}
-          defaults={editedHolder}
+          defaults={editedPhoneType}
           onSubmit={(payload) =>
-            editHolder({
-              id: editedHolder.id,
-              firstName: payload.firstName,
-              lastName: payload.lastName,
-              middleName: payload.middleName,
+            editPhoneType({
+              id: editedPhoneType.id,
+              name: payload.name,
+              description: payload.description,
             })
           }
           items={[
             {
-              name: "lastName",
+              name: "name",
               content: ({ bind, name, disabled }) => (
-                <Input {...bind} required label="Фамилия" name={name} />
+                <Input {...bind} required label="Наименование" name={name} />
               ),
             },
             {
-              name: "firstName",
-              nullable: true,
-              content: ({ bind, name }) => (
-                <Input {...bind} required label="Имя" name={name} />
-              ),
-            },
-            {
-              name: "middleName",
-              nullable: true,
-              content: ({ bind, name }) => (
-                <Input {...bind} required label="Отчество" name={name} />
+              name: "description",
+              content: ({ bind, name, disabled }) => (
+                <Input {...bind} label="Описание" name={name} />
               ),
             },
           ]}

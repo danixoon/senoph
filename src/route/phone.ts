@@ -480,6 +480,48 @@ router.get(
   })
 );
 
+router.put(
+  "/phone/model",
+  access("admin"),
+  validate({
+    query: {
+      id: tester().isNumber().required(),
+      name: tester(),
+      description: tester(),
+    },
+  }),
+  transactionHandler(async (req, res) => {
+    const { id } = req.params.user;
+    const { id: targetId, ...rest } = req.query;
+    const { details } = req.body;
+
+    const type = await PhoneModel.findByPk(targetId);
+    if (!type)
+      throw new ApiError(errorType.NOT_FOUND, {
+        description: `Модель средства связи #${targetId} не найдена.`,
+      });
+
+    const prev = type.toJSON();
+
+    const updated = await type?.update({ ...rest });
+
+    if (typeof details !== "undefined") {
+      await PhoneModelDetail.destroy({ where: { modelId: updated.id } });
+      await PhoneModelDetail.bulkCreate(
+        details.map((detail) => ({ ...detail, modelId: updated.id }))
+      );
+    }
+
+    Log.log("model", [targetId], "edit", id, {
+      before: prev,
+      after: type,
+      query: req.query,
+    });
+
+    res.send({ id: targetId });
+  })
+);
+
 router.post(
   "/phone/model",
   access("admin"),
@@ -596,6 +638,40 @@ router.post(
     const type = await PhoneType.create({ name, description });
     Log.log("phoneType", [type.id], "create", user.id);
     res.send({ id: type.id });
+  })
+);
+
+router.put(
+  "/phone/type",
+  access("admin"),
+  validate({
+    query: {
+      id: tester().isNumber().required(),
+      name: tester(),
+      description: tester(),
+    },
+  }),
+  transactionHandler(async (req, res) => {
+    const { id } = req.params.user;
+    const { id: targetId, ...rest } = req.query;
+
+    const type = await PhoneType.findByPk(targetId);
+    if (!type)
+      throw new ApiError(errorType.NOT_FOUND, {
+        description: `Тип средства связи #${targetId} не найдено.`,
+      });
+
+    const prev = type.toJSON();
+
+    const updated = await type?.update({ ...rest });
+
+    Log.log("phoneType", [targetId], "edit", id, {
+      before: prev,
+      after: type,
+      query: req.query,
+    });
+
+    res.send({ id: targetId });
   })
 );
 

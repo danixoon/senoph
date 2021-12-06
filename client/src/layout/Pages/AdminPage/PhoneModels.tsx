@@ -1,3 +1,4 @@
+import ActionBox from "components/ActionBox";
 import AltPopup from "components/AltPopup";
 import Badge from "components/Badge";
 import Button from "components/Button";
@@ -13,8 +14,11 @@ import Table, { TableColumn } from "components/Table";
 import { usePhoneType, usePhoneTypeByModel } from "hooks/misc/phoneType";
 import { useInput } from "hooks/useInput";
 import { useTimeout } from "hooks/useTimeout";
+import { useTogglePayloadPopup } from "hooks/useTogglePopup";
+import ItemEditPopup from "layout/Popups/ItemEditPopup";
 import { NoticeContext } from "providers/NoticeProvider";
-import React from "react";
+import PopupLayer from "providers/PopupLayer";
+import React, { DetailedHTMLProps } from "react";
 import { api } from "store/slices/api";
 import { extractStatus } from "store/utils";
 
@@ -24,6 +28,7 @@ const useContainer = () => {
   const models = api.useFetchPhoneModelQuery({});
   const [deletePhoneModel, deleteStatus] = api.useDeletePhoneModelMutation();
   const [createPhoneModel, createStatus] = api.useCreatePhoneModelMutation();
+  const [editPhoneModel, editStatus] = api.useEditPhoneModelMutation();
   const getPhoneType = usePhoneType();
   const types = api.useFetchPhoneTypesQuery({});
 
@@ -33,7 +38,9 @@ const useContainer = () => {
     deletePhoneModel,
     deleteStatus: extractStatus(deleteStatus),
     createStatus: extractStatus(createStatus),
+    editStatus: extractStatus(editStatus),
     createPhoneModel,
+    editPhoneModel,
     getPhoneType,
   };
 };
@@ -45,15 +52,65 @@ const detailsMap: Record<string, string> = {
   mpg: "МПГ",
 };
 
+const DetailsList: React.FC<{
+  onCreate: (type: string, amount: number) => void;
+  onDelete: (name: string) => void;
+  details: Detail[];
+  map: Record<string, string>;
+}> = ({ onCreate, onDelete, details, map }) => (
+  <>
+    <CreateDetailButton details={map} onCreate={onCreate} />
+    {details.length === 0 ? (
+      <Badge>Нет драг. металлов</Badge>
+    ) : (
+      details.map((detail) => (
+        <Badge key={detail.name}>
+          <Button
+            inverted
+            color="primary"
+            onClick={() => onDelete(detail.name)}
+          >
+            <Icon.X />
+          </Button>
+          {detailsMap[detail.name]}: {detail.amount} {detail.units}.
+        </Badge>
+      ))
+    )}
+  </>
+);
+type Detail = Omit<DB.PhoneModelDetailAttributes, "modelId">;
+
+const useEditedDetails = (id: number, originalDetails: Detail[]) => {
+  // const originalDetails = editedPhoneModel.details ?? [];
+
+  const [details, setDetails] = React.useState<Detail[]>(
+    () => originalDetails ?? []
+  );
+
+  React.useEffect(() => {
+    setDetails(originalDetails ?? []);
+  }, [id]);
+
+  const map = Object.fromEntries(
+    Object.entries(detailsMap).filter(
+      ([name]) => !details.find((det) => det.name === name)
+    )
+  );
+
+  return { details, setDetails, map };
+};
+
 const PhoneModels: React.FC<PhoneModelsProps> = (props) => {
   const {
     models,
     types,
     deletePhoneModel,
     createPhoneModel,
+    editPhoneModel,
     getPhoneType,
     createStatus,
     deleteStatus,
+    editStatus,
   } = useContainer();
 
   const noticeContext = React.useContext(NoticeContext);
@@ -86,10 +143,14 @@ const PhoneModels: React.FC<PhoneModelsProps> = (props) => {
       header: "",
       size: "30px",
       mapper: (v, item) => (
-        <ActionBox
-          status={deleteStatus}
-          onDelete={() => deletePhoneModel({ id: item.id })}
-        />
+        <ActionBox status={deleteStatus}>
+          <SpoilerPopupButton onClick={() => editPopup.onToggle(true, item)}>
+            Изменить
+          </SpoilerPopupButton>
+          <SpoilerPopupButton onClick={() => deletePhoneModel({ id: item.id })}>
+            Удалить
+          </SpoilerPopupButton>
+        </ActionBox>
       ),
     },
     {
@@ -114,7 +175,7 @@ const PhoneModels: React.FC<PhoneModelsProps> = (props) => {
     {
       key: "details",
       header: "Драг. металлы",
-      mapper: (details: DB.PhoneModelDetailAttributes[]) =>
+      mapper: (details: DB.PhoneModelDetailAttributes[] = []) =>
         details.map((detail) => (
           <>
             {detailsMap[detail.name]}: <b>{detail.amount}</b> {detail.units}.
@@ -128,12 +189,99 @@ const PhoneModels: React.FC<PhoneModelsProps> = (props) => {
 
   const tableItems = models.items.map((type) => type);
 
-  const [details, setDetails] = React.useState<
-    Omit<DB.PhoneModelDetailAttributes, "modelId">[]
-  >(() => [] as any);
+  const [details, setDetails] = React.useState<Detail[]>(() => [] as any);
+
+  const { state: editedPhoneModel, ...editPopup } = useTogglePayloadPopup<
+    Api.Models.PhoneModel | undefined
+  >();
+
+  const editedDetails = useEditedDetails(
+    editedPhoneModel?.id ?? -1,
+    editedPhoneModel?.details ?? []
+  );
 
   return (
     <>
+      <PopupLayer>
+        <ItemEditPopup
+          {...editPopup}
+          status={editStatus}
+          defaults={editedPhoneModel}
+          onReset={() =>
+            editedDetails.setDetails(editedPhoneModel?.details ?? [])
+          }
+          onSubmit={(payload) =>
+            editPhoneModel({
+              id: editedPhoneModel?.id ?? -1,
+              name: payload.name,
+              description: payload.description,
+              details: editedDetails.details ?? [],
+            })
+          }
+          items={[
+            {
+              name: "name",
+              content: ({ bind, name, disabled }) => (
+                <Input {...bind} required label="Наименование" name={name} />
+              ),
+            },
+            {
+              name: "phoneTypeId",
+              nullable: true,
+              content: ({ bind, name, disabled }) => (
+                <Dropdown
+                  {...bind}
+                  items={types.items.map((type) => ({
+                    label: type.name,
+                    id: type.id,
+                  }))}
+                  required
+                  label="Тип СС"
+                  name={name}
+                  disabled={disabled}
+                />
+              ),
+            },
+            {
+              name: "description",
+              content: ({ bind, name, disabled }) => (
+                <Input {...bind} label="Описание" name={name} />
+              ),
+            },
+            {
+              name: "details",
+              content: ({ bind, name }) => {
+                return (
+                  <Layout flow="row wrap">
+                    <DetailsList
+                      onCreate={(type, amount) =>
+                        editedDetails.setDetails([
+                          ...editedDetails.details,
+                          {
+                            name: type,
+                            amount,
+                            units: "гр",
+                            type: "preciousMetal",
+                          },
+                        ])
+                      }
+                      onDelete={(name) =>
+                        editedDetails.setDetails(
+                          editedDetails.details.filter(
+                            (det) => det.name !== name
+                          )
+                        )
+                      }
+                      details={editedDetails.details}
+                      map={editedDetails.map}
+                    />
+                  </Layout>
+                );
+              },
+            },
+          ]}
+        />
+      </PopupLayer>
       <Layout>
         <Form
           input={bind.input}
@@ -170,39 +318,23 @@ const PhoneModels: React.FC<PhoneModelsProps> = (props) => {
             />
           </Layout>
           <Layout flow="row" padding="md">
-            <CreateDetailButton
-              details={Object.fromEntries(
-                Object.entries(detailsMap).filter(
-                  ([name]) => !details.find((det) => det.name === name)
-                )
-              )}
+            <DetailsList
               onCreate={(type, amount) =>
                 setDetails([
                   ...details,
                   { name: type, amount, units: "гр", type: "preciousMetal" },
                 ])
               }
+              onDelete={(name) =>
+                setDetails(details.filter((det) => det.name !== name))
+              }
+              details={details}
+              map={Object.fromEntries(
+                Object.entries(detailsMap).filter(
+                  ([name]) => !details.find((det) => det.name === name)
+                )
+              )}
             />
-            {details.length === 0 ? (
-              <Badge>Нет драг. металлов</Badge>
-            ) : (
-              details.map((detail) => (
-                <Badge key={detail.name}>
-                  <Button
-                    inverted
-                    color="primary"
-                    onClick={() =>
-                      setDetails(
-                        details.filter((det) => det.name !== detail.name)
-                      )
-                    }
-                  >
-                    <Icon.X />
-                  </Button>
-                  {detailsMap[detail.name]}: {detail.amount} {detail.units}.
-                </Badge>
-              ))
-            )}
             <Button
               disabled={createStatus.isLoading}
               style={{
@@ -275,7 +407,10 @@ const CreateDetailButton = React.forwardRef<
         onBlur={(e) => {
           const currentTarget = e.currentTarget;
           setTimeout(() => {
-            if (!currentTarget.contains(document.activeElement)) {
+            if (
+              inputRef.current &&
+              !currentTarget.contains(document.activeElement)
+            ) {
               setIsOpen(false);
             }
           });
@@ -320,39 +455,5 @@ const CreateDetailButton = React.forwardRef<
     </Button>
   );
 });
-
-const ActionBox = (props: { status: ApiStatus; onDelete: () => void }) => {
-  // const { commit } = props;
-  const [target, setTarget] = React.useState<HTMLElement | null>(() => null);
-
-  const [isOpen, setIsOpen] = React.useState(() => false);
-
-  return (
-    <Button
-      ref={(r) => setTarget(r)}
-      color="primary"
-      inverted
-      onClick={() => setIsOpen(true)}
-    >
-      <Icon.Box />
-      <SpoilerPopup
-        target={isOpen ? target : null}
-        position="right"
-        onBlur={(e) => {
-          if (e.currentTarget.contains(e.relatedTarget as any))
-            e.preventDefault();
-          else setIsOpen(false);
-        }}
-      >
-        <SpoilerPopupButton
-          // disabled={props.status.isLoading}
-          onClick={() => !props.status.isLoading && props.onDelete()}
-        >
-          {props.status.isLoading ? <LoaderIcon /> : "Удалить"}
-        </SpoilerPopupButton>
-      </SpoilerPopup>
-    </Button>
-  );
-};
 
 export default PhoneModels;

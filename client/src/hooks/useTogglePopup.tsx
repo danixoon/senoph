@@ -14,9 +14,11 @@ export const useTogglePopup = (isOpened: boolean = true) => {
   };
 };
 
-export const useTogglePayloadPopup = (isOpened: boolean = true) => {
+export const useTogglePayloadPopup = function <T = any>(
+  isOpened: boolean = true
+) {
   const [isOpen, setPopup] = React.useState(() => false);
-  const [state, setState] = React.useState<any>(() => {});
+  const [state, setState] = React.useState<T>(() => ({} as any as T));
   return {
     isOpen: isOpen && isOpened,
     onToggle: (state?: boolean, payload?: any) => {

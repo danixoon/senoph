@@ -30,6 +30,7 @@ export type Item = {
 export type ItemEditPopupProps = OverrideProps<
   PopupProps,
   {
+    onReset?: () => void;
     onSubmit: (input: any) => void;
     status: ApiStatus;
     defaults?: any;
@@ -45,6 +46,7 @@ const ItemEditPopup: React.FC<ItemEditPopupProps> = (props) => {
     defaults = {},
     layoutProps = {},
     onSubmit,
+    onReset,
     ...rest
   } = props;
 
@@ -54,7 +56,7 @@ const ItemEditPopup: React.FC<ItemEditPopupProps> = (props) => {
     if (rest.isOpen) setInput(defaults);
   }, [rest.isOpen]);
 
-  useNotice(status);
+  useNotice(status, { onSuccess: () => rest.onToggle && rest.onToggle(false) });
 
   const [metaBind, setMeta] = useInput<any>();
 
@@ -65,6 +67,7 @@ const ItemEditPopup: React.FC<ItemEditPopupProps> = (props) => {
           style={{ flex: "1" }}
           input={bind.input}
           onReset={(e) => {
+            if (onReset) onReset();
             setInput(defaults);
           }}
           onSubmit={(e) => {

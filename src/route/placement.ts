@@ -49,6 +49,40 @@ router.get(
   })
 );
 
+router.put(
+  "/placement",
+  access("admin"),
+  validate({
+    query: {
+      id: tester().isNumber().required(),
+      name: tester(),
+      description: tester(),
+    },
+  }),
+  transactionHandler(async (req, res) => {
+    const { id } = req.params.user;
+    const { id: targetId, ...rest } = req.query;
+
+    const placement = await Placement.findByPk(targetId);
+    if (!placement)
+      throw new ApiError(errorType.NOT_FOUND, {
+        description: `Местоположение #${targetId} не найдено.`,
+      });
+
+    const prev = placement.toJSON();
+
+    const updated = await placement?.update({ ...rest });
+
+    Log.log("department", [targetId], "edit", id, {
+      before: prev,
+      after: placement,
+      query: req.query,
+    });
+
+    res.send({ id: targetId });
+  })
+);
+
 router.post(
   "/placement",
   access("admin"),

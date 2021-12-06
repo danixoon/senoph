@@ -477,7 +477,7 @@ declare namespace Api {
         >)
       | (() => RouteHandler<
           "/account",
-          {},
+          { id: number },
           {
             id: number;
             username?: string;
@@ -489,7 +489,7 @@ declare namespace Api {
         >)
       | (() => RouteHandler<
           "/department",
-          {},
+          { id: number },
           {
             id: number;
             name?: string;
@@ -499,8 +499,46 @@ declare namespace Api {
           {}
         >)
       | (() => RouteHandler<
+          "/placement",
+          { id: number },
+          {
+            id: number;
+            name?: string;
+            description?: string;
+          },
+          {}
+        >)
+      | (() => RouteHandler<
+          "/phone/type",
+          { id: number },
+          {
+            id: number;
+            name?: string;
+
+            description?: string;
+          },
+          {}
+        >)
+      | (() => RouteHandler<
+          "/phone/model",
+          { id: number },
+          {
+            id: number;
+            name?: string;
+            description?: string;
+          },
+          {
+            details?: {
+              type: DB.PhoneModelDetailType;
+              name: string;
+              amount: number;
+              units: string;
+            }[];
+          }
+        >)
+      | (() => RouteHandler<
           "/holder",
-          {},
+          { id: number },
           {
             id: number;
             firstName?: string;
