@@ -16,7 +16,7 @@ import { init as initDb, close as closeDb } from "@backend/db/index";
 import { errorHandler, notFoundHandler } from "@backend/middleware/error";
 import { routers } from "./route";
 import { ApiError, errorType } from "./utils/errors";
-import { loadBackup, makeBackup } from "./db/backup";
+import { revertBackup, createBackup } from "./db/backup";
 
 let server: http.Server | null;
 let isStarted = false;
@@ -66,8 +66,6 @@ export const init = async () => {
       payload: { port },
     });
     isStarted = true;
-
-    const backup = await makeBackup("omg");
   });
 
   server.on("error", (err) => {

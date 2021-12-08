@@ -66,6 +66,7 @@ declare namespace Api {
     type PhoneModel = RequiredId<DB.PhoneModelAttributes>;
     type Department = RequiredId<DB.DepartmentAttributes>;
     type Placement = RequiredId<DB.PlacementAttributes>;
+    type Backup = { tag: string; id: string; date: Date; size: number };
     type User = Omit<RequiredId<DB.UserAttributes>, "passwordHash">;
     type Holder = RequiredId<DB.HolderAttributes>;
     type Holding = RequiredId<DB.HoldingAttributes> & { phoneIds: number[] };
@@ -171,6 +172,17 @@ declare namespace Api {
 
   type FnRequestsMap = {
     get:
+      | (() => RouteHandler<
+          "/admin/backups",
+          ItemsResponse<{
+            id: string;
+            tag: string;
+            date: string;
+            size: number;
+          }>,
+          {},
+          {}
+        >)
       | (() => RouteHandler<"/import", {}, { entity: "phone" }, {}>)
       | (() => RouteHandler<"/account", Api.Models.User, {}, {}>)
       | (() => RouteHandler<
@@ -338,6 +350,13 @@ declare namespace Api {
       | (() => RouteHandler<"/logs", ItemsResponse<Api.Models.Log>, {}, {}>);
 
     post:
+      | (() => RouteHandler<
+          "/admin/backup",
+          { id: string },
+          { tag: string },
+          {}
+        >)
+      | (() => RouteHandler<"/admin/backup/revert", {}, { id: string }, {}>)
       | (<T extends "phone" | "model">() => RouteHandler<
           `/import`,
           {},
@@ -613,6 +632,7 @@ declare namespace Api {
           { target: ChangesTargetName; targetId: number; keys?: string[] },
           {}
         >)
+      | (() => RouteHandler<"/admin/backup", {}, { id: string }, {}>)
       | (() => RouteHandler<"/category", {}, { id: number }, {}>)
       | (() => RouteHandler<"/holding", {}, { id: number }, {}>)
       | (() => RouteHandler<"/phone", {}, { ids: number[] }, {}>)

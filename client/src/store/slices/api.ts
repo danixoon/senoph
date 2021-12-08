@@ -15,24 +15,26 @@ const convertItem = (item: any) => {
   return converted;
 };
 
+const tagTypes = [
+  "commit",
+  "holder",
+  "phone",
+  "holding",
+  "holdingPhone",
+  "categoryPhone",
+  "holder",
+  "category",
+  "placement",
+  "user",
+  "department",
+  "phoneType",
+  "phoneModel",
+  "log",
+  "backup",
+] as const;
 export const api = createApi({
   reducerPath: "api",
-  tagTypes: [
-    "commit",
-    "holder",
-    "phone",
-    "holding",
-    "holdingPhone",
-    "categoryPhone",
-    "holder",
-    "category",
-    "placement",
-    "user",
-    "department",
-    "phoneType",
-    "phoneModel",
-    "log",
-  ],
+  tagTypes,
   baseQuery: fetchBaseQuery({
     baseUrl: "/api",
     prepareHeaders: (headers, { getState }) => {
@@ -581,6 +583,51 @@ export const api = createApi({
         method: "GET",
       }),
       providesTags: ["log"],
+    }),
+    //*****//
+    fetchBackups: builder.query<
+      Api.GetResponse<"get", "/admin/backups">,
+      Api.GetQuery<"get", "/admin/backups">
+    >({
+      query: (params) => ({
+        url: "admin/backups",
+        params,
+        method: "GET",
+      }),
+      providesTags: ["backup"],
+    }),
+    createBackup: builder.mutation<
+      Api.GetResponse<"post", "/admin/backup">,
+      Api.GetQuery<"post", "/admin/backup">
+    >({
+      query: (params) => ({
+        url: "admin/backup",
+        params,
+        method: "POST",
+      }),
+      invalidatesTags: ["backup"],
+    }),
+    revertBackup: builder.mutation<
+      Api.GetResponse<"post", "/admin/backup/revert">,
+      Api.GetQuery<"post", "/admin/backup/revert">
+    >({
+      query: (params) => ({
+        url: "admin/backup/revert",
+        params,
+        method: "POST",
+      }),
+      invalidatesTags: tagTypes,
+    }),
+    removeBackup: builder.mutation<
+      Api.GetResponse<"delete", "/admin/backup">,
+      Api.GetQuery<"delete", "/admin/backup">
+    >({
+      query: (params) => ({
+        url: "admin/backup",
+        params,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["backup"],
     }),
   }),
 });

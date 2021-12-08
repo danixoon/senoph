@@ -1,6 +1,6 @@
 import * as React from "react";
 import { api } from "store/slices/api";
-import { extractStatus } from "store/utils";
+import { extractStatus, mergeStatuses } from "store/utils";
 import { groupBy } from "utils";
 
 export type ChangeStatus = {
@@ -17,28 +17,7 @@ export const useChanges = <T extends ChangesTargetName>(target: T) => {
   const makeStatus = extractStatus(makeInfo, true);
   const undoStatus = extractStatus(undoInfo, true);
 
-  const mergeStatuses = (a: ApiStatus, b: ApiStatus) => {
-    const status: ApiStatus = {
-      error: a.error || b.error,
-      isError: a.isError || b.isError,
-      isIdle: a.isIdle && b.isIdle,
-      isLoading: a.isLoading || b.isLoading,
-      isSuccess: a.isSuccess && b.isSuccess,
-      status:
-        a.status === b.status
-          ? b.status
-          : a.status === "error" || b.status === "error"
-          ? "error"
-          : a.status === "loading" || b.status === "loading"
-          ? "loading"
-          : a.status === "success" && b.status === "success"
-          ? "success"
-          : "idle",
-    };
-
-    return status;
-  };
-
+  
   const statuses: Map<number, ChangeStatus> = new Map();
   if (makeInfo.originalArgs) {
     const { targetId, changes } = makeInfo.originalArgs;

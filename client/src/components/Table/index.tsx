@@ -1,7 +1,7 @@
 import Checkbox from "components/Checkbox";
 import { InputBind } from "hooks/useInput";
 import * as React from "react";
-import { mergeClassNames, mergeProps } from "utils";
+import { getLocalDate, mergeClassNames, mergeProps } from "utils";
 import "./styles.styl";
 
 type TableItem<T> = {
@@ -22,6 +22,7 @@ export type TableColumn<T = any> = {
   mapper?: (v: any, row: T) => any;
 } & (
   | { type?: "date" }
+  | { type?: "local-date" }
   | { type?: "checkbox"; onToggle: (state: boolean, id: any) => void }
 );
 
@@ -102,6 +103,8 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
     const mapper = column.mapper ?? ((v: any) => v);
 
     switch (column.type) {
+      case "local-date":
+        return getLocalDate(value);
       case "date":
         return new Date(value).toLocaleDateString();
       case "checkbox":

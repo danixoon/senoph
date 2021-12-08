@@ -19,6 +19,11 @@ const ActionBox: React.FC<ActionBoxProps> = (props) => {
 
   const IconComponent = icon ?? Icon.Box;
 
+  React.useEffect(() => {
+    if(!status?.isSuccess) return;
+    setIsOpen(false);
+  }, [status?.isSuccess])
+
   return (
     <Button
       ref={(r) => setTarget(r)}

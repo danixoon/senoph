@@ -4,6 +4,9 @@ html
     meta(charset="UTF-8")
     meta(lang="ru")
     meta(name="viewport", content="width=device-width, initial-scale=1.0")
+    script.
+      window.__version__ = "#{htmlWebpackPlugin.options.version}";
+
     title #{htmlWebpackPlugin.options.title}
   body
     div(id="senoph-root")

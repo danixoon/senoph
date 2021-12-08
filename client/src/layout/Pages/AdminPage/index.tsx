@@ -9,6 +9,7 @@ import PhoneTypes from "./PhoneTypes";
 
 import "./style.styl";
 import Users from "./Users";
+import Backups from "./Backups";
 
 export type AdminPageProps = {};
 const AdminPage: React.FC<AdminPageProps> = (props) => {
@@ -32,6 +33,9 @@ const AdminPage: React.FC<AdminPageProps> = (props) => {
       </Route>
       <Route path={`${path}/models`}>
         <PhoneModels />
+      </Route>
+      <Route path={`${path}/backups`}>
+        <Backups />
       </Route>
       <Route path={`${path}/logs`}>
         <Logs />

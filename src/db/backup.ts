@@ -1,16 +1,19 @@
 import path from "path";
+import { v4 as uuid } from "uuid";
 import { promises as fs, createWriteStream } from "fs";
 import { spawn, exec } from "child_process";
 
-export const makeBackup = (tag: string = "normal") =>
-  new Promise<void>((res, rej) => {
+export const createBackup = (tag: string = "normal") =>
+  new Promise<{ id: string; filename: string }>((res, rej) => {
     const stamp = Date.now();
 
-    const backupPath = path.resolve(
+    const id = uuid();
+
+    const filename = path.resolve(
       __dirname,
-      `../../backup/${stamp}_${tag}.sql`
+      `../../backup/${stamp}_${id}_${tag}.sql`
     );
-    const wstream = createWriteStream(backupPath);
+    const wstream = createWriteStream(filename);
 
     const mysqldump = spawn("mysqldump", [
       "-h" + process.env.DB_HOST,
@@ -23,16 +26,38 @@ export const makeBackup = (tag: string = "normal") =>
     mysqldump.stdout
       .pipe(wstream)
       .on("finish", () => {
-        res();
+        res({ id, filename });
       })
       .on("error", function (err) {
         rej(err);
       });
   });
 
-export const loadBackup = (name: string) =>
+export const getBackups = async (filter: { tag?: string; id?: string }) => {
+  const dir = await fs.readdir(path.resolve(__dirname, `../../backup/`));
+  const files: string[] = [];
+  for (const file of dir) {
+    const [stamp, id, tag] = file.slice(0, -4).split("_");
+
+    if (filter.tag && tag !== filter.tag) continue;
+    if (filter.id && id !== filter.id) continue;
+
+    if (id === filter.id) return [file];
+
+    files.push(file);
+  }
+
+  return files;
+};
+
+export const removeBackup = async (filename: string) => {
+  const backupPath = path.resolve(__dirname, `../../backup/${filename}`);
+  await fs.unlink(backupPath);
+};
+
+export const revertBackup = (filename: string) =>
   new Promise<void>(async (res, rej) => {
-    const backupPath = path.resolve(__dirname, `../../backup/${name}.sql`);
+    const backupPath = path.resolve(__dirname, `../../backup/${filename}`);
 
     exec(
       `mysql -u${process.env.DB_USERNAME} -p${process.env.DB_PASSWORD} -h${process.env.DB_HOST} ${process.env.DB_NAME} < ${backupPath}`,
