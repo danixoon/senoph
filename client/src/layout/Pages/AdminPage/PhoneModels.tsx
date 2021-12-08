@@ -11,7 +11,12 @@ import Input from "components/Input";
 import Layout from "components/Layout";
 import SpoilerPopup, { SpoilerPopupButton } from "components/SpoilerPopup";
 import Table, { TableColumn } from "components/Table";
-import { usePhoneType, usePhoneTypeByModel } from "hooks/misc/phoneType";
+import WithLoader from "components/WithLoader";
+import {
+  getPhoneTypeName,
+  usePhoneType,
+  usePhoneTypeByModel,
+} from "hooks/misc/phoneType";
 import { useInput } from "hooks/useInput";
 import { useTimeout } from "hooks/useTimeout";
 import { useTogglePayloadPopup } from "hooks/useTogglePopup";
@@ -33,7 +38,11 @@ const useContainer = () => {
   const types = api.useFetchPhoneTypesQuery({});
 
   return {
-    models: { ...models, items: models.data?.items ?? [] },
+    models: {
+      ...models,
+      items: models.data?.items ?? [],
+      status: extractStatus(models, true),
+    },
     types: { ...types, items: types.data?.items ?? [] },
     deletePhoneModel,
     deleteStatus: extractStatus(deleteStatus),
@@ -166,7 +175,7 @@ const PhoneModels: React.FC<PhoneModelsProps> = (props) => {
       key: "phoneTypeId",
       header: "Тип СС",
       mapper: (v, item: DB.PhoneModelAttributes) =>
-        getPhoneType(item.phoneTypeId),
+        getPhoneTypeName(getPhoneType(item.phoneTypeId)),
     },
     {
       key: "description",
@@ -354,7 +363,9 @@ const PhoneModels: React.FC<PhoneModelsProps> = (props) => {
         <Header align="right">
           Список моделей средств связи ({models.items.length})
         </Header>
-        <Table items={tableItems} columns={columns} />
+        <WithLoader status={models.status}>
+          <Table items={tableItems} columns={columns} />
+        </WithLoader>
       </Layout>
     </>
   );

@@ -9,6 +9,7 @@ import Input from "components/Input";
 import Layout from "components/Layout";
 import SpoilerPopup, { SpoilerPopupButton } from "components/SpoilerPopup";
 import Table, { TableColumn } from "components/Table";
+import WithLoader from "components/WithLoader";
 import { useDepartment } from "hooks/misc/department";
 import { splitHolderName, useHolder } from "hooks/misc/holder";
 import { useInput } from "hooks/useInput";
@@ -30,7 +31,11 @@ const useContainer = () => {
   const getHolderName = useHolder();
 
   return {
-    holders: { ...holders, items: holders.data?.items ?? [] },
+    holders: {
+      ...holders,
+      items: holders.data?.items ?? [],
+      status: extractStatus(holders, true),
+    },
     deleteHolder,
     createHolder,
     editHolder,
@@ -105,6 +110,11 @@ const Holders: React.FC<HoldersProps> = (props) => {
       header: "ФИО",
       mapper: (v, item: Api.Models.Holder) => splitHolderName(item),
     },
+    {
+      key: "description",
+      header: "Дополнение",
+      mapper: (v, item: Api.Models.Holder) => item.description ?? "",
+    },
   ];
 
   const [bind] = useInput({});
@@ -125,7 +135,15 @@ const Holders: React.FC<HoldersProps> = (props) => {
           {...editPopup}
           status={editStatus}
           defaults={editedHolder}
-          onSubmit={(payload) => editHolder({ id: editedHolder.id, firstName: payload.firstName, lastName: payload.lastName, middleName: payload.middleName })}
+          onSubmit={(payload) =>
+            editHolder({
+              id: editedHolder.id,
+              firstName: payload.firstName,
+              lastName: payload.lastName,
+              middleName: payload.middleName,
+              description: payload.description
+            })
+          }
           items={[
             {
               name: "lastName",
@@ -145,6 +163,13 @@ const Holders: React.FC<HoldersProps> = (props) => {
               nullable: true,
               content: ({ bind, name }) => (
                 <Input {...bind} required label="Отчество" name={name} />
+              ),
+            },
+            {
+              name: "description",
+              nullable: true,
+              content: ({ bind, name }) => (
+                <Input {...bind} label="Дополнение" name={name} />
               ),
             },
           ]}
@@ -184,6 +209,13 @@ const Holders: React.FC<HoldersProps> = (props) => {
               name="middleName"
               style={{ flex: "1" }}
             />
+            <Input
+              label="Дополнение"
+              placeholder="..."
+              {...bind}
+              name="description"
+              style={{ flex: "1" }}
+            />
             <Button
               style={{
                 marginTop: "auto",
@@ -203,7 +235,9 @@ const Holders: React.FC<HoldersProps> = (props) => {
         <Header align="right">
           Список владельцев ({holders.items.length})
         </Header>
-        <Table items={tableItems} columns={columns} />
+        <WithLoader status={holders.status}>
+          <Table items={tableItems} columns={columns} />
+        </WithLoader>
       </Layout>
     </>
   );

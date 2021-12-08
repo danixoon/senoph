@@ -120,6 +120,8 @@ declare namespace DB {
     firstName: string;
     lastName: string;
     middleName: string;
+
+    description?: string;
   }>;
 
   type DepartmentAttributes = Attributes<{

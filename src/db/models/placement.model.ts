@@ -16,6 +16,7 @@ export default class Placement extends Model<
   DB.CreateAttributes<DB.PlacementAttributes>
 > {
   @AllowNull(false)
+  @Unique
   @Column(DataType.STRING)
   name: string;
 

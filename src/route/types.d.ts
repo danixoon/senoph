@@ -464,6 +464,7 @@ declare namespace Api {
             firstName: string;
             lastName: string;
             middleName: string;
+            description?: string;
           },
           {}
         >);
@@ -544,6 +545,7 @@ declare namespace Api {
             firstName?: string;
             lastName?: string;
             middleName?: string;
+            description?: string;
           },
           {}
         >)

@@ -9,6 +9,7 @@ import Input from "components/Input";
 import Layout from "components/Layout";
 import SpoilerPopup, { SpoilerPopupButton } from "components/SpoilerPopup";
 import Table, { TableColumn } from "components/Table";
+import WithLoader from "components/WithLoader";
 import { useInput } from "hooks/useInput";
 import { useTogglePayloadPopup } from "hooks/useTogglePopup";
 import ItemEditPopup from "layout/Popups/ItemEditPopup";
@@ -27,7 +28,11 @@ const useContainer = () => {
   const [editPhoneType, editStatus] = api.useEditPhoneTypeMutation();
 
   return {
-    phoneTypes: { ...phoneTypes, items: phoneTypes.data?.items ?? [] },
+    phoneTypes: {
+      ...phoneTypes,
+      items: phoneTypes.data?.items ?? [],
+      status: extractStatus(phoneTypes, true),
+    },
     deletePhoneType,
     deleteStatus: extractStatus(deleteStatus),
     createStatus: extractStatus(createStatus),
@@ -215,7 +220,9 @@ const PhoneTypes: React.FC<PhoneTypesProps> = (props) => {
         <Header align="right">
           Список типов средств связи ({phoneTypes.items.length})
         </Header>
-        <Table items={tableItems} columns={columns} />
+        <WithLoader status={phoneTypes.status}>
+          <Table items={tableItems} columns={columns} />
+        </WithLoader>
       </Layout>
     </>
   );

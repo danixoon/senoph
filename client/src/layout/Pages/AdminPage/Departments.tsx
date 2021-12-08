@@ -9,6 +9,7 @@ import Input from "components/Input";
 import Layout from "components/Layout";
 import SpoilerPopup, { SpoilerPopupButton } from "components/SpoilerPopup";
 import Table, { TableColumn } from "components/Table";
+import WithLoader from "components/WithLoader";
 import { useInput } from "hooks/useInput";
 import { useTogglePayloadPopup } from "hooks/useTogglePopup";
 import ItemEditPopup from "layout/Popups/ItemEditPopup";
@@ -29,7 +30,11 @@ const useDepartmentsContainer = () => {
   const [editDepartment, editStatus] = api.useEditDepartmentMutation();
 
   return {
-    departments: { ...departments, items: departments.data?.items ?? [] },
+    departments: {
+      ...departments,
+      items: departments.data?.items ?? [],
+      status: extractStatus(departments, true),
+    },
     placements: { ...placements, items: placements.data?.items ?? [] },
     deleteDepartment,
     deleteStatus: extractStatus(deleteStatus),
@@ -148,7 +153,13 @@ const Departments: React.FC<DepartmentsProps> = (props) => {
             {
               name: "name",
               content: ({ bind, name, disabled }) => (
-                <Input {...bind} required label="Наименование" name={name} disabled={disabled} />
+                <Input
+                  {...bind}
+                  required
+                  label="Наименование"
+                  name={name}
+                  disabled={disabled}
+                />
               ),
             },
             {
@@ -170,7 +181,12 @@ const Departments: React.FC<DepartmentsProps> = (props) => {
             {
               name: "description",
               content: ({ bind, name, disabled }) => (
-                <Input {...bind} label="Описание" name={name} disabled={disabled} />
+                <Input
+                  {...bind}
+                  label="Описание"
+                  name={name}
+                  disabled={disabled}
+                />
               ),
             },
           ]}
@@ -230,7 +246,9 @@ const Departments: React.FC<DepartmentsProps> = (props) => {
         <Header align="right">
           Список подразделений ({departments.items.length})
         </Header>
-        <Table items={tableItems} columns={columns} />
+        <WithLoader status={departments.status}>
+          <Table items={tableItems} columns={columns} />
+        </WithLoader>
       </Layout>
     </>
   );

@@ -61,6 +61,7 @@ router.put(
       firstName: tester(),
       lastName: tester(),
       middleName: tester(),
+      description: tester(),
     },
   }),
   transactionHandler(async (req, res) => {
@@ -95,16 +96,18 @@ router.post(
       firstName: tester().required(),
       lastName: tester().required(),
       middleName: tester().required(),
+      description: tester(),
     },
   }),
   transactionHandler(async (req, res) => {
     const { user } = req.params;
-    const { firstName, lastName, middleName } = req.query;
+    const { firstName, lastName, middleName, description } = req.query;
 
     const holder = await Holder.create({
       firstName,
       lastName,
       middleName,
+      description,
     });
 
     Log.log("holder", [holder.id], "create", user.id);

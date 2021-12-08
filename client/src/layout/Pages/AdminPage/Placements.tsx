@@ -9,6 +9,7 @@ import Input from "components/Input";
 import Layout from "components/Layout";
 import SpoilerPopup, { SpoilerPopupButton } from "components/SpoilerPopup";
 import Table, { TableColumn } from "components/Table";
+import WithLoader from "components/WithLoader";
 import { useInput } from "hooks/useInput";
 import { useNotice } from "hooks/useNotice";
 import { useTogglePayloadPopup } from "hooks/useTogglePopup";
@@ -28,7 +29,11 @@ const usePlacementsContainer = () => {
   const [editPlacement, editStatus] = api.useEditPlacementMutation();
 
   return {
-    placements: { ...placements, items: placements.data?.items ?? [] },
+    placements: {
+      ...placements,
+      items: placements.data?.items ?? [],
+      status: extractStatus(placements, true),
+    },
     deletePlacement,
     deleteStatus: extractStatus(deleteStatus),
     createStatus: extractStatus(createStatus),
@@ -186,7 +191,9 @@ const Departments: React.FC<PlacementsProps> = (props) => {
         <Header align="right">
           Список местоположений ({placements.items.length})
         </Header>
-        <Table items={tableItems} columns={columns} />
+        <WithLoader status={placements.status}>
+          <Table items={tableItems} columns={columns} />
+        </WithLoader>
       </Layout>
     </>
   );

@@ -35,6 +35,10 @@ export default class Holder extends Model<
   @Column(DataType.STRING)
   middleName: string;
 
+  @AllowNull(true)
+  @Column(DataType.STRING)
+  description: string;
+
   // @HasMany(() => Holding)
   // holdings: Holding[];
 

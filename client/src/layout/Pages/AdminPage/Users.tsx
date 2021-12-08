@@ -9,6 +9,7 @@ import Input from "components/Input";
 import Layout from "components/Layout";
 import SpoilerPopup, { SpoilerPopupButton } from "components/SpoilerPopup";
 import Table, { TableColumn } from "components/Table";
+import WithLoader from "components/WithLoader";
 import { useInput } from "hooks/useInput";
 import { useNotice } from "hooks/useNotice";
 import { useTogglePayloadPopup, useTogglePopup } from "hooks/useTogglePopup";
@@ -28,7 +29,11 @@ const useUsersContainer = () => {
   const [editUser, editStatus] = api.useEditUserMutation();
 
   return {
-    users: { ...users, items: users.data?.items ?? [] },
+    users: {
+      ...users,
+      items: users.data?.items ?? [],
+      status: extractStatus(users, true),
+    },
     deleteUser,
     createUser,
     editUser,
@@ -226,7 +231,9 @@ const Users: React.FC<UsersProps> = (props) => {
         <Header align="right">
           Список пользователей ({users.items.length})
         </Header>
-        <Table items={tableItems} columns={columns} />
+        <WithLoader status={users.status}>
+          <Table items={tableItems} columns={columns} />
+        </WithLoader>
       </Layout>
     </>
   );
