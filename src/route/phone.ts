@@ -221,7 +221,7 @@ router.get(
       ? [
           orderByKey(sortKey, sortDir ?? "asc", {
             modelName: [PhoneModel, "model", "name"],
-            category: [Category, "category", "category"],
+            category: [Category, "category", "categoryKey"],
             id: "id",
             inventoryKey: "inventoryKey",
             factoryKey: "factoryKey",
@@ -263,38 +263,34 @@ router.get(
       order,
       where: filter.where,
       include: [
-        // { model: Category, where: categoryFilter.where },
+        { model: Category },
         { model: PhoneModel, where: modelFilter.where },
         { model: Holding },
       ],
       //attributes: ["id"],
     });
 
-    const filteredItems =
-      // typeof departmentId === "undefined"
-      // ? items
-      items.filter((item) => {
-        const lastHolding = [...(item.holdings ?? [])].sort((a, b) =>
-          a.orderDate > b.orderDate ? 1 : -1
-        )[0];
+    const filteredItems = items.filter((item) => {
+      const lastHolding = [...(item.holdings ?? [])].sort((a, b) =>
+        a.orderDate > b.orderDate ? 1 : -1
+      )[0];
+      const lastCategory = [...(item.categories ?? [])].sort((a, b) =>
+        a.actDate > b.actDate ? 1 : -1
+      )[0];
 
-        const isDepartment = typeof departmentId !== "undefined";
-        const isHolder = typeof holderId !== "undefined";
+      const isDepartment = typeof departmentId !== "undefined";
+      const isHolder = typeof holderId !== "undefined";
+      const isCategory = typeof category !== "undefined";
 
-        // if (isDepartment && lastHolding?.departmentId !== departmentId)
-        // return false;
-        // if (isHolder && lastHolding?.holderId !== holderId) return false;
+      if (isCategory && category.toString() !== lastCategory.categoryKey)
+        return false;
+      if (isHolder && lastHolding?.holderId !== holderId) return false;
+      if (isDepartment && lastHolding?.departmentId !== departmentId)
+        return false;
 
-        return (
-          (isHolder ? lastHolding?.holderId === holderId : true) &&
-          (isDepartment ? lastHolding?.departmentId === departmentId : true)
-        );
-
-        // return true;
-      });
+      return true;
+    });
     const phones = filteredItems.slice(offset, offset + amount);
-
-    // const phones = await Phone.withHolders(ofsetted);
 
     res.send(
       prepareItems(phones as Api.Models.Phone[], filteredItems.length, offset)

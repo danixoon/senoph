@@ -89,7 +89,7 @@ const CreateContent: React.FC<HoldingPageProps> = (props) => {
               required
               {...bind}
               name="holderName"
-              label="Владещец"
+              label="Владелец"
               onActive={() => bindHoldingPopup.onToggle()}
               style={{ flex: "2" }}
             />
