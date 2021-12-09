@@ -74,7 +74,7 @@ export const init = async () => {
     });
 
     if (isProd) await fillProdDatabase();
-    else await fillDevDatabase(isFill);
+    else await fillDevDatabase(isFill, 1500);
   }
 };
 

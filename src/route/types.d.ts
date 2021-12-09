@@ -172,6 +172,7 @@ declare namespace Api {
 
   type FnRequestsMap = {
     get:
+      | (() => RouteHandler<"/admin/backup/export", Blob, { id: string }, {}>)
       | (() => RouteHandler<
           "/admin/backups",
           ItemsResponse<{
@@ -350,6 +351,12 @@ declare namespace Api {
       | (() => RouteHandler<"/logs", ItemsResponse<Api.Models.Log>, {}, {}>);
 
     post:
+      | (() => RouteHandler<
+          "/admin/backup/import",
+          { id: string },
+          { unsafe?: boolean },
+          { file: FileList }
+        >)
       | (() => RouteHandler<
           "/admin/backup",
           { id: string },

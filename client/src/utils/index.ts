@@ -26,7 +26,7 @@ export const getLocalDate = (checkDate?: Date | string) => {
 
   return isCurrentDay()
     ? date.toTimeString().split(/\s+/)[0]
-    : date.toDateString();
+    : date.toLocaleDateString();
 };
 
 export const mergeClassNames = (

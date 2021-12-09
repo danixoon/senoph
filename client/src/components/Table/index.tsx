@@ -48,8 +48,8 @@ type TableProps<T = any> = OverrideProps<
 
 type TableCellProps = OverrideProps<
   React.DetailedHTMLProps<
-    React.TdHTMLAttributes<HTMLTableDataCellElement>,
-    HTMLTableDataCellElement
+    React.TdHTMLAttributes<HTMLTableCellElement>,
+    HTMLTableCellElement
   >,
   {}
 >;

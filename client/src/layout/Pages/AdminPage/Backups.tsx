@@ -1,3 +1,4 @@
+import { exportBackup, importBackup } from "api/import";
 import ActionBox from "components/ActionBox";
 import Button from "components/Button";
 import Dropdown from "components/Dropdown";
@@ -8,18 +9,25 @@ import Icon, { LoaderIcon } from "components/Icon";
 import InfoBanner from "components/InfoBanner";
 import Input from "components/Input";
 import Layout from "components/Layout";
+import Link from "components/Link";
 import SpoilerPopup, { SpoilerPopupButton } from "components/SpoilerPopup";
 import Table, { TableColumn } from "components/Table";
 import WithLoader from "components/WithLoader";
-import { useInput } from "hooks/useInput";
+import { useFileInput, useInput } from "hooks/useInput";
 import { useNotice } from "hooks/useNotice";
 import { useTogglePayloadPopup } from "hooks/useTogglePopup";
 import ItemEditPopup from "layout/Popups/ItemEditPopup";
 import { NoticeContext } from "providers/NoticeProvider";
 import PopupLayer from "providers/PopupLayer";
+import TopBarLayer from "providers/TopBarLayer";
 import React from "react";
 import { api } from "store/slices/api";
-import { extractStatus, mergeStatuses, parseItems } from "store/utils";
+import {
+  extractStatus,
+  mergeStatuses,
+  parseItems,
+  splitStatus,
+} from "store/utils";
 
 export type BackupsProps = {};
 
@@ -67,9 +75,11 @@ const Departments: React.FC<BackupsProps> = (props) => {
             Восстановить
           </SpoilerPopupButton>
           <SpoilerPopupButton
-            onClick={() => backups.revert.exec({ id: item.id })}
+            onClick={() => {
+              exportBackup(item.id);
+            }}
           >
-            Скачать
+            Экспорт
           </SpoilerPopupButton>
           <SpoilerPopupButton
             onClick={() => backups.remove.exec({ id: item.id })}
@@ -106,9 +116,45 @@ const Departments: React.FC<BackupsProps> = (props) => {
   ];
 
   const [bind] = useInput({});
+  const [bindImport, setImport, ref] = useFileInput();
+
+  const [importStatus, setImportStatus] = React.useState(splitStatus("idle"));
+
+  useNotice(importStatus);
+
+  React.useEffect(() => {
+    if (!bindImport.files.file) return;
+
+    setImportStatus(splitStatus("loading"));
+    importBackup(bindImport.files.file[0])
+      .then((res) => {
+        setImportStatus(splitStatus("success"));
+      })
+      .catch((err) => setImportStatus(splitStatus(err)));
+  }, [bindImport.files.file]);
 
   return (
     <>
+      <TopBarLayer>
+        <Link
+          style={{ marginLeft: "auto", marginRight: "0.5rem" }}
+          size="sm"
+          color="primary"
+          onClick={() => {
+            setImport({});
+            ref?.click();
+          }}
+        >
+          Импортировать резервную копию <Icon.Upload color="primary" />
+        </Link>
+        <Input
+          hidden
+          name="file"
+          type="file"
+          inputProps={{ accept: ".sbac" }}
+          {...bindImport}
+        />
+      </TopBarLayer>
       <Layout flex="1">
         <Form
           input={bind.input}
