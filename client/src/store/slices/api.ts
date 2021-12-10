@@ -32,6 +32,9 @@ const tagTypes = [
   "log",
   "backup",
 ] as const;
+
+// api.
+
 export const api = createApi({
   reducerPath: "api",
   tagTypes,
@@ -596,6 +599,21 @@ export const api = createApi({
       }),
       providesTags: ["backup"],
     }),
+    importBackup: builder.mutation<
+      Api.GetResponse<"post", "/admin/backup/import">,
+      { body: Api.GetBody<"post", "/admin/backup/import"> } & Api.GetQuery<
+        "post",
+        "/admin/backup/import"
+      >
+    >({
+      query: ({ unsafe, body }) => ({
+        url: "admin/backup/import",
+        method: "POST",
+        params: { unsafe },
+        body,
+      }),
+      invalidatesTags: (r, e, a) => ["backup", "log"],
+    }),
     createBackup: builder.mutation<
       Api.GetResponse<"post", "/admin/backup">,
       Api.GetQuery<"post", "/admin/backup">
@@ -628,6 +646,17 @@ export const api = createApi({
         method: "DELETE",
       }),
       invalidatesTags: ["backup"],
+    }),
+    fetchNotice: builder.query<
+      Api.GetResponse<"get", "/notice">,
+      Api.GetQuery<"get", "/notice">
+    >({
+      query: (params) => ({
+        url: "notice",
+        params,
+        method: "GET",
+      }),
+      providesTags: tagTypes,
     }),
   }),
 });

@@ -7,6 +7,7 @@ import { spawn, exec } from "child_process";
 const { version } = require("../../package.json");
 
 type Stats = { VERSION: string; SHA: string; DATE: string; TAG?: string };
+export class ParsingError extends Error {}
 
 export const parseStats = (line: string) => {
   const result: Stats = {
@@ -21,7 +22,7 @@ export const parseStats = (line: string) => {
   }
 
   if (!result.SHA || !result.VERSION || !result.DATE)
-    throw new Error("SHA, VERSION and DATE required");
+    throw new ParsingError("SHA, VERSION and DATE required");
 
   return result;
 };
@@ -48,7 +49,7 @@ export const createBackup = async (tag: string = "normal") => {
     "-h" + process.env.DB_HOST,
     "-P" + process.env.DB_PORT,
     "-u" + process.env.DB_USERNAME,
-    "-p" + process.env.DB_PASSWORD,
+    process.env.DB_PASSWORD ? "-p" + process.env.DB_PASSWORD : "",
     process.env.DB_NAME,
   ]);
 
@@ -88,6 +89,7 @@ export const getBackups = async (filter: { tag?: string; id?: string }) => {
   const dir = await fs.readdir(path.resolve(__dirname, `../../backup/`));
   const files: string[] = [];
   for (const file of dir) {
+    if (!file.endsWith(".sql")) continue;
     const [stamp, id, tag] = file.slice(0, -4).split("_");
 
     if (filter.tag && tag !== filter.tag) continue;

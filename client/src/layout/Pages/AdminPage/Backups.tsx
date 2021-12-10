@@ -1,8 +1,10 @@
 import { exportBackup, importBackup } from "api/import";
+import qu from "@reduxjs/toolkit/query";
 import ActionBox from "components/ActionBox";
 import Button from "components/Button";
+import Checkbox from "components/Checkbox";
 import Dropdown from "components/Dropdown";
-import Form from "components/Form";
+import Form, { FormContext } from "components/Form";
 import Header from "components/Header";
 import Hr from "components/Hr";
 import Icon, { LoaderIcon } from "components/Icon";
@@ -21,6 +23,7 @@ import { NoticeContext } from "providers/NoticeProvider";
 import PopupLayer from "providers/PopupLayer";
 import TopBarLayer from "providers/TopBarLayer";
 import React from "react";
+import { useQueryCache } from "react-query";
 import { api } from "store/slices/api";
 import {
   extractStatus,
@@ -36,6 +39,7 @@ const useContainer = () => {
   const [createBackup, createStatus] = api.useCreateBackupMutation();
   const [revertBackup, revertStatus] = api.useRevertBackupMutation();
   const [removeBackup, removeStatus] = api.useRemoveBackupMutation();
+  const [importBackup, importStatus] = api.useImportBackupMutation();
 
   return {
     backups: {
@@ -43,6 +47,7 @@ const useContainer = () => {
       revert: { status: extractStatus(revertStatus), exec: revertBackup },
       create: { status: extractStatus(createStatus), exec: createBackup },
       remove: { status: extractStatus(removeStatus), exec: removeBackup },
+      import: { status: extractStatus(importStatus), exec: importBackup },
     },
   };
 };
@@ -115,33 +120,47 @@ const Departments: React.FC<BackupsProps> = (props) => {
     },
   ];
 
-  const [bind] = useInput({});
+  const [bind] = useInput<{}>({});
+  const [bindUnsafe] = useInput<{ unsafe?: boolean }>({});
   const [bindImport, setImport, ref] = useFileInput();
 
-  const [importStatus, setImportStatus] = React.useState(splitStatus("idle"));
+  const formContext = React.useContext(FormContext);
 
-  useNotice(importStatus);
+  // formContext.addCheck(bind.input, "tag", (v) => {
+
+  // });
+
+  useNotice(backups.import.status);
 
   React.useEffect(() => {
-    if (!bindImport.files.file) return;
+    if ((bindImport.files.file?.length ?? 0) === 0) return;
 
-    setImportStatus(splitStatus("loading"));
-    importBackup(bindImport.files.file[0])
-      .then((res) => {
-        setImportStatus(splitStatus("success"));
-      })
-      .catch((err) => setImportStatus(splitStatus(err)));
+    const body = new FormData();
+
+    body.append("file", (bindImport.files.file as FileList)[0]);
+
+    backups.import.exec({
+      body: body as any,
+      unsafe: bindUnsafe.input.unsafe as boolean,
+    });
   }, [bindImport.files.file]);
 
   return (
     <>
       <TopBarLayer>
+        <Checkbox
+          containerProps={{
+            style: { marginLeft: "auto", marginRight: "0.5rem" },
+          }}
+          label="Без проверки"
+          name="unsafe"
+          {...bind}
+        />
         <Link
-          style={{ marginLeft: "auto", marginRight: "0.5rem" }}
           size="sm"
           color="primary"
           onClick={() => {
-            setImport({});
+            if (ref) ref.value = "";
             ref?.click();
           }}
         >
@@ -159,14 +178,28 @@ const Departments: React.FC<BackupsProps> = (props) => {
         <Form
           input={bind.input}
           onSubmit={(data) => {
-            backups.create.exec(data as any);
+            backups.create.exec({ ...data, tag: data.tag.toUpperCase() });
           }}
         >
           <Layout flow="row">
             <Input
+              check={(v) => {
+                if (!v) return false;
+                if (v.length < 3 || v.length > 10) return "От 3 до 10 символов";
+                const correct = v
+                  .split("")
+                  .every(
+                    (c) => (c >= "a" && c <= "z") || (c >= "0" && c <= "9")
+                  );
+
+                if (!correct) return "Только латинские цифры и символы";
+
+                return false;
+              }}
               label="Метка"
               placeholder="normal"
               {...bind}
+              required
               name="tag"
               style={{ flex: "1" }}
             />

@@ -1,5 +1,5 @@
 import path from "path";
-import { promises as fs } from "fs";
+import { promises as fs, existsSync } from "fs";
 import { fillDevDatabase, fillProdDatabase } from "@backend/utils/db";
 import { Sequelize } from "sequelize-typescript";
 import { logger } from "@backend/utils/index";
@@ -76,6 +76,9 @@ export const init = async () => {
     if (isProd) await fillProdDatabase();
     else await fillDevDatabase(isFill, 1500);
   }
+
+  const backupDirPath = path.resolve(__dirname, "../../backup");
+  if (!existsSync(backupDirPath)) await fs.mkdir(backupDirPath);
 };
 
 export const close = async () => {

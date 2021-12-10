@@ -14,6 +14,7 @@ import {
   createBackup,
   getBackups,
   parseStats,
+  ParsingError,
   removeBackup,
   revertBackup,
 } from "@backend/db/backup";
@@ -57,11 +58,12 @@ router.get(
   access("admin"),
   validate({ query: {} }),
   transactionHandler(async (req, res, next) => {
-    const backupDir = path.resolve(__dirname, "../../backup/");
+    // const backupDir = path.resolve(__dirname, "../../backup/");
 
-    const dir = await fs.readdir(backupDir);
+    const backups = await getBackups({});
+
     const result = await Promise.all(
-      dir.map(async (v) => {
+      backups.map(async (v) => {
         const stats = await fs.stat(
           path.resolve(__dirname, "../../backup/", v)
         );
@@ -124,7 +126,8 @@ router.post(
   uploadMemory(".sbac").single("file"),
   validate({ query: { unsafe: tester().isBoolean() } }),
   transactionHandler(async (req, res, next) => {
-    const { user, unsafe } = req.params;
+    const { user } = req.params;
+    const { unsafe } = req.query;
     const file = req.file;
 
     if (!file)
@@ -142,41 +145,49 @@ router.post(
       })
     );
 
-    const stats = parseStats(line.substring(2));
+    try {
+      const stats = parseStats(line.substring(2));
 
-    const statsVer = stats.VERSION.split(".").slice(0, 2).join("");
-    const serverVer = version.split(".").slice(0, 2).join("");
+      const statsVer = stats.VERSION.split(".").slice(0, 2).join("");
+      const serverVer = version.split(".").slice(0, 2).join("");
 
-    if (!unsafe) {
-      if (statsVer !== serverVer)
-        throw new ApiError("INVALID_BODY", {
-          description: `Версия резервной копии (${stats.VERSION}) не поддерживается сервером (${version}).`,
+      if (!unsafe) {
+        if (statsVer !== serverVer)
+          throw new ApiError("INVALID_BODY", {
+            description: `Версия резервной копии (${stats.VERSION}) не поддерживается сервером (${version}).`,
+          });
+
+        const content = data.slice(line.length + 1, data.length);
+
+        const hash = crypto
+          .HmacSHA256(content, process.env.SECRET)
+          .toString(crypto.enc.Hex);
+
+        if (hash !== stats.SHA)
+          throw new ApiError(errorType.INVALID_BODY, {
+            description: "Проверка целостности резервной копии не удалась.",
+          });
+      }
+
+      const id = uuid();
+
+      await fs.writeFile(
+        path.resolve(
+          __dirname,
+          "../../backup/",
+          `${new Date(stats.DATE).getTime()}_${id}_${stats.TAG ?? "normal"}.sql`
+        ),
+        data
+      );
+
+      res.send({ id });
+    } catch (err) {
+      if (err instanceof ParsingError) {
+        throw new ApiError(errorType.VALIDATION_ERROR, {
+          description: "Некорректный файл резервной копии.",
         });
-
-      const content = data.slice(line.length + 1, data.length);
-
-      const hash = crypto
-        .HmacSHA256(content, process.env.SECRET)
-        .toString(crypto.enc.Hex);
-
-      if (hash !== stats.SHA)
-        throw new ApiError(errorType.INVALID_BODY, {
-          description: "Проверка целостности резервной копии не удалась.",
-        });
+      } else throw err;
     }
-
-    const id = uuid();
-
-    await fs.writeFile(
-      path.resolve(
-        __dirname,
-        "../../backup/",
-        `${new Date(stats.DATE).getTime()}_${id}_${stats.TAG ?? "normal"}.sql`
-      ),
-      data
-    );
-
-    res.send({ id });
   })
 );
 

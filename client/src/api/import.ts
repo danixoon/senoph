@@ -15,13 +15,13 @@ export const importPhone = async (file: File) => {
   });
 };
 
-export const importBackup = async (file: File) => {
+export const importBackup = async (file: File, unsafe?: boolean) => {
   const data = new FormData();
 
   data.append("file", file);
 
   return api.request("post", "/admin/backup/import", {
-    params: {},
+    params: { unsafe },
     data: data as any,
     headers: {
       "Content-Type": `multipart/form-data`,

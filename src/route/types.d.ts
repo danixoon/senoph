@@ -71,6 +71,11 @@ declare namespace Api {
     type Holder = RequiredId<DB.HolderAttributes>;
     type Holding = RequiredId<DB.HoldingAttributes> & { phoneIds: number[] };
     type Log = RequiredId<DB.LogAttributes>;
+    type Notice = {
+      phone: { changes: number; commits: number };
+      holding: { commits: number; changes: number };
+      category: { commits: number; changes: number };
+    };
     // }
   }
 
@@ -172,6 +177,7 @@ declare namespace Api {
 
   type FnRequestsMap = {
     get:
+      | (() => RouteHandler<"/notice", Api.Models.Notice, {}, {}>)
       | (() => RouteHandler<"/admin/backup/export", Blob, { id: string }, {}>)
       | (() => RouteHandler<
           "/admin/backups",
@@ -355,7 +361,7 @@ declare namespace Api {
           "/admin/backup/import",
           { id: string },
           { unsafe?: boolean },
-          { file: FileList }
+          { file: File }
         >)
       | (() => RouteHandler<
           "/admin/backup",

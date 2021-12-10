@@ -1,25 +1,47 @@
 import Button from "components/Button";
 import Header from "components/Header";
 import Hr from "components/Hr";
-import Icon from "components/Icon";
+import Icon, { IconProps } from "components/Icon";
 import Layout from "components/Layout";
 import Link from "components/Link";
-import LinkItem from "components/LinkItem";
+import LinkItem, { LinkItemProps } from "components/LinkItem";
+import Span from "components/Span";
 import Spoiler from "components/Spoiler";
 import Toggle from "components/Toggle";
-import LinkItemContainer from "containers/LinkItem";
+import LinkItemContainer, {
+  LinkItemContainer as LinkItemContainerProps,
+} from "containers/LinkItem";
 import { useInput } from "hooks/useInput";
 import * as React from "react";
 import { useAppSelector } from "store";
 import "./style.styl";
 
 export type SideBar = {
+  notice: Api.Models.Notice;
   page: "phone" | "category" | "holding" | "admin" | "commit";
   logout: () => void;
 };
 
+const NoticeBadge: React.FC<{ value: number }> = (props) => {
+  const { value } = props;
+  return <div className="notice-badge">{value}</div>;
+};
+
+const Item: React.FC<
+  {
+    badge?: number;
+    icon: React.FC<IconProps>;
+    text: string;
+  } & LinkItemContainerProps
+> = ({ badge, icon: IconItem, text, ...rest }) => (
+  <LinkItemContainer {...rest}>
+    <IconItem style={{ marginRight: "0.5rem" }} />
+    <span className="side-bar__item-text">{text}</span>
+    {badge && <NoticeBadge value={badge} />}
+  </LinkItemContainer>
+);
 const SideBar: React.FC<SideBar> = (props) => {
-  const { page, logout } = props;
+  const { notice, page, logout } = props;
   const handleSpoilerToggle = () => {};
 
   const user = useAppSelector((store) => store.app.user);
@@ -38,23 +60,30 @@ const SideBar: React.FC<SideBar> = (props) => {
           }
         >
           <Layout className="sidebar__group">
-            <LinkItemContainer
+            {/* <LinkItemContainer
               href="/phone/view"
               withQuery={(loc) => loc.pathname.startsWith("/phone/edit")}
             >
               <Icon.Eye style={{ marginRight: "0.5rem" }} />
               Просмотр
-            </LinkItemContainer>
-            <LinkItemContainer
+            </LinkItemContainer> */}
+            <Item
+              icon={(p) => <Icon.Eye {...p} />}
+              text="Просмотр"
+              href="/phone/view"
+              withQuery={(loc) => loc.pathname.startsWith("/phone/edit")}
+            />
+            <Item
               href="/phone/edit"
               withQuery={(loc) => loc.pathname.startsWith("/phone/view")}
-            >
-              <Icon.Settings style={{ marginRight: "0.5rem" }} />
-              Управление
-            </LinkItemContainer>
-            <LinkItemContainer href="/phone/commit/actions">
-              <Icon.DownloadCloud style={{ marginRight: "0.5rem" }} /> Действия
-            </LinkItemContainer>
+              text="Управление"
+              icon={(p) => <Icon.Settings {...p} />}
+            />
+            <Item
+              href="/phone/commit/actions"
+              text="Действия"
+              icon={(p) => <Icon.DownloadCloud {...p} />}
+            />
           </Layout>
         </Spoiler>
         <Spoiler
@@ -68,12 +97,21 @@ const SideBar: React.FC<SideBar> = (props) => {
           }
         >
           <Layout className="sidebar__group">
-            <LinkItemContainer href="/holding/view">
-              <Icon.Eye style={{ marginRight: "0.5rem" }} /> Просмотр
-            </LinkItemContainer>
-            <LinkItemContainer href="/holding/commit">
-              <Icon.Check style={{ marginRight: "0.5rem" }} /> Подтверждения
-            </LinkItemContainer>
+            <Item
+              href="/holding/view"
+              text="Просмотр"
+              icon={(p) => <Icon.Eye {...p} />}
+            />
+            <Item
+              href="/holding/commit"
+              text="Подтверждения"
+              icon={(p) => <Icon.Check {...p} />}
+            />
+            <Item
+              href="/holding/phone/commit"
+              text="Изменения"
+              icon={(p) => <Icon.Check {...p} />}
+            />
             <LinkItemContainer href="/holding/phone/commit">
               <Icon.Edit3 style={{ marginRight: "0.5rem" }} /> Изменения
             </LinkItemContainer>

@@ -41,7 +41,7 @@ const Checkbox: React.FC<CheckboxProps> = (props) => {
           type="checkbox"
           {...mergedProps}
           disabled={disabled}
-          checked={checked}
+          checked={!!checked}
         />
       </div>
       {label && (
