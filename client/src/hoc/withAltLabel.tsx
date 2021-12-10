@@ -1,13 +1,12 @@
-import AltPopup from "components/AltPopup";
+import AltPopup, { AltPopupProps } from "components/AltPopup";
 import * as React from "react";
 import PopupLayer from "providers/PopupLayer";
 
-type WithAltLabel = {
+export type WithAltLabel = {
   altLabel?: {
     text: string;
-    position?: "left" | "right" | "top" | "bottom";
     isOpen?: boolean;
-  };
+  } & Omit<AltPopupProps, "target">;
 };
 
 export const withAltLabel = function <T>(TargetComponent: React.FC<T>) {
@@ -16,6 +15,8 @@ export const withAltLabel = function <T>(TargetComponent: React.FC<T>) {
     const handleMouseEnter = (e: React.MouseEvent<HTMLElement, MouseEvent>) => {
       const target = e.target as HTMLElement;
       setTarget(target ?? null);
+
+      // console.log("MOUSE ENTERED!");
     };
     const handleMouseLeave = (e: React.MouseEvent<HTMLElement, MouseEvent>) => {
       setTarget(null);
@@ -31,14 +32,13 @@ export const withAltLabel = function <T>(TargetComponent: React.FC<T>) {
           onMouseLeave={handleMouseLeave}
           aria-label={altLabel?.text ?? undefined}
         />
-       
-          <AltPopup
-            position={altLabel?.position ?? "bottom"}
-            target={altLabel ? target : null}
-          >
-            {altLabel?.text}
-          </AltPopup>
-        
+
+        <AltPopup
+          {...altLabel}
+          target={altLabel ? target : null}
+        >
+          {altLabel?.text}
+        </AltPopup>
       </>
     ) : (
       <TargetComponent {...(rest as T)} />

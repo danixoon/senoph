@@ -1,9 +1,121 @@
 import axios from "axios";
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import api from "../../api";
+import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-const initialState = {
-  filter: {},
+export type AppState = {
+  token: string | null;
+  user: Api.Models.User;
+} & WithStatus;
+
+const initialState: AppState = {
+  token: null,
+  user: { id: -1, username: "...", role: "unknown", name: "..." },
+  status: "idle",
 };
+
+// export const fetchAccount = createAsyncThunk(
+//   "app/fetchAccount",
+//   async (params: Api.GetQuery<"get", "/account">, thunk) => {
+//     const { app } = thunk.getState() as StoreType;
+//     const response = await axios.get("/api/account", {
+//       headers: { Authorization: app.token },
+//     });
+
+//     const data = response.data as Api.GetResponse<"get", "/account">;
+
+//     thunk.dispatch(appSlice.actions.setAccount(data));
+
+//     return data;
+//   }
+// );
+
+// export const fetchAccount = createAsyncThunk(
+//   "app/fetchAccount",
+//   async (params: Api.GetQuery<"get", "/account">, thunk) => {
+//     const { app } = thunk.getState() as StoreType;
+//     const response = await axios.get("/api/account", {
+//       headers: { Authorization: app.token },
+//     });
+
+//     const data = response.data as Api.GetResponse<"get", "/account">;
+
+//     return data;
+//   }
+// );
+
+export const login = createAsyncThunk(
+  "app/login",
+  async (params: string | Api.GetQuery<"get", "/account/login">, thunk) => {
+    try {
+      let token = params as string;
+      if (typeof params !== "string") {
+        const response = await api.request("get", "/account/login", {
+          params,
+          data: {},
+        });
+        token = response.token;
+      }
+
+      const account = await api.request("get", "/account", {
+        params: {},
+        data: {},
+        token,
+      });
+
+      // thunk.dispatch(appSlice.actions.setAccount(account));
+
+      return { token, account };
+    } catch (err) {
+      throw thunk.rejectWithValue(err.error);
+    }
+  }
+);
+
+export const appSlice = createSlice({
+  name: "app",
+  initialState: {
+    ...initialState,
+    token: localStorage.getItem("token") ?? null,
+  },
+  reducers: {
+    logout: (state, { payload }: PayloadAction) => {
+      window.localStorage.removeItem("token");
+
+      return initialState;
+    },
+  },
+  extraReducers: (builder) =>
+    builder
+      .addCase(login.pending, (state, { payload }) => {
+        state.status = "loading";
+      })
+      .addCase(login.rejected, (state, { payload }) => {
+        state.status = payload as Api.Error;
+
+        window.localStorage.removeItem("token");
+      })
+      .addCase(login.fulfilled, (state, { payload }) => {
+        const { token, account } = payload;
+
+        state.user = { ...initialState.user, ...account };
+        state.token = token;
+        state.status = "success";
+
+        window.localStorage.setItem("token", token);
+      }),
+  // .addCase(fetchAccount.pending, (state, { payload }) => {
+  //   state.user.status = "loading";
+  // })
+  // // .addCase(fetchAccount.rejected, (state, { payload }) => {
+  // //   state.user.status = (payload as Api.WithError).error;
+  // // })
+  // .addCase(fetchAccount.fulfilled, (state, { payload }) => {
+  //   state.user.status = "success";
+  // }),
+});
+
+export const { logout } = appSlice.actions;
+export default appSlice.reducer;
 
 // export const createPhone = createAsyncThunk(
 //   "phone/createPhone",
@@ -31,8 +143,6 @@ const initialState = {
 //   },
 // });
 
-// // export const { increment, decrement, incrementByAmount } = phoneSlice.actions;
-
 // // The function below is called a selector and allows us to select a value from
 // // the state. Selectors can also be defined inline where they're used instead of
 // // in the slice file. For example: `useSelector((state: RootState) => state.counter.value)`
@@ -46,5 +156,3 @@ const initialState = {
 // //     dispatch(incrementByAmount(amount));
 // //   }
 // // };
-
-// export default appSlice.reducer;

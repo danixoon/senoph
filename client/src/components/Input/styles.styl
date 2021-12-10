@@ -3,6 +3,11 @@
 .input
   margin: margin.md
   position: relative
+ 
+  &__clear-button
+    position: absolute
+    bottom: -2px
+    right: -4px
 
   &__info
     @extend .monospace
@@ -22,6 +27,29 @@
     color: colors.dark
     width: 100%
     font: inherit
+    display: flex
+    align-items: center
+    cursor: text
+    padding: 2px
+    background-color: colors.white
+
+    &[type="file"]
+      display: none
+
+    &[disabled]
+      background-color: colors.light
+
+    &_file
+      white-space: nowrap
+      text-overflow: ellipsis
+      overflow: hidden
+      // word-wrap: nowrap
+
+    &_clearable
+      padding-right: 20px
+      
+  &_xs  
+    font-size: fontSize.xs
 
   &_sm
     height: 20px

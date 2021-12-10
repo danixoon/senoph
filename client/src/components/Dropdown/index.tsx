@@ -4,22 +4,29 @@ import { mergeClassNames, mergeProps } from "utils";
 import "./styles.styl";
 import { ReactComponent } from "icons/arrowDown.svg";
 import Button from "components/Button";
+import { FormContext } from "components/Form";
+import Span from "components/Span";
+import AltPopup from "components/AltPopup";
+import { useIsFirstEffect } from "hooks/useIsFirstEffect";
+import { useTimeout } from "hooks/useTimeout";
 
-type DropdownItem = { id: any; label: string; payload?: any };
+export type DropdownItem = { id: any; label: string; payload?: any };
 
-type DropdownProps = OverrideProps<
+export type DropdownProps = OverrideProps<
   React.InputHTMLAttributes<HTMLInputElement>,
   {
     input: any;
     name: string;
-    label: string;
+    label?: string;
     items: DropdownItem[];
     onChange: (event: { target: { name: string; value: any } }) => void;
+    required?: boolean;
   }
 >;
 
 const Dropdown: React.FC<DropdownProps> = (props) => {
-  const { label, name, items, input, onChange, disabled, ...rest } = props;
+  const { label, name, items, input, onChange, disabled, required, ...rest } =
+    props;
 
   const [isOpened, toggleOpen] = React.useState(() => false);
 
@@ -33,7 +40,8 @@ const Dropdown: React.FC<DropdownProps> = (props) => {
     input[name] !== undefined ? [emptyItem, ...items] : [...items];
   let selectedItem: ArrayElement<DropdownProps["items"]> =
     listItems.find((item, i) => {
-      if (item.id === input[name]) {
+      if (item.id == null || input[name] == null) return;
+      if (item.id.toString() === input[name].toString()) {
         listItems.splice(i, 1);
         return true;
       }
@@ -49,19 +57,53 @@ const Dropdown: React.FC<DropdownProps> = (props) => {
       className: mergeClassNames(
         `dropdown`,
         isOpened && "dropdown_opened",
-        disabled && "dropdown_disabled"
+        disabled && "dropdown_disabled",
+        label && "dropdown_labeled"
       ),
     },
     rest
   );
 
   const dropdownRef = React.useRef<HTMLDivElement | null>(null);
+  const formContext = React.useContext(FormContext);
+
+  if (required)
+    formContext.addCheck(input, name, (v) =>
+      v == null ? "Значение обязательно" : false
+    );
+
+  // TODO: Make popup system reusable
+  const [show, message, toggleMessage] = useTimeout<string | null>(null, 2000);
+
+  const isFirst = useIsFirstEffect();
+
+  React.useEffect(() => {
+    // TODO: Make error context nullable
+    if (isFirst) return;
+    const msg = formContext.error[name]?.message;
+    toggleMessage(msg);
+  }, [formContext.error[name]]);
+
+  React.useEffect(() => {
+    if (isFirst) return;
+
+    if (selectedItem.id === null) onChange({ target: { name, value: null } });
+  }, [selectedItem.id]);
 
   return (
     <div {...mergedProps}>
-      <Label weight="medium" className="drowpown__label">
-        {label}
-      </Label>
+      {label && (
+        <Label weight="medium" className="drowpown__label">
+          {label}
+          {required ? (
+            <Span inline color="primary">
+              *
+            </Span>
+          ) : (
+            ""
+          )}
+        </Label>
+      )}
       <div
         ref={(r) => (dropdownRef.current = r)}
         className="dropdown__container"
@@ -77,19 +119,28 @@ const Dropdown: React.FC<DropdownProps> = (props) => {
           }, 0);
         }}
       >
-        <Button color="invisible" className="dropdown-item">
-          <Label className="dropdown-item__label" unselectable>{selectedItem.label}</Label>
+        <Button inverted className="dropdown-item" fill>
+          <Label className="dropdown-item__label" unselectable>
+            {selectedItem.label}
+          </Label>
         </Button>
         {listItems.map((item, i) => (
           <Button
             key={item.id}
-            color="invisible"
+            fill
+            inverted
             className="dropdown-item"
             onClick={() => handleItemSelect(item)}
           >
             <Label unselectable>{item.label}</Label>
           </Button>
         ))}
+        <AltPopup
+          target={show && message ? dropdownRef.current : null}
+          position="bottom"
+        >
+          {message}
+        </AltPopup>
       </div>
     </div>
   );

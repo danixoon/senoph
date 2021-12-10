@@ -31,29 +31,43 @@ const Paginator = React.forwardRef<HTMLDivElement, PaginatorProps>(
       if (next <= max && next >= min) onChange(next);
     };
 
+    const noMarginX = { marginLeft: 0, marginRight: 0 };
+
+    const pages = new Array(size)
+      .fill(0)
+      .map((_, i) => {
+        let center = Math.floor(size / 2);
+        let page =
+          i +
+          current -
+          center +
+          (current - center < min ? Math.abs(min - (current - center)) : 0) -
+          (current + center > max ? Math.abs(max - (current + center)) : 0);
+
+        return page < min || page > max ? null : (
+          <Button
+            key={page}
+            onClick={() => onChange(page)}
+            style={noMarginX}
+            color={page === current ? "primary" : "secondary"}
+          >
+            {page}
+          </Button>
+        );
+      })
+      .filter((v) => v);
+
+    if (pages.length <= 1) return <> </>;
+
     return (
       <ButtonGroup {...mergedProps}>
-        <Button onClick={() => handleIncrement(-1)}>{"<"}</Button>
-        {new Array(size).fill(0).map((_, i) => {
-          const side = Math.floor(size / 2);
-          let page =
-            i +
-            current -
-            side +
-            (current - side < min ? Math.abs(min - (current - side)) : 0) -
-            (current + side > max ? Math.abs(max - (current + side)) : 0);
-
-          return (
-            <Button
-              key={page}
-              onClick={() => onChange(page)}
-              color={page === current ? "primary" : "secondary"}
-            >
-              {page}
-            </Button>
-          );
-        })}
-        <Button onClick={() => handleIncrement(1)}>{">"}</Button>
+        <Button style={noMarginX} onClick={() => handleIncrement(-1)}>
+          {"<"}
+        </Button>
+        {pages}
+        <Button style={noMarginX} onClick={() => handleIncrement(1)}>
+          {">"}
+        </Button>
       </ButtonGroup>
     );
   }

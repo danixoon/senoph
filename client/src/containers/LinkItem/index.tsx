@@ -1,15 +1,30 @@
 import React from "react";
-
 import LinkItem, { LinkItemProps } from "components/LinkItem";
 import { useLocation } from "react-router";
+import type { Location } from "history";
 
-type LinkItemContainer = OverrideProps<Omit<LinkItemProps, "selected">, {}>;
+type LinkItemContainer = OverrideProps<
+  Omit<LinkItemProps, "selected">,
+  {
+    withQuery?: boolean | ((loc: Location<any>) => boolean);
+  }
+>;
 
 const LinkItemContainer: React.FC<LinkItemContainer> = (props) => {
-  const { href, ...rest } = props;
-  const { pathname } = useLocation();
+  const { href, withQuery, ...rest } = props;
+  const location = useLocation();
+  const { search, pathname } = location;
 
-  return <LinkItem {...props} selected={href === pathname} />;
+  const appendQuery =
+    typeof withQuery === "function" ? withQuery(location) : withQuery;
+
+  return (
+    <LinkItem
+      {...rest}
+      href={`${href}${appendQuery && search ? search : ""}`}
+      selected={pathname.startsWith(href ?? "")}
+    />
+  );
 };
 
 export default LinkItemContainer;

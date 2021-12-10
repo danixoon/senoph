@@ -12,7 +12,7 @@ import React from "react";
 import Form from ".";
 
 storiesOf("Components/Containers/Form", module).add("simple", () => {
-  const bindInput = useInput({ username: "", password: "", invisible: false });
+  const [bindInput] = useInput({ username: "", password: "", invisible: false });
   const groupRef = React.useRef<HTMLDivElement | null>(null);
 
   const [showMessage, message, setMessage] = useTimeout<string | null>(null, 1000);

@@ -1,0 +1,21 @@
+@require 'stylus/theme.styl'
+
+.category-item  
+  &__level
+    flex: 1
+
+  &:not(:last-child)
+    border-bottom: 1px solid colors.light
+    margin-bottom: margin.md
+
+
+.holding-item
+  padding-bottom: margin.md
+  &:not(:last-child)
+    border-bottom: 1px solid colors.light
+    margin-bottom: margin.md
+    
+
+.edit-item
+  &_editable
+    border-bottom: 1px solid colors.primary

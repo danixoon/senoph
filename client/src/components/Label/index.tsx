@@ -2,11 +2,11 @@ import * as React from "react";
 import { mergeClassNames, mergeProps } from "utils";
 import "./styles.styl";
 
-type LabelProps = OverrideProps<
+export type LabelProps = OverrideProps<
   React.PropsWithChildren<React.HTMLAttributes<HTMLSpanElement>>,
   {
     unselectable?: boolean;
-    size?: "xs" | "sm" | "md";
+    size?: Size;
     margin?: "right" | "left";
     weight?: "normal" | "medium" | "bold";
   }
@@ -18,6 +18,7 @@ const Label: React.FC<LabelProps> = (props: LabelProps) => {
     unselectable,
     weight = "normal",
     size = "sm",
+    color = "darkBg",
     margin,
     ...rest
   } = props;
@@ -28,7 +29,8 @@ const Label: React.FC<LabelProps> = (props: LabelProps) => {
         "label",
         `label_${size}`,
         unselectable && "label_unselectable",
-        `weight_${weight}`
+        `weight_${weight}`,
+        `col_${color}`
       ),
       style: margin && {
         [`margin${margin[0].toUpperCase() + margin.slice(1)}`]: "7px",

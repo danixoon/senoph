@@ -11,13 +11,9 @@ declare module "*.png" {
   export default content;
 }
 
-declare type WithRandomId = {
-  randomId?: string;
-};
 
-declare type ArrayElement<
-  ArrayType extends readonly unknown[]
-> = ArrayType[number];
+declare type ArrayElement<ArrayType extends readonly unknown[]> =
+  ArrayType[number];
 
 declare type Action<T extends keyof Payloads = keyof Payloads> = {
   type: T;
@@ -52,9 +48,10 @@ declare type GetPayload<
 
 declare type ActionEnum = {
   [T in keyof Payloads]: {
-    [S in "initial" | "loading" | "success"]: ((
-      payload: GetPayload<T, S>
-    ) => { type: string; payload: typeof payload }) & { type: string };
+    [S in "initial" | "loading" | "success"]: ((payload: GetPayload<T, S>) => {
+      type: string;
+      payload: typeof payload;
+    }) & { type: string };
   };
 };
 
@@ -71,14 +68,15 @@ declare type StateSchema<
 declare type OverrideProps<F, T> = Omit<F, keyof T> & T;
 
 declare type HookOnChange = (e: {
-  target: { name: string; type?: string; value: any };
+  target: { name: string; type?: string; value: any; files?: FileList | null };
 }) => void;
 
 declare type StateCreator<T extends object> = () => T;
 
-declare type ContainerProps<
-  T
-> = T extends import("react-redux").ConnectedComponent<_, infer P> ? P : never;
+declare type ContainerProps<T> =
+  T extends import("react-redux").ConnectedComponent<infer _, infer P>
+    ? P
+    : never;
 
 declare type QueryError = {
   message: string;
@@ -89,3 +87,6 @@ declare type QueryHook<T> = [
   T,
   { isFetching: boolean; error: null | QueryError[] }
 ];
+
+declare type SortDir = "asc" | "desc";
+declare type Size = "none" | "xs" | "sm" | "md" | "lg";

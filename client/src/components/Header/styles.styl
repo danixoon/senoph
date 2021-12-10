@@ -1,14 +1,21 @@
 @require 'stylus/theme.styl'
 
 .header
-  display: flex
+  // display: flex
   display: block
   // align-items: center
-  padding: 0px 15px
+  padding: 0px padding.lg
   color: colors.muted
   font-size: fontSize.xs
   font-style: italic
 
+  &_unsized
+    height: 0px
+
+  &_bottom
+    margin-top: margin.md
 
   &_hr
-    border-bottom: 1px solid colors.primary
+    border-bottom: 1px solid colors.light
+    padding: padding.lg 15px  
+    // margin-bottom: margin.lg

@@ -1,7 +1,10 @@
 @require 'stylus/theme.styl'
 
 
+
+
 tr
+  height: 2rem
   &.row_selectable
     cursor: pointer
 
@@ -11,8 +14,10 @@ tr
     &.row_selected
       
       @extend .focus
+      border: 0
       & > td
-
+        border-color: transparent
+/* 
         border-color: colors.primary
         
 
@@ -22,18 +27,16 @@ tr
           border-right-color: colors.primary
         
         border-right-color: transparent
-        border-left-color: transparent
+        border-left-color: transparent */
 
 td
-  @extend .border, .padding_md
+  @extend .b_t, .padding_md
+  
   
   // width: 1px;
-  // white-space: nowrap
-
-  word-wrap: normal
-  white-space: pre
-  overflow: hidden
+  white-space: nowrap
   text-overflow: ellipsis
+  overflow: hidden
 
   &.cell_sortable
     cursor: pointer
@@ -62,13 +65,22 @@ td
       &:after
         transform: scaleY(1)
         visibility: visible
-      
+
+
+.cell
+  &_checkbox
+    padding: 0px
+    width: 2rem
+  &_wrap
+    white-space: normal !important
+  
         
     
 
 thead
-  @extend .weight_medium, .monospace
-  text-align: center
+  @extend .weight_bold
+  // text-align: center
+  
 
   & > tr > td
     border: none
@@ -79,3 +91,11 @@ thead
   table-layout: fixed
   width: 100%
   word-wrap: break-word
+  color: colors.bgDark
+
+  & > tbody > tr > td
+    word-wrap: normal
+    white-space: pre
+    overflow: hidden
+    text-overflow: ellipsis
+

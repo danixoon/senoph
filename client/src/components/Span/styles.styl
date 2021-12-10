@@ -1,0 +1,37 @@
+@require 'stylus/theme.styl'
+
+.span
+  &:not(&_inline)
+    display: flex
+    // justify-content: center
+    // align-items: center
+    // margin: margin.sm
+    // padding: 0 padding.md
+
+  &_center
+    justify-content: center
+    align-items: center
+
+  &_sm
+    font-size: fontSize.sm
+  &_xs
+    font-size: fontSize.xs
+
+ 
+
+  &_monospace
+    @extend .monospace
+
+
+  &_secondary
+    color: colors.bgDark
+
+  &_primary
+    color: colors.primary
+
+  &_alter
+    color: colors.alter
+
+  &_strike
+    color: colors.primary;
+    text-decoration: line-through

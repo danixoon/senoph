@@ -1,6 +1,11 @@
 node_modules
 build
+backup
+deploy
+deploy.zip
+uploads
 yarn.lock
 .env*
 logs
 *.log
+*.blg

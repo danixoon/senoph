@@ -10,26 +10,45 @@ export interface LinkProps
   > {
   isMonospace?: boolean;
   size?: "xs" | "sm";
-  
+  native?: boolean;
+  inline?: boolean;
 }
-const Link: React.FC<LinkProps> = ({ href = "#", ...props }: LinkProps) => {
-  const { children, isMonospace, size = "xs", onClick, ...rest } = props;
+const Link: React.FC<LinkProps> = ({ href, ...props }: LinkProps) => {
+  const {
+    children,
+    isMonospace,
+    native,
+    inline,
+    size = "sm",
+    onClick,
+    ...rest
+  } = props;
 
   const mergedProps = mergeProps(
     {
       className: mergeClassNames(
         "link",
         `link_${size}`,
+        inline && "link_inline",
         isMonospace && "link_monospace"
       ),
     },
     rest
   );
 
-  return (
+  return href && !native ? (
     <RouterLink to={href} tabIndex={0} {...mergedProps} onClick={onClick}>
       {children}
     </RouterLink>
+  ) : (
+    <a
+      href={href ?? (native ? "#" : undefined)}
+      tabIndex={0}
+      {...mergedProps}
+      onClick={onClick}
+    >
+      {children}
+    </a>
   );
 };
 

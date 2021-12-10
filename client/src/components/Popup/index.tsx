@@ -1,28 +1,49 @@
 import * as React from "react";
+import ReactDOM from "react-dom";
 import { mergeClassNames, mergeProps } from "utils";
 import "./styles.styl";
 import { ReactComponent as CrossIcon } from "icons/crossBig.svg";
 import { AnimatePresence, motion, HTMLMotionProps } from "framer-motion";
 import Button from "components/Button";
 
-type PopupProps = OverrideProps<
+export type PopupProps = OverrideProps<
   React.HTMLAttributes<HTMLDivElement>,
   {
     isOpen?: boolean;
     closeable?: boolean;
     size?: "sm" | "md" | "lg";
+    noPadding?: boolean;
     onToggle?: (isOpen: boolean) => void;
   }
 >;
 
+export const PopupContext = React.createContext<null | HTMLElement>(null);
+export const PopupTopBar: React.FC<{}> = (props) => {
+  const { children } = props;
+  return (
+    <PopupContext.Consumer>
+      {(ref) => ref && ReactDOM.createPortal(children, ref)}
+    </PopupContext.Consumer>
+  );
+};
+
 const Popup: React.FC<PopupProps> = (props: PopupProps) => {
-  const { children, isOpen, closeable, onToggle, size = "sm", ...rest } = props;
+  const {
+    children,
+    isOpen,
+    closeable,
+    onToggle,
+    noPadding,
+    size = "sm",
+    ...rest
+  } = props;
 
   const mergedProps = mergeProps(
     {
       className: mergeClassNames(
         "popup__container",
-        `popup__container_${size}`
+        `popup__container_${size}`,
+        noPadding && "popup_no-padding"
       ),
     },
     rest
@@ -32,34 +53,92 @@ const Popup: React.FC<PopupProps> = (props: PopupProps) => {
     if (onToggle) onToggle(!isOpen);
   };
 
+  // React.useEffect(() => {
+  //   if (isOpen) {
+  //     console.clear();
+  //     console.log("REF ISSS: " + ref);
+  //     setTimeout(() => ref?.focus());
+  //   }
+  // }, [isOpen]);
+
+  const [ref, setRef] = React.useState<HTMLDivElement | null>(() => null);
+  const topBarRef = React.useCallback((node: HTMLDivElement) => {
+    if (node != null) {
+      setRef(node);
+    }
+  }, []);
+
+  // const closeRef = React.useRef<HTMLElement | null>(null);
+  const [closeRef, setCloseRef] = React.useState<HTMLElement | null>(
+    () => null
+  );
+  const prevRef = React.useRef<HTMLElement | null>(null);
+
+  React.useEffect(() => {
+    if (closeRef) {
+      prevRef.current = document.activeElement as HTMLElement;
+      closeRef.focus();
+    } else prevRef.current?.focus();
+  }, [!closeRef]);
+
+  const containerRef = React.useRef<null | HTMLElement>(null);
+
+  React.useEffect(() => {
+    const handler = function (this: HTMLElement, ev: KeyboardEvent) {
+      if (
+        ev.key === "Escape" &&
+        onToggle &&
+        containerRef.current &&
+        containerRef.current.contains(document.activeElement)
+      )
+        onToggle(false);
+    };
+
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  });
+
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          key="popup"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.06 }}
-          className="popup"
-        >
-          <div onClick={handleOnToggle} className="popup__fade" />
-          <div {...mergedProps}>
-            {closeable && (
-              <Button
-                color="invisible"
-                onClick={handleOnToggle}
-                className="popup__close"
-                tabIndex={0}
-              >
-                <CrossIcon />
-              </Button>
-            )}
-            {children}
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <PopupContext.Provider value={ref}>
+      <div
+        ref={(e) => (containerRef.current = e)}
+        className="popup-container"
+        style={rest.style}
+        tabIndex={0}
+      >
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              key="popup"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.06 }}
+              className="popup"
+            >
+              <div onClick={handleOnToggle} className="popup__fade" />
+              <div {...mergedProps}>
+                {(true || closeable) && (
+                  <Button
+                    inverted
+                    onClick={handleOnToggle}
+                    className="popup__close"
+                    ref={(e) => {
+                      setCloseRef(e);
+                      // e?.focus();
+                    }}
+                  >
+                    <CrossIcon />
+                  </Button>
+                )}
+                <div ref={topBarRef} className="popup__header" />
+                {children}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </PopupContext.Provider>
   );
 };
 

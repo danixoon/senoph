@@ -3,7 +3,7 @@ import React from "react";
 import Switch from ".";
 import { useInput } from "hooks/useInput";
 storiesOf("Components/Inputs/Switch", module).add("basic", () => {
-  const bind = useInput({
+  const [bind] = useInput({
     switch: "1",
   });
   return (

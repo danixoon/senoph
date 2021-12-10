@@ -6,24 +6,43 @@ import "./styles.styl";
 export type ButtonProps = OverrideProps<
   React.PropsWithChildren<React.ButtonHTMLAttributes<HTMLButtonElement>>,
   {
-    color?: "secondary" | "primary" | "invisible";
-    size?: "sm" | "md";
+    color?: "secondary" | "primary" | "bgDark" | "muted" | "light";
+    inverted?: boolean;
+    fill?: boolean;
+    size?: Size;
+    margin?: Size;
   }
 >;
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   (props, ref) => {
-    const { children, color = "secondary", size = "sm", ...rest } = props;
+    const {
+      children,
+      color = "secondary",
+      inverted,
+      size = "sm",
+      margin = "sm",
+      fill,
+      type = "button",
+      ...rest
+    } = props;
 
     const mergedProps = mergeProps(
       {
-        className: mergeClassNames("btn", `btn_${color}`, `btn_${size}`),
+        className: mergeClassNames(
+          "btn",
+          inverted && "btn_inverted",
+          `btn_${color}`,
+          `btn_${size}`,
+          fill && "btn_fill",
+          `mg_${margin}`
+        ),
       },
       rest
     );
 
     return (
-      <button ref={ref} {...mergedProps}>
+      <button ref={ref} {...mergedProps} type={type}>
         {children}
       </button>
     );

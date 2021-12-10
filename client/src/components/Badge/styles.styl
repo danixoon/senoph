@@ -2,7 +2,7 @@
 
 .badge
   @extend .monospace
-  margin: margin.sm
+  // margin: margin.sm
   padding: 0 padding.md
   font-size: fontSize.xs
   background-color: colors.white
@@ -11,12 +11,18 @@
   justify-content: center
   align-items: center
 
+
   &_interactive
     @extend .focusable
+    cursor: pointer
 
-  &_secondary
+  &_dark
     color: colors.bgDark
     border: 1px solid colors.bgDark
+
+  &_secondary
+    color: colors.secondary
+    border: 1px solid colors.secondary
 
   &_primary
     color: colors.primary
@@ -27,3 +33,6 @@
       content: url('icons/badgeWarn.svg')
       height: 14px
       margin-left: margin.md
+
+  &_no-border
+    border: 0

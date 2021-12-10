@@ -7,7 +7,7 @@ import Toggle from "components/Toggle";
 import { useInput } from "hooks/useInput";
 
 storiesOf("Components/Containers/Layout", module).add("layout", () => {
-  const bindInput = useInput({ toggle: false });
+  const [bindInput] = useInput({ toggle: false });
   return (
     <Layout margin="md">
       <Header> Немые сообщения </Header>

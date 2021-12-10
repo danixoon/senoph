@@ -80,11 +80,11 @@ export default {
 
   // A map from regular expressions to module names or to arrays of module names that allow to stub out resources with a single module
   moduleNameMapper: {
-    "@backend/utils": ["<rootDir>/utils.ts"],
+    "@backend/utils/(.*)": ["<rootDir>/utils/$1"],
     "@backend/db/(.*)": ["<rootDir>/db/$1"],
     "@backend/graphql/(.*)": ["<rootDir>/graphql/$1"],
-    "@backend/bot//(.*)": ["<rootDir>/bot/$1"],
     "@backend/middleware/(.*)": ["<rootDir>/middleware/$1"],
+    "@backend/route/(.*)": ["<rootDir>/route/$1"],
   },
 
   // An array of regexp pattern strings, matched against all module paths before considered 'visible' to the module loader

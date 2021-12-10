@@ -3,7 +3,11 @@ import { useIsFirstEffect } from "./useIsFirstEffect";
 
 export type TimeoutHook<T = any> = [boolean, T, (value: T) => void];
 
-export const useTimeout = <T>(startValue: T, timeout: number) => {
+export const useTimeout = <T>(
+  startValue: T,
+  timeout: number,
+  autoReset: boolean = false
+) => {
   const [{ changed, value, expired }, setInfo] = React.useState(
     () =>
       ({ changed: false, value: startValue, expired: true } as {
@@ -27,7 +31,12 @@ export const useTimeout = <T>(startValue: T, timeout: number) => {
 
     if (!changed) {
       timeoutId = window.setTimeout(
-        () => setInfo({ value, changed: false, expired: true }),
+        () =>
+          setInfo({
+            value: autoReset ? startValue : value,
+            changed: false,
+            expired: true,
+          }),
         timeout
       );
 

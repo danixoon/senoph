@@ -1,36 +1,130 @@
 import * as React from "react";
 
-export type InputHook<T = any> = {
-  input: T;
+export type InputBind<T = any> = {
+  input: PartialType<T, null | string>;
   onChange: HookOnChange;
-  // setInput: React.Dispatch<React.SetStateAction<T>>;
 };
 
-export const useInput = function <T extends object = any>(
-  defaultValue: T = {} as T,
-  prepareValue: <K extends keyof T>(key: K, value: T[K], input: T) => T = (
-    key,
-    value,
-    input
-  ) => input
-): InputHook<T> {
-  const [input, setInput] = React.useState<T>(() => defaultValue);
+export type SetInput<T = any> = (input: T, force?: boolean) => void;
 
-  const onChange = (e: {
-    target: { name: string; type?: string; value: any };
-  }) => {
-    const changedInput = prepareValue(
-      e.target.name as any,
-      e.target.value as any,
-      { ...input }
-    ) as any;
+export type InputFileBind<T = any> = {
+  input: PartialNullable<T>;
+  files: PartialNullable<{ [key: string]: FileList | null }>;
+  onChange: HookOnChange;
+};
 
-    changedInput[e.target.name] =
-      e.target.type === "checkbox"
-        ? !changedInput[e.target.name]
-        : e.target.value;
+export type InputHook<T = any> = [InputBind<T>, SetInput<T>];
+export type InputFileHook<T = any> = [
+  InputFileBind<T> & { ref: (e: HTMLInputElement) => void },
+  (input: T) => void,
+  HTMLInputElement | null
+];
+
+export type InputHookPrepare<P> = <T extends PartialType<P, null | string>>(
+  nextInput: T
+) => T | null;
+
+export const handleChangeEvent = <T>(
+  input: T,
+  e: {
+    target: {
+      name: string;
+      type?: string;
+      value: any;
+      files?: FileList | null;
+    };
+  }
+) => {
+  let changedInput = { ...input } as any;
+
+  switch (e.target.type) {
+    case "checkbox":
+      changedInput[e.target.name] = !changedInput[e.target.name];
+      break;
+    case "file":
+      changedInput[e.target.name] = e.target.files;
+      break;
+    default:
+      changedInput[e.target.name] = e.target.value;
+      break;
+  }
+
+  if (
+    e.target.type !== "file" &&
+    typeof changedInput[e.target.name] === "string" &&
+    changedInput[e.target.name].trim() === ""
+  )
+    changedInput[e.target.name] = null;
+
+  return changedInput;
+};
+
+export const useInput = function <T>(
+  defaultValue: PartialType<T, null | string> = {} as PartialType<
+    T,
+    null | string
+  >,
+  prepareValue: InputHookPrepare<PartialType<T, null | string>> = (nextInput) =>
+    nextInput
+): InputHook<PartialType<T, null | string>> {
+  const [input, setInput] = React.useState<PartialType<T, null | string>>(
+    () => defaultValue
+  );
+
+  const onChange: HookOnChange = (e) => {
+    let changedInput = handleChangeEvent(input, e);
+
+    changedInput = prepareValue(changedInput);
+    if (changedInput) setInput(changedInput);
+  };
+
+  return [
+    { input, onChange },
+    (values, force) => {
+      // let result = { ...values };
+      // for (const key in values)
+      if (force) {
+        setInput(values);
+        return;
+      }
+
+      const result = prepareValue(values);
+      if (result) setInput(result);
+    },
+  ];
+};
+
+export const useFileInput = function <
+  P = any,
+  T extends PartialNullable<{
+    [K in keyof P]: FileList | null;
+  }> = PartialNullable<{ [K in keyof P]: FileList | null }>
+>(): InputFileHook<T> {
+  const [input, setInput] = React.useState<T>(() => ({} as any));
+
+  const onChange: HookOnChange = (e) => {
+    let changedInput = handleChangeEvent(input, e);
+
     setInput(changedInput);
   };
 
-  return { input, onChange };
+  const textInput = {} as any;
+
+  for (const prop in input) {
+    const propValue = (input[prop] as any) ?? [{}];
+    textInput[prop] = propValue[0]?.name ?? "Не выбрано";
+  }
+
+  const [ref, setRef] = React.useState<HTMLInputElement | null>(null);
+
+  return [
+    {
+      input: textInput,
+      files: input,
+      onChange,
+      ref: (e: HTMLInputElement) => setRef(e),
+    },
+    setInput,
+    ref,
+  ];
 };

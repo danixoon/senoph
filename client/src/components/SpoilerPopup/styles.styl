@@ -1,0 +1,54 @@
+@require 'stylus/theme.styl'
+
+
+.spoiler-popup
+  // @extend .unselectable
+  // overflow: hidden
+  border-radius: radius.sm
+  @extend .shadow
+
+  display: flex
+  // flex-flow: column
+
+  position: absolute
+  background-color: colors.white
+  text-align: center
+  padding: padding.md (padding.lg)
+  z-index: zIndex.alt
+  pointer-events: all
+  // width: 120px
+  // height: 100px
+  border: 1px solid colors.light
+
+  &_z-popup
+    z-index: zIndex.alt + zIndex.popup
+
+  &__content
+    color: colors.white
+    // margin: auto
+    display: flex
+    flex-flow: column
+    flex: 1
+
+  &__icon
+    position: absolute
+
+  &__button
+    background-color: colors.white
+    color: colors.muted
+    border-radius: 5px
+    border: 0
+    text-align: left
+
+    &:hover
+      background-color: colors.light
+    &:active
+      background-color: colors.light
+
+  // &:first-child
+    // border-radius: 5px 5px 0 0
+
+  // &:last-child
+    // border-radius: 0 0 5px 5px
+  
+

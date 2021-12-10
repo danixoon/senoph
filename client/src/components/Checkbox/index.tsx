@@ -8,28 +8,34 @@ type CheckboxProps = OverrideProps<
   {
     input: any;
     name: string;
-    label: string;
+    label?: string;
+    containerProps?: React.HTMLAttributes<HTMLElement>;
   }
 >;
 
 const Checkbox: React.FC<CheckboxProps> = (props) => {
-  const { label, input, disabled, ...rest } = props;
+  const { label, input, disabled, containerProps, ...rest } = props;
+
+  const checked = input[rest.name];
 
   const mergedProps = mergeProps(
     { className: mergeClassNames(`checkbox__input`) },
     rest
   );
 
-  const checked = input[rest.name];
-
-  return (
-    <label
-      className={mergeClassNames(
+  const mergedContainerProps = mergeProps(
+    {
+      className: mergeClassNames(
         "checkbox",
         checked && "checkbox_checked",
         disabled && "checkbox_disabled"
-      )}
-    >
+      ),
+    },
+    containerProps
+  );
+
+  return (
+    <label {...mergedContainerProps}>
       <div className="checkbox__icon">
         <input
           type="checkbox"
@@ -38,9 +44,11 @@ const Checkbox: React.FC<CheckboxProps> = (props) => {
           checked={checked}
         />
       </div>
-      <Label className="checkbox__label" margin="left" unselectable>
-        {label}
-      </Label>
+      {label && (
+        <Label className="checkbox__label" margin="left" unselectable>
+          {label}
+        </Label>
+      )}
     </label>
   );
 };
