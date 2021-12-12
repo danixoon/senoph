@@ -17,6 +17,7 @@ import PhoneEditActions from "layout/PhoneEditActions";
 import PopupLayer from "providers/PopupLayer";
 import WithLoader from "components/WithLoader";
 import { splitStatus } from "store/utils";
+import { usePaginator } from "hooks/usePaginator";
 
 export type Item = { id: any; content?: React.ReactChild; name: string };
 export type ItemSelectionPopupProps = OverrideProps<
@@ -71,6 +72,10 @@ const ItemSelectionPopup: React.FC<ItemSelectionPopupProps> = (props) => {
     ...rest
   } = props;
 
+  const pageItems = 12;
+  const [offset, setOffset] = React.useState(0);
+  const paginator = usePaginator(offset, items.length, pageItems);
+
   return (
     <Popup {...rest} size="md" closeable noPadding>
       <PopupTopBar>
@@ -82,27 +87,33 @@ const ItemSelectionPopup: React.FC<ItemSelectionPopupProps> = (props) => {
       </PopupTopBar>
       <WithLoader status={status ?? splitStatus("idle")}>
         <Layout padding="md" flex="1" className="items-list">
+          <Paginator
+            style={{ margin: "auto" }}
+            onChange={(page) => setOffset((page - 1) * pageItems)}
+            current={paginator.currentPage}
+            size={5}
+            max={paginator.maxPage}
+            min={1}
+          />
           {children}
           {/* <Hr /> */}
 
-          {items
-            // .filter((item) => isIncludes(item.name))
-            .map((item) => {
-              const content = item.content ?? item.name;
-              return (
-                <Item
-                  key={item.id}
-                  selectable={selectable}
-                  id={item.id}
-                  onSelect={() => {
-                    onSelect(item);
-                    if (rest.onToggle) rest.onToggle(false);
-                  }}
-                >
-                  {content}
-                </Item>
-              );
-            })}
+          {items.slice(offset, offset + pageItems).map((item) => {
+            const content = item.content ?? item.name;
+            return (
+              <Item
+                key={item.id}
+                selectable={selectable}
+                id={item.id}
+                onSelect={() => {
+                  onSelect(item);
+                  if (rest.onToggle) rest.onToggle(false);
+                }}
+              >
+                {content}
+              </Item>
+            );
+          })}
         </Layout>
       </WithLoader>
     </Popup>

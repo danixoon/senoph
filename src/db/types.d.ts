@@ -17,7 +17,7 @@ declare type CommitTargetName = keyof Pick<
 
 declare type ChangedDataType = "string" | "date" | "number";
 declare type CommitActionType = "approve" | "decline";
-declare type CommitStatus = "delete-pending" | "create-pending";
+declare type CommitStatus = "delete-pending" | "create-pending" | null;
 declare type HoldingReason =
   | "dismissal"
   | "movement"

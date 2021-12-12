@@ -42,6 +42,7 @@ export const locationQueryReducer = <T extends { filter: F }, F>(
   });
 
 export const updateQuery = <T>(query: Partial<T>, pathname?: string) => {
+  
   const q = clearObject(query);
   const search = qs.stringify(q).trim();
   // if (pathname)

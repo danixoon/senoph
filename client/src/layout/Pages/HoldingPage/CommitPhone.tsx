@@ -87,7 +87,7 @@ const CommitPhoneContent: React.FC<HoldingPageProps> = (props) => {
       key: "id",
       size: "30px",
       mapper: (v, item) => (
-        <Link href={`/holding/view#${item.holdingId}`}>#{item.holdingId}</Link>
+        <Link href={`/holding/view?id=${item.holdingId}`}>#{item.holdingId}</Link>
       ),
     },
     {

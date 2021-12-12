@@ -250,7 +250,7 @@ declare namespace Api {
       | (() => RouteHandler<
           "/phone/commit",
           ItemsResponse<Api.Models.Phone>,
-          { status?: CommitStatus },
+          { status?: CommitStatus; offset?: number; amount?: number },
           {}
         >)
       | (() => RouteHandler<
@@ -275,6 +275,9 @@ declare namespace Api {
             holderId?: number;
             orderDate?: Date;
             orderKey?: string;
+
+            offset?: number;
+            amount?: number;
           },
           {}
         >)
@@ -382,6 +385,7 @@ declare namespace Api {
                   departmentId: number;
                   orderDate: string;
                   orderKey: string;
+                  // merge: boolean;
                   phoneRandomIds: string[];
                 }[];
               }>
@@ -397,6 +401,7 @@ declare namespace Api {
                   departmentId: number;
                   orderDate: string;
                   orderKey: string;
+                  merge: boolean;
                   phoneRandomIds: string[];
                 }[];
               }>
@@ -430,7 +435,7 @@ declare namespace Api {
           {},
           {
             orderFile?: FileList;
-            phoneIds: number[];
+            phoneIds?: number[];
             holderId: number;
             departmentId: number;
 

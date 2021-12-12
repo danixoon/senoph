@@ -1,9 +1,12 @@
+import Paginator from "components/Paginator";
 import { push } from "connected-react-router";
 import { useFetchConfigMap } from "hooks/api/useFetchConfigMap";
 import { useNotice } from "hooks/useNotice";
+import { usePaginator } from "hooks/usePaginator";
 import { useQueryInput } from "hooks/useQueryInput";
 import HoldingPage from "layout/Pages/HoldingPage";
 import { NoticeContext } from "providers/NoticeProvider";
+import TopBarLayer from "providers/TopBarLayer";
 import React from "react";
 import { QueryStatus } from "react-query";
 import { getStatusProps } from "react-query/types/core/utils";
@@ -18,42 +21,53 @@ const HoldingPageContainer: React.FC<Props> = (props) => {
 
   const { departments } = useFetchConfigMap();
 
-  const [bind] = useQueryInput<
-    Partial<
-      Record<
-        | "holderId"
-        | "departmentId"
-        | "orderDate"
-        | "orderKey"
-        | "status"
-        | "phoneIds",
-        string
-      >
-    >
-  >({});
+  // const [bind] = useQueryInput<
+  //   Partial<
+  //     Record<
+  //       | "holderId"
+  //       | "departmentId"
+  //       | "orderDate"
+  //       | "orderKey"
+  //       | "status"
+  //       | "phoneIds",
+  //       string
+  //     >
+  //   >
+  // >({});
 
-  const phoneIds =
-    bind.input.phoneIds?.split(",").map((id) => Number(id)) ?? [];
+  // const phoneIds =
+  //   bind.input.phoneIds?.split(",").map((id) => Number(id)) ?? [];
 
-  const { data: phones, ...phonesRest } = api.useFetchPhonesQuery(
-    {
-      amount: phoneIds.length,
-      offset: 0,
-      ids: phoneIds.length > 0 ? undefined : phoneIds,
-    },
-    { skip: (bind.input.phoneIds?.length ?? 0) === 0 }
-  );
+  const pageItems = 10;
 
-  const filterHook = useQueryInput<{ orderKey?: string; orderDate?: string }>(
-    {}
-  );
+  const filterHook = useQueryInput<{
+    orderKey?: string;
+    orderDate?: string;
+    status?: any;
+    holderId?: any;
+    departmentId?: any;
+  }>({});
 
-  const [bindFilter] = filterHook;
+  const [bindFilter, setFilter] = filterHook;
+  const [offset, setOffset] = React.useState(() => 0);
+
+  React.useEffect(() => {
+    setOffset(0);
+  }, [
+    bindFilter.input.orderDate,
+    bindFilter.input.orderKey,
+    bindFilter.input.departmentId,
+    bindFilter.input.holderId,
+    bindFilter.input.status,
+  ]);
 
   // TODO: Possible weak?
-  const filterData = clearObject(bindFilter.input) as any;
+  const { id, ...filterData } = clearObject(bindFilter.input) as any;
   const { data: holdings, ...holdingsRest } = api.useFetchHoldingsQuery({
     ...filterData,
+    ids: id ? [id] : undefined,
+    offset,
+    amount: pageItems,
   });
 
   const holdingPhoneIds = Array.from(
@@ -84,7 +98,7 @@ const HoldingPageContainer: React.FC<Props> = (props) => {
     }
   }
 
-  const phonesStatus = extractStatus(phonesRest, true);
+  // const phonesStatus = extractStatus(phonesRest, true);
   const holdingsStatus = extractStatus(holdingsRest, true);
 
   const noticeContext = React.useContext(NoticeContext);
@@ -134,18 +148,35 @@ const HoldingPageContainer: React.FC<Props> = (props) => {
     onSuccess: () => dispatch(push("/holding/commit")),
   });
 
+  const { currentPage, maxPage } = usePaginator(
+    offset,
+    holdings?.total ?? pageItems,
+    pageItems
+  );
+
   return (
-    <HoldingPage
-      onSubmitHolding={(data) => {
-        createHolding(data);
-      }}
-      phones={phones?.items ?? []}
-      holdings={holdingItems}
-      phonesStatus={phonesStatus}
-      holdingCreationStatus={holdingCreationStatus}
-      holdingsStatus={holdingsStatus}
-      filterHook={filterHook}
-    />
+    <>
+      <TopBarLayer>
+        <Paginator
+          size={5}
+          current={currentPage}
+          min={1}
+          max={maxPage}
+          onChange={(page) => setOffset((page - 1) * pageItems)}
+        />
+      </TopBarLayer>
+      <HoldingPage
+        onSubmitHolding={(data) => {
+          createHolding(data);
+        }}
+        // phones={phones?.items ?? []}
+        holdings={{ items: holdingItems, offset, total: holdings?.total ?? 0 }}
+        // phonesStatus={phonesStatus}
+        holdingCreationStatus={holdingCreationStatus}
+        holdingsStatus={holdingsStatus}
+        filterHook={filterHook}
+      />
+    </>
   );
 };
 

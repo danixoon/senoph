@@ -1,3 +1,4 @@
+import qs from "query-string";
 import Checkbox from "components/Checkbox";
 import Dropdown from "components/Dropdown";
 import Form from "components/Form";
@@ -9,23 +10,47 @@ import Link from "components/Link";
 import Paginator from "components/Paginator";
 import Popup from "components/Popup";
 import Table, { TableColumn } from "components/Table";
+import { push } from "connected-react-router";
 import { InputHook, useInput } from "hooks/useInput";
 import PopupLayer from "providers/PopupLayer";
 import TopBarLayer from "providers/TopBarLayer";
 import * as React from "react";
+import { useDispatch } from "react-redux";
+import { useLocation } from "react-router";
 import { PhoneState } from "store/slices/phone";
+import Span from "components/Span";
 
-export const defaultColumns: TableColumn[] = [
+export const getDefaultColumns: (
+  withoutSelection?: boolean
+) => TableColumn[] = (without) => [
   {
     key: "id",
     header: "ID",
     sortable: true,
     size: "30px",
-    mapper: (v, item) => (
-      <Link tabIndex={-1} href={`/phone?selectedId=${v}`}>
-        #{v}
-      </Link>
-    ),
+    mapper: (v, item) => {
+      // const dispatch = useDispatch();
+      // const location = useLocation();
+      // const search = save ? qs.parse(location.search) : {};
+      // search.selectedId = item.id;
+
+      if (without) return <Span>#{item.id}</Span>;
+
+      return (
+        <Link
+          tabIndex={-1}
+          href={`/phone?selectedId=${v}`}
+
+          // onClick={() => {
+          // dispatch(
+          // push({ pathname: "/phone/view", search: qs.stringify(search) })
+          // );
+          // }}
+        >
+          #{v}
+        </Link>
+      );
+    },
   },
   {
     key: "modelName",
@@ -114,7 +139,7 @@ const Items: React.FC<{
     };
   });
 
-  const columns: TableColumn[] = [...defaultColumns];
+  const columns: TableColumn[] = getDefaultColumns(true);
 
   if (mode === "edit")
     columns.push({

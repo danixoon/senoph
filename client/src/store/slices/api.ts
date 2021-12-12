@@ -38,6 +38,7 @@ const tagTypes = [
 export const api = createApi({
   reducerPath: "api",
   tagTypes,
+  keepUnusedDataFor: 5,
   baseQuery: fetchBaseQuery({
     baseUrl: "/api",
     prepareHeaders: (headers, { getState }) => {

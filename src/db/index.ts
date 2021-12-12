@@ -74,7 +74,7 @@ export const init = async () => {
     });
 
     if (isProd) await fillProdDatabase();
-    else await fillDevDatabase(isFill, 1500);
+    else await fillDevDatabase(isFill, 500);
   }
 
   const backupDirPath = path.resolve(__dirname, "../../backup");

@@ -34,11 +34,22 @@ router.get(
       orderDate: tester().isDate(),
       holderId: tester().isNumber(),
       departmentId: tester().isNumber(),
+
+      amount: tester().isNumber(),
+      offset: tester().isNumber(),
     },
   }),
   transactionHandler(async (req, res) => {
-    const { orderKey, holderId, departmentId, orderDate, status, ids } =
-      req.query;
+    const {
+      offset = 0,
+      amount,
+      orderKey,
+      holderId,
+      departmentId,
+      orderDate,
+      status,
+      ids,
+    } = req.query;
     const { user } = req.params;
 
     // const filter = new Filter({
@@ -50,6 +61,7 @@ router.get(
 
     const filter = new WhereFilter<DB.HoldingAttributes>();
 
+    filter.on("id").optional(Op.in, ids);
     filter.on("orderKey").optional(Op.eq, orderKey);
     filter.on("status").optional(Op.eq, status === "based" ? null : status);
     filter.on("departmentId").optional(Op.eq, departmentId);
@@ -72,29 +84,34 @@ router.get(
           // where: phoneFilter.where,
           attributes: ["id"],
           required: false,
+          // separate: true,
           // required: (req.query.phoneIds ?? []).length > 0,
         },
         { model: Holder },
       ],
       order: [["orderDate", "ASC"]],
+      // limit: amount,
+      // offset: offset,
       where: filter.where,
     });
 
     res.send(
       prepareItems(
-        holdings.map((holding) => ({
-          id: holding.id,
-          holderId: holding.holderId,
-          phoneIds: holding.phones?.map((phone) => phone.id) ?? [],
-          reasonId: holding.reasonId,
-          status: holding.status,
-          authorId: holding.authorId,
-          departmentId: holding.departmentId,
-          orderKey: holding.orderKey,
-          orderDate: holding.orderDate,
-          orderUrl: holding.orderUrl,
-          holder: holding.holder,
-        })),
+        holdings
+          .slice(offset, offset + (amount ?? holdings.length))
+          .map((holding) => ({
+            id: holding.id,
+            holderId: holding.holderId,
+            phoneIds: holding.phones?.map((phone) => phone.id) ?? [],
+            reasonId: holding.reasonId,
+            status: holding.status,
+            authorId: holding.authorId,
+            departmentId: holding.departmentId,
+            orderKey: holding.orderKey,
+            orderDate: holding.orderDate,
+            orderUrl: holding.orderUrl,
+            holder: holding.holder,
+          })),
         holdings.length,
         0
       )
@@ -165,12 +182,12 @@ router.post(
           "other",
         ])
         .required(),
-      phoneIds: tester().array().required(),
+      phoneIds: tester().array("int"),
       orderFile: tester(),
       orderKey: tester().required(),
     },
   }),
-  owner("phone", (req) => req.body.phoneIds),
+  // owner("phone", (req) => req.body.phoneIds),
   transactionHandler(async (req, res) => {
     // TODO: Make file validation
     const { user } = req.params;
@@ -199,9 +216,10 @@ router.post(
 
     // TODO: Make holding create validation
 
-    const phoneHoldings = await HoldingPhone.bulkCreate(
-      phoneIds.map((phoneId) => ({ phoneId, holdingId: holding.id }))
-    );
+    if (phoneIds && phoneIds?.length > 0)
+      await HoldingPhone.bulkCreate(
+        phoneIds.map((phoneId) => ({ phoneId, holdingId: holding.id }))
+      );
 
     Log.log("holding", [holding.id], "create", user.id);
 

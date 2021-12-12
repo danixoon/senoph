@@ -21,7 +21,7 @@ export type QueryState = PartialNullable<
     selectedId: any;
     page: number;
   }
-> & { offset: number; amount: number; pageItems: number };
+> & { offset: number; pageItems: number };
 
 export type PhonePageMode = "edit" | "view";
 
@@ -53,7 +53,6 @@ const initialState: PhoneState = {
     page: null,
     selectedId: null,
     offset: 0,
-    amount: 100,
     pageItems: 40,
   },
 };

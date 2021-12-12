@@ -14,7 +14,7 @@ import Link from "components/Link";
 import { useHistory, useLocation, useRouteMatch } from "react-router";
 import { useQueryInput } from "hooks/useQueryInput";
 import { useStoreQueryInput } from "hooks/useStoreQueryInput";
-import { defaultColumns } from "../PhonePage/Items";
+import { getDefaultColumns } from "../PhonePage/Items";
 import Header from "components/Header";
 import Span from "components/Span";
 import WithLoader from "components/WithLoader";
@@ -142,7 +142,7 @@ export const UpdateContent: React.FC<{}> = (props) => {
           <Header align="right">
             Список добавляемых средств связи ({phones.data.items.length})
           </Header>
-          <Table columns={defaultColumns} items={phones.data.items} />
+          <Table columns={getDefaultColumns()} items={phones.data.items} />
         </WithLoader>
       )}
     </>

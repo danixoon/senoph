@@ -102,16 +102,24 @@ const ViewContent: React.FC<
       <Form style={{ flexFlow: "column wrap", maxHeight: "100px" }} input={{}}>
         <Input
           {...bindFilter}
+          blurrable
+          name="id"
+          label="ID"
+          placeholder="1234"
+        />
+        <Input
+          {...bindFilter}
+          blurrable
           name="orderKey"
           label="Номер документа"
           placeholder="1234"
         />
         <Input
           {...bindFilter}
+          blurrable
           type="date"
           name="orderDate"
           label="Дата документа"
-          blurrable
         />
         <Dropdown
           {...bindFilter}
@@ -152,7 +160,7 @@ const ViewContent: React.FC<
       </Form>
       <Hr />
       <WithLoader status={holdingsStatus}>
-        {holdings.length === 0 ? (
+        {holdings.total === 0 ? (
           <InfoBanner
             href="/phone/edit"
             hrefContent="средства связи"
@@ -160,7 +168,7 @@ const ViewContent: React.FC<
           />
         ) : (
           <>
-            <Header align="right">Результаты ({holdings.length})</Header>
+            <Header align="right">Результаты ({holdings.total})</Header>
             <Table
               onSelect={
                 isSelecting
@@ -179,7 +187,7 @@ const ViewContent: React.FC<
               }
               // selectedId={2}
               columns={columns}
-              items={holdings}
+              items={holdings.items}
             />
           </>
         )}

@@ -104,7 +104,10 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>((props, ref) => {
   const [capturedEvent, setCapturedEvent] =
     React.useState<null | React.ChangeEvent<HTMLInputElement>>(null);
 
-  const value = (blurrable ? capturedEvent?.target.value : originalValue) ?? "";
+  const value =
+    (blurrable && capturedEvent
+      ? capturedEvent?.target.value
+      : originalValue) ?? "";
 
   return (
     <div {...mergedProps}>

@@ -36,8 +36,8 @@ const Item: React.FC<
 > = ({ badge, icon: IconItem, text, ...rest }) => (
   <LinkItemContainer {...rest}>
     <IconItem style={{ marginRight: "0.5rem" }} />
-    <span className="side-bar__item-text">{text}</span>
-    {badge && <NoticeBadge value={badge} />}
+    <span className="sidebar__item-text">{text}</span>
+    {badge ? <NoticeBadge value={badge} /> : ""}
   </LinkItemContainer>
 );
 const SideBar: React.FC<SideBar> = (props) => {
@@ -82,6 +82,7 @@ const SideBar: React.FC<SideBar> = (props) => {
             <Item
               href="/phone/commit/actions"
               text="Действия"
+              badge={notice.phone.commits}
               icon={(p) => <Icon.DownloadCloud {...p} />}
             />
           </Layout>
@@ -106,22 +107,24 @@ const SideBar: React.FC<SideBar> = (props) => {
               href="/holding/commit"
               text="Подтверждения"
               icon={(p) => <Icon.Check {...p} />}
+              badge={notice.holding.commits}
             />
             <Item
               href="/holding/phone/commit"
               text="Изменения"
-              icon={(p) => <Icon.Check {...p} />}
+              icon={(p) => <Icon.Edit3 {...p} />}
+              badge={notice.holding.changes}
             />
-            <LinkItemContainer href="/holding/phone/commit">
-              <Icon.Edit3 style={{ marginRight: "0.5rem" }} /> Изменения
-            </LinkItemContainer>
-            <LinkItemContainer href="/holding/update">
-              <Icon.UserPlus size="md" style={{ marginRight: "0.5rem" }} />
-              Обновление
-            </LinkItemContainer>
-            <LinkItemContainer href="/holding/create">
-              <Icon.Plus size="md" style={{ marginRight: "0.5rem" }} /> Создание
-            </LinkItemContainer>
+            <Item
+              href="/holding/update"
+              text="Обновления"
+              icon={(p) => <Icon.UserPlus {...p} />}
+            />
+            <Item
+              href="/holding/create"
+              text="Создание"
+              icon={(p) => <Icon.Plus {...p} />}
+            />
           </Layout>
         </Spoiler>
         <Spoiler
@@ -130,28 +133,38 @@ const SideBar: React.FC<SideBar> = (props) => {
           label={
             <>
               Категорирование
-              <Icon.Key inline style={{ marginLeft: "auto" }} />
+              <Icon.Folder inline style={{ marginLeft: "auto" }} />
             </>
           }
         >
           <Layout className="sidebar__group">
-            <LinkItemContainer href="/category/view">
-              <Icon.Eye style={{ marginRight: "0.5rem" }} /> Просмотр
-            </LinkItemContainer>
-            <LinkItemContainer href="/category/commit">
-              <Icon.Check style={{ marginRight: "0.5rem" }} /> Подтверждения
-            </LinkItemContainer>
-            <LinkItemContainer href="/category/phone/commit">
-              <Icon.Edit3 style={{ marginRight: "0.5rem" }} /> Изменения
-            </LinkItemContainer>
-            <LinkItemContainer href="/category/update">
-              <Icon.UserPlus size="md" style={{ marginRight: "0.5rem" }} />
-              Обновление
-            </LinkItemContainer>
-            <LinkItemContainer href="/category/create">
-              <Icon.Plus size="md" style={{ marginRight: "0.5rem" }} />
-              Создание
-            </LinkItemContainer>
+            <Item
+              href="/category/view"
+              text="Просмотр"
+              icon={(p) => <Icon.Eye {...p} />}
+            />
+            <Item
+              href="/category/commit"
+              text="Подтверждения"
+              icon={(p) => <Icon.Check {...p} />}
+              badge={notice.category.commits}
+            />
+            <Item
+              href="/category/phone/commit"
+              text="Изменения"
+              icon={(p) => <Icon.Edit3 {...p} />}
+              badge={notice.category.changes}
+            />
+            <Item
+              href="/category/update"
+              text="Обновление"
+              icon={(p) => <Icon.FolderPlus {...p} />}
+            />
+            <Item
+              href="/category/create"
+              text="Создание"
+              icon={(p) => <Icon.Plus {...p} />}
+            />
           </Layout>
         </Spoiler>
         {user.role === "admin" && (
@@ -165,32 +178,47 @@ const SideBar: React.FC<SideBar> = (props) => {
               </>
             }
           >
-            <LinkItemContainer href="/admin/holders">
-              <Icon.Star style={{ marginRight: "0.5rem" }} /> Владельцы
-            </LinkItemContainer>
-            <LinkItemContainer href="/admin/placements">
-              <Icon.Globe style={{ marginRight: "0.5rem" }} /> Местоположения
-            </LinkItemContainer>
-            <LinkItemContainer href="/admin/departments">
-              <Icon.Home style={{ marginRight: "0.5rem" }} /> Подразделения
-            </LinkItemContainer>
             <Layout className="sidebar__group">
-              <LinkItemContainer href="/admin/phone">
-                <Icon.Folder style={{ marginRight: "0.5rem" }} /> Типы
-              </LinkItemContainer>
-              <LinkItemContainer href="/admin/models">
-                <Icon.Phone style={{ marginRight: "0.5rem" }} /> Модели
-              </LinkItemContainer>
-              <LinkItemContainer href="/admin/users">
-                <Icon.User style={{ marginRight: "0.5rem" }} /> Пользователи
-              </LinkItemContainer>
-              <LinkItemContainer href="/admin/backups">
-                <Icon.Database style={{ marginRight: "0.5rem" }} /> Резервные
-                копии
-              </LinkItemContainer>
-              <LinkItemContainer href="/admin/logs">
-                <Icon.Cloud style={{ marginRight: "0.5rem" }} /> История (логи)
-              </LinkItemContainer>
+              <Item
+                href="/admin/holders"
+                text="Владельцы"
+                icon={(p) => <Icon.Star {...p} />}
+              />
+              <Item
+                href="/admin/placements"
+                text="Местоположения"
+                icon={(p) => <Icon.Globe {...p} />}
+              />
+              <Item
+                href="/admin/departments"
+                text="Подразделения"
+                icon={(p) => <Icon.Home {...p} />}
+              />
+              <Item
+                href="/admin/phone"
+                text="Типы"
+                icon={(p) => <Icon.Tag {...p} />}
+              />
+              <Item
+                href="/admin/models"
+                text="Модели"
+                icon={(p) => <Icon.Phone {...p} />}
+              />
+              <Item
+                href="/admin/users"
+                text="Пользователи"
+                icon={(p) => <Icon.User {...p} />}
+              />
+              <Item
+                href="/admin/backups"
+                text="Резервные копии"
+                icon={(p) => <Icon.Database {...p} />}
+              />
+              <Item
+                href="/admin/logs"
+                text="История (логи)"
+                icon={(p) => <Icon.Cloud {...p} />}
+              />
             </Layout>
           </Spoiler>
         )}

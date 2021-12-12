@@ -35,14 +35,10 @@ export type HoldingItem = Api.Models.Holding & {
 };
 
 export type HoldingPageProps = {
-  phones: Api.Models.Phone[];
-  holdings: HoldingItem[];
-  phonesStatus: ApiStatus;
+  holdings: ItemsResponse<HoldingItem>;
   holdingsStatus: ApiStatus;
   holdingCreationStatus: ApiStatus;
-
   onSubmitHolding: (data: any) => void;
-
   filterHook: InputHook<any>;
 };
 
@@ -58,10 +54,10 @@ const useContainer = (props: { holdings: Api.Models.Holding[] }) => {
   const history = useHistory();
   const query = qs.parse(location.search);
 
-  const isId = typeof query.id === "string";
+  const isId = typeof query.selectedId === "string";
 
   const ids = isId
-    ? holdings.find((holding) => holding.id.toString() === query.id)
+    ? holdings.find((holding) => holding.id.toString() === query.selectedId)
         ?.phoneIds ?? []
     : [];
 
@@ -77,11 +73,11 @@ const useContainer = (props: { holdings: Api.Models.Holding[] }) => {
   return {
     path,
     phones,
-    holderId: isId ? parseInt(query.id as string) : undefined,
+    holderId: isId ? parseInt(query.selectedId as string) : undefined,
     isOpen: isId,
     onToggle: (id?: number) => {
       history.replace({
-        search: qs.stringify({ ...query, id }),
+        search: qs.stringify({ ...query, selectedId: id }),
       });
     },
     act: location.state?.act,
@@ -96,7 +92,7 @@ const useContainer = (props: { holdings: Api.Models.Holding[] }) => {
 };
 
 const HoldingPage: React.FC<HoldingPageProps> = (props) => {
-  const { phones, holdings } = props;
+  const { holdings } = props;
   const {
     phones: holdingPhones,
     holderId,
@@ -105,7 +101,7 @@ const HoldingPage: React.FC<HoldingPageProps> = (props) => {
     onCommit,
     act,
     path,
-  } = useContainer({ holdings });
+  } = useContainer({ holdings: holdings.items });
 
   const noticeContext = React.useContext(NoticeContext);
 
@@ -154,20 +150,24 @@ const HoldingPage: React.FC<HoldingPageProps> = (props) => {
       <Layout flex="1" className="holding-page">
         <Switch>
           <Route path={`${path}/create`}>
-            {phones.length === 0 ? (
+            {/* {phones.length === 0 ? (
               <InfoBanner
                 href="/phone/edit"
                 hrefContent="средство связи"
                 text="Для создания движения выберите"
               />
-            ) : (
-              <CreateContent {...props} />
-            )}
+            ) : ( */}
+            <CreateContent {...props} />
+            {/* )} */}
           </Route>
           <Route path={`${path}/commit`}>
             <CommitContent
               {...props}
-              holdings={props.holdings.filter((p) => p.status !== null)}
+              holdings={{
+                items: props.holdings.items.filter((p) => p.status !== null),
+                total: props.holdings.total,
+                offset: props.holdings.offset,
+              }}
             />
           </Route>
           <Route path={`${path}/view`}>

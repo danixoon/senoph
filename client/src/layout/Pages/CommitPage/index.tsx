@@ -13,7 +13,7 @@ import { useInput } from "hooks/useInput";
 import Dropdown from "components/Dropdown";
 import Form from "components/Form";
 import { clearObject, getLocalDate } from "utils";
-import { defaultColumns as phonePageColumns } from "../PhonePage/Items";
+import { getDefaultColumns as getPhonePageColumns } from "../PhonePage/Items";
 import Checkbox from "components/Checkbox";
 import TopBarLayer from "providers/TopBarLayer";
 import ButtonGroup from "components/ButtonGroup";
@@ -22,6 +22,9 @@ import Badge from "components/Badge";
 import Icon, { LoaderIcon } from "components/Icon";
 import { useNotice } from "hooks/useNotice";
 import Span from "components/Span";
+import Paginator from "components/Paginator";
+import { usePaginator } from "hooks/usePaginator";
+import { useQueryInput } from "hooks/useQueryInput";
 
 type CommitItem = {
   id: any;
@@ -61,9 +64,11 @@ export const CommitContent: React.FC<CommitContentProps> = (props) => {
   );
 };
 
-const useActionsContainer = (query: { status?: CommitStatus } = {}) => {
-  const { status } = query;
-  const commits = api.useFetchPhonesCommitQuery({ status });
+const useActionsContainer = (
+  query: { status?: CommitStatus; amount?: number; offset?: number } = {}
+) => {
+  const { status, amount, offset } = query;
+  const commits = api.useFetchPhonesCommitQuery({ status, amount, offset });
   const [commitPhone, commitPhoneInfo] = api.useCommitPhoneMutation();
   return {
     commits: parseItems(commits),
@@ -73,17 +78,22 @@ const useActionsContainer = (query: { status?: CommitStatus } = {}) => {
 };
 const ActionCommits: React.FC<{}> = (props) => {
   type ItemType = ArrayElement<typeof commits.data.items>;
-  type FilterType = { status: CommitStatus };
+  type FilterType = { status?: CommitStatus };
 
   const [selectedIds, setSelection] = React.useState<number[]>(() => []);
 
-  const [bindFilter, setFilter] = useInput<FilterType>({
-    status: null,
-  });
+  // const [bindFilter, setFilter] = useInput<FilterType>({
+  //   status: null,
+  // });
 
-  const { commits, commit, status } = useActionsContainer(
-    clearObject(bindFilter.input) as FilterType
-  );
+  const [bindQuery, setQuery] = useQueryInput<FilterType>({});
+  const [offset, setOffset] = React.useState(() => 0);
+
+  const { commits, commit, status } = useActionsContainer({
+    amount: 15,
+    offset,
+    ...clearObject(bindQuery.input as any),
+  });
 
   React.useEffect(() => {
     const updatedSelection: number[] = [];
@@ -113,7 +123,7 @@ const ActionCommits: React.FC<{}> = (props) => {
         </ActionBox>
       ),
     },
-    ...phonePageColumns,
+    ...getPhonePageColumns(),
     {
       key: "statusAt",
       header: "Добавлено",
@@ -183,6 +193,12 @@ const ActionCommits: React.FC<{}> = (props) => {
     // success: "",
   });
 
+  const { maxPage, currentPage } = usePaginator(offset, commits.data.total, 15);
+
+  React.useEffect(() => {
+    setOffset(0);
+  }, [bindQuery.input.status]);
+
   return (
     <>
       <TopBarLayer>
@@ -205,6 +221,13 @@ const ActionCommits: React.FC<{}> = (props) => {
             Отменить
           </Button>
         </ButtonGroup>
+        <Paginator
+          onChange={(page) => setOffset((page - 1) * 15)}
+          min={1}
+          max={maxPage}
+          size={5}
+          current={currentPage}
+        />
       </TopBarLayer>
       <CommitContent
         onCommit={(ids, action) => commit({ ids, action })}
@@ -216,7 +239,7 @@ const ActionCommits: React.FC<{}> = (props) => {
             Фильтр
           </Header>
           <Dropdown
-            {...bindFilter}
+            {...bindQuery}
             label="Статус действия"
             name="status"
             items={[
@@ -268,7 +291,7 @@ const ChangeCommits: React.FC<{}> = (props) => {
         </ActionBox>
       ),
     },
-    ...phonePageColumns,
+    ...getPhonePageColumns(),
     {
       key: "statusAt",
       header: "Добавлено",

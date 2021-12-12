@@ -1,3 +1,4 @@
+import qs from "query-string";
 import Badge from "components/Badge";
 import { LoaderIcon } from "components/Icon";
 import Layout from "components/Layout";
@@ -9,6 +10,7 @@ import React from "react";
 import { useAppDispatch } from "store";
 import { updateQuery } from "store/utils";
 import { HoldingTableItem } from ".";
+import { useLocation } from "react-router";
 
 export const reasonMap = [
   { id: "initial", label: "Назначение" },
@@ -109,12 +111,18 @@ export const getTableColumns: (args: {
       ));
 
       const dispatch = useAppDispatch();
+      const location = useLocation();
 
       if (items.length === maxItems)
         items.push(
           <Link
             onClick={() => {
-              dispatch(updateQuery({ id: item.id }));
+              dispatch(
+                updateQuery({
+                  ...qs.parse(location.search),
+                  selectedId: item.id,
+                })
+              );
             }}
             inline
             style={{ float: "right" }}

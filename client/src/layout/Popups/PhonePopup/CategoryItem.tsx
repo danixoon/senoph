@@ -8,12 +8,12 @@ import React from "react";
 
 const CategoryItem: React.FC<{
   category: number;
-  onDelete: () => void;
+  onSelect: () => void;
   deletable?: boolean;
   actDate: Date;
   actUrl: string;
 }> = (props) => {
-  const { category, actDate, actUrl, deletable, onDelete } = props;
+  const { category, actDate, actUrl, deletable, onSelect } = props;
 
   let cat = "?";
   switch (category) {
@@ -37,10 +37,11 @@ const CategoryItem: React.FC<{
   } as Pick<LabelProps, "style" | "weight">;
 
   return (
-    <Layout flow="column" className="category-item">
-      <Badge onClick={() => {}} className="category-item__level">
-        {cat}
-      </Badge>
+    <Layout
+      flow="column"
+      // style={{ alignItems: "center" }}
+      className="category-item"
+    >
       <Layout flow="row">
         <Label {...labelStyle}>
           <Link native inline href={`/upload/${actUrl}`}>
@@ -49,16 +50,19 @@ const CategoryItem: React.FC<{
           от
         </Label>
         <Link>{actDate.toLocaleDateString()}</Link>
-        {deletable && (
-          <Button
-            onClick={onDelete}
-            style={{ marginLeft: "auto" }}
-            inverted
-            color="primary"
-          >
-            <Icon.X />
-          </Button>
-        )}
+      </Layout>
+      <Layout flow="row nowrap">
+        <Badge onClick={() => {}} className="category-item__level">
+          {cat}
+        </Badge>
+        <Button
+          onClick={onSelect}
+          style={{ marginLeft: "auto" }}
+          inverted
+          color="primary"
+        >
+          <Icon.ExternalLink />
+        </Button>
       </Layout>
     </Layout>
   );

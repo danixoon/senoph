@@ -154,7 +154,7 @@ const Departments: React.FC<BackupsProps> = (props) => {
           }}
           label="Без проверки"
           name="unsafe"
-          {...bind}
+          {...bindUnsafe}
         />
         <Link
           size="sm"

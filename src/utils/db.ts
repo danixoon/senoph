@@ -307,6 +307,9 @@ export const fillDevDatabase = async (full?: boolean, size: number = 150) => {
     }))
   );
 
+
+  return;
+
   const phonesData = mapGenerated(size, () => ({
     inventoryKey: uuid(),
     factoryKey: uuid(),
@@ -326,20 +329,42 @@ export const fillDevDatabase = async (full?: boolean, size: number = 150) => {
   }));
 
   const phones = await Phone.bulkCreate(phonesData);
-  const holding = await Holding.create({
-    holderId: getRandomItem(holders).id,
-    orderUrl: "sample.pdf",
-    authorId: user.id,
-    departmentId: getRandomItem(deps).id,
-    orderKey: Math.floor(10 + Math.random() * 200).toString(),
-    orderDate: new Date().toISOString(),
-    reasonId: "movement" as const,
-    status: null,
-  });
-
-  const holdingPhones = await HoldingPhone.bulkCreate(
-    phones.map((phone) => ({ phoneId: phone.id, holdingId: holding.id }))
+  const holdings = await Holding.bulkCreate(
+    mapGenerated(Math.floor(size / 4), (i) => {
+      const holding = {
+        holderId: getRandomItem(holders).id,
+        orderUrl: "sample.pdf",
+        authorId: user.id,
+        departmentId: getRandomItem(deps).id,
+        orderKey: `${i}-${Math.floor(10 + Math.random() * 200)}`,
+        orderDate:
+          // Сегодня и -10 лет
+          new Date(
+            Math.floor(
+              Date.now() - 1000 * 60 * 60 * 24 * 30 * 12 * 10 * Math.random()
+            )
+          ).toISOString(),
+        reasonId: "movement" as const,
+        status: null,
+      };
+      return holding;
+    })
   );
+
+  const holdingPhones: DB.HoldingPhoneAttributes[] = [];
+
+  for (const holding of holdings) {
+    holdingPhones.push(
+      ...getRandomItems(Math.floor(phones.length / 20), phones).map(
+        (phone) => ({
+          phoneId: phone.id,
+          holdingId: holding.id,
+        })
+      )
+    );
+  }
+
+  await HoldingPhone.bulkCreate(holdingPhones);
 
   const category = await Category.create({
     categoryKey: "1",

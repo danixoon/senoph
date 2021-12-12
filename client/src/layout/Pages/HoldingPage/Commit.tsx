@@ -36,14 +36,14 @@ const CommitContent: React.FC<HoldingPageProps> = (props) => {
 
   return (
     <>
-      {holdings.length === 0 ? (
+      {holdings.total === 0 ? (
         <InfoBanner
           href="/phone/edit"
           hrefContent="средство связи"
           text="Движения для потдверждения отсутствуют. Создайте их, выбрав"
         />
       ) : (
-        <Table columns={columns} items={holdings} />
+        <Table columns={columns} items={holdings.items} />
       )}
     </>
   );

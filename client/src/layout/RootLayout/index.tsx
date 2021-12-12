@@ -15,6 +15,7 @@ import { useIsFirstEffect } from "hooks/useIsFirstEffect";
 import { login } from "store/slices/app";
 import { replace } from "connected-react-router";
 import CategoryPage from "layout/Pages/CategoryPage";
+import PhonePageCreate from "layout/Pages/PhonePage/Create";
 import HoldingPageContainer from "containers/HoldingPage";
 // import CategoryPageContainer from "containers/CategoryPage";
 import AdminPage from "layout/Pages/AdminPage";
@@ -79,7 +80,9 @@ const RootLayout: React.FC<{}> = (props) => {
                       <Span> Добро пожаловать, {user.name}! </Span>
                     </Layout>
                   </Route>
-
+                  <Route path="/phone/create">
+                    <PhonePageCreate />
+                  </Route>
                   <Route path="/phone/commit">
                     <CommitPage />
                   </Route>

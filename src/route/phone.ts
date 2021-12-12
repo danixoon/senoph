@@ -28,6 +28,7 @@ import Log from "@backend/db/models/log.model";
 import phone from "@backend/db/queries/phone";
 import { sequelize } from "../db";
 import { Sequelize } from "sequelize";
+import CategoryPhone from "@backend/db/models/categoryPhone.model";
 
 const router = AppRouter();
 
@@ -135,17 +136,30 @@ router.get(
   "/phone/commit",
   access("user"),
   validate({
-    query: { status: tester().isIn(["delete-pending", "create-pending"]) },
+    query: {
+      status: tester().isIn(["delete-pending", "create-pending"]),
+      offset: tester().isNumber(),
+      amount: tester().isNumber(),
+    },
   }),
   transactionHandler(async (req, res, next) => {
-    const { status } = req.query;
+    const { status, amount, offset } = req.query;
 
-    const filter = new Filter(req.query);
-    filter.add("status");
+    // const filter = new Filter(req.query);
+    // filter.add("status");
 
-    const phones = await Phone.scope("commit").findAll({ where: filter.where });
+    const filter = new WhereFilter<DB.PhoneAttributes>();
+    filter.on("status").optional(Op.eq, status);
 
-    res.send(prepareItems(phones as Api.Models.Phone[], phones.length, 0));
+    const phones = await Phone.scope("commit").findAndCountAll({
+      where: filter.where,
+      offset,
+      limit: amount,
+    });
+
+    res.send(
+      prepareItems(phones.rows as Api.Models.Phone[], phones.count, offset ?? 0)
+    );
   })
 );
 
@@ -259,24 +273,69 @@ router.get(
     // const categoryFilter = new WhereFilter<DB.CategoryAttributes>();
     // categoryFilter.on("categoryKey").optional(Op.eq, category);
 
+    // console.log("searching..");
+
     const items = await Phone.findAll({
-      order,
+      order: [
+        ...order,
+        // [Sequelize.literal("`holdings.orderDate`"), "DESC"],
+        // [Sequelize.literal("`categories.actDate`"), "DESC"],
+      ],
       where: filter.where,
       include: [
-        { model: Category },
+        // {
+        //   model: Category,
+        //   // attributes: ["id", "actDate"],
+        // },
         { model: PhoneModel, where: modelFilter.where },
-        { model: Holding },
+        // {
+        //   model: Holding,
+        //   // attributes: ["id", "orderDate"],
+        // },
       ],
+
       //attributes: ["id"],
     });
 
-    const filteredItems = items.filter((item) => {
-      const lastHolding = [...(item.holdings ?? [])].sort((a, b) =>
-        a.orderDate > b.orderDate ? 1 : -1
-      )[0];
-      const lastCategory = [...(item.categories ?? [])].sort((a, b) =>
-        a.actDate > b.actDate ? 1 : -1
-      )[0];
+    const phoneIds = items.map((item) => item.id);
+
+    const holdings = await HoldingPhone.unscoped().findAll({
+      where: { phoneId: { [Op.in]: phoneIds } },
+      include: [Holding],
+      order: [[Sequelize.literal("`holding.orderDate`"), "DESC"]],
+    });
+
+    const categories = await CategoryPhone.unscoped().findAll({
+      where: { phoneId: { [Op.in]: phoneIds } },
+      include: [Category],
+      order: [[Sequelize.literal("`category.actDate`"), "DESC"]],
+    });
+
+    const populatedItems = items.map((v) => {
+      const holding = holdings.find((h) => h.phoneId === v.id)
+        ?.holding as Holding;
+      const category = categories.find((h) => h.phoneId === v.id)
+        ?.category as Category;
+
+      return {
+        ...v.toJSON(),
+        holdings: holding ? [holding.toJSON()] : [],
+        categories: category ? [category.toJSON()] : [],
+      };
+    });
+
+    // console.log("filtering..");
+
+    const filteredItems = populatedItems.filter((item) => {
+      // const lastHolding = [...(item.holdings ?? [])].sort((a, b) =>
+      //   a.orderDate > b.orderDate ? 1 : -1
+      // )[0];
+      // const lastCategory = [...(item.categories ?? [])].sort((a, b) =>
+      //   a.actDate > b.actDate ? 1 : -1
+      // )[0];
+
+      const lastHolding = item.holdings[0];
+      const lastCategory = item.categories[0];
 
       const isDepartment = typeof departmentId !== "undefined";
       const isHolder = typeof holderId !== "undefined";
@@ -290,7 +349,9 @@ router.get(
 
       return true;
     });
+    // console.log("slicing..");
     const phones = filteredItems.slice(offset, offset + amount);
+    // console.log("sending..");
 
     res.send(
       prepareItems(phones as Api.Models.Phone[], filteredItems.length, offset)

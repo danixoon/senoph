@@ -440,23 +440,28 @@ const parsePhonesFile = async (book: exceljs.Workbook) => {
     where: { orderKey: { [Op.in]: holdings.map((h) => h.orderKey) } },
   });
 
-  const ex = existingHoldings.filter((holding) => {
-    return holdings.find(
+  existingHoldings.forEach((holding) => {
+    const ex = holdings.find(
       (h) =>
         new Date(h.orderDate).getFullYear() ===
           new Date(holding.orderDate).getFullYear() &&
         h.orderKey === holding.orderKey
     );
+
+    if (ex) ex.merge = true;
   });
 
-  if (ex.length > 0) {
-    holdings.forEach((holding) => ({}));
-    // throw new ApiError(errorType.VALIDATION_ERROR, {
-    //   description: `В базе данных уже присутствует движение с приказом от '${new Date(
-    //     ex.orderDate
-    //   ).getFullYear()}' года и номером приказа '${ex.orderKey}'.`,
-    // });
-  }
+  // Движения, которые уже существуют в бд
+  // if (ex.length > 0) {
+  //   ex.forEach((holding) => {
+  //     holding;
+  //   });
+  // throw new ApiError(errorType.VALIDATION_ERROR, {
+  //   description: `В базе данных уже присутствует движение с приказом от '${new Date(
+  //     ex.orderDate
+  //   ).getFullYear()}' года и номером приказа '${ex.orderKey}'.`,
+  // });
+  // }
 
   return { phones, holdings };
 };

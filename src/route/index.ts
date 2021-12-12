@@ -11,6 +11,7 @@ import placementRoute from "@backend/route/placement";
 import logRoute from "@backend/route/log";
 import importRoute from "@backend/route/import";
 import adminRoute from "@backend/route/admin";
+import noticeRoute from "@backend/route/notice";
 
 export const routers: Router[] = [
   importRoute as Router,
@@ -24,4 +25,5 @@ export const routers: Router[] = [
   placementRoute as Router,
   logRoute as Router,
   adminRoute as Router,
+  noticeRoute as Router,
 ];

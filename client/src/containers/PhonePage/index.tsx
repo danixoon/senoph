@@ -38,6 +38,8 @@ import Input from "components/Input";
 import Span from "components/Span";
 import Header from "components/Header";
 import Paginator from "components/Paginator";
+import { usePaginator } from "hooks/usePaginator";
+import { useNotice } from "hooks/useNotice";
 
 type PhonePageContainerProps = {};
 
@@ -74,13 +76,11 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
   const fetchStatus = extractStatus(fetchPhones, true);
   const noticeContext = React.useContext(NoticeContext);
 
-  React.useEffect(() => {
-    if (fetchStatus.isError) {
-      noticeContext.createNotice(
-        `Ошибка поиска (${fetchStatus.error?.name}): ${fetchStatus.error?.description}`
-      );
-    }
-  }, [fetchStatus.status]);
+  useNotice(fetchStatus, {
+    error: "Ошибка поиска",
+    loading: null,
+    success: null,
+  });
 
   const [bind, setBind] = useInput({ items: DEFAULT_PAGE_ITEMS });
 
@@ -93,8 +93,8 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
       bind.input.items?.toString() ?? DEFAULT_PAGE_ITEMS.toString()
     );
 
-    if (value <= 0) value = 1;
-    else if (value >= 200) value = 200;
+    if (value < 15) value = 15;
+    else if (value > 200) value = 200;
 
     dispatch(
       updateFilter({
@@ -103,22 +103,24 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
     );
   };
 
-  const maxPage = Math.ceil(totalItems / filter.pageItems);
-  let currentPage = Math.floor((filter.offset / totalItems) * maxPage) + 1;
-  if (Number.isNaN(currentPage)) currentPage = 1;
+  let { maxPage, currentPage } = usePaginator(
+    filter.offset,
+    totalItems,
+    filter.pageItems
+  );
   // if (currentPage > maxPage) currentPage = maxPage;
 
-  React.useEffect(() => {
-    if (totalItems > 0) {
-      if (currentPage > maxPage) {
-        dispatch(
-          updateFilter({
-            offset: Math.max(0, (maxPage - 1) * filter.pageItems),
-          })
-        );
-      }
-    }
-  }, [filter.offset, totalItems]);
+  // React.useEffect(() => {
+  //   if (totalItems > 0) {
+  //     if (currentPage > maxPage) {
+  //       dispatch(
+  //         updateFilter({
+  //           offset: Math.max(0, (maxPage - 1) * filter.pageItems),
+  //         })
+  //       );
+  //     }
+  //   }
+  // }, [filter.offset, totalItems]);
 
   return (
     <>
@@ -166,14 +168,6 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
                 {selectionIdsSet.size}
               </Badge>
             </ButtonGroup>
-            <Button
-              style={{ marginRight: "4rem" }}
-              margin="none"
-              color="primary"
-              onClick={() => createPopup.onToggle()}
-            >
-              <Icon.Plus size="md" />
-            </Button>
           </Route>
         </RouterSwitch>
         <Header
