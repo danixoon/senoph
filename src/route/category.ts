@@ -205,7 +205,8 @@ router.put(
       if (categories.length > 0)
         throw new ApiError(errorType.INVALID_QUERY, {
           description:
-            "Один или более ID средств связи указан неверно, либо уже существует в категории с данным актом",
+            "Один или более ID средств связи указан неверно, либо уже существует в категории с данным актом" +
+            categories.map((v) => `#${v.phoneId}`),
         });
 
       const category = await Category.unscoped().findByPk(categoryId);

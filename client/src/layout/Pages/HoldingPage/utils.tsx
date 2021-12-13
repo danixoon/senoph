@@ -81,7 +81,19 @@ export const getTableColumns: (args: {
       size: "30px",
       header: "ID",
     },
-    { key: "orderKey", header: "Номер документа", size: "100px" },
+    {
+      key: "orderKey",
+      header: "Номер документа",
+      size: "100px",
+      mapper: (v, item) =>
+        item.orderUrl ? (
+          <Link native href={`/upload/${item.orderUrl}`}>
+            {item.orderKey}
+          </Link>
+        ) : (
+          item.orderKey
+        ), //. ,
+    },
     { key: "orderDate", header: "Документ от", size: "100px", type: "date" },
     {
       key: "holderId",
