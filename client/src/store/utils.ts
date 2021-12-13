@@ -42,7 +42,6 @@ export const locationQueryReducer = <T extends { filter: F }, F>(
   });
 
 export const updateQuery = <T>(query: Partial<T>, pathname?: string) => {
-  
   const q = clearObject(query);
   const search = qs.stringify(q).trim();
   // if (pathname)
@@ -114,6 +113,29 @@ type Statusable = {
   isSuccess?: boolean;
   isFetching?: boolean;
   error?: any;
+};
+
+export const orStatus = (...statuses: ApiStatus[]) => {
+  const status: ApiStatus = statuses.reduce((a, b) => ({
+    error: a.error || b.error,
+    isError: a.isError || b.isError,
+    isIdle: a.isIdle || b.isIdle,
+    isLoading: a.isLoading || b.isLoading,
+    isSuccess: a.isSuccess || b.isSuccess,
+    status:
+      a.status === b.status
+        ? b.status
+        : a.status === "error" || b.status === "error"
+        ? "error"
+        : a.status === "loading" || b.status === "loading"
+        ? "loading"
+        : a.status === "success" || b.status === "success"
+        ? "success"
+        : "idle",
+  }));
+
+  return status;
+  // const status: ApiStatus =
 };
 
 export const mergeStatuses = (...statuses: ApiStatus[]) => {

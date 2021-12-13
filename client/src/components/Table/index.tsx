@@ -19,7 +19,7 @@ export type TableColumn<T = any> = {
   sortable?: boolean;
   wrap?: boolean;
   props?: React.TdHTMLAttributes<HTMLElement>;
-  mapper?: (v: any, row: T) => any;
+  mapper?: (v: any, row: T, i: number) => any;
 } & (
   | { type?: "date" }
   | { type?: "local-date" }
@@ -98,7 +98,8 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
   const convertValue = (
     column: TableColumn,
     item: TableItem<any>,
-    value: any
+    value: any,
+    i: number
   ) => {
     const mapper = column.mapper ?? ((v: any) => v);
 
@@ -118,7 +119,7 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
           />
         );
     }
-    return mapper(value, item);
+    return mapper(value, item, i);
   };
 
   // console.log(sortDir);
@@ -160,7 +161,7 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
         </tr>
       </thead>
       <tbody>
-        {items.map((item, i) => (
+        {items.map((item, ir) => (
           <tr
             id={item.id}
             className={mergeClassNames(
@@ -169,7 +170,7 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
             )}
             // TODO: Make rows selectable with keyboard
             tabIndex={onSelect ? 0 : undefined}
-            key={`${item.id ?? "id"}-${i}`}
+            key={`${item.id ?? "id"}-${ir}`}
             {...item.props}
           >
             {columns.map((column, i) => {
@@ -184,13 +185,13 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
               );
               return (
                 <TableCell
-                  key={`${column.key}-${item.id}-${i}`}
+                  key={`${column.key}-${item.id}-${ir}-${i}`}
                   onClick={() =>
                     column.type != "checkbox" && onSelect && onSelect(item)
                   }
                   {...mergedProps}
                 >
-                  {convertValue(column, item, item[column.key])}
+                  {convertValue(column, item, item[column.key], ir)}
                 </TableCell>
               );
             })}

@@ -168,25 +168,6 @@ const Content: React.FC<
 
   return (
     <>
-      <PopupLayer>
-        <FieldEditPopup
-          onSubmit={(value) =>
-            makeChanges(field.targetId, { [field.key]: value })
-          }
-          onReset={() => undoChanges(field.targetId, [field.key])}
-          defaultValue={changedValue}
-          name={field.key || "field"}
-          isOpen={field.isEdit}
-          type={field.type}
-          label={field.label ?? undefined}
-          onToggle={() =>
-            setFieldEdit({
-              ...field,
-              isEdit: false,
-            })
-          }
-        />
-      </PopupLayer>
       {/* <Layout padding="md" flex="1"> */}
       <PopupTopBar>
         <Header hr align="center" style={{ flex: 1, display: "flex" }}>
@@ -362,6 +343,25 @@ const Content: React.FC<
         </Layout>
       </Layout>
       {/* </Layout> */}
+      <PopupLayer>
+        <FieldEditPopup
+          onSubmit={(value) =>
+            makeChanges(field.targetId, { [field.key]: value })
+          }
+          onReset={() => undoChanges(field.targetId, [field.key])}
+          defaultValue={changedValue}
+          name={field.key || "field"}
+          isOpen={field.isEdit}
+          type={field.type}
+          label={field.label ?? undefined}
+          onToggle={() =>
+            setFieldEdit({
+              ...field,
+              isEdit: false,
+            })
+          }
+        />
+      </PopupLayer>
     </>
   );
 };

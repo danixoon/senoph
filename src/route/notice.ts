@@ -25,6 +25,7 @@ import CategoryPhone from "@backend/db/models/categoryPhone.model";
 import Holding from "@backend/db/models/holding.model";
 import HoldingPhone from "@backend/db/models/holdingPhone.model";
 import Phone from "@backend/db/models/phone.model";
+import Change from "@backend/db/models/change.model";
 
 const router = AppRouter();
 
@@ -52,7 +53,7 @@ router.get(
       },
 
       phone: {
-        changes: 0,
+        changes: await Change.count({ where: { target: "phone" } }),
         commits: await Phone.count({
           where: { status: { [Op.not]: null } },
         }),

@@ -55,7 +55,7 @@ const SideBar: React.FC<SideBar> = (props) => {
           label={
             <>
               Средства связи <Icon.Phone inline />
-              {notice.holding.changes || notice.holding.commits ? (
+              {notice.phone.changes || notice.phone.commits ? (
                 <div className="notice-icon" />
               ) : (
                 ""
@@ -88,6 +88,12 @@ const SideBar: React.FC<SideBar> = (props) => {
               text="Действия"
               badge={notice.phone.commits}
               icon={(p) => <Icon.DownloadCloud {...p} />}
+            />
+            <Item
+              href="/phone/commit/updates"
+              text="Изменения"
+              badge={notice.phone.changes}
+              icon={(p) => <Icon.Edit3 {...p} />}
             />
             <Item
               href="/phone/create"

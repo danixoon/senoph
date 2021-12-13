@@ -358,6 +358,12 @@ const Create: React.FC<{}> = (props) => {
 
   const phoneModeColumns: TableColumn<AddedItem>[] = [
     {
+      key: "id",
+      header: "№",
+      size: "30px",
+      mapper: (v, item, i) => i + 1,
+    },
+    {
       key: "model",
       header: "Модель",
       mapper: (v, item) => item.item.phoneModelName,
@@ -397,19 +403,26 @@ const Create: React.FC<{}> = (props) => {
       header: "Статус движения",
       // type: "date",
       mapper: (v, item) => {
-        const holding = creations.holdings.find((h) =>
+        const holdingI = creations.holdings.findIndex((h) =>
           h.phoneRandomIds.includes(item.payload.randomId)
         );
+        const holding = creations.holdings[holdingI];
         return holding
           ? holding.merge
             ? `Добавление в существующее #${holding.id}`
-            : "Новое движение"
+            : `Новое движение №${holdingI + 1}`
           : "Без движения";
       },
     },
   ];
 
   const holdingModeColumns: TableColumn<AddedHolding>[] = [
+    {
+      key: "id",
+      header: "№",
+      size: "30px",
+      mapper: (v, item, i) => i + 1,
+    },
     {
       key: "orderKey",
       header: "Номер акта",
@@ -438,15 +451,19 @@ const Create: React.FC<{}> = (props) => {
       header: "Статус движения",
       // type: "date",
       mapper: (v, item) => {
+        const phones = creations.phones
+          .filter((p) => item.phoneRandomIds.includes(p.payload.randomId))
+          .map((p, i) => `№${i + 1}`)
+          .join(", ");
         return item.merge ? (
           <>
-            Добавление в существующее{" "}
+            Добавление {phones} в существующее{" "}
             <Link inline href={`/holding/view?id=${item.id}`}>
               #{item.id}
             </Link>
           </>
         ) : (
-          "Новое движение"
+          "Новое движение для " + phones
         );
       },
     },
