@@ -9,6 +9,12 @@
   outline: none
   cursor: pointer
 
+  &_inverted
+    flex-flow: row-reverse
+
+    & > ^[0]__label
+      margin-left: margin.md
+
   &__container
     border-radius: 10px
     display: flex

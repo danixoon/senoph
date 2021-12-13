@@ -245,6 +245,17 @@ export const api = createApi({
       }),
       providesTags: ["holding"],
     }),
+    fetchPhonesFromHolding: builder.query<
+      Api.GetResponse<"get", "/holding/phones">,
+      Api.GetQuery<"get", "/holding/phones">
+    >({
+      query: (params) => ({
+        url: "holding/phones",
+        params,
+        method: "GET",
+      }),
+      providesTags: ["holding", "phone", "holdingPhone"],
+    }),
     fetchPhoneHoldings: builder.query<
       Api.GetResponse<"get", "/phone/holdings">,
       Api.GetQuery<"get", "/phone/holdings">

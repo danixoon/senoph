@@ -270,7 +270,7 @@ declare namespace Api {
           ItemsResponse<Api.Models.Holding>,
           {
             ids?: number[];
-            status?: CommitStatus | "based";
+            status?: CommitStatus | "based" | "pending";
             departmentId?: number;
             holderId?: number;
             orderDate?: Date;
@@ -278,6 +278,14 @@ declare namespace Api {
 
             offset?: number;
             amount?: number;
+          },
+          {}
+        >)
+      | (() => RouteHandler<
+          "/holding/phones",
+          ItemsResponse<Api.Models.Phone>,
+          {
+            holdingId: number;
           },
           {}
         >)

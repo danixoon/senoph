@@ -6,7 +6,6 @@ import { splitHolderName, useHolder } from "hooks/misc/holder";
 import { useInput, useFileInput } from "hooks/useInput";
 import { useTogglePopup } from "hooks/useTogglePopup";
 import React from "react";
-import { HoldingPageProps } from ".";
 import Button from "components/Button";
 import ClickInput from "components/ClickInput";
 import Dropdown from "components/Dropdown";
@@ -21,30 +20,42 @@ import Span from "components/Span";
 import HolderSelectionPopupContainer from "containers/HolderSelectionPopup";
 import PopupLayer from "providers/PopupLayer";
 import { getTableColumns, reasonMap } from "./utils";
-import { parseItems } from "store/utils";
+import { extractStatus, parseItems } from "store/utils";
 import { getLastHolding } from "hooks/misc/holding";
 import { useLocation } from "react-router";
 import InfoBanner from "components/InfoBanner";
 import { clearObject } from "utils";
+import { useNotice } from "hooks/useNotice";
 
-const CreateContent: React.FC<HoldingPageProps> = (props) => {
-  const { holdingCreationStatus, onSubmitHolding: onSubmit } = props;
-  const columns: TableColumn[] = [
-    {
-      key: "id",
-      header: "ID",
-      size: "30px",
-      mapper: (v, item) => (
-        <Link href={`/phone/view?selectedId=${item.id}`}>
-          <Span font="monospace">{`#${v}`}</Span>
-        </Link>
-      ),
+const useContainer = () => {
+  const [createHolding, createStatus] = api.useCreateHoldingMutation();
+
+  return {
+    holding: {
+      create: { exec: createHolding, status: extractStatus(createStatus) },
     },
-    { key: "modelName", header: "Модель", size: "150px" },
-    { key: "inventoryKey", header: "Инвентарный номер", size: "300px" },
-    { key: "holderName", header: "Владелец" },
-    { key: "departmentName", header: "Отделение" },
-  ];
+  };
+};
+
+const columns: TableColumn[] = [
+  {
+    key: "id",
+    header: "ID",
+    size: "30px",
+    mapper: (v, item) => (
+      <Link href={`/phone/view?selectedId=${item.id}`}>
+        <Span font="monospace">{`#${v}`}</Span>
+      </Link>
+    ),
+  },
+  { key: "modelName", header: "Модель", size: "150px" },
+  { key: "inventoryKey", header: "Инвентарный номер", size: "300px" },
+  { key: "holderName", header: "Владелец" },
+  { key: "departmentName", header: "Отделение" },
+];
+
+const CreateContent: React.FC<{}> = (props) => {
+  const { holding } = useContainer();
   const getHolder = useHolder();
   const getDepartment = useDepartment();
 
@@ -54,6 +65,8 @@ const CreateContent: React.FC<HoldingPageProps> = (props) => {
     holderId: null,
     holderName: null,
   });
+
+  useNotice(holding.create.status);
 
   const [bindFile] = useFileInput();
 
@@ -119,7 +132,7 @@ const CreateContent: React.FC<HoldingPageProps> = (props) => {
                   : undefined,
             })}
             onSubmit={(data) => {
-              onSubmit(data);
+              holding.create.exec(data);
             }}
           >
             <Layout flow="row">
@@ -189,12 +202,12 @@ const CreateContent: React.FC<HoldingPageProps> = (props) => {
                   marginLeft: "auto",
                   padding: "0 4rem",
                 }}
-                disabled={holdingCreationStatus.isLoading}
+                disabled={holding.create.status.isLoading}
                 margin="md"
                 type="submit"
                 color="primary"
               >
-                {holdingCreationStatus.isLoading ? <LoaderIcon /> : "Создать"}
+                {holding.create.status.isLoading ? <LoaderIcon /> : "Создать"}
               </Button>
             </Layout>
           </Form>

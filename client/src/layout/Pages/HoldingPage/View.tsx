@@ -4,13 +4,12 @@ import { push } from "connected-react-router";
 import { useFetchConfigMap } from "hooks/api/useFetchConfigMap";
 import React from "react";
 import { useAppDispatch } from "store";
-import { extractStatus } from "store/utils";
-import { HoldingPageProps } from ".";
+import { extractStatus, parseItems } from "store/utils";
 import ActionBox from "components/ActionBox";
 import InfoBanner from "components/InfoBanner";
 import { SpoilerPopupButton } from "components/SpoilerPopup";
 import Table from "components/Table";
-import { getTableColumns } from "./utils";
+import { getTableColumns, useHoldingWithHistory } from "./utils";
 import Link from "components/Link";
 import { useHistory, useLocation, useRouteMatch } from "react-router";
 import { useQueryInput } from "hooks/useQueryInput";
@@ -21,39 +20,57 @@ import Hr from "components/Hr";
 import Header from "components/Header";
 import Dropdown from "components/Dropdown";
 import HolderSelectionPopupContainer from "containers/HolderSelectionPopup";
-import { useTogglePopup } from "hooks/useTogglePopup";
+import { useTogglePayloadPopup, useTogglePopup } from "hooks/useTogglePopup";
 import ClickInput from "components/ClickInput";
 import PopupLayer from "providers/PopupLayer";
 import WithLoader from "components/WithLoader";
+import PhonesSelectionPopup from "./PhonesSelectionPopup";
 
-const ViewContent: React.FC<
-  HoldingPageProps & { onEdit: (id: number) => void; act?: "view" | "select" }
-> = (props) => {
-  const { holdings, holdingsStatus, onEdit, act = "view", filterHook } = props;
-  const [deleteHolding, deleteHoldingStatus] = api.useDeleteHoldingMutation();
+const useContainer = () => {
   const { holders, departments } = useFetchConfigMap();
+  const [deleteHolding, deleteHoldingInfo] = api.useDeleteHoldingMutation();
+
+  const filterHook = useQueryInput<any>({});
+
+  const holdings = useHoldingWithHistory(filterHook[0].input);
+
+  const location = useLocation<any>();
+
+  return {
+    deleteHolding: {
+      status: extractStatus(deleteHoldingInfo),
+      exec: deleteHolding,
+    },
+    filterHook,
+    holders,
+    holdings,
+    departments,
+    act: ((location.state?.act as any) ?? "view") as "view" | "select",
+  };
+};
+
+const ViewContent: React.FC<{}> = (props) => {
+  const { filterHook, holders, departments, act, deleteHolding, holdings } =
+    useContainer();
 
   const [bindFilter, setFilter] = filterHook;
-
   const isSelecting = act === "select";
   const dispatch = useAppDispatch();
 
   const location = useLocation<any>();
   const history = useHistory();
 
+  const phonesPopup = useTogglePayloadPopup();
+
   const columns = getTableColumns({
-    status: extractStatus(deleteHoldingStatus),
+    status: deleteHolding.status,
     holders,
     departments,
     controlMapper: (v, item) =>
       isSelecting ? (
         <> </>
       ) : (
-        <ActionBox
-          key="ok"
-          icon={Icon.Box}
-          status={extractStatus(deleteHoldingStatus)}
-        >
+        <ActionBox key="ok" icon={Icon.Box} status={deleteHolding.status}>
           {item.status !== null ? (
             <>
               <SpoilerPopupButton
@@ -61,17 +78,21 @@ const ViewContent: React.FC<
               >
                 Просмотреть
               </SpoilerPopupButton>
-              <SpoilerPopupButton onClick={() => onEdit(item.id)}>
+              <SpoilerPopupButton
+                onClick={() => phonesPopup.onToggle(true, item.id)}
+              >
                 Изменить
               </SpoilerPopupButton>
             </>
           ) : (
             <>
-              <SpoilerPopupButton onClick={() => onEdit(item.id)}>
+              <SpoilerPopupButton
+                onClick={() => phonesPopup.onToggle(true, item.id)}
+              >
                 Изменить
               </SpoilerPopupButton>
               <SpoilerPopupButton
-                onClick={() => deleteHolding({ id: item.id })}
+                onClick={() => deleteHolding.exec({ id: item.id })}
               >
                 Удалить
               </SpoilerPopupButton>
@@ -82,12 +103,12 @@ const ViewContent: React.FC<
   });
 
   const holderPopup = useTogglePopup();
-
   const holderName = React.useRef<string | undefined>(undefined);
 
   return (
     <>
       <PopupLayer>
+        <PhonesSelectionPopup {...phonesPopup} holdingId={phonesPopup.state} />
         <HolderSelectionPopupContainer
           {...holderPopup}
           onSelect={(id, name) => {
@@ -159,8 +180,8 @@ const ViewContent: React.FC<
         />
       </Form>
       <Hr />
-      <WithLoader status={holdingsStatus}>
-        {holdings.total === 0 ? (
+      <WithLoader status={holdings.status}>
+        {holdings.data.total === 0 ? (
           <InfoBanner
             href="/phone/edit"
             hrefContent="средства связи"
@@ -168,7 +189,7 @@ const ViewContent: React.FC<
           />
         ) : (
           <>
-            <Header align="right">Результаты ({holdings.total})</Header>
+            <Header align="right">Результаты ({holdings.data.total})</Header>
             <Table
               onSelect={
                 isSelecting
@@ -187,7 +208,7 @@ const ViewContent: React.FC<
               }
               // selectedId={2}
               columns={columns}
-              items={holdings.items}
+              items={holdings.data.items}
             />
           </>
         )}

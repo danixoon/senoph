@@ -24,8 +24,6 @@ import "./style.styl";
 import HolderSelectionPopupContainer from "containers/HolderSelectionPopup";
 import PopupLayer from "providers/PopupLayer";
 import Checkbox from "components/Checkbox";
-import { HoldingItem } from "layout/Pages/HoldingPage";
-
 import { useCreatePhones } from "hooks/api/useCreatePhones";
 import TopBarLayer from "providers/TopBarLayer";
 import { useAppDispatch } from "store";
@@ -35,6 +33,11 @@ import { getDefaultColumns } from "./Items";
 import Table, { TableColumn } from "components/Table";
 import { replace } from "connected-react-router";
 import { useLocation } from "react-router";
+import { useNotice } from "hooks/useNotice";
+import Toggle from "components/Toggle";
+import { getDepartmentName, useDepartment } from "hooks/misc/department";
+import { splitHolderName, useHolder } from "hooks/misc/holder";
+import ButtonGroup from "components/ButtonGroup";
 
 export type PhoneCreatePopupProps = OverrideProps<
   PopupProps,
@@ -71,6 +74,7 @@ type AddedItem = {
   };
 };
 type AddedHolding = {
+  id?: number;
   holderId: number;
   departmentId: number;
   orderDate: string;
@@ -83,6 +87,11 @@ const useContainer = () => {
   const dispatch = useAppDispatch();
   const [createPhones, phoneInfo] = useCreatePhones();
   const [createHolding, holdingInfo] = api.useCreateHoldingMutation();
+  const [updateHolding, updateHoldingInfo] =
+    api.useCreateHoldingChangeMutation();
+
+  const location = useLocation();
+
   const onAddHolding = () =>
     dispatch(
       replace({
@@ -101,8 +110,6 @@ const useContainer = () => {
 
   const srch = qs.parse(search);
 
-  console.log("SELCTED: ", state);
-
   const fetchSelectedHolding = parseItems(
     api.useFetchHoldingsQuery(
       { ids: [selectedId as number] },
@@ -110,7 +117,7 @@ const useContainer = () => {
     )
   );
 
-  const onDelHolding = () => dispatch(replace({ ...location, state: {} }));
+  const onDelHolding = () => dispatch(replace({ state: undefined }));
 
   return {
     createdPhoneIds: phoneInfo.data?.created ?? [],
@@ -125,9 +132,11 @@ const useContainer = () => {
         replace({ ...location, search: qs.stringify({ ...srch, ...q }) })
       ),
     selectedHolding: {
-      data: fetchSelectedHolding.data?.items[0] ?? null,
+      data: !isNaN(selectedId) ? fetchSelectedHolding.data?.items[0] : null,
       status: fetchSelectedHolding.status,
     },
+    updateHolding,
+    updateHoldingStatus: extractStatus(updateHoldingInfo),
     search: srch as Partial<Record<string, string>>,
   };
 };
@@ -138,6 +147,8 @@ const Create: React.FC<{}> = (props) => {
     createdPhoneIds,
     createPhones,
     createHoldings,
+    updateHolding,
+    updateHoldingStatus,
     onAddHolding,
     onDelHolding,
     phonesStatus,
@@ -171,10 +182,8 @@ const Create: React.FC<{}> = (props) => {
 
   const handleSubmit = () => {
     const { phoneModelName, assemblyYear, ...rest } = clearObject(bind.input);
-    const { isHolded, holderId, orderDate, orderKey } = clearObject(
-      bindHolding.input
-    );
     const year = parseInt(assemblyYear as string);
+    const randomId = Math.random().toString();
     const phone: AddedItem = {
       item: {
         phoneModelName,
@@ -182,7 +191,7 @@ const Create: React.FC<{}> = (props) => {
       },
       payload: {
         ...rest,
-        randomId: Math.random().toString(),
+        randomId,
         phoneModelId: Number(rest.phoneModelId),
         assemblyDate: new Date(year, 1, 1).toISOString(),
       },
@@ -220,18 +229,42 @@ const Create: React.FC<{}> = (props) => {
     });
     if (isFuckedUp) return;
 
-    setCreations({ ...creations, phones: [...creations.phones, phone] });
+    const newCreations = { ...creations, phones: [...creations.phones, phone] };
+    if (selectedHolding.data?.id) {
+      const ex = newCreations.holdings.find(
+        (holding) => holding.id === selectedHolding.data?.id
+      );
+
+      ex?.phoneRandomIds.push(randomId);
+    }
+
+    setCreations(newCreations);
   };
 
-  const handlePhonesSubmit = () => {
+  const handleCreationsClear = () => {
+    setCreations({ phones: [], holdings: [] });
+  };
+  const handleCreationsSubmit = () => {
     const { holdings, phones } = creations;
     createPhones(phones.map((phone) => phone.payload));
   };
 
+  useNotice(updateHoldingStatus, {
+    loading: "Производится привязка к движению..",
+  });
+  useNotice(holdingsStatus, {
+    loading: "Производится создание движения..",
+  });
+  useNotice(phonesStatus, {
+    loading: "Производится создание средств связи..",
+  });
+
   React.useEffect(() => {
     if (!phonesStatus.isSuccess || holdingsStatus.isSuccess) return;
     const { holdings, phones } = creations;
-    // const phoneIds = createdPhoneIds;
+
+    // const createdHoldings: typeof holdings = [];
+    // const mergedHoldings: typeof holdings = [];
     for (const holding of holdings) {
       const phoneIds = holding.phoneRandomIds
         .map(
@@ -239,14 +272,22 @@ const Create: React.FC<{}> = (props) => {
             createdPhoneIds.find((createdId) => createdId.randomId === id)?.id
         )
         .filter((v) => v) as number[];
-      createHoldings({
-        holderId: holding.holderId,
-        departmentId: holding.departmentId,
-        phoneIds,
-        orderDate: holding.orderDate,
-        orderKey: holding.orderKey,
-        reasonId: "movement",
-      });
+
+      if (holding.merge)
+        updateHolding({
+          action: "add",
+          holdingId: holding.id as number,
+          phoneIds,
+        });
+      else
+        createHoldings({
+          holderId: holding.holderId,
+          departmentId: holding.departmentId,
+          phoneIds,
+          orderDate: holding.orderDate,
+          orderKey: holding.orderKey,
+          reasonId: "movement",
+        });
     }
     // createHoldings({  })
   }, [phonesStatus.isSuccess]);
@@ -308,7 +349,8 @@ const Create: React.FC<{}> = (props) => {
 
   const holderPopup = useTogglePopup();
 
-  const tableItems = creations.phones;
+  const getDepartment = useDepartment();
+  const getHolder = useHolder();
 
   // const columns: TableColumn<AddedItem>[] = creations.phones.map((creation) => {
   //   return { ...creation.payload };
@@ -333,19 +375,20 @@ const Create: React.FC<{}> = (props) => {
     {
       key: "assemblyDate",
       header: "Год сборки",
+      size: "100px",
       mapper: (v, item) => new Date(item.payload.assemblyDate).getFullYear(),
     },
     {
       key: "accountingDate",
       header: "Дата учёта",
-      // type: "date",
+      size: "100px",
       mapper: (v, item) =>
         new Date(item.payload.accountingDate).toLocaleDateString(),
     },
     {
       key: "commissioningDate",
       header: "Дата вода в эксплуатацию",
-      // type: "date",
+      size: "100px",
       mapper: (v, item) =>
         new Date(item.payload.commissioningDate).toLocaleDateString(),
     },
@@ -359,7 +402,7 @@ const Create: React.FC<{}> = (props) => {
         );
         return holding
           ? holding.merge
-            ? "Добавление в существующее"
+            ? `Добавление в существующее #${holding.id}`
             : "Новое движение"
           : "Без движения";
       },
@@ -370,22 +413,42 @@ const Create: React.FC<{}> = (props) => {
     {
       key: "orderKey",
       header: "Номер акта",
+      size: "100px",
       mapper: (v, item) => item.orderKey,
     },
     {
       key: "orderDate",
       header: "Дата акта",
+      type: "date",
+      size: "100px",
       mapper: (v, item) => item.orderDate,
     },
     {
       key: "departmentId",
       header: "Подразделение",
-      mapper: (v, item) => item.departmentId,
+      mapper: (v, item) => getDepartmentName(getDepartment(item.departmentId)),
     },
     {
       key: "holderId",
       header: "Владелец",
-      mapper: (v, item) => item.holderId,
+      mapper: (v, item) => splitHolderName(getHolder(item.holderId)),
+    },
+    {
+      key: "status",
+      header: "Статус движения",
+      // type: "date",
+      mapper: (v, item) => {
+        return item.merge ? (
+          <>
+            Добавление в существующее{" "}
+            <Link inline href={`/holding/view?id=${item.id}`}>
+              #{item.id}
+            </Link>
+          </>
+        ) : (
+          "Новое движение"
+        );
+      },
     },
 
     // {
@@ -416,6 +479,39 @@ const Create: React.FC<{}> = (props) => {
 
   const holdingMode = search.view === "holding";
 
+  React.useEffect(() => {
+    if (!selectedHolding.data) return;
+    const holding = selectedHolding.data;
+    const ex = creations.holdings.find(
+      (h) =>
+        h.orderKey === holding.orderKey &&
+        new Date(h.orderDate).getFullYear() ===
+          new Date(holding.orderDate).getFullYear()
+    );
+    if (ex)
+      return noticeContext.createNotice(
+        "Ошибка привязки движения: Движение с соответствующим номером и годом уже присутствует."
+      );
+
+    setCreations({
+      ...creations,
+      holdings: [
+        ...creations.holdings,
+        {
+          merge: true,
+          departmentId: holding.departmentId,
+          holderId: holding.holderId,
+          orderDate: holding.orderDate,
+          orderKey: holding.orderKey,
+          phoneRandomIds: [],
+          id: holding.id,
+        },
+      ],
+    });
+  }, [selectedHolding.data?.id]);
+
+  useNotice(phonesStatus);
+
   return (
     <>
       <PopupLayer>
@@ -437,15 +533,26 @@ const Create: React.FC<{}> = (props) => {
         />
       </PopupLayer>
       <TopBarLayer>
+        <Checkbox
+          disabled
+          label={`Без подтверждения`}
+          name="no"
+          input={{}}
+          onChange={(e) => {}}
+        />
         <Button
           color="primary"
           disabled={creations.phones.length === 0 || phonesStatus.isLoading}
-          onClick={handlePhonesSubmit}
+          onClick={handleCreationsSubmit}
           ref={submitRef}
         >
-          {phonesStatus.isLoading ? <LoaderIcon /> : "Применить"}
+          Применить
         </Button>
-        <Checkbox
+        <Button onClick={handleCreationsClear} ref={submitRef}>
+          Очистить
+        </Button>
+        <Toggle
+          inverted
           label={`Отобразить движения (${creations.holdings.length})`}
           name="view"
           input={{ view: holdingMode }}
@@ -459,6 +566,7 @@ const Create: React.FC<{}> = (props) => {
           color="primary"
           onClick={(e) => {
             ref?.click();
+            if (ref) ref.value = "";
           }}
         >
           Импорт <Icon.Database color="primary" />
@@ -476,11 +584,11 @@ const Create: React.FC<{}> = (props) => {
       </TopBarLayer>
 
       <Form
-        style={{ flexFlow: "row" }}
+        // style={{ flexFlow: "row" }}
         onSubmit={() => handleSubmit()}
         input={bind.input}
       >
-        <Layout flow="row wrap" flex="2" padding="md">
+        <Layout flow="row" flex="1" padding="md">
           {/* <Layout> */}
           <ClickInput
             {...bind}
@@ -492,18 +600,18 @@ const Create: React.FC<{}> = (props) => {
           />
           <Input
             {...bind}
+            style={{ flex: "1" }}
             name="inventoryKey"
             label="Инвентарный номер"
             placeholder="110xxxxxxxxx"
           />
           <Input
+            style={{ flex: "1" }}
             {...bind}
             name="factoryKey"
             placeholder="110xxxxxxxxx"
             label="Заводской номер"
           />
-          {/* </Layout> */}
-          {/* <Layout> */}
           <Input
             {...bind}
             type="number"
@@ -526,28 +634,34 @@ const Create: React.FC<{}> = (props) => {
             label="Дата ввода в эксплуатацию"
             required
           />
-          <Layout flow="row" style={{ alignItems: "center" }}>
-            {selectedHolding?.data ? (
-              <>
-                <Span inline>
-                  Привязка к движению{" "}
-                  <Link
-                    inline
-                    href={`/holding/view?id=${selectedHolding.data.id}`}
-                  >
-                    #{selectedHolding.data.id}
-                  </Link>
-                </Span>
-                <Button inverted color="primary" onClick={onDelHolding}>
-                  <Icon.X />
-                </Button>
-              </>
-            ) : (
-              <Link onClick={() => onAddHolding()}>Указать движение</Link>
-            )}
-          </Layout>
         </Layout>
-        <Button type="submit">Добавить</Button>
+        <Layout
+          flow="row"
+          flex="1"
+          style={{ alignItems: "center", padding: "0 0.75rem" }}
+        >
+          {selectedHolding?.data ? (
+            <>
+              <Span inline>
+                Привязка к движению{" "}
+                <Link
+                  inline
+                  href={`/holding/view?id=${selectedHolding.data.id}`}
+                >
+                  #{selectedHolding.data.id}
+                </Link>
+              </Span>
+              <Button inverted color="primary" onClick={onDelHolding}>
+                <Icon.X />
+              </Button>
+            </>
+          ) : (
+            <Link onClick={() => onAddHolding()}>Привязать к движению</Link>
+          )}
+          <Button style={{ marginLeft: "auto" }} type="submit">
+            Добавить
+          </Button>
+        </Layout>
       </Form>
       <Hr />
       {holdingMode ? (

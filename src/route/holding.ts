@@ -24,6 +24,38 @@ import Log from "@backend/db/models/log.model";
 const router = AppRouter();
 
 router.get(
+  "/holding/phones",
+  access("user"),
+  validate({
+    query: {
+      holdingId: tester().isNumber(),
+    },
+  }),
+  transactionHandler(async (req, res) => {
+    const { holdingId } = req.query;
+
+    const phones = await Phone.unscoped().findAll({
+      include: [
+        {
+          model: Holding,
+          where: { id: holdingId },
+          through: { where: { status: null } },
+          required: true,
+        },
+      ],
+    });
+
+    res.send(
+      prepareItems(
+        phones.map((v) => ({ ...v.toJSON(), holdings: undefined })),
+        phones.length,
+        0
+      )
+    );
+  })
+);
+
+router.get(
   "/holdings",
   access("user"),
   validate({
@@ -63,7 +95,11 @@ router.get(
 
     filter.on("id").optional(Op.in, ids);
     filter.on("orderKey").optional(Op.eq, orderKey);
-    filter.on("status").optional(Op.eq, status === "based" ? null : status);
+
+    if (status === "based") filter.on("status").optional(Op.eq, null);
+    else if (status === "pending") filter.on("status").optional(Op.not, null);
+    else filter.on("status").optional(Op.eq, status);
+
     filter.on("departmentId").optional(Op.eq, departmentId);
     filter.on("holderId").optional(Op.eq, holderId);
 
@@ -80,7 +116,7 @@ router.get(
     const holdings = await Holding.findAll({
       include: [
         {
-          model: Phone,
+          model: Phone.unscoped(),
           // where: phoneFilter.where,
           attributes: ["id"],
           required: false,
@@ -273,7 +309,8 @@ router.put(
       if (holdings.length > 0)
         throw new ApiError(errorType.INVALID_QUERY, {
           description:
-            "Один или более ID средств связи указан неверно, либо уже существует в движении",
+            "Один или более ID средств связи указан неверно, либо уже существует в движении: " +
+            holdings.map((v) => `#${v.phoneId}`),
         });
 
       const holding = await Holding.unscoped().findByPk(holdingId);

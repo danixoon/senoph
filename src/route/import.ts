@@ -446,9 +446,12 @@ const parsePhonesFile = async (book: exceljs.Workbook) => {
         new Date(h.orderDate).getFullYear() ===
           new Date(holding.orderDate).getFullYear() &&
         h.orderKey === holding.orderKey
-    );
+    ); 
 
-    if (ex) ex.merge = true;
+    if (ex) {
+      ex.merge = true;
+      ex.id = holding.id;
+    }
   });
 
   // Движения, которые уже существуют в бд

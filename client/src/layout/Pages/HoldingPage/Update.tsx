@@ -6,7 +6,6 @@ import { useFetchConfigMap } from "hooks/api/useFetchConfigMap";
 import React from "react";
 import { useAppDispatch } from "store";
 import { extractStatus, parseItems } from "store/utils";
-import { HoldingPageProps } from ".";
 import ActionBox from "components/ActionBox";
 import InfoBanner from "components/InfoBanner";
 import { SpoilerPopupButton } from "components/SpoilerPopup";
@@ -88,7 +87,7 @@ const useContainer = () => {
   };
 };
 
-const UpdateContent: React.FC<HoldingPageProps> = (props) => {
+const UpdateContent: React.FC<{}> = (props) => {
   const { selectedId, phoneIds, phones, holding, change } = useContainer();
 
   const handleUpdate = () => {

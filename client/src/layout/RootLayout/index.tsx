@@ -16,7 +16,7 @@ import { login } from "store/slices/app";
 import { replace } from "connected-react-router";
 import CategoryPage from "layout/Pages/CategoryPage";
 import PhonePageCreate from "layout/Pages/PhonePage/Create";
-import HoldingPageContainer from "containers/HoldingPage";
+import HoldingPage from "layout/Pages/HoldingPage";
 // import CategoryPageContainer from "containers/CategoryPage";
 import AdminPage from "layout/Pages/AdminPage";
 import CommitPage from "layout/Pages/CommitPage";
@@ -90,7 +90,7 @@ const RootLayout: React.FC<{}> = (props) => {
                     <PhonePageContainer />
                   </Route>
                   <Route path="/holding">
-                    <HoldingPageContainer />
+                    <HoldingPage />
                   </Route>
                   <Route path="/category">
                     <CategoryPage />

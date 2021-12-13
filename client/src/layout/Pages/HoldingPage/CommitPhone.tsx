@@ -1,17 +1,21 @@
 import { api } from "store/slices/api";
-import Icon from "components/Icon";
+import Icon, { LoaderIcon } from "components/Icon";
 import { useFetchConfigMap } from "hooks/api/useFetchConfigMap";
 import React from "react";
 import { extractStatus, parseItems } from "store/utils";
-import { HoldingPageProps } from ".";
 import ActionBox from "components/ActionBox";
 import InfoBanner from "components/InfoBanner";
 import { SpoilerPopupButton } from "components/SpoilerPopup";
 import Table, { TableColumn } from "components/Table";
-import { getTableColumns } from "./utils";
+import { getSelectionColumn, getTableColumns } from "./utils";
 import { extractItemsHook, getLocalDate } from "utils";
 import Link from "components/Link";
 import Span from "components/Span";
+import { useSelection } from "./useSelection";
+import ButtonGroup from "components/ButtonGroup";
+import TopBarLayer from "providers/TopBarLayer";
+import Badge from "components/Badge";
+import Button from "components/Button";
 
 const useContainer = () => {
   const { holders, departments } = useFetchConfigMap();
@@ -46,9 +50,11 @@ const useContainer = () => {
 
 // type TableItem = GetItemType<Api.GetResponse<"get", "/holdings/commit">>;
 
-const CommitPhoneContent: React.FC<HoldingPageProps> = (props) => {
+const CommitPhoneContent: React.FC<{}> = (props) => {
   const { holdings, commit, commitStatus, departments, holders } =
     useContainer();
+
+  const selection = useSelection(holdings as any);
 
   const columns: TableColumn<ArrayElement<typeof holdings>>[] = [
     {
@@ -87,7 +93,9 @@ const CommitPhoneContent: React.FC<HoldingPageProps> = (props) => {
       key: "id",
       size: "30px",
       mapper: (v, item) => (
-        <Link href={`/holding/view?id=${item.holdingId}`}>#{item.holdingId}</Link>
+        <Link href={`/holding/view?id=${item.holdingId}`}>
+          #{item.holdingId}
+        </Link>
       ),
     },
     {
@@ -137,7 +145,27 @@ const CommitPhoneContent: React.FC<HoldingPageProps> = (props) => {
           )
         ),
     },
+    getSelectionColumn(selection) as any,
   ];
+
+  const commitSelected = (action: CommitActionType) => {
+    const payloads: any[] = [];
+    const targetHoldings = holdings.filter((v) =>
+      selection.selection.includes(v.id)
+    );
+
+    for (const holding of targetHoldings) {
+      payloads.push({
+        action,
+        holdingId: holding.id,
+        phoneIds: holding.commits.map((v) => v.phoneId),
+      });
+    }
+
+    for (const payload of payloads) {
+      commit(payload);
+    }
+  };
 
   return (
     <>
@@ -148,7 +176,42 @@ const CommitPhoneContent: React.FC<HoldingPageProps> = (props) => {
           text="Изменения движений отсутствуют."
         />
       ) : (
-        <Table columns={columns} items={holdings} />
+        <>
+          <TopBarLayer>
+            <ButtonGroup>
+              <Button
+                disabled={
+                  selection.selection.length === 0 || commitStatus.isLoading
+                }
+                margin="none"
+                onClick={() => commitSelected("approve")}
+              >
+                Подтвердить
+              </Button>
+              <Badge
+                margin="none"
+                color="secondary"
+                style={{ borderRadius: 0 }}
+              >
+                {commitStatus.isLoading ? (
+                  <LoaderIcon />
+                ) : (
+                  selection.selection.length
+                )}
+              </Badge>
+              <Button
+                disabled={
+                  selection.selection.length === 0 || commitStatus.isLoading
+                }
+                margin="none"
+                onClick={() => commitSelected("decline")}
+              >
+                Отменить
+              </Button>
+            </ButtonGroup>
+          </TopBarLayer>
+          <Table columns={columns} items={holdings} />
+        </>
       )}
     </>
   );

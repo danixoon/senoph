@@ -54,8 +54,12 @@ const SideBar: React.FC<SideBar> = (props) => {
           onToggle={page === "phone" ? handleSpoilerToggle : undefined}
           label={
             <>
-              Средства связи{" "}
-              <Icon.Phone style={{ marginLeft: "auto" }} inline />
+              Средства связи <Icon.Phone inline />
+              {notice.holding.changes || notice.holding.commits ? (
+                <div className="notice-icon" />
+              ) : (
+                ""
+              )}
             </>
           }
         >
@@ -85,6 +89,11 @@ const SideBar: React.FC<SideBar> = (props) => {
               badge={notice.phone.commits}
               icon={(p) => <Icon.DownloadCloud {...p} />}
             />
+            <Item
+              href="/phone/create"
+              text="Создание"
+              icon={(p) => <Icon.Plus {...p} />}
+            />
           </Layout>
         </Spoiler>
         <Spoiler
@@ -93,7 +102,12 @@ const SideBar: React.FC<SideBar> = (props) => {
           label={
             <>
               Движения
-              <Icon.User inline style={{ marginLeft: "auto" }} />
+              <Icon.User inline />
+              {notice.holding.changes || notice.holding.commits ? (
+                <div className="notice-icon" />
+              ) : (
+                ""
+              )}
             </>
           }
         >
@@ -133,7 +147,12 @@ const SideBar: React.FC<SideBar> = (props) => {
           label={
             <>
               Категорирование
-              <Icon.Folder inline style={{ marginLeft: "auto" }} />
+              <Icon.Folder inline />
+              {notice.category.changes || notice.category.commits ? (
+                <div className="notice-icon" />
+              ) : (
+                ""
+              )}
             </>
           }
         >

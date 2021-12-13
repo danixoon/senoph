@@ -23,7 +23,6 @@ import "./style.styl";
 import HolderSelectionPopupContainer from "containers/HolderSelectionPopup";
 import PopupLayer from "providers/PopupLayer";
 import Checkbox from "components/Checkbox";
-import { HoldingItem } from "layout/Pages/HoldingPage";
 
 export type PhoneCreatePopupProps = OverrideProps<
   PopupProps,
@@ -500,7 +499,6 @@ const PhoneCreatePopup: React.FC<PhoneCreatePopupProps> = (props) => {
       </Popup>
       <ModelSelectionPopupContainer
         {...modelPopup}
-        
         onSelect={(id, name) =>
           setBind({ ...bind.input, phoneModelId: id, phoneModelName: name })
         }

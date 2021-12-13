@@ -240,6 +240,7 @@ const Content: React.FC<
           {...bind}
           size="sm"
           border
+          style={{ minWidth: "323px" }}
           // position="vertical"
           name="tab"
           items={[
