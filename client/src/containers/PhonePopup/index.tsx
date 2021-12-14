@@ -89,10 +89,10 @@ const PhonePopupContainer: React.FC<PhonePopupContainerProps> = (props) => {
             ? {
                 ...phone,
                 categories: [...(phone?.categories ?? [])].sort((a, b) =>
-                  a.actDate > b.actDate ? 1 : -1
+                  a.actDate < b.actDate ? 1 : -1
                 ),
                 holdings: [...(phone?.holdings ?? [])].sort((a, b) =>
-                  a.orderDate > b.orderDate ? 1 : -1
+                  a.orderDate < b.orderDate ? 1 : -1
                 ),
               }
             : null

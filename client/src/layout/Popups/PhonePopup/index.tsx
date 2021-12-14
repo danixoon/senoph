@@ -160,11 +160,16 @@ const Content: React.FC<
 
   const lifespan = type?.lifespan;
   // TODO: Расчитывать срок относительно даты списания
-  const now = Date.now() / 1000 / 60 / 60 / 24 / 30;
-  const comissioning =
-    new Date(phone.commissioningDate).getTime() / 1000 / 60 / 60 / 24 / 30;
+  const toMonths = 1000 * 60 * 60 * 24 * 30;
+  const now =
+    (phone.categories ?? [])[0]?.categoryKey === "4"
+      ? new Date((phone.categories ?? [])[0].actDate).getTime()
+      : Date.now();
+  const comissioning = new Date(phone.commissioningDate).getTime();
 
-  const diff = lifespan ? now - (comissioning + lifespan) : null;
+  const diff = lifespan
+    ? now / toMonths - (comissioning / toMonths + lifespan)
+    : null;
 
   return (
     <>

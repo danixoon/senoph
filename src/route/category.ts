@@ -117,6 +117,149 @@ router.post(
     const { user } = req.params;
     const { categoryKey, actDate, phoneIds, actKey, description } = req.body;
 
+    const targetPhones = await Phone.findAll({
+      where: { id: { [Op.in]: phoneIds } },
+      include: [Category],
+      order: [[Sequelize.literal("`categories.actDate`"), "DESC"]],
+    });
+
+    if (targetPhones.length !== phoneIds.length)
+      throw new ApiError(errorType.INVALID_QUERY, {
+        description: "Одно или несколько ID средств связи указаны неверно",
+      });
+
+    for (const phone of targetPhones) {
+      const last = phone.categories[0];
+      const getPrevious = (date: Date) => {
+        if (phone.categories.length > 0) {
+          const prev = phone.categories.find(
+            (cat) => new Date(cat.actDate) < date
+          );
+          return prev;
+        }
+      };
+      const getNext = (date: Date) => {
+        if (phone.categories.length > 0) {
+          const next = [...phone.categories]
+            .reverse()
+            .find((cat) => new Date(cat.actDate) > date);
+          return next;
+        }
+      };
+      const getSiblings = (date: Date) => [getPrevious(date), getNext(date)];
+
+      if (last) {
+        if (Math.abs(parseInt(last.categoryKey) - parseInt(categoryKey)) !== 1)
+          throw new ApiError(errorType.VALIDATION_ERROR, {
+            description: `Ошибка для средства связи #${phone.id}: Неккоректный порядок категорий.`,
+          });
+
+        if (
+          categoryKey !== "2" &&
+          parseInt(last.categoryKey) > parseInt(categoryKey)
+        )
+          throw new ApiError(errorType.VALIDATION_ERROR, {
+            description: `Ошибка для средства связи #${phone.id}: Неккоректный порядок категорий, попытка добавить младшую категорию после старшей.`,
+          });
+
+        if (
+          categoryKey === "2" &&
+          last.categoryKey !== "3" &&
+          last.categoryKey !== "1"
+        )
+          throw new ApiError(errorType.VALIDATION_ERROR, {
+            description: `Ошибка для средства связи #${phone.id}: Неккоректный порядок категорий, II категорию возможно добавить только после III или I.`,
+          });
+
+        if (new Date(last.actDate) >= actDate)
+          throw new ApiError(errorType.VALIDATION_ERROR, {
+            description: `Ошибка для средства связи #${phone.id}: Неккоректный порядок категорий, дата акта прикрепляемой категории раньше или аналогична дате старшей категории`,
+          });
+      } else {
+        if (categoryKey !== "1" && categoryKey !== "2")
+          throw new ApiError(errorType.VALIDATION_ERROR, {
+            description: `Ошибка для средства связи #${phone.id}: Неккоректный порядок категорий, первая категория допускается I или II`,
+          });
+      }
+
+      // if(phone.categories.some(cat => parseInt(cat.categoryKey) > parseInt(categoryKey) && new Date(cat.actDate) ))
+
+      //   if (
+      //     categoryKey === "1" &&
+      //     phone.categories.some((cat) => new Date(cat.actDate) < actDate)
+      //   )
+      //     throw new ApiError(errorType.VALIDATION_ERROR, {
+      //       description: `Ошибка для средства связи #${phone.id}: Невозможно привязать I категорию, если средство связи уже находится в категории предшествующей указанной.`,
+      //     });
+
+      //   if (parseInt(categoryKey) > 2 && phone.categories.length === 0) {
+      //     throw new ApiError(errorType.VALIDATION_ERROR, {
+      //       description: `Ошибка для средства связи #${phone.id}: Средство связи невозможно изначально привязать к III категории и выше.`,
+      //     });
+      //   }
+
+      //   if (last && last.categoryKey !== "3" && categoryKey === "4") {
+      //     throw new ApiError(errorType.VALIDATION_ERROR, {
+      //       description: `Ошибка для средства связи #${phone.id}: Невозможно привязать IV категорию, если средство связи не находится в III.`,
+      //     });
+      //   }
+
+      //   if (last && last.categoryKey !== "2" && categoryKey === "3") {
+      //     throw new ApiError(errorType.VALIDATION_ERROR, {
+      //       description: `Ошибка для средства связи #${phone.id}: Невозможно привязать III категорию, если средство связи не находится в II.`,
+      //     });
+    }
+
+    //   if (
+    //     categoryKey === "4" &&
+    //     phone.categories.some((cat) => new Date(cat.actDate) > actDate)
+    //   ) {
+    //     throw new ApiError(errorType.VALIDATION_ERROR, {
+    //       description: `Ошибка для средства связи #${phone.id}: Невозможно привязать IV категорию, если средство связи уже находится в категории старше указанной.`,
+    //     });
+    //   }
+
+    //   if (
+    //     categoryKey === "2" &&
+    //     phone.categories.some(
+    //       (cat) => cat.categoryKey === "1" && new Date(cat.actDate) > actDate
+    //     )
+    //   ) {
+    //     throw new ApiError(errorType.VALIDATION_ERROR, {
+    //       description: `Ошибка для средства связи #${phone.id}: Невозможно привязать II категорию, если средство связи уже находится в категории старше указанной.`,
+    //     });
+    //   }
+
+    //   if (
+    //     categoryKey === "4" &&
+    //     phone.categories.some((cat) => cat.categoryKey === "4")
+    //   ) {
+    //     throw new ApiError(errorType.VALIDATION_ERROR, {
+    //       description: `Ошибка для средства связи #${phone.id}: Средство связи уже находится в IV категории.`,
+    //     });
+    //   }
+
+    //   if (
+    //     categoryKey === "1" &&
+    //     phone.categories.some((cat) => cat.categoryKey === "1")
+    //   ) {
+    //     throw new ApiError(errorType.VALIDATION_ERROR, {
+    //       description: `Ошибка для средства связи #${phone.id}: Средство связи уже находится в I категории.`,
+    //     });
+    //   }
+
+    //   if (categoryKey === "2" || categoryKey === "3") {
+    //     const [prev, next] = getSiblings(actDate);
+    //     if (
+    //       (prev && prev.categoryKey === categoryKey) ||
+    //       (next && next.categoryKey === categoryKey)
+    //     )
+    //       throw new ApiError(errorType.VALIDATION_ERROR, {
+    //         description: `Ошибка для средства связи #${phone.id}: Средство связи не может быть несколько раз подряд привязано к одной и той же категории.`,
+    //       });
+    //   }
+    // }
+
     const cat = await category.create(user.id, {
       actDate,
       phoneIds,

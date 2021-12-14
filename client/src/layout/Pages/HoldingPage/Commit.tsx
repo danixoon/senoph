@@ -84,6 +84,7 @@ const CommitContent: React.FC<{}> = (props) => {
                 {holding.commit.status.isLoading ? (
                   <LoaderIcon />
                 ) : (
+                  
                   selection.selection.length
                 )}
               </Badge>

@@ -9,3 +9,4 @@ yarn.lock
 logs
 *.log
 *.blg
+sync.json

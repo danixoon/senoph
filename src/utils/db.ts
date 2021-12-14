@@ -308,7 +308,7 @@ export const fillDevDatabase = async (full?: boolean, size: number = 150) => {
   );
 
 
-  return;
+  // return;
 
   const phonesData = mapGenerated(size, () => ({
     inventoryKey: uuid(),

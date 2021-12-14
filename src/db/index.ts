@@ -126,7 +126,8 @@ export const init = async () => {
 
   if (!isTest) {
     if (!isProd && isDrop) await dropDatabase();
-    if (sync) {
+    if (!isProd && isFill) await syncDatabase(true);
+    else if (sync) {
       const config = await getSyncConfig();
       if (!config || force) {
         await dropDatabase();
