@@ -40,9 +40,12 @@ export const dropDatabase = () => {
   return sequelize.drop({});
 };
 export const syncDatabase = async (force: boolean) => {
-  logger.info(`База данных синхронизируется`, {
-    service: "database",
-  });
+  logger.info(
+    `База данных синхронизируется${force ? " БЕЗ СОХРАНЕНИЯ ИЗМЕНЕНИЙ" : ""}`,
+    {
+      service: "database",
+    }
+  );
   const now = new Date();
   const config: SyncConfig = {
     date: now,
@@ -122,17 +125,17 @@ export const init = async () => {
   const { sync, force } = minimist(process.argv.slice(2));
 
   if (!isTest) {
+    if (!isProd && isDrop) await dropDatabase();
     if (sync) {
       const config = await getSyncConfig();
-      if (!isProd && isDrop) await dropDatabase();
-      if (!config) {
-        if (force) await dropDatabase();
-        await syncDatabase(force);
+      if (!config || force) {
+        await dropDatabase();
+        await syncDatabase(true);
       } else
         throw new Error(
-          "Невозможно произвести синхронизацию: она уже произведена. Удалите файл sync.json, чтобы сделать её повторно"
+          `Невозможно произвести синхронизацию: она уже производилась ${config.date.toLocaleDateString()} в ${config.date.toLocaleTimeString()}. Удалите файл sync.json, либо запустите приложение с флагом --force чтобы сделать её повторно без сохранения изменений.`
         );
-    }
+    } else syncDatabase(false);
 
     // 1141 <-> 1481
     if (isProd) await fillProdDatabase();
