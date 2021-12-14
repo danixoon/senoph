@@ -286,6 +286,8 @@ declare namespace Api {
           ItemsResponse<Api.Models.Phone>,
           {
             holdingId: number;
+            ids?: number[];
+            inventoryKey?: string;
           },
           {}
         >)

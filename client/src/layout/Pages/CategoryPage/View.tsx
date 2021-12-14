@@ -4,7 +4,7 @@ import Badge from "components/Badge";
 import Link from "components/Link";
 import { SpoilerPopupButton } from "components/SpoilerPopup";
 import Table, { TableColumn } from "components/Table";
-import { useTogglePopup } from "hooks/useTogglePopup";
+import { useTogglePayloadPopup, useTogglePopup } from "hooks/useTogglePopup";
 import ItemSelectionPopup from "layout/Popups/ItemSelectionPopup";
 import { NoticeContext } from "providers/NoticeProvider";
 import PopupLayer from "providers/PopupLayer";
@@ -29,6 +29,8 @@ import InfoBanner from "components/InfoBanner";
 import Input from "components/Input";
 import { useQueryInput } from "hooks/useQueryInput";
 import WithLoader from "components/WithLoader";
+import { useNotice } from "hooks/useNotice";
+import PhonesSelectionPopup from "../HoldingPage/PhonesSelectionPopup";
 
 const useContainer = () => {
   const filterHook = useQueryInput<{
@@ -74,6 +76,11 @@ const useContainer = () => {
 
   const isSelecting = location.state?.act === "select";
 
+  // useNotice(orStatus(commitInfo));
+
+  useNotice(extractStatus(commitCategoryInfo));
+  useNotice(extractStatus(deleteCategoryInfo));
+
   return {
     filterHook,
     categories,
@@ -100,8 +107,8 @@ const useContainer = () => {
       : undefined,
     onToggle: () => dispatch(replace({ search: qs.stringify(query) })),
     onViewCommit: (id: number) => dispatch(push("/category/commit")),
-    onEdit: (id: number) =>
-      dispatch(push({ search: qs.stringify({ ...query, id }) })),
+    // onEdit: (id: number) =>
+    // dispatch(push({ search: qs.stringify({ ...query, id }) })),
   };
 };
 
@@ -114,7 +121,6 @@ export const ViewContent: React.FC<{}> = (props) => {
     selectedId,
     onToggle,
     onViewCommit,
-    onEdit,
     onSelect,
   } = useContainer();
 
@@ -129,13 +135,17 @@ export const ViewContent: React.FC<{}> = (props) => {
             <SpoilerPopupButton onClick={() => onViewCommit(item.id)}>
               Просмотреть
             </SpoilerPopupButton>
-            <SpoilerPopupButton onClick={() => onEdit(item.id)}>
+            <SpoilerPopupButton
+              onClick={() => phonesPopup.onToggle(true, item.id)}
+            >
               Изменить
             </SpoilerPopupButton>
           </>
         ) : (
           <>
-            <SpoilerPopupButton onClick={() => onEdit(item.id)}>
+            <SpoilerPopupButton
+              onClick={() => phonesPopup.onToggle(true, item.id)}
+            >
               Изменить
             </SpoilerPopupButton>
             <SpoilerPopupButton
@@ -149,55 +159,14 @@ export const ViewContent: React.FC<{}> = (props) => {
     ),
   };
 
-  const noticeContext = React.useContext(NoticeContext);
   const [bindFilter] = filterHook;
+
+  const phonesPopup = useTogglePayloadPopup();
 
   return (
     <>
       <PopupLayer>
-        <ItemSelectionPopup
-          onToggle={() => onToggle()}
-          isOpen={!isNaN(selectedId)}
-          header="Прикреплённые средства связи"
-          onSelect={(item) => {}}
-          status={categoryPhones.status}
-          items={categoryPhones.data.items.map((item) => ({
-            id: item.id.toString(),
-            content: (
-              <>
-                <Button
-                  onClick={() => {
-                    if (categoryPhones.data.items.length === 1)
-                      noticeContext.createNotice(
-                        "Ошибка: Невозможно удалить последнее средство связи из категории. \nВероятно, вы хотите удалить категорию полностью?"
-                      );
-                    else if (selectedId)
-                      category.commit({
-                        action: "remove",
-                        phoneIds: [item.id],
-                        categoryId: selectedId,
-                      });
-                  }}
-                  inverted
-                  style={{ marginRight: "1rem" }}
-                >
-                  <Icon.X />
-                </Button>
-                <Link href={`/phone/view?selectedId=${item.id}`}>
-                  {item.model?.name ?? `#${item.id}`}
-                </Link>
-                <Span
-                  size="xs"
-                  style={{ marginLeft: "auto", marginRight: "1rem" }}
-                  font="monospace"
-                >
-                  {item.inventoryKey ?? "Инвентарный отсутствует"}
-                </Span>
-              </>
-            ),
-            name: item.model?.name ?? `#${item.id}`,
-          }))}
-        />
+        <PhonesSelectionPopup {...phonesPopup} holdingId={phonesPopup.state} />
       </PopupLayer>
       <Form style={{ flexFlow: "column wrap", maxHeight: "100px" }} input={{}}>
         <Input

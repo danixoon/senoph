@@ -28,13 +28,20 @@ router.get(
   access("user"),
   validate({
     query: {
-      holdingId: tester().isNumber(),
+      holdingId: tester().required().isNumber(),
+      ids: tester().array("int"),
+      inventoryKey: tester(),
     },
   }),
   transactionHandler(async (req, res) => {
-    const { holdingId } = req.query;
+    const { holdingId, ids, inventoryKey } = req.query;
+
+    const filter = new WhereFilter<DB.PhoneAttributes>();
+    filter.on("id").optional(Op.in, ids);
+    filter.on("inventoryKey").optional(Op.substring, inventoryKey);
 
     const phones = await Phone.unscoped().findAll({
+      where: filter.where,
       include: [
         {
           model: Holding,

@@ -91,6 +91,47 @@ router.get(
   })
 );
 
+const checkNewCategory = (
+  last: DB.CategoryAttributes | undefined,
+  categoryKey: CategoryKey,
+  actDate: Date,
+  phoneId: number
+) => {
+  if (last) {
+    if (Math.abs(parseInt(last.categoryKey) - parseInt(categoryKey)) !== 1)
+      throw new ApiError(errorType.VALIDATION_ERROR, {
+        description: `Ошибка для средства связи #${phoneId}: Неккоректный порядок категорий.`,
+      });
+
+    if (
+      categoryKey !== "2" &&
+      parseInt(last.categoryKey) > parseInt(categoryKey)
+    )
+      throw new ApiError(errorType.VALIDATION_ERROR, {
+        description: `Ошибка для средства связи #${phoneId}: Неккоректный порядок категорий, попытка добавить младшую категорию после старшей.`,
+      });
+
+    if (
+      categoryKey === "2" &&
+      last.categoryKey !== "3" &&
+      last.categoryKey !== "1"
+    )
+      throw new ApiError(errorType.VALIDATION_ERROR, {
+        description: `Ошибка для средства связи #${phoneId}: Неккоректный порядок категорий, II категорию возможно добавить только после III или I.`,
+      });
+
+    if (new Date(last.actDate) >= actDate)
+      throw new ApiError(errorType.VALIDATION_ERROR, {
+        description: `Ошибка для средства связи #${phoneId}: Неккоректный порядок категорий, дата акта прикрепляемой категории раньше или аналогична дате старшей категории`,
+      });
+  } else {
+    if (categoryKey !== "1" && categoryKey !== "2")
+      throw new ApiError(errorType.VALIDATION_ERROR, {
+        description: `Ошибка для средства связи #${phoneId}: Неккоректный порядок категорий, первой категория допускается либо I, либо II`,
+      });
+  }
+};
+
 router.post(
   "/category",
   access("user"),
@@ -130,136 +171,25 @@ router.post(
 
     for (const phone of targetPhones) {
       const last = phone.categories[0];
-      const getPrevious = (date: Date) => {
-        if (phone.categories.length > 0) {
-          const prev = phone.categories.find(
-            (cat) => new Date(cat.actDate) < date
-          );
-          return prev;
-        }
-      };
-      const getNext = (date: Date) => {
-        if (phone.categories.length > 0) {
-          const next = [...phone.categories]
-            .reverse()
-            .find((cat) => new Date(cat.actDate) > date);
-          return next;
-        }
-      };
-      const getSiblings = (date: Date) => [getPrevious(date), getNext(date)];
-
-      if (last) {
-        if (Math.abs(parseInt(last.categoryKey) - parseInt(categoryKey)) !== 1)
-          throw new ApiError(errorType.VALIDATION_ERROR, {
-            description: `Ошибка для средства связи #${phone.id}: Неккоректный порядок категорий.`,
-          });
-
-        if (
-          categoryKey !== "2" &&
-          parseInt(last.categoryKey) > parseInt(categoryKey)
-        )
-          throw new ApiError(errorType.VALIDATION_ERROR, {
-            description: `Ошибка для средства связи #${phone.id}: Неккоректный порядок категорий, попытка добавить младшую категорию после старшей.`,
-          });
-
-        if (
-          categoryKey === "2" &&
-          last.categoryKey !== "3" &&
-          last.categoryKey !== "1"
-        )
-          throw new ApiError(errorType.VALIDATION_ERROR, {
-            description: `Ошибка для средства связи #${phone.id}: Неккоректный порядок категорий, II категорию возможно добавить только после III или I.`,
-          });
-
-        if (new Date(last.actDate) >= actDate)
-          throw new ApiError(errorType.VALIDATION_ERROR, {
-            description: `Ошибка для средства связи #${phone.id}: Неккоректный порядок категорий, дата акта прикрепляемой категории раньше или аналогична дате старшей категории`,
-          });
-      } else {
-        if (categoryKey !== "1" && categoryKey !== "2")
-          throw new ApiError(errorType.VALIDATION_ERROR, {
-            description: `Ошибка для средства связи #${phone.id}: Неккоректный порядок категорий, первая категория допускается I или II`,
-          });
-      }
-
-      // if(phone.categories.some(cat => parseInt(cat.categoryKey) > parseInt(categoryKey) && new Date(cat.actDate) ))
-
-      //   if (
-      //     categoryKey === "1" &&
-      //     phone.categories.some((cat) => new Date(cat.actDate) < actDate)
-      //   )
-      //     throw new ApiError(errorType.VALIDATION_ERROR, {
-      //       description: `Ошибка для средства связи #${phone.id}: Невозможно привязать I категорию, если средство связи уже находится в категории предшествующей указанной.`,
-      //     });
-
-      //   if (parseInt(categoryKey) > 2 && phone.categories.length === 0) {
-      //     throw new ApiError(errorType.VALIDATION_ERROR, {
-      //       description: `Ошибка для средства связи #${phone.id}: Средство связи невозможно изначально привязать к III категории и выше.`,
-      //     });
+      // const getPrevious = (date: Date) => {
+      //   if (phone.categories.length > 0) {
+      //     const prev = phone.categories.find(
+      //       (cat) => new Date(cat.actDate) < date
+      //     );
+      //     return prev;
       //   }
-
-      //   if (last && last.categoryKey !== "3" && categoryKey === "4") {
-      //     throw new ApiError(errorType.VALIDATION_ERROR, {
-      //       description: `Ошибка для средства связи #${phone.id}: Невозможно привязать IV категорию, если средство связи не находится в III.`,
-      //     });
+      // };
+      // const getNext = (date: Date) => {
+      //   if (phone.categories.length > 0) {
+      //     const next = [...phone.categories]
+      //       .reverse()
+      //       .find((cat) => new Date(cat.actDate) > date);
+      //     return next;
       //   }
-
-      //   if (last && last.categoryKey !== "2" && categoryKey === "3") {
-      //     throw new ApiError(errorType.VALIDATION_ERROR, {
-      //       description: `Ошибка для средства связи #${phone.id}: Невозможно привязать III категорию, если средство связи не находится в II.`,
-      //     });
+      // };
+      // const getSiblings = (date: Date) => [getPrevious(date), getNext(date)];
+      checkNewCategory(last, categoryKey, actDate, phone.id);
     }
-
-    //   if (
-    //     categoryKey === "4" &&
-    //     phone.categories.some((cat) => new Date(cat.actDate) > actDate)
-    //   ) {
-    //     throw new ApiError(errorType.VALIDATION_ERROR, {
-    //       description: `Ошибка для средства связи #${phone.id}: Невозможно привязать IV категорию, если средство связи уже находится в категории старше указанной.`,
-    //     });
-    //   }
-
-    //   if (
-    //     categoryKey === "2" &&
-    //     phone.categories.some(
-    //       (cat) => cat.categoryKey === "1" && new Date(cat.actDate) > actDate
-    //     )
-    //   ) {
-    //     throw new ApiError(errorType.VALIDATION_ERROR, {
-    //       description: `Ошибка для средства связи #${phone.id}: Невозможно привязать II категорию, если средство связи уже находится в категории старше указанной.`,
-    //     });
-    //   }
-
-    //   if (
-    //     categoryKey === "4" &&
-    //     phone.categories.some((cat) => cat.categoryKey === "4")
-    //   ) {
-    //     throw new ApiError(errorType.VALIDATION_ERROR, {
-    //       description: `Ошибка для средства связи #${phone.id}: Средство связи уже находится в IV категории.`,
-    //     });
-    //   }
-
-    //   if (
-    //     categoryKey === "1" &&
-    //     phone.categories.some((cat) => cat.categoryKey === "1")
-    //   ) {
-    //     throw new ApiError(errorType.VALIDATION_ERROR, {
-    //       description: `Ошибка для средства связи #${phone.id}: Средство связи уже находится в I категории.`,
-    //     });
-    //   }
-
-    //   if (categoryKey === "2" || categoryKey === "3") {
-    //     const [prev, next] = getSiblings(actDate);
-    //     if (
-    //       (prev && prev.categoryKey === categoryKey) ||
-    //       (next && next.categoryKey === categoryKey)
-    //     )
-    //       throw new ApiError(errorType.VALIDATION_ERROR, {
-    //         description: `Ошибка для средства связи #${phone.id}: Средство связи не может быть несколько раз подряд привязано к одной и той же категории.`,
-    //       });
-    //   }
-    // }
-
     const cat = await category.create(user.id, {
       actDate,
       phoneIds,
@@ -315,6 +245,19 @@ router.put(
   transactionHandler(async (req, res) => {
     const { action, phoneIds, categoryId } = req.query;
 
+    const targetCategory = await Category.findByPk(categoryId);
+
+    if (!targetCategory)
+      throw new ApiError(errorType.NOT_FOUND, {
+        description: `Категория с ID #${categoryId} не найдена.`,
+      });
+
+    const targetPhones = await Phone.findAll({
+      where: { id: { [Op.in]: phoneIds } },
+      include: [Category],
+      order: [[Sequelize.literal("`categories.actDate`"), "DESC"]],
+    });
+
     if (action === "remove") {
       const categories = await CategoryPhone.unscoped().findAll({
         where: {
@@ -328,6 +271,16 @@ router.put(
         throw new ApiError(errorType.INVALID_QUERY, {
           description: "Один или более ID средств связи указан неверно.",
         });
+
+      for (const cat of categories) {
+        const phone = targetPhones.find((p) => p.id === cat.phoneId);
+        const last = phone?.categories[0];
+
+        if (last?.id !== cat.categoryId)
+          throw new ApiError(errorType.VALIDATION_ERROR, {
+            description: `Невозможно удалить из категории #${cat.categoryId} средство связи #${cat.phoneId}. Удаление возможно только из старшей категории средства связи.`,
+          });
+      }
 
       const categoryPhonesIds = categories.map((h) => h.id);
       const [row, updated] = await CategoryPhone.unscoped().update(
@@ -351,6 +304,16 @@ router.put(
             "Один или более ID средств связи указан неверно, либо уже существует в категории с данным актом" +
             categories.map((v) => `#${v.phoneId}`),
         });
+
+      for (const phone of targetPhones) {
+        const last = phone.categories[0];
+        checkNewCategory(
+          last,
+          targetCategory.categoryKey,
+          new Date(targetCategory.actDate),
+          phone.id
+        );
+      }
 
       const category = await Category.unscoped().findByPk(categoryId);
       if (!category)

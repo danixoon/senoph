@@ -6,20 +6,35 @@ import Link from "components/Link";
 import ItemSelectionPopup from "layout/Popups/ItemSelectionPopup";
 import { PopupProps } from "components/Popup";
 import { api } from "store/slices/api";
-import { parseItems } from "store/utils";
+import { extractStatus, parseItems } from "store/utils";
+import { useNotice } from "hooks/useNotice";
+import { useInput } from "hooks/useInput";
+import { clearObject } from "utils";
+import Input from "components/Input";
 
 const PhonesSelectionPopup: React.FC<{ holdingId?: number } & PopupProps> = (
   props
 ) => {
   const { holdingId, ...rest } = props;
 
+  const [bind, setBind] = useInput<any>({});
+
   const items = parseItems(
     api.useFetchPhonesFromHoldingQuery(
-      { holdingId: holdingId as number },
+      clearObject({
+        holdingId: holdingId as number,
+        ids: bind.input.id ? [bind.input.id] : undefined,
+        inventoryKey: bind.input.inventoryKey,
+      }),
       { skip: typeof holdingId !== "number" }
     )
   );
-  const [commit] = api.useCreateHoldingChangeMutation();
+
+  const [commit, commitInfo] = api.useCreateHoldingChangeMutation();
+
+  // console.log(commitInfo);
+
+  useNotice(extractStatus(commitInfo));
 
   return (
     <ItemSelectionPopup
@@ -32,7 +47,11 @@ const PhonesSelectionPopup: React.FC<{ holdingId?: number } & PopupProps> = (
           <>
             <Button
               onClick={() => {
-                commit({ action: "remove", holdingId: holdingId as number, phoneIds: [item.id] });
+                commit({
+                  action: "remove",
+                  holdingId: holdingId as number,
+                  phoneIds: [item.id],
+                });
               }}
               inverted
               style={{ marginRight: "1rem" }}
@@ -53,7 +72,15 @@ const PhonesSelectionPopup: React.FC<{ holdingId?: number } & PopupProps> = (
         ),
         name: item.model?.name ?? `#${item.id}`,
       }))}
-    />
+    >
+      <Input {...bind} style={{ flex: "1" }} name="id" placeholder="ID" />
+      <Input
+        {...bind}
+        style={{ flex: "1" }}
+        name="inventoryKey"
+        placeholder="Инвентарный номер"
+      />
+    </ItemSelectionPopup>
   );
 };
 

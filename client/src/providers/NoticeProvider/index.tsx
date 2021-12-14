@@ -9,8 +9,6 @@ import "./style.styl";
 import { v4 as uuid } from "uuid";
 import { AnimatePresence, motion } from "framer-motion";
 
-// export const NoticeLayerContext = React.createContext<HTMLElement | null>(null);
-
 export interface NoticeLayerProviderProps {}
 
 export type NoticeContextState = {
@@ -31,8 +29,15 @@ const NoticeLayerProvider: React.FC<
     type: "danger" | "info" = "info"
   ) => {
     const id = uuid();
-    const lifeTime = 3000;
-    dispatch(createNotice({ id, message, type, lifeTime }));
+    const lifeTime = 3000 * Math.max(1, message.length / 50);
+    dispatch(
+      createNotice({
+        id,
+        message,
+        type,
+        lifeTime,
+      })
+    );
     setTimeout(() => {
       dispatch(removeNotice({ id }));
     }, lifeTime);
@@ -41,7 +46,7 @@ const NoticeLayerProvider: React.FC<
   return (
     <NoticeContext.Provider
       value={{
-        createNotice: handleCreateNotice,
+        createNotice: handleCreateNotice, 
       }}
     >
       {children}

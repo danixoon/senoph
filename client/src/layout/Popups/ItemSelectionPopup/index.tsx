@@ -18,6 +18,8 @@ import PopupLayer from "providers/PopupLayer";
 import WithLoader from "components/WithLoader";
 import { splitStatus } from "store/utils";
 import { usePaginator } from "hooks/usePaginator";
+import { useNotice } from "hooks/useNotice";
+import { NoticeContext } from "providers/NoticeProvider";
 
 export type Item = { id: any; content?: React.ReactChild; name: string };
 export type ItemSelectionPopupProps = OverrideProps<
@@ -76,6 +78,12 @@ const ItemSelectionPopup: React.FC<ItemSelectionPopupProps> = (props) => {
   const [offset, setOffset] = React.useState(0);
   const paginator = usePaginator(offset, items.length, pageItems);
 
+  // const notice = React.useContext(NoticeContext);
+
+  // setInterval(() => {
+  //   notice.createNotice("lok");
+  // }, 30);
+
   return (
     <Popup {...rest} size="md" closeable noPadding>
       <PopupTopBar>
@@ -87,17 +95,17 @@ const ItemSelectionPopup: React.FC<ItemSelectionPopupProps> = (props) => {
       </PopupTopBar>
       <WithLoader status={status ?? splitStatus("idle")}>
         <Layout padding="md" flex="1" className="items-list">
-          <Paginator
-            style={{ margin: "auto" }}
-            onChange={(page) => setOffset((page - 1) * pageItems)}
-            current={paginator.currentPage}
-            size={5}
-            max={paginator.maxPage}
-            min={1}
-          />
-          {children}
-          {/* <Hr /> */}
-
+          <Layout flow="row">
+            {children}
+            <Paginator
+              style={{ margin: "auto" }}
+              onChange={(page) => setOffset((page - 1) * pageItems)}
+              current={paginator.currentPage}
+              size={5}
+              max={paginator.maxPage}
+              min={1}
+            />
+          </Layout>
           {items.slice(offset, offset + pageItems).map((item) => {
             const content = item.content ?? item.name;
             return (
