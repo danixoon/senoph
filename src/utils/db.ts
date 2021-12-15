@@ -1,3 +1,4 @@
+import bcrypt from "bcryptjs";
 import Department from "@backend/db/models/department.model";
 import Holder from "@backend/db/models/holder.model";
 import Holding from "@backend/db/models/holding.model";
@@ -172,11 +173,14 @@ const mapGenerated = <T = any>(size: number, f: (i: number) => T) =>
 export const fillProdDatabase = async () => {
   const adminUser = await User.findOne({ where: { role: "admin" } });
   if (adminUser) return;
+
+  const defaultPassword = process.env.DEFAULT_PASSWORD;
+  const hash = await bcrypt.hash(defaultPassword, await bcrypt.genSalt(13));
+
   await User.create({
     name: "Администратор",
     username: "admin",
-    passwordHash:
-      "$2b$13$PwLX48c7HTCmRfqbsd8pq.f6BCkNYnQcyfYg95hx7p2jgLCd2jkqC",
+    passwordHash: hash,
     role: "admin",
   });
 };

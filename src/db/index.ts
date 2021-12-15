@@ -70,11 +70,10 @@ export const syncDatabase = async (force: boolean) => {
   }
 };
 
-export const init = async () => {
-  // console.log(process.env);
+export const init = async () => {  
   dbLogger = await fs.open(path.resolve(__dirname, "../../logs/db.log"), "a+");
   sequelize = new Sequelize({
-    dialect: process.env.DB_DIALECT,
+    dialect: "mysql",
     username: process.env.DB_USERNAME,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,

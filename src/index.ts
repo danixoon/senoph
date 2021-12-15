@@ -3,7 +3,12 @@ import path from "path";
 import express, { Router } from "express";
 import dotenv from "dotenv";
 import * as bodyParser from "body-parser";
-import { transactionHandler, logger, handler } from "@backend/utils/index";
+import {
+  transactionHandler,
+  logger,
+  handler,
+  validateEnv,
+} from "@backend/utils/index";
 import { logger as logRequest } from "@backend/middleware/logger";
 
 dotenv.config(
@@ -23,6 +28,9 @@ let isStarted = false;
 
 export const init = async () => {
   if (server) throw new Error("Сервер уже запущен.");
+
+  validateEnv();
+
   const app = express();
 
   const port = process.env.PORT || 5000;

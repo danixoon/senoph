@@ -3,17 +3,16 @@ declare global {
   namespace NodeJS {
     interface ProcessEnv {
       readonly NODE_ENV: "development" | "production" | "test";
-      readonly PORT: string;
+      readonly PORT?: string;
       readonly DB_USERNAME: string;
       readonly DB_PASSWORD: string;
       readonly DB_NAME: string;
-      readonly DB_DIALECT: "mysql" | "postgres" | "mssql";
       readonly DB_PORT: string;
       readonly DEV_DB_FILL?: string;
       readonly DEV_DB_DROP?: string;
       readonly DB_HOST: string;
-      readonly API_TEST_TOKEN: string;
-
+      readonly API_TEST_TOKEN?: string;
+      readonly DEFAULT_PASSWORD: string;
       readonly SECRET: string;
     }
   }
