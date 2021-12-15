@@ -53,6 +53,7 @@ export const CommitPhoneContent: React.FC<{}> = (props) => {
       key: "actions",
       header: "",
       size: "30px",
+      required: true,
       mapper: (v, item) => (
         <ActionBox icon={Icon.Box} status={commitStatus}>
           <SpoilerPopupButton

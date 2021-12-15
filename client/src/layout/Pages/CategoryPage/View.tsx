@@ -30,7 +30,8 @@ import Input from "components/Input";
 import { useQueryInput } from "hooks/useQueryInput";
 import WithLoader from "components/WithLoader";
 import { useNotice } from "hooks/useNotice";
-import PhonesSelectionPopup from "../HoldingPage/PhonesSelectionPopup";
+import PhonesSelectionPopup from "../../Popups/PhonesSelectionPopup";
+import { useAuthor } from "hooks/misc/author";
 
 const useContainer = () => {
   const filterHook = useQueryInput<{
@@ -128,6 +129,7 @@ export const ViewContent: React.FC<{}> = (props) => {
     key: "actions",
     header: "",
     size: "30px",
+    required: true,
     mapper: (v, item) => (
       <ActionBox key="ok" icon={Icon.Box} status={category.deleteStatus}>
         {item.status !== null ? (
@@ -162,6 +164,8 @@ export const ViewContent: React.FC<{}> = (props) => {
   const [bindFilter] = filterHook;
 
   const phonesPopup = useTogglePayloadPopup();
+
+  const getUser = useAuthor();
 
   return (
     <>
@@ -220,7 +224,7 @@ export const ViewContent: React.FC<{}> = (props) => {
             </Header>
             <Table
               items={categories.data.items}
-              columns={[actionBox, ...getColumns()]}
+              columns={[actionBox, ...getColumns(getUser)]}
               onSelect={onSelect}
             />
           </>

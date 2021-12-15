@@ -6,11 +6,13 @@ export const useFetchConfig = () => {
   const { data: models } = api.useFetchPhoneModelQuery({});
   const { data: departments } = api.useFetchDepartmentsQuery({});
   const { data: holders } = api.useFetchHoldersQuery({});
+  const { data: users } = api.useFetchUsersQuery({});
 
   return {
     types: types?.items ?? [],
     models: models?.items ?? [],
     departments: departments?.items ?? [],
     holders: holders?.items ?? [],
+    users: users?.items ?? [],
   };
 };

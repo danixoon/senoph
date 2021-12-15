@@ -19,7 +19,7 @@ import Layout from "components/Layout";
 export type SpoilerPopupProps = OverrideProps<
   React.PropsWithChildren<HTMLMotionProps<"div">>,
   {
-    position?: "left" | "right" | "top" | "bottom";
+    position?: "left" | "right" | "top" | "bottom" | "rt-corner";
     target: HTMLElement | null;
     zIndex?: "normal" | "popup";
   }
@@ -79,6 +79,10 @@ const SpoilerPopup: React.FC<SpoilerPopupProps> = (
         case "right":
           result.left = rect.x + rect.width;
           result.top = centerY;
+          break;
+        case "rt-corner":
+          result.left = rect.x - width - 27;
+          result.top = rect.y + rect.height - 25;
           break;
       }
     }
@@ -162,6 +166,12 @@ const SpoilerPopup: React.FC<SpoilerPopupProps> = (
           [position]: "calc(100% - 3px)",
           bottom: "calc(50% - 2px)",
           transform: `rotate(${90}deg)`,
+        };
+      case "rt-corner":
+        return {
+          bottom: "calc(100% - 17px)",
+          left: "calc(100% - 2px)",
+          transform: `rotate(${-90}deg)`,
         };
     }
   };

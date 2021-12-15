@@ -1,6 +1,8 @@
 import { api } from "store/slices/api";
 import Icon from "components/Icon";
 import { useFetchConfigMap } from "hooks/api/useFetchConfigMap";
+
+import { useAuthor } from "hooks/misc/author";
 import React from "react";
 import { extractStatus, parseItems } from "store/utils";
 
@@ -32,6 +34,7 @@ export const CommitContent: React.FC<{}> = (props) => {
     key: "actions",
     header: "",
     size: "30px",
+    required: true,
     mapper: (v, item) => (
       <ActionBox status={extractStatus(category.status)}>
         <SpoilerPopupButton onClick={() => handleCommit("approve", item.id)}>
@@ -44,6 +47,8 @@ export const CommitContent: React.FC<{}> = (props) => {
     ),
   };
 
+  const getUser = useAuthor();
+
   return (
     <>
       {categories.data.items.length === 0 ? (
@@ -54,7 +59,7 @@ export const CommitContent: React.FC<{}> = (props) => {
         />
       ) : (
         <Table
-          columns={[actionBox, ...getColumns()]}
+          columns={[actionBox, ...getColumns(getUser)]}
           items={categories.data.items}
         />
       )}

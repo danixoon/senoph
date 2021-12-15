@@ -19,10 +19,13 @@ import { useDispatch } from "react-redux";
 import { useLocation } from "react-router";
 import { PhoneState } from "store/slices/phone";
 import Span from "components/Span";
+import columns from "utils/columns";
+import { useAuthor } from "hooks/misc/author";
 
 export const getDefaultColumns: (
+  getUser: (id?: number | undefined) => Api.Models.User | undefined,
   withoutSelection?: boolean
-) => TableColumn[] = (without) => [
+) => TableColumn[] = (getUser, without) => [
   {
     key: "id",
     header: "ID",
@@ -85,6 +88,7 @@ export const getDefaultColumns: (
     sortable: true,
     size: "50px",
   },
+  columns.author({ getUser }),
 ];
 
 const Items: React.FC<{
@@ -139,11 +143,13 @@ const Items: React.FC<{
     };
   });
 
-  const columns: TableColumn[] = getDefaultColumns(true);
+  const getUser = useAuthor();
+  const columns: TableColumn[] = getDefaultColumns(getUser, true);
 
   if (mode === "edit")
     columns.push({
       key: "selected",
+      required: true,
       header: (
         <Checkbox
           name="selectAll"

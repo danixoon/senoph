@@ -23,6 +23,7 @@ import Hr from "components/Hr";
 import Form from "components/Form";
 import Layout from "components/Layout";
 import { useNotice } from "hooks/useNotice";
+import { useAuthor } from "hooks/misc/author";
 
 const useContainer = () => {
   const dispatch = useAppDispatch();
@@ -97,6 +98,8 @@ export const UpdateContent: React.FC<{}> = (props) => {
     success: "Средства успешно добавлены и ожидают подтверждения.",
   });
 
+  const getUser = useAuthor();
+
   return (
     <>
       {typeof selectedId === "undefined" ? (
@@ -142,7 +145,7 @@ export const UpdateContent: React.FC<{}> = (props) => {
           <Header align="right">
             Список добавляемых средств связи ({phones.data.items.length})
           </Header>
-          <Table columns={getDefaultColumns()} items={phones.data.items} />
+          <Table columns={getDefaultColumns(getUser)} items={phones.data.items} />
         </WithLoader>
       )}
     </>

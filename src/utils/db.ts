@@ -307,7 +307,6 @@ export const fillDevDatabase = async (full?: boolean, size: number = 150) => {
     }))
   );
 
-
   // return;
 
   const phonesData = mapGenerated(size, () => ({
@@ -366,16 +365,41 @@ export const fillDevDatabase = async (full?: boolean, size: number = 150) => {
 
   await HoldingPhone.bulkCreate(holdingPhones);
 
-  const category = await Category.create({
-    categoryKey: "1",
-    actDate: randomDate().toISOString(),
-    actKey: (100 + Math.floor(Math.random() * 200)).toString(),
-    authorId: user.id,
-    actUrl: "test.pdf",
-    status: null,
-  });
+  // const category = await Category.create({
+  //   categoryKey: "1",
+  //   actDate: randomDate().toISOString(),
+  //   actKey: (100 + Math.floor(Math.random() * 200)).toString(),
+  //   authorId: user.id,
+  //   actUrl: "test.pdf",
+  //   status: null,
+  // });
 
-  const categoryPhones = await CategoryPhone.bulkCreate(
-    phones.map((phone) => ({ phoneId: phone.id, categoryId: category.id }))
+  const categories = await Category.bulkCreate(
+    mapGenerated(Math.floor(size / 4), (i) => {
+      const category = {
+        categoryKey: "1" as CategoryKey,
+        actDate: randomDate().toISOString(),
+        actKey: (100 + Math.floor(Math.random() * 200)).toString(),
+        authorId: user.id,
+        actUrl: "test.pdf",
+        status: null,
+      };
+      return category;
+    })
   );
+
+  const categoryPhones: DB.CategoryPhoneAttributes[] = [];
+
+  for (const category of categories) {
+    categoryPhones.push(
+      ...getRandomItems(Math.floor(phones.length / 20), phones).map(
+        (phone) => ({
+          phoneId: phone.id,
+          categoryId: category.id,
+        })
+      )
+    );
+  }
+
+  await CategoryPhone.bulkCreate(categoryPhones);
 };

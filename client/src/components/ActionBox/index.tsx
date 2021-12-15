@@ -9,23 +9,25 @@ import "./styles.styl";
 export type ActionBoxProps = {
   status?: ApiStatus;
   icon?: React.FC<any>;
+  containerProps?: React.ButtonHTMLAttributes<HTMLButtonElement>;
 } & Omit<SpoilerPopupProps, "target">;
 // React.PropsWithChildren<React.HTMLAttributes<HTMLElement>>
 
 const ActionBox: React.FC<ActionBoxProps> = (props) => {
-  const { status, icon, children, ...rest } = props;
+  const { status, icon, children, containerProps, ...rest } = props;
   const [target, setTarget] = React.useState<HTMLElement | null>(() => null);
   const [isOpen, setIsOpen] = React.useState(() => false);
 
   const IconComponent = icon ?? Icon.Box;
 
   React.useEffect(() => {
-    if(!status?.isSuccess) return;
+    if (!status?.isSuccess) return;
     setIsOpen(false);
-  }, [status?.isSuccess])
+  }, [status?.isSuccess]);
 
   return (
     <Button
+      {...containerProps}
       ref={(r) => setTarget(r)}
       color="primary"
       inverted

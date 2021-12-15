@@ -12,7 +12,8 @@ import TopBarLayer from "providers/TopBarLayer";
 import ButtonGroup from "components/ButtonGroup";
 import Button from "components/Button";
 import Badge from "components/Badge";
-import { useSelection } from "./useSelection";
+import { useSelection } from "../../../hooks/useSelection";
+import { useAuthor } from "hooks/misc/author";
 
 const useContainer = () => {
   const holdings = useHoldingWithHistory({ status: "pending" });
@@ -37,7 +38,10 @@ const CommitContent: React.FC<{}> = (props) => {
 
   const selection = useSelection(holdings.data.items);
 
+  const getUser = useAuthor();
+
   const columns = getTableColumns({
+    getUser,
     holders,
     departments,
     status: extractStatus(holdings.status),

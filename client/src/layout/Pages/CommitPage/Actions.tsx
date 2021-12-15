@@ -21,6 +21,7 @@ import { clearObject, getLocalDate } from "utils";
 import { TableColumn } from "components/Table";
 import { CommitContent } from "./Content";
 import Layout from "components/Layout";
+import { useAuthor } from "hooks/misc/author";
 
 const useActionsContainer = (
   query: { status?: CommitStatus; amount?: number; offset?: number } = {}
@@ -59,13 +60,15 @@ const Actions: React.FC<{}> = (props) => {
       if (selectedIds.includes(commit.id)) updatedSelection.push(commit.id);
 
     setSelection(updatedSelection);
-  }, [commits.data.items]);
+  }, [commits.data.items.map((v) => v.id).join("_")]);
 
+  const getUser = useAuthor();
   const columns: TableColumn<ItemType>[] = [
     {
       key: "actions",
       header: "",
       size: "30px",
+      required: true,
       mapper: (v, item) => (
         <ActionBox status={status}>
           <SpoilerPopupButton
@@ -81,7 +84,7 @@ const Actions: React.FC<{}> = (props) => {
         </ActionBox>
       ),
     },
-    ...getPhonePageColumns(),
+    ...getPhonePageColumns(getUser),
     {
       key: "statusAt",
       header: "Добавлено",
@@ -106,6 +109,7 @@ const Actions: React.FC<{}> = (props) => {
     },
 
     {
+      required: true,
       header: (
         <Checkbox
           name="selectedAll"

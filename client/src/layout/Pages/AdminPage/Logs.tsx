@@ -31,6 +31,7 @@ const Logs: React.FC<LogsProps> = (props) => {
       key: "actions",
       header: "",
       size: "30px",
+      required: true,
       mapper: (v, item) => <ActionBox showDetails={() => {}} />,
     },
     // {

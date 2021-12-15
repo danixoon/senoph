@@ -11,7 +11,7 @@ import { getSelectionColumn, getTableColumns } from "./utils";
 import { extractItemsHook, getLocalDate } from "utils";
 import Link from "components/Link";
 import Span from "components/Span";
-import { useSelection } from "./useSelection";
+import { useSelection } from "../../../hooks/useSelection";
 import ButtonGroup from "components/ButtonGroup";
 import TopBarLayer from "providers/TopBarLayer";
 import Badge from "components/Badge";
@@ -61,6 +61,7 @@ const CommitPhoneContent: React.FC<{}> = (props) => {
       key: "actions",
       header: "",
       size: "30px",
+      required: true,
       mapper: (v, item) => (
         <ActionBox icon={Icon.Box} status={commitStatus}>
           <SpoilerPopupButton

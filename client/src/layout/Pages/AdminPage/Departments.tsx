@@ -86,6 +86,7 @@ const Departments: React.FC<DepartmentsProps> = (props) => {
       key: "actions",
       header: "",
       size: "30px",
+      required: true,
       mapper: (v, item) => (
         <ActionBox status={deleteStatus}>
           <SpoilerPopupButton

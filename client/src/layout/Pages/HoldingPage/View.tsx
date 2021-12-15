@@ -24,15 +24,23 @@ import { useTogglePayloadPopup, useTogglePopup } from "hooks/useTogglePopup";
 import ClickInput from "components/ClickInput";
 import PopupLayer from "providers/PopupLayer";
 import WithLoader from "components/WithLoader";
-import PhonesSelectionPopup from "./PhonesSelectionPopup";
+import PhonesSelectionPopup from "../../Popups/PhonesSelectionPopup";
+import { usePaginator } from "hooks/usePaginator";
+import TopBarLayer from "providers/TopBarLayer";
+import Paginator from "components/Paginator";
+import { useAuthor } from "hooks/misc/author";
 
-const useContainer = () => {
+const useContainer = (offset: number) => {
   const { holders, departments } = useFetchConfigMap();
   const [deleteHolding, deleteHoldingInfo] = api.useDeleteHoldingMutation();
 
   const filterHook = useQueryInput<any>({});
 
-  const holdings = useHoldingWithHistory(filterHook[0].input);
+  const holdings = useHoldingWithHistory({
+    ...filterHook[0].input,
+    offset,
+    amount: 15,
+  });
 
   const location = useLocation<any>();
 
@@ -50,8 +58,15 @@ const useContainer = () => {
 };
 
 const ViewContent: React.FC<{}> = (props) => {
+  const [offset, setOffset] = React.useState(0);
   const { filterHook, holders, departments, act, deleteHolding, holdings } =
-    useContainer();
+    useContainer(offset);
+
+  const { currentPage, maxPage } = usePaginator(
+    offset,
+    holdings.data.total,
+    15
+  );
 
   const [bindFilter, setFilter] = filterHook;
   const isSelecting = act === "select";
@@ -62,10 +77,13 @@ const ViewContent: React.FC<{}> = (props) => {
 
   const phonesPopup = useTogglePayloadPopup();
 
+  const getUser = useAuthor();
+
   const columns = getTableColumns({
     status: deleteHolding.status,
     holders,
     departments,
+    getUser,
     controlMapper: (v, item) =>
       isSelecting ? (
         <> </>
@@ -103,10 +121,20 @@ const ViewContent: React.FC<{}> = (props) => {
   });
 
   const holderPopup = useTogglePopup();
+
   const holderName = React.useRef<string | undefined>(undefined);
 
   return (
     <>
+      <TopBarLayer>
+        <Paginator
+          onChange={(page) => setOffset((page - 1) * 15)}
+          min={1}
+          max={maxPage}
+          size={5}
+          current={currentPage}
+        />
+      </TopBarLayer>
       <PopupLayer>
         <PhonesSelectionPopup {...phonesPopup} holdingId={phonesPopup.state} />
         <HolderSelectionPopupContainer

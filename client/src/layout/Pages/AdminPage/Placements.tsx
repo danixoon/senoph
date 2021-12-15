@@ -71,6 +71,7 @@ const Departments: React.FC<PlacementsProps> = (props) => {
       key: "actions",
       header: "",
       size: "30px",
+      required: true,
       mapper: (v, item: Api.Models.Placement) => (
         <ActionBox status={deleteStatus}>
           <SpoilerPopupButton onClick={() => editPopup.onToggle(true, item)}>

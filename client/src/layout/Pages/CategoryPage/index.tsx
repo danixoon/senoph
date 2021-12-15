@@ -9,9 +9,11 @@ import { CommitContent } from "./Commit";
 import { UpdateContent } from "./Update";
 
 import "./style.styl";
+import { useAuthor } from "hooks/misc/author";
 
 const CategoryPage: React.FC<{}> = (props) => {
   const { path } = useRouteMatch();
+
   return (
     <Layout flex="1" className="category-page">
       <Switch>

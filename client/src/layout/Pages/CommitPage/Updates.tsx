@@ -91,6 +91,7 @@ const Updates: React.FC<{}> = (props) => {
       key: "actions",
       header: "",
       size: "10px",
+      required: true,
       mapper: (v, item) => (
         <ActionBox status={update.status}>
           <SpoilerPopupButton

@@ -14,7 +14,8 @@ import { useFetchConfigMap } from "hooks/api/useFetchConfigMap";
 import { api } from "store/slices/api";
 import { InputHook } from "hooks/useInput";
 import Checkbox from "components/Checkbox";
-import { Selection } from "./useSelection";
+import { Selection } from "../../../hooks/useSelection";
+import columnTypes from "utils/columns";
 
 export const reasonMap = [
   { id: "initial", label: "Назначение" },
@@ -61,11 +62,13 @@ export const getTableColumns: (args: {
   status: ApiStatus;
   holders: Map<number, Api.Models.Holder>;
   departments: Map<number, Api.Models.Department>;
+  getUser: (id?: number | undefined) => Api.Models.User | undefined;
   controlMapper: (v: any, item: HoldingTableItem) => React.ReactNode;
 }) => TableColumn<HoldingTableItem>[] = ({
   status,
   selection,
   departments,
+  getUser,
   holders,
   controlMapper,
 }) => {
@@ -74,6 +77,7 @@ export const getTableColumns: (args: {
       key: "control",
       size: "30px",
       header: "",
+      required: true,
       mapper: controlMapper,
     },
     {
@@ -206,6 +210,7 @@ export const getTableColumns: (args: {
         return <Badge>{status}</Badge>;
       },
     },
+    columnTypes.author({ getUser }),
   ];
 
   if (selection) {

@@ -1,4 +1,8 @@
+import ActionBox from "components/ActionBox";
+import Button from "components/Button";
 import Checkbox from "components/Checkbox";
+import Header from "components/Header";
+import Icon from "components/Icon";
 import { InputBind } from "hooks/useInput";
 import * as React from "react";
 import { getLocalDate, mergeClassNames, mergeProps } from "utils";
@@ -17,6 +21,8 @@ export type TableColumn<T = any> = {
   header: React.ReactChild;
   size?: string;
   sortable?: boolean;
+  hidden?: boolean;
+  required?: boolean;
   wrap?: boolean;
   props?: React.TdHTMLAttributes<HTMLElement>;
   mapper?: (v: any, row: T, i: number) => any;
@@ -32,6 +38,7 @@ type TableProps<T = any> = OverrideProps<
     items: TableItem<T>[];
     columns: TableColumn[];
     name?: string;
+    settingsPosition?: "top" | "bottom" | "left" | "right" | "rt-corner";
 
     onSelect?: (item: TableItem<T>) => void;
     selectedId?: any;
@@ -72,6 +79,7 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
     sortDir,
     onSort,
     selectedId,
+    settingsPosition = "rt-corner",
     selectMultiple,
     ...rest
   } = props;
@@ -122,6 +130,76 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
     return mapper(value, item, i);
   };
 
+  type ColumnsState = Record<string, { hidden: boolean }>;
+
+  const getColumnsState = (columnsState?: ColumnsState) => {
+    const state: ColumnsState = columns.reduce(
+      (st, v) =>
+        v.required
+          ? st
+          : {
+              ...st,
+              [v.key]: {
+                hidden: columnsState
+                  ? columnsState[v.key]?.hidden ?? !!v.hidden
+                  : !!v.hidden,
+              },
+            },
+      {} as any
+    );
+    return state;
+  };
+  const [columnsState, setColumnsState] = React.useState<ColumnsState>(() =>
+    getColumnsState()
+  );
+
+  React.useEffect(() => {
+    setColumnsState(getColumnsState(columnsState));
+  }, [columns.map((v) => v.key).join("_")]);
+
+  const filteredColumns = columns.filter(
+    (column) => !columnsState[column.key]?.hidden
+  );
+
+  const tableColumns: TableColumn[] = [
+    ...filteredColumns,
+    {
+      key: "index",
+      size: "30px",
+      header: (
+        <>
+          <ActionBox
+            containerProps={{ style: { float: "right" } }}
+            position={settingsPosition}
+            icon={() => <Icon.Settings color="muted" />}
+          >
+            {Object.entries(columnsState).map(([key, value]) => (
+              <Checkbox
+                input={{ checked: !value.hidden }}
+                name="checked"
+                label={columns
+                  .find((col) => col.key === key)
+                  ?.header.toString()}
+                onChange={(e) =>
+                  setColumnsState({
+                    ...columnsState,
+                    [key]: { hidden: !value.hidden },
+                  })
+                }
+              />
+            ))}
+            {/* <Checkbox label="Инвентарный номер" input={{}} name="a" /> */}
+            {/* <Checkbox label="Заводской номер номер" input={{}} name="a" /> */}
+          </ActionBox>
+        </>
+      ),
+      // props: { style: { flo } }
+      mapper: (v, item, i) => (
+        <Header style={{ float: "right" }}>{i + 1}</Header>
+      ),
+    },
+  ];
+
   // console.log(sortDir);
 
   // TODO: Unique key error
@@ -129,7 +207,7 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
     <table {...mergedProps}>
       <thead>
         <tr>
-          {columns.map((column) => {
+          {tableColumns.map((column) => {
             const mergedProps = mergeProps(
               {
                 className: mergeClassNames(
@@ -173,7 +251,7 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
             key={`${item.id ?? "id"}-${ir}`}
             {...item.props}
           >
-            {columns.map((column, i) => {
+            {tableColumns.map((column, i) => {
               const mergedProps = mergeProps(
                 {
                   className: mergeClassNames(

@@ -80,6 +80,7 @@ const PhoneTypes: React.FC<PhoneTypesProps> = (props) => {
       key: "actions",
       header: "",
       size: "30px",
+      required: true,
       mapper: (v, item) => (
         <ActionBox status={deleteStatus}>
           <SpoilerPopupButton onClick={() => editPopup.onToggle(true, item)}>

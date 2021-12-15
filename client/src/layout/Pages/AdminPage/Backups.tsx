@@ -70,6 +70,7 @@ const Departments: React.FC<BackupsProps> = (props) => {
       key: "actions",
       header: "",
       size: "30px",
+      required: true,
       mapper: (v, item: Api.Models.Backup) => (
         <ActionBox
           status={mergeStatuses(backups.revert.status, backups.remove.status)}

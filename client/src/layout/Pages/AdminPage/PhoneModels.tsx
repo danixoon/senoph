@@ -151,6 +151,7 @@ const PhoneModels: React.FC<PhoneModelsProps> = (props) => {
       key: "actions",
       header: "",
       size: "30px",
+      required: true,
       mapper: (v, item) => (
         <ActionBox status={deleteStatus}>
           <SpoilerPopupButton onClick={() => editPopup.onToggle(true, item)}>
