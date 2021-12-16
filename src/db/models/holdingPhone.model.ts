@@ -19,6 +19,7 @@ import Holder from "./holder.model";
 import Holding from "./holding.model";
 import Phone from "./phone.model";
 import PhoneType from "./phoneType.model";
+import User from "./user.model";
 
 @Table({ defaultScope: { where: { status: null } } })
 export default class HoldingPhone extends Model<
@@ -39,6 +40,11 @@ export default class HoldingPhone extends Model<
   @Column(DataType.INTEGER)
   phoneId: number;
 
+  @ForeignKey(() => User)
+  @AllowNull(true)
+  @Column(DataType.INTEGER)
+  auhtorId?: number;
+
   @AllowNull(true)
   @Validate({ isIn: [["create-pending", "delete-pending"]] })
   @Default(null)
@@ -54,4 +60,7 @@ export default class HoldingPhone extends Model<
 
   @BelongsTo(() => Phone, { onDelete: "CASCADE" })
   phone?: Phone;
+
+  @BelongsTo(() => User)
+  author?: User;
 }

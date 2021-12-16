@@ -155,7 +155,7 @@ const Actions: React.FC<{}> = (props) => {
     // success: "",
   });
 
-  const { maxPage, currentPage } = usePaginator(offset, commits.data.total, 15);
+  const { maxPage, currentPage } = usePaginator(offset, setOffset, commits.data.total, 15);
 
   React.useEffect(() => {
     setOffset(0);

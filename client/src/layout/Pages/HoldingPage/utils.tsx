@@ -28,29 +28,29 @@ export const reasonMap = [
 export const getReason = (id: string) =>
   reasonMap.find((r) => r.id === id)?.label ?? `#${id}`;
 
-export const getSelectionColumn = (selection: Selection) => ({
-  size: "30px",
-  header: (
-    <Checkbox
-      name="all"
-      input={{ all: selection.total === selection.selection.length }}
-      onClick={(e) =>
-        selection.onToggleAll(selection.total !== selection.selection.length)
-      }
-    />
-  ),
-  key: "selection",
-  mapper: (v: any, item: { id: any }) => {
-    const enabled = selection.selection.includes(item.id);
-    return (
-      <Checkbox
-        name="selection"
-        input={{ selection: enabled }}
-        onClick={(e) => selection.onToggle(item.id, !enabled)}
-      />
-    );
-  },
-});
+// export const getSelectionColumn = (selection: Selection) => ({
+//   size: "30px",
+//   header: (
+//     <Checkbox
+//       name="all"
+//       input={{ all: selection.total === selection.selection.length }}
+//       onClick={(e) =>
+//         selection.onToggleAll(selection.total !== selection.selection.length)
+//       }
+//     />
+//   ),
+//   key: "selection",
+//   mapper: (v: any, item: { id: any }) => {
+//     const enabled = selection.selection.includes(item.id);
+//     return (
+//       <Checkbox
+//         name="selection"
+//         input={{ selection: enabled }}
+//         onClick={(e) => selection.onToggle(item.id, !enabled)}
+//       />
+//     );
+//   },
+// });
 
 export const getTableColumns: (args: {
   selection?: {
@@ -214,7 +214,7 @@ export const getTableColumns: (args: {
   ];
 
   if (selection) {
-    columns.push(getSelectionColumn(selection));
+    columns.push(columnTypes.selection({ selection }));
   }
 
   return columns;

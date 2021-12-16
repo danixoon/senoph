@@ -103,8 +103,9 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
     );
   };
 
-  let { maxPage, currentPage } = usePaginator(
-    filter.offset,
+  const { maxPage, currentPage } = usePaginator(
+    parseInt(filter.offset.toString()),
+    (off) => dispatch(updateFilter({ offset: off })),
     totalItems,
     filter.pageItems
   );
@@ -134,7 +135,7 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
           onChange={(page) =>
             dispatch(
               updateFilter({
-                offset: Math.max(0, (page - 1) * filter.pageItems),
+                offset: (page - 1) * filter.pageItems,
               })
             )
           }

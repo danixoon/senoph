@@ -76,13 +76,7 @@ const ItemSelectionPopup: React.FC<ItemSelectionPopupProps> = (props) => {
 
   const pageItems = 12;
   const [offset, setOffset] = React.useState(0);
-  const paginator = usePaginator(offset, items.length, pageItems);
-
-  // const notice = React.useContext(NoticeContext);
-
-  // setInterval(() => {
-  //   notice.createNotice("lok");
-  // }, 30);
+  const paginator = usePaginator(offset, setOffset, items.length, pageItems);
 
   return (
     <Popup {...rest} size="md" closeable noPadding>

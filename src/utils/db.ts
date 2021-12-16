@@ -329,6 +329,7 @@ export const fillDevDatabase = async (full?: boolean, size: number = 150) => {
         : Math.random() > 0.5
         ? ("create-pending" as const)
         : ("delete-pending" as const),
+    statusAt: new Date().toISOString(),
   }));
 
   const phones = await Phone.bulkCreate(phonesData);
@@ -348,7 +349,13 @@ export const fillDevDatabase = async (full?: boolean, size: number = 150) => {
             )
           ).toISOString(),
         reasonId: "movement" as const,
-        status: null,
+        status:
+          Math.random() > 0.5
+            ? null
+            : Math.random() > 0.5
+            ? ("create-pending" as const)
+            : ("delete-pending" as const),
+        statusAt: new Date().toISOString(),
       };
       return holding;
     })
@@ -362,6 +369,14 @@ export const fillDevDatabase = async (full?: boolean, size: number = 150) => {
         (phone) => ({
           phoneId: phone.id,
           holdingId: holding.id,
+          authorId: Math.random() > 0.5 ? user.id : null,
+          status:
+            Math.random() > 0.05
+              ? null
+              : Math.random() > 0.5
+              ? ("create-pending" as const)
+              : ("delete-pending" as const),
+          statusAt: new Date().toISOString(),
         })
       )
     );
@@ -386,7 +401,13 @@ export const fillDevDatabase = async (full?: boolean, size: number = 150) => {
         actKey: (100 + Math.floor(Math.random() * 200)).toString(),
         authorId: user.id,
         actUrl: "test.pdf",
-        status: null,
+        status:
+          Math.random() > 0.5
+            ? null
+            : Math.random() > 0.5
+            ? ("create-pending" as const)
+            : ("delete-pending" as const),
+        statusAt: new Date().toISOString(),
       };
       return category;
     })
@@ -400,6 +421,14 @@ export const fillDevDatabase = async (full?: boolean, size: number = 150) => {
         (phone) => ({
           phoneId: phone.id,
           categoryId: category.id,
+          authorId: Math.random() > 0.5 ? user.id : null,
+          status:
+            Math.random() > 0.05
+              ? null
+              : Math.random() > 0.5
+              ? ("create-pending" as const)
+              : ("delete-pending" as const),
+          statusAt: new Date().toISOString(),
         })
       )
     );

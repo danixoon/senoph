@@ -29,6 +29,7 @@ import { usePaginator } from "hooks/usePaginator";
 import TopBarLayer from "providers/TopBarLayer";
 import Paginator from "components/Paginator";
 import { useAuthor } from "hooks/misc/author";
+import Layout from "components/Layout";
 
 const useContainer = (offset: number) => {
   const { holders, departments } = useFetchConfigMap();
@@ -64,6 +65,7 @@ const ViewContent: React.FC<{}> = (props) => {
 
   const { currentPage, maxPage } = usePaginator(
     offset,
+    setOffset,
     holdings.data.total,
     15
   );
@@ -127,13 +129,81 @@ const ViewContent: React.FC<{}> = (props) => {
   return (
     <>
       <TopBarLayer>
-        <Paginator
-          onChange={(page) => setOffset((page - 1) * 15)}
-          min={1}
-          max={maxPage}
-          size={5}
-          current={currentPage}
-        />
+        <Layout flex="1">
+          <Paginator
+            style={{ marginRight: "auto" }}
+            onChange={(page) => setOffset((page - 1) * 15)}
+            min={1}
+            max={maxPage}
+            size={5}
+            current={currentPage}
+          />
+          <Header unsized align="right">
+            Фильтр
+          </Header>
+          <Form
+            style={{ flexFlow: "column wrap", maxHeight: "100px" }}
+            input={{}}
+          >
+            <Input
+              {...bindFilter}
+              blurrable
+              name="id"
+              label="ID"
+              placeholder="1234"
+            />
+            <Input
+              {...bindFilter}
+              blurrable
+              name="orderKey"
+              label="Номер документа"
+              placeholder="1234"
+            />
+            <Input
+              {...bindFilter}
+              blurrable
+              type="date"
+              name="orderDate"
+              label="Дата документа"
+            />
+            <Dropdown
+              {...bindFilter}
+              style={{ flex: "1" }}
+              items={Array.from(departments.values()).map((v) => ({
+                label: v.name,
+                id: v.id,
+              }))}
+              name="departmentId"
+              label="Подразделение"
+            />
+            <ClickInput
+              input={{ holderName: holderName.current }}
+              name="holderName"
+              label="Владелец"
+              clearable
+              onClear={() => {
+                holderName.current = undefined;
+                setFilter({
+                  ...bindFilter.input,
+                  holderId: undefined,
+                  holderName: undefined,
+                });
+              }}
+              onActive={() => holderPopup.onToggle()}
+            />
+            <Dropdown
+              {...bindFilter}
+              style={{ flex: "1" }}
+              items={[
+                { id: "create-pending", label: "Ожидает создания" },
+                { id: "delete-pending", label: "Ожидает удаления" },
+                { id: "based", label: "Подтверждённые" },
+              ]}
+              name="status"
+              label="Статус"
+            />
+          </Form>
+        </Layout>
       </TopBarLayer>
       <PopupLayer>
         <PhonesSelectionPopup {...phonesPopup} holdingId={phonesPopup.state} />
@@ -145,69 +215,8 @@ const ViewContent: React.FC<{}> = (props) => {
           }}
         />
       </PopupLayer>
-      <Header unsized align="right">
-        Фильтр
-      </Header>
-      <Form style={{ flexFlow: "column wrap", maxHeight: "100px" }} input={{}}>
-        <Input
-          {...bindFilter}
-          blurrable
-          name="id"
-          label="ID"
-          placeholder="1234"
-        />
-        <Input
-          {...bindFilter}
-          blurrable
-          name="orderKey"
-          label="Номер документа"
-          placeholder="1234"
-        />
-        <Input
-          {...bindFilter}
-          blurrable
-          type="date"
-          name="orderDate"
-          label="Дата документа"
-        />
-        <Dropdown
-          {...bindFilter}
-          style={{ flex: "1" }}
-          items={Array.from(departments.values()).map((v) => ({
-            label: v.name,
-            id: v.id,
-          }))}
-          name="departmentId"
-          label="Подразделение"
-        />
-        <ClickInput
-          input={{ holderName: holderName.current }}
-          name="holderName"
-          label="Владелец"
-          clearable
-          onClear={() => {
-            holderName.current = undefined;
-            setFilter({
-              ...bindFilter.input,
-              holderId: undefined,
-              holderName: undefined,
-            });
-          }}
-          onActive={() => holderPopup.onToggle()}
-        />
-        <Dropdown
-          {...bindFilter}
-          style={{ flex: "1" }}
-          items={[
-            { id: "create-pending", label: "Ожидает создания" },
-            { id: "delete-pending", label: "Ожидает удаления" },
-            { id: "based", label: "Подтверждённые" },
-          ]}
-          name="status"
-          label="Статус"
-        />
-      </Form>
-      <Hr />
+
+      {/* <Hr /> */}
       <WithLoader status={holdings.status}>
         {holdings.data.total === 0 ? (
           <InfoBanner

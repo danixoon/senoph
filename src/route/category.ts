@@ -36,11 +36,23 @@ router.get(
       actKey: tester(),
       categoryKey: tester(),
       pending: tester().isBoolean(),
+
+      offset: tester().isNumber(),
+      amount: tester().isNumber(),
     },
   }),
   transactionHandler(async (req, res) => {
     // const filter = new Filter(req.query).add("status");
-    const { ids, status, actDate, actKey, categoryKey, pending } = req.query;
+    const {
+      ids,
+      status,
+      actDate,
+      actKey,
+      categoryKey,
+      pending,
+      offset = 0,
+      amount,
+    } = req.query;
     const filter = new WhereFilter<DB.CategoryAttributes>();
 
     filter.on("id").optional(Op.in, ids);
@@ -71,19 +83,21 @@ router.get(
 
     res.send(
       prepareItems(
-        categories.map((category) => ({
-          id: category.id,
-          actKey: category.actKey,
-          actDate: category.actDate,
-          actUrl: category.actUrl,
-          categoryKey: category.categoryKey,
-          phoneIds: category.phones?.map((v) => v.id) ?? [],
-          status: category.status,
-          statusAt: category.statusAt,
-          authorId: category.authorId,
-          createdAt: category.createdAt,
-          // updatedAt: category.updated
-        })),
+        categories
+          .slice(offset, offset + (amount ?? categories.length - offset))
+          .map((category) => ({
+            id: category.id,
+            actKey: category.actKey,
+            actDate: category.actDate,
+            actUrl: category.actUrl,
+            categoryKey: category.categoryKey,
+            phoneIds: category.phones?.map((v) => v.id) ?? [],
+            status: category.status,
+            statusAt: category.statusAt,
+            authorId: category.authorId,
+            createdAt: category.createdAt,
+            // updatedAt: category.updated
+          })),
         categories.length,
         0
       )
@@ -146,7 +160,6 @@ router.post(
       actKey: tester().required(),
     },
   }),
-  owner("phone", (req) => req.body.phoneIds),
   transactionHandler(async (req, res) => {
     // TODO: Make file validation
     const { file } = req;
@@ -219,7 +232,7 @@ router.get(
     const groupedItems = groupBy(categoryPhones, (item) => item.categoryId);
     const items: {
       categoryId: number;
-      commits: ({ phoneId: number } & WithCommit)[];
+      commits: ({ phoneId: number; authorId?: number } & WithCommit)[];
     }[] = [];
 
     for (const [key, value] of groupedItems)
@@ -243,6 +256,7 @@ router.put(
     },
   }),
   transactionHandler(async (req, res) => {
+    const { user } = req.params;
     const { action, phoneIds, categoryId } = req.query;
 
     const targetCategory = await Category.findByPk(categoryId);
@@ -287,6 +301,7 @@ router.put(
         {
           status: "delete-pending",
           statusAt: new Date().toISOString(),
+          authorId: user.id,
         },
         { where: { id: { [Op.in]: categoryPhonesIds } } }
       );
@@ -325,6 +340,7 @@ router.put(
         (phoneId) => ({
           phoneId,
           categoryId,
+          authorId: user.id,
           status: "create-pending",
           statusAt: new Date().toISOString(),
         })

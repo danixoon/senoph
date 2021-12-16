@@ -313,6 +313,9 @@ declare namespace Api {
             actKey?: string;
             categoryKey?: CategoryKey;
             pending?: boolean;
+
+            offset?: number;
+            amount?: number;
           },
           {}
         >)

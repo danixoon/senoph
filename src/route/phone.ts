@@ -36,17 +36,21 @@ router.delete(
   "/phone",
   access("user"),
   validate({ query: { ids: tester().array("int").required() } }),
-  owner("phone", (q) => q.query.ids),
+  // owner("phone", (q) => q.query.ids),
   transactionHandler(async (req, res) => {
+    const { user } = req.params;
     const { params } = req;
     if (!withOwner(params, "phone")) return res.sendStatus(500);
 
     const { phone } = params;
+    const phoneIds = phone.map((phone) => phone.id);
     // TODO: Сделать назначение статуса единоместным
     await Phone.update(
       { status: "delete-pending", statusAt: new Date().toISOString() },
-      { where: { id: { [Op.in]: phone.map((phone) => phone.id) } } }
+      { where: { id: { [Op.in]: phoneIds } } }
     );
+
+    Log.log("phone", phoneIds, "commit", user.id, {});
 
     res.send();
   })
@@ -501,7 +505,11 @@ router.post(
       const ids = phones.map((p) => p.id as number);
 
       // TODO: Сделать логгирование более строгим (через хуки?)
-      Log.log("phone", ids, "create", user.id);
+      Log.log("phone", ids, "create", user.id, {
+        amount: ids.length,
+      }).catch((err) => {
+        console.log(err);
+      });
 
       res.send({
         created: ids.map((v, i) => ({
@@ -608,7 +616,12 @@ router.post(
       description,
     });
 
-    Log.log("model", [model.id], "create", user.id);
+    Log.log("model", [model.id], "create", user.id, {
+      phoneTypeId,
+      name,
+      details,
+      description,
+    });
 
     if (details) {
       await PhoneModelDetail.bulkCreate(

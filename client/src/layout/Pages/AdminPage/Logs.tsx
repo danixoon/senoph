@@ -1,3 +1,4 @@
+import ReactJson from "react-json-view";
 import Button from "components/Button";
 import Dropdown from "components/Dropdown";
 import Form from "components/Form";
@@ -7,65 +8,145 @@ import Icon from "components/Icon";
 import Input from "components/Input";
 import Layout from "components/Layout";
 import Link from "components/Link";
+import Popup, { PopupProps, PopupTopBar } from "components/Popup";
 import SpoilerPopup, { SpoilerPopupButton } from "components/SpoilerPopup";
 import Table, { TableColumn } from "components/Table";
+import { useAuthor } from "hooks/misc/author";
 import { useInput } from "hooks/useInput";
 import React from "react";
 import { api } from "store/slices/api";
+import columns from "utils/columns";
+import { useTogglePayloadPopup } from "hooks/useTogglePopup";
+import PopupLayer from "providers/PopupLayer";
+import Span from "components/Span";
 
 export type LogsProps = {};
+
+const DetailsPopup: React.FC<PopupProps & { payload?: any }> = (props) => {
+  const { payload, ...rest } = props;
+  return (
+    <Popup {...rest} size="md">
+      <PopupTopBar>
+        <Layout flex="1">
+          <Header align="right">Подробности</Header>
+          <Hr />
+        </Layout>
+      </PopupTopBar>
+      {payload ? (
+        <ReactJson
+          displayDataTypes={false}
+          name={null}
+          displayObjectSize={false}
+          src={payload}
+        />
+      ) : (
+        <Span> Отсутствуют </Span>
+      )}
+    </Popup>
+  );
+};
 
 const useContainer = () => {
   const logs = api.useFetchLogsQuery({});
 
+  const getUser = useAuthor();
+
   return {
     logs: { ...logs, items: logs.data?.items ?? [] },
+    getUser,
   };
 };
 
-const Logs: React.FC<LogsProps> = (props) => {
-  const { logs } = useContainer();
+const resolveTypeMap: Record<DB.LogType, string> = {
+  commit: "Ожидание подтверждения",
+  create: "Создание",
+  delete: "Удаление",
+  edit: "Изменение",
+};
+export const resolveType = (type: DB.LogType) => resolveTypeMap[type];
+const resolveTargetMap: Record<DB.LogTarget, string> = {
+  category: "Категория",
+  categoryPhone: "СС категории",
+  department: "Подразделение",
+  holder: "Владелец",
+  holding: "Движение",
+  holdingPhone: "СС движения",
+  model: "Модель СС",
+  phone: "Средство связи",
+  phoneType: "Тип средства связи",
+  placement: "Местоположение",
+  user: "Пользователь",
+};
+const resolveTarget = (target: DB.LogTarget) => resolveTargetMap[target];
 
-  const columns: TableColumn[] = [
+const resolveTargetHref = (target: DB.LogTarget, id: number) => {
+  switch (target) {
+    case "phone":
+      return `/phone/view?selectedId=${id}`;
+    case "category":
+      return `/category/view?id=${id}`;
+    case "holding":
+      return `/holding/view?id=${id}`;
+    case "user":
+      return `/admin/users?id=${id}`;
+    case "department":
+      return `/admin/departments?id=${id}`;
+    case "holder":
+      return `/admin/holder?id=${id}`;
+    case "placement":
+      return `/admin/placements?id=${id}`;
+    default:
+      return "#";
+  }
+};
+
+const Logs: React.FC<LogsProps> = (props) => {
+  const { logs, getUser } = useContainer();
+
+  const tableColumns: TableColumn<DB.LogAttributes>[] = [
     {
       key: "actions",
       header: "",
       size: "30px",
       required: true,
-      mapper: (v, item) => <ActionBox showDetails={() => {}} />,
+      mapper: (v, item) => (
+        <ActionBox
+          showDetails={() => detailsPopup.onToggle(true, item.payload ?? {})}
+        />
+      ),
     },
     // {
     //   key: "id",
-    //   header: "ID",
+    //   header: "ID",П
     //   size: "30px",
     // },
     {
       key: "target",
       header: "Цель",
-      // size: "150px",
+      mapper: (v, item) => resolveTarget(item.target),
     },
     {
       key: "type",
       header: "Тип действия",
-      // mapper: () => ()
+      mapper: (v, item) => resolveType(item.type),
       // size: "150px",
     },
     {
+      wrap: true,
       key: "targets",
       header: "Затрагиваемое",
-      mapper: (v: { id: number }[]) =>
-        v.map((v) => (
-          <Link key={v.id} href="#">
-            #{v.id}
-          </Link>
+      mapper: (v: { id: number }[], item) =>
+        v.map((v, i, arr) => (
+          <>
+            <Link inline key={v.id} href={resolveTargetHref(item.target, v.id)}>
+              #{v.id}
+            </Link>
+            {i === arr.length - 1 ? "" : ", "}
+          </>
         )),
       // size: "150px",
     },
-    {
-      key: "authorId",
-      header: "Автор",
-      // size: "150px",
-    },
+    columns.author({ getUser }),
     {
       key: "createdAt",
       header: "Время",
@@ -78,11 +159,16 @@ const Logs: React.FC<LogsProps> = (props) => {
 
   const tableItems = logs.items.map((log) => log);
 
+  const { state: payload, ...detailsPopup } = useTogglePayloadPopup();
+
   // const noticeContext = React.useContext(NoticeContext);
 
   // TODO: Make proper typing for POST request params & form inputs
   return (
     <>
+      <PopupLayer>
+        <DetailsPopup {...detailsPopup} payload={payload} />
+      </PopupLayer>
       <Layout>
         {/* <Form
           input={bind.input}
@@ -116,7 +202,7 @@ const Logs: React.FC<LogsProps> = (props) => {
         </Form> */}
         {/* <Hr /> */}
         {/* <Header align="right">История операций ({logs.items.length})</Header> */}
-        <Table items={tableItems} columns={columns} />
+        <Table items={tableItems} columns={tableColumns} />
       </Layout>
     </>
   );

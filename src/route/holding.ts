@@ -178,7 +178,7 @@ router.get(
     const groupedItems = groupBy(holdingPhones, (item) => item.holdingId);
     const items: {
       holdingId: number;
-      commits: ({ phoneId: number } & WithCommit)[];
+      commits: ({ phoneId: number; authorId?: number } & WithCommit)[];
     }[] = [];
 
     for (const [key, value] of groupedItems)
@@ -281,6 +281,7 @@ router.put(
     },
   }),
   transactionHandler(async (req, res) => {
+    const { user } = req.params;
     const { action, phoneIds, holdingId } = req.query;
 
     if (action === "remove") {
@@ -302,6 +303,7 @@ router.put(
         {
           status: "delete-pending",
           statusAt: new Date().toISOString(),
+          authorId: user.id,
         },
         { where: { id: { [Op.in]: holdingPhonesIds } } }
       );
@@ -330,6 +332,7 @@ router.put(
         (phoneId) => ({
           phoneId,
           holdingId,
+          authorId: user.id,
           status: "create-pending",
           statusAt: new Date().toISOString(),
         })

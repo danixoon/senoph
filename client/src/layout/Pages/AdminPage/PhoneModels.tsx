@@ -23,6 +23,7 @@ import { useTogglePayloadPopup } from "hooks/useTogglePopup";
 import ItemEditPopup from "layout/Popups/ItemEditPopup";
 import { NoticeContext } from "providers/NoticeProvider";
 import PopupLayer from "providers/PopupLayer";
+import TopBarLayer from "providers/TopBarLayer";
 import React, { DetailedHTMLProps } from "react";
 import { api } from "store/slices/api";
 import { extractStatus } from "store/utils";
@@ -292,8 +293,10 @@ const PhoneModels: React.FC<PhoneModelsProps> = (props) => {
           ]}
         />
       </PopupLayer>
-      <Layout>
+      {/* <Layout> */}
+      <TopBarLayer>
         <Form
+          style={{ flex: "1" }}
           input={bind.input}
           onSubmit={(data) => {
             createPhoneModel({ ...data, details });
@@ -360,14 +363,16 @@ const PhoneModels: React.FC<PhoneModelsProps> = (props) => {
             </Button>
           </Layout>
         </Form>
-        <Hr />
-        <Header align="right">
-          Список моделей средств связи ({models.items.length})
-        </Header>
-        <WithLoader status={models.status}>
-          <Table items={tableItems} columns={columns} />
-        </WithLoader>
-      </Layout>
+      </TopBarLayer>
+      {/* <Hr /> */}
+      <Header align="right">
+        Список моделей средств связи ({models.items.length})
+      </Header>
+
+      <WithLoader status={models.status}>
+        <Table items={tableItems} columns={columns} />
+      </WithLoader>
+      {/* </Layout> */}
     </>
   );
 };

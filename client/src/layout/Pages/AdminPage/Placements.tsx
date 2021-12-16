@@ -16,6 +16,7 @@ import { useTogglePayloadPopup } from "hooks/useTogglePopup";
 import ItemEditPopup from "layout/Popups/ItemEditPopup";
 import { NoticeContext } from "providers/NoticeProvider";
 import PopupLayer from "providers/PopupLayer";
+import TopBarLayer from "providers/TopBarLayer";
 import React from "react";
 import { api } from "store/slices/api";
 import { extractStatus } from "store/utils";
@@ -148,54 +149,56 @@ const Departments: React.FC<PlacementsProps> = (props) => {
           ]}
         />
       </PopupLayer>
-      <Layout>
+      {/* <Layout> */}
+      <TopBarLayer>
         <Form
           input={bind.input}
+          style={{ flex: "1", flexFlow: "row" }}
           onSubmit={(data) => {
             // onSubmit(data);
             createPlacement(data as any);
             // noticeContext.createNotice("Пользователь создан");
           }}
         >
-          <Layout flow="row">
-            <Input
-              required
-              placeholder="Консультативный корпус"
-              label="Название"
-              {...bind}
-              name="name"
-              style={{ flex: "1" }}
-            />
-            <Input
-              label="Описание"
-              placeholder="Дополнительная информация"
-              {...bind}
-              name="description"
-              style={{ flex: "1" }}
-            />
-            <Button
-              style={{
-                marginTop: "auto",
-                marginLeft: "auto",
-                padding: "0 4rem",
-              }}
-              disabled={createStatus.isLoading}
-              margin="md"
-              type="submit"
-              color="primary"
-            >
-              {createStatus.isLoading ? <LoaderIcon /> : "Создать"}
-            </Button>
-          </Layout>
+          {/* <Layout flow="row"> */}
+          <Input
+            required
+            placeholder="Консультативный корпус"
+            label="Название"
+            {...bind}
+            name="name"
+            style={{ flex: "1" }}
+          />
+          <Input
+            label="Описание"
+            placeholder="Дополнительная информация"
+            {...bind}
+            name="description"
+            style={{ flex: "1" }}
+          />
+          <Button
+            style={{
+              marginTop: "auto",
+              marginLeft: "auto",
+              padding: "0 4rem",
+            }}
+            disabled={createStatus.isLoading}
+            margin="md"
+            type="submit"
+            color="primary"
+          >
+            {createStatus.isLoading ? <LoaderIcon /> : "Создать"}
+          </Button>
+          {/* </Layout> */}
         </Form>
-        <Hr />
-        <Header align="right">
-          Список местоположений ({placements.items.length})
-        </Header>
-        <WithLoader status={placements.status}>
-          <Table items={tableItems} columns={columns} />
-        </WithLoader>
-      </Layout>
+      </TopBarLayer>
+      {/* <Hr /> */}
+      <Header align="right">
+        Список местоположений ({placements.items.length})
+      </Header>
+      <WithLoader status={placements.status}>
+        <Table items={tableItems} columns={columns} />
+      </WithLoader>
     </>
   );
 };

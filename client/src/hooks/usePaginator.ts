@@ -1,5 +1,6 @@
 export const usePaginator = (
   offset: number,
+  setOffset: (offset: number) => void,
   total: number,
   perPage: number
 ) => {
@@ -12,5 +13,7 @@ export const usePaginator = (
 
   const off = (currentPage - 1) * perPage;
 
-  return { maxPage, currentPage, offset: off };
+  if (offset !== off) setOffset(off);
+
+  return { maxPage, currentPage };
 };

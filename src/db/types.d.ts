@@ -87,8 +87,10 @@ declare namespace DB {
   type CategoryPhoneAttributes = Attributes<{
     categoryId: number;
     phoneId: number;
+    authorId?: number;
     category?: CategoryAttributes;
     phone?: PhoneAttributes;
+    author?: UserAttributes;
   }> &
     WithCommit;
 
@@ -111,8 +113,10 @@ declare namespace DB {
   type HoldingPhoneAttributes = Attributes<{
     holdingId: number;
     phoneId: number;
+    authorId?: number;
     holding?: HoldingAttributes;
     phone?: PhoneAttributes;
+    author?: UserAttributes;
   }> &
     WithCommit;
 

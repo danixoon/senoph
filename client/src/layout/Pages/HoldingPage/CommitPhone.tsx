@@ -7,7 +7,7 @@ import ActionBox from "components/ActionBox";
 import InfoBanner from "components/InfoBanner";
 import { SpoilerPopupButton } from "components/SpoilerPopup";
 import Table, { TableColumn } from "components/Table";
-import { getSelectionColumn, getTableColumns } from "./utils";
+import { getTableColumns } from "./utils";
 import { extractItemsHook, getLocalDate } from "utils";
 import Link from "components/Link";
 import Span from "components/Span";
@@ -16,6 +16,8 @@ import ButtonGroup from "components/ButtonGroup";
 import TopBarLayer from "providers/TopBarLayer";
 import Badge from "components/Badge";
 import Button from "components/Button";
+import columnTypes from "utils/columns";
+import { useAuthor } from "hooks/misc/author";
 
 const useContainer = () => {
   const { holders, departments } = useFetchConfigMap();
@@ -38,6 +40,8 @@ const useContainer = () => {
     return { ...item, ...targetHolding };
   });
 
+  const getUser = useAuthor();
+
   return {
     holdingPhoneCommits,
     commit,
@@ -45,13 +49,14 @@ const useContainer = () => {
     holders,
     departments,
     holdings: mappedHoldings,
+    getUser,
   };
 };
 
 // type TableItem = GetItemType<Api.GetResponse<"get", "/holdings/commit">>;
 
 const CommitPhoneContent: React.FC<{}> = (props) => {
-  const { holdings, commit, commitStatus, departments, holders } =
+  const { holdings, commit, getUser, commitStatus, departments, holders } =
     useContainer();
 
   const selection = useSelection(holdings as any);
@@ -146,7 +151,8 @@ const CommitPhoneContent: React.FC<{}> = (props) => {
           )
         ),
     },
-    getSelectionColumn(selection) as any,
+    columnTypes.selection({ selection }),
+    columnTypes.author({ getUser }),
   ];
 
   const commitSelected = (action: CommitActionType) => {

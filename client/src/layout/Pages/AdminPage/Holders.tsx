@@ -17,6 +17,7 @@ import { useTogglePayloadPopup } from "hooks/useTogglePopup";
 import ItemEditPopup from "layout/Popups/ItemEditPopup";
 import { NoticeContext } from "providers/NoticeProvider";
 import PopupLayer from "providers/PopupLayer";
+import TopBarLayer from "providers/TopBarLayer";
 import React from "react";
 import { api } from "store/slices/api";
 import { extractStatus } from "store/utils";
@@ -142,7 +143,7 @@ const Holders: React.FC<HoldersProps> = (props) => {
               firstName: payload.firstName,
               lastName: payload.lastName,
               middleName: payload.middleName,
-              description: payload.description
+              description: payload.description,
             })
           }
           items={[
@@ -176,8 +177,10 @@ const Holders: React.FC<HoldersProps> = (props) => {
           ]}
         />
       </PopupLayer>
-      <Layout>
+      <TopBarLayer>
+        {/* <Layout> */}
         <Form
+          style={{ flexFlow: "row", flex: "1" }}
           input={bind.input}
           onSubmit={(data) => {
             // onSubmit(data);
@@ -185,61 +188,59 @@ const Holders: React.FC<HoldersProps> = (props) => {
             // noticeContext.createNotice("Пользователь создан");
           }}
         >
-          <Layout flow="row">
-            <Input
-              required
-              placeholder="Иванов"
-              label="Фамилия"
-              {...bind}
-              name="lastName"
-              style={{ flex: "1" }}
-            />
-            <Input
-              required
-              label="Имя"
-              placeholder="Иван"
-              {...bind}
-              name="firstName"
-              style={{ flex: "1" }}
-            />
-            <Input
-              required
-              label="Отчество"
-              placeholder="Иванович"
-              {...bind}
-              name="middleName"
-              style={{ flex: "1" }}
-            />
-            <Input
-              label="Дополнение"
-              placeholder="..."
-              {...bind}
-              name="description"
-              style={{ flex: "1" }}
-            />
-            <Button
-              style={{
-                marginTop: "auto",
-                marginLeft: "auto",
-                padding: "0 4rem",
-              }}
-              disabled={createStatus.isLoading}
-              margin="md"
-              type="submit"
-              color="primary"
-            >
-              {createStatus.isLoading ? <LoaderIcon /> : "Создать"}
-            </Button>
-          </Layout>
+          {/* <Layout flow="row"> */}
+          <Input
+            required
+            placeholder="Иванов"
+            label="Фамилия"
+            {...bind}
+            name="lastName"
+            style={{ flex: "1" }}
+          />
+          <Input
+            required
+            label="Имя"
+            placeholder="Иван"
+            {...bind}
+            name="firstName"
+            style={{ flex: "1" }}
+          />
+          <Input
+            required
+            label="Отчество"
+            placeholder="Иванович"
+            {...bind}
+            name="middleName"
+            style={{ flex: "1" }}
+          />
+          <Input
+            label="Дополнение"
+            placeholder="..."
+            {...bind}
+            name="description"
+            style={{ flex: "1" }}
+          />
+          <Button
+            style={{
+              marginTop: "auto",
+              marginLeft: "auto",
+              padding: "0 4rem",
+            }}
+            disabled={createStatus.isLoading}
+            margin="md"
+            type="submit"
+            color="primary"
+          >
+            {createStatus.isLoading ? <LoaderIcon /> : "Создать"}
+          </Button>
+          {/* </Layout> */}
         </Form>
-        <Hr />
-        <Header align="right">
-          Список владельцев ({holders.items.length})
-        </Header>
-        <WithLoader status={holders.status}>
-          <Table items={tableItems} columns={columns} />
-        </WithLoader>
-      </Layout>
+      </TopBarLayer>
+      <Header align="right">Список владельцев ({holders.items.length})</Header>
+      <WithLoader status={holders.status}>
+        <Table items={tableItems} columns={columns} />
+      </WithLoader>
+      {/* </Layout> */}
     </>
   );
 };

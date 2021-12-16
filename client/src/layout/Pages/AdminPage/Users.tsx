@@ -16,6 +16,7 @@ import { useTogglePayloadPopup, useTogglePopup } from "hooks/useTogglePopup";
 import ItemEditPopup from "layout/Popups/ItemEditPopup";
 import { NoticeContext } from "providers/NoticeProvider";
 import PopupLayer from "providers/PopupLayer";
+import TopBarLayer from "providers/TopBarLayer";
 import React from "react";
 import { api } from "store/slices/api";
 import { extractStatus } from "store/utils";
@@ -168,74 +169,74 @@ const Users: React.FC<UsersProps> = (props) => {
           ]}
         />
       </PopupLayer>
-      <Layout>
-        <Form
-          input={bind.input}
-          onSubmit={(data) => {
-            // onSubmit(data);
-            createUser(data as any);
-            // noticeContext.createNotice("Пользователь создан");
-          }}
-        >
-          <Layout flow="row">
-            <Dropdown
-              required
-              style={{ flex: "1" }}
-              label="Роль"
-              name="role"
-              items={[
-                { id: "user", label: "Пользователь" },
-                { id: "admin", label: "Администратор" },
-              ]}
-              {...bind}
-            />
-            <Input
-              required
-              placeholder="Ivan"
-              label="Логин пользователя"
-              {...bind}
-              name="username"
-              style={{ flex: "1" }}
-            />
-            <Input
-              required
-              placeholder="Иван Иванович"
-              label="Имя пользователя"
-              {...bind}
-              name="name"
-              style={{ flex: "1" }}
-            />
-            <Input
-              required
-              label="Пароль"
-              placeholder="*********"
-              {...bind}
-              name="password"
-              style={{ flex: "1" }}
-              type="password"
-            />
-            <Button
-              style={{
-                marginTop: "auto",
-                marginLeft: "auto",
-                padding: "0 4rem",
-              }}
-              margin="md"
-              type="submit"
-              color="primary"
-            >
-              {createStatus.isLoading ? <LoaderIcon /> : "Создать"}
-            </Button>
-          </Layout>
-        </Form>
-        <Hr />
-        <Header align="right">
-          Список пользователей ({users.items.length})
-        </Header>
-        <WithLoader status={users.status}>
-          <Table items={tableItems} columns={columns} />
-        </WithLoader>
-      </Layout>
+      <TopBarLayer>
+        {/* <Layout flex="1"> */}
+          <Form
+            style={{ flexFlow: "row", flex: "1" }}
+            input={bind.input}
+            onSubmit={(data) => {
+              // onSubmit(data);
+              createUser(data as any);
+              // noticeContext.createNotice("Пользователь создан");
+            }}
+          >
+            {/* <Layout flow="row"> */}
+              <Dropdown
+                required
+                style={{ flex: "1" }}
+                label="Роль"
+                name="role"
+                items={[
+                  { id: "user", label: "Пользователь" },
+                  { id: "admin", label: "Администратор" },
+                ]}
+                {...bind}
+              />
+              <Input
+                required
+                placeholder="Ivan"
+                label="Логин пользователя"
+                {...bind}
+                name="username"
+                style={{ flex: "1" }}
+              />
+              <Input
+                required
+                placeholder="Иван Иванович"
+                label="Имя пользователя"
+                {...bind}
+                name="name"
+                style={{ flex: "1" }}
+              />
+              <Input
+                required
+                label="Пароль"
+                placeholder="*********"
+                {...bind}
+                name="password"
+                style={{ flex: "1" }}
+                type="password"
+              />
+              <Button
+                style={{
+                  marginTop: "auto",
+                  marginLeft: "auto",
+                  padding: "0 4rem",
+                }}
+                margin="md"
+                type="submit"
+                color="primary"
+              >
+                {createStatus.isLoading ? <LoaderIcon /> : "Создать"}
+              </Button>
+            {/* </Layout> */}
+          </Form>
+        {/* </Layout> */}
+      </TopBarLayer>
+      <Header bottom align="right">Список пользователей ({users.items.length})</Header>
+      <WithLoader status={users.status}>
+        <Table items={tableItems} columns={columns} />
+      </WithLoader>
     </>
   );
 };

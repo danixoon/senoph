@@ -15,6 +15,7 @@ import { useTogglePayloadPopup } from "hooks/useTogglePopup";
 import ItemEditPopup from "layout/Popups/ItemEditPopup";
 import { NoticeContext } from "providers/NoticeProvider";
 import PopupLayer from "providers/PopupLayer";
+import TopBarLayer from "providers/TopBarLayer";
 import React from "react";
 import { api } from "store/slices/api";
 import { extractStatus } from "store/utils";
@@ -193,8 +194,9 @@ const Departments: React.FC<DepartmentsProps> = (props) => {
           ]}
         />
       </PopupLayer>
-      <Layout>
+      <TopBarLayer>
         <Form
+          style={{ flexFlow: "row", flex: "1" }}
           input={bind.input}
           onSubmit={(data) => {
             // onSubmit(data);
@@ -202,55 +204,52 @@ const Departments: React.FC<DepartmentsProps> = (props) => {
             // noticeContext.createNotice("Пользователь создан");
           }}
         >
-          <Layout flow="row">
-            <Input
-              required
-              placeholder="Отделение связи и ИТ"
-              label="Название"
-              {...bind}
-              name="name"
-              style={{ flex: "1" }}
-            />
-            <Dropdown
-              style={{ flex: "1" }}
-              label="Местоположение"
-              items={placements.items.map((item) => ({
-                id: item.id,
-                label: item.name,
-              }))}
-              name="placementId"
-              {...bind}
-            />
-            <Input
-              label="Описание"
-              placeholder="Дополнительная информация"
-              {...bind}
-              name="description"
-              style={{ flex: "1" }}
-            />
-            <Button
-              style={{
-                marginTop: "auto",
-                marginLeft: "auto",
-                padding: "0 4rem",
-              }}
-              disabled={createStatus.isLoading}
-              margin="md"
-              type="submit"
-              color="primary"
-            >
-              {createStatus.isLoading ? <LoaderIcon /> : "Создать"}
-            </Button>
-          </Layout>
+          <Input
+            required
+            placeholder="Отделение связи и ИТ"
+            label="Название"
+            {...bind}
+            name="name"
+            style={{ flex: "1" }}
+          />
+          <Dropdown
+            style={{ flex: "1" }}
+            label="Местоположение"
+            items={placements.items.map((item) => ({
+              id: item.id,
+              label: item.name,
+            }))}
+            name="placementId"
+            {...bind}
+          />
+          <Input
+            label="Описание"
+            placeholder="Дополнительная информация"
+            {...bind}
+            name="description"
+            style={{ flex: "1" }}
+          />
+          <Button
+            style={{
+              marginTop: "auto",
+              marginLeft: "auto",
+              padding: "0 4rem",
+            }}
+            disabled={createStatus.isLoading}
+            margin="md"
+            type="submit"
+            color="primary"
+          >
+            {createStatus.isLoading ? <LoaderIcon /> : "Создать"}
+          </Button>
         </Form>
-        <Hr />
-        <Header align="right">
-          Список подразделений ({departments.items.length})
-        </Header>
-        <WithLoader status={departments.status}>
-          <Table items={tableItems} columns={columns} />
-        </WithLoader>
-      </Layout>
+      </TopBarLayer>
+      <Header bottom align="right">
+        Список подразделений ({departments.items.length})
+      </Header>
+      <WithLoader status={departments.status}>
+        <Table items={tableItems} columns={columns} />
+      </WithLoader>
     </>
   );
 };

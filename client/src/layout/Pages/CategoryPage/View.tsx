@@ -32,8 +32,12 @@ import WithLoader from "components/WithLoader";
 import { useNotice } from "hooks/useNotice";
 import PhonesSelectionPopup from "../../Popups/PhonesSelectionPopup";
 import { useAuthor } from "hooks/misc/author";
+import Paginator from "components/Paginator";
+import { usePaginator } from "hooks/usePaginator";
+import TopBarLayer from "providers/TopBarLayer";
+import Layout from "components/Layout";
 
-const useContainer = () => {
+const useContainer = (props: { offset?: number; amount?: number }) => {
   const filterHook = useQueryInput<{
     actKey?: string;
     actDate?: string;
@@ -44,7 +48,7 @@ const useContainer = () => {
   // const input = filterHook[0].input;
 
   const fetchedCategories = api.useFetchCategoriesQuery({
-    ...clearObject(filterHook[0].input as any),
+    ...clearObject({ ...filterHook[0].input, ...props } as any),
   });
 
   const categories = parseItems(fetchedCategories);
@@ -114,6 +118,7 @@ const useContainer = () => {
 };
 
 export const ViewContent: React.FC<{}> = (props) => {
+  const [offset, setOffset] = React.useState(0);
   const {
     filterHook,
     category,
@@ -123,7 +128,14 @@ export const ViewContent: React.FC<{}> = (props) => {
     onToggle,
     onViewCommit,
     onSelect,
-  } = useContainer();
+  } = useContainer({ offset, amount: 15 });
+
+  const { currentPage, maxPage } = usePaginator(
+    offset,
+    setOffset,
+    categories.data.total,
+    15
+  );
 
   const actionBox: TableColumn = {
     key: "actions",
@@ -172,43 +184,62 @@ export const ViewContent: React.FC<{}> = (props) => {
       <PopupLayer>
         <PhonesSelectionPopup {...phonesPopup} holdingId={phonesPopup.state} />
       </PopupLayer>
-      <Form style={{ flexFlow: "column wrap", maxHeight: "100px" }} input={{}}>
-        <Input
-          {...bindFilter}
-          name="actKey"
-          label="Номер акта"
-          placeholder="1234"
-        />
-        <Input
-          {...bindFilter}
-          type="date"
-          name="actDate"
-          label="Дата акта"
-          blurrable
-        />
-        <Dropdown
-          {...bindFilter}
-          style={{ flex: "1" }}
-          items={Object.entries(categoryNames).map(([id, label]) => ({
-            label,
-            id,
-          }))}
-          name="categoryKey"
-          label="Категория"
-        />
-        <Dropdown
-          {...bindFilter}
-          style={{ flex: "1" }}
-          items={[
-            { id: "create-pending", label: "Ожидает создания" },
-            { id: "delete-pending", label: "Ожидает удаления" },
-            { id: "based", label: "Подтверждённые" },
-          ]}
-          name="status"
-          label="Статус"
-        />
-      </Form>
-      <Hr />
+      <TopBarLayer>
+        <Layout flex="1">
+          <Paginator
+            style={{ marginRight: "auto" }}
+            onChange={(page) => setOffset((page - 1) * 15)}
+            min={1}
+            max={maxPage}
+            size={5}
+            current={currentPage}
+          />
+          <Header unsized align="right">
+            Фильтр
+          </Header>
+          <Form
+            style={{ flexFlow: "column wrap", maxHeight: "100px" }}
+            input={{}}
+          >
+            <Input
+              {...bindFilter}
+              name="actKey"
+              label="Номер акта"
+              placeholder="1234"
+            />
+            <Input
+              {...bindFilter}
+              type="date"
+              name="actDate"
+              label="Дата акта"
+              blurrable
+            />
+            <Dropdown
+              {...bindFilter}
+              style={{ flex: "1" }}
+              items={Object.entries(categoryNames).map(([id, label]) => ({
+                label,
+                id,
+              }))}
+              name="categoryKey"
+              label="Категория"
+            />
+            <Dropdown
+              {...bindFilter}
+              style={{ flex: "1" }}
+              items={[
+                { id: "create-pending", label: "Ожидает создания" },
+                { id: "delete-pending", label: "Ожидает удаления" },
+                { id: "based", label: "Подтверждённые" },
+              ]}
+              name="status"
+              label="Статус"
+            />
+          </Form>
+        </Layout>
+      </TopBarLayer>
+
+      {/* <Hr /> */}
 
       <WithLoader status={categories.status}>
         {categories.data.items.length === 0 ? (

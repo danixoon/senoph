@@ -93,7 +93,7 @@ router.post(
   validate({
     query: { target: tester().required(), targetId: tester().required() },
   }),
-  owner("phone", (r) => r.query.targetId),
+  // owner("phone", (r) => r.query.targetId),
   transactionHandler(async (req, res) => {
     const { id } = req.params.user;
     const { target, targetId } = req.query;
@@ -340,16 +340,16 @@ router.put(
       ids: tester().array({}),
     },
   }),
-  owner(
-    "phone",
-    (req) => req.body.ids,
-    (model) => {
-      if (model.status === null)
-        throw new ApiError(errorType.INVALID_QUERY, {
-          description: "Объект изменений не ожидает",
-        });
-    }
-  ),
+  // owner(
+  //   "phone",
+  //   (req) => req.body.ids,
+  //   (model) => {
+  //     if (model.status === null)
+  //       throw new ApiError(errorType.INVALID_QUERY, {
+  //         description: "Объект изменений не ожидает",
+  //       });
+  //   }
+  // ),
   transactionHandler(async (req, res, next) => {
     const { ids, action } = req.body;
     const { params } = req;
@@ -409,7 +409,7 @@ router.delete(
       target: tester().required(),
     },
   }),
-  owner("phone", (r) => r.query.targetId),
+  // owner("phone", (r) => r.query.targetId),
   convertValues({ keys: (c) => c.toArray().value }),
   transactionHandler(async (req, res) => {
     const { id } = req.params.user;
@@ -418,6 +418,8 @@ router.delete(
     const updater = getUpdater(target, targetId, id);
     if (!Array.isArray(keys)) await updater.clearAll();
     else await updater.clear(...keys);
+
+    Log.log(target, [targetId], "commit", id, { target, targetId, keys });
 
     res.send();
   })
