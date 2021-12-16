@@ -27,6 +27,7 @@ import TopBarLayer from "providers/TopBarLayer";
 import React, { DetailedHTMLProps } from "react";
 import { api } from "store/slices/api";
 import { extractStatus } from "store/utils";
+import columnTypes from "utils/columns";
 
 export type PhoneModelsProps = {};
 
@@ -194,6 +195,7 @@ const PhoneModels: React.FC<PhoneModelsProps> = (props) => {
           </>
         )),
     },
+    ...columnTypes.entityDates(),
   ];
 
   const [bind] = useInput({});
@@ -362,15 +364,15 @@ const PhoneModels: React.FC<PhoneModelsProps> = (props) => {
               {createStatus.isLoading ? <LoaderIcon /> : "Создать"}
             </Button>
           </Layout>
+          <Header align="right">
+            Список моделей средств связи ({models.items.length})
+          </Header>
         </Form>
       </TopBarLayer>
       {/* <Hr /> */}
-      <Header align="right">
-        Список моделей средств связи ({models.items.length})
-      </Header>
 
       <WithLoader status={models.status}>
-        <Table items={tableItems} columns={columns} />
+        <Table stickyTop={121} items={tableItems} columns={columns} />
       </WithLoader>
       {/* </Layout> */}
     </>

@@ -19,6 +19,7 @@ import TopBarLayer from "providers/TopBarLayer";
 import React from "react";
 import { api } from "store/slices/api";
 import { extractStatus } from "store/utils";
+import columnTypes from "utils/columns";
 
 export type PhoneTypesProps = {};
 
@@ -126,6 +127,7 @@ const PhoneTypes: React.FC<PhoneTypesProps> = (props) => {
       header: "Описание",
       // size: "150px",
     },
+    ...columnTypes.entityDates() as any,
   ];
 
   const [bind] = useInput({});
@@ -180,53 +182,55 @@ const PhoneTypes: React.FC<PhoneTypesProps> = (props) => {
         />
       </PopupLayer>
       <TopBarLayer>
-        {/* <Layout> */}
-        <Form
-          style={{ flex: "1", flexFlow: "row" }}
-          input={bind.input}
-          onSubmit={(data) => {
-            // onSubmit(data);
-            createPhoneType(data as any);
-            // noticeContext.createNotice("Пользователь создан");
-          }}
-        >
-          {/* <Layout flow="row"> */}
-          <Input
-            required
-            label="Наименование"
-            placeholder="Средство связи"
-            {...bind}
-            name="name"
-            style={{ flex: "1" }}
-          />
-          <Input
-            label="Описание"
-            {...bind}
-            placeholder="Дополнительная информация"
-            name="description"
-            style={{ flex: "1" }}
-          />
-          <Button
-            style={{
-              marginTop: "auto",
-              marginLeft: "auto",
-              padding: "0 4rem",
+        <Layout flex="1">
+          <Form
+            style={{ flex: "1", flexFlow: "row" }}
+            input={bind.input}
+            onSubmit={(data) => {
+              // onSubmit(data);
+              createPhoneType(data as any);
+              // noticeContext.createNotice("Пользователь создан");
             }}
-            margin="md"
-            type="submit"
-            color="primary"
           >
-            {createStatus.isLoading ? <LoaderIcon /> : "Создать"}
-          </Button>
-          {/* </Layout> */}
-        </Form>
+            {/* <Layout flow="row"> */}
+            <Input
+              required
+              label="Наименование"
+              placeholder="Средство связи"
+              {...bind}
+              name="name"
+              style={{ flex: "1" }}
+            />
+            <Input
+              label="Описание"
+              {...bind}
+              placeholder="Дополнительная информация"
+              name="description"
+              style={{ flex: "1" }}
+            />
+            <Button
+              style={{
+                marginTop: "auto",
+                marginLeft: "auto",
+                padding: "0 4rem",
+              }}
+              margin="md"
+              type="submit"
+              color="primary"
+            >
+              {createStatus.isLoading ? <LoaderIcon /> : "Создать"}
+            </Button>
+            {/* </Layout> */}
+          </Form>
+          <Header align="right">
+            Список типов средств связи ({phoneTypes.items.length})
+          </Header>
+        </Layout>
         {/* <Hr /> */}
       </TopBarLayer>
-      <Header align="right">
-        Список типов средств связи ({phoneTypes.items.length})
-      </Header>
+
       <WithLoader status={phoneTypes.status}>
-        <Table items={tableItems} columns={columns} />
+        <Table stickyTop={86} items={tableItems} columns={columns} />
       </WithLoader>
       {/* </Layout> */}
     </>

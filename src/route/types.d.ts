@@ -256,7 +256,7 @@ declare namespace Api {
       | (() => RouteHandler<
           "/phone/holdings",
           ItemsResponse<Api.Models.Holding>,
-          { phoneIds: number[]; orderDate?: string; orderKey?: string },
+        { phoneIds: number[]; orderDate?: string; orderKey?: string },
           {}
         >)
       | (() => RouteHandler<
@@ -370,7 +370,12 @@ declare namespace Api {
           },
           {}
         >)
-      | (() => RouteHandler<"/logs", ItemsResponse<Api.Models.Log>, {}, {}>);
+      | (() => RouteHandler<
+          "/logs",
+          ItemsResponse<Api.Models.Log>,
+          { offset?: number; amount?: number },
+          {}
+        >);
 
     post:
       | (() => RouteHandler<

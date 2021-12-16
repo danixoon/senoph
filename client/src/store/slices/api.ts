@@ -594,7 +594,7 @@ export const api = createApi({
     >({
       query: (params) => ({
         url: "logs",
-        // params,
+        params,
         method: "GET",
       }),
       providesTags: ["log"],

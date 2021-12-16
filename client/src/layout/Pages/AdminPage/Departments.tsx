@@ -19,7 +19,7 @@ import TopBarLayer from "providers/TopBarLayer";
 import React from "react";
 import { api } from "store/slices/api";
 import { extractStatus } from "store/utils";
-import { clearObject } from "utils";
+import columnTypes from "utils/columns";
 
 export type DepartmentsProps = {};
 
@@ -130,6 +130,7 @@ const Departments: React.FC<DepartmentsProps> = (props) => {
       header: "Описание",
       // size: "150px",
     },
+    ...columnTypes.entityDates(),
   ];
 
   const [bind] = useInput({});
@@ -195,60 +196,62 @@ const Departments: React.FC<DepartmentsProps> = (props) => {
         />
       </PopupLayer>
       <TopBarLayer>
-        <Form
-          style={{ flexFlow: "row", flex: "1" }}
-          input={bind.input}
-          onSubmit={(data) => {
-            // onSubmit(data);
-            createDepartment(data as any);
-            // noticeContext.createNotice("Пользователь создан");
-          }}
-        >
-          <Input
-            required
-            placeholder="Отделение связи и ИТ"
-            label="Название"
-            {...bind}
-            name="name"
-            style={{ flex: "1" }}
-          />
-          <Dropdown
-            style={{ flex: "1" }}
-            label="Местоположение"
-            items={placements.items.map((item) => ({
-              id: item.id,
-              label: item.name,
-            }))}
-            name="placementId"
-            {...bind}
-          />
-          <Input
-            label="Описание"
-            placeholder="Дополнительная информация"
-            {...bind}
-            name="description"
-            style={{ flex: "1" }}
-          />
-          <Button
-            style={{
-              marginTop: "auto",
-              marginLeft: "auto",
-              padding: "0 4rem",
+        <Layout flex="1">
+          <Form
+            style={{ flexFlow: "row", flex: "1" }}
+            input={bind.input}
+            onSubmit={(data) => {
+              // onSubmit(data);
+              createDepartment(data as any);
+              // noticeContext.createNotice("Пользователь создан");
             }}
-            disabled={createStatus.isLoading}
-            margin="md"
-            type="submit"
-            color="primary"
           >
-            {createStatus.isLoading ? <LoaderIcon /> : "Создать"}
-          </Button>
-        </Form>
+            <Input
+              required
+              placeholder="Отделение связи и ИТ"
+              label="Название"
+              {...bind}
+              name="name"
+              style={{ flex: "1" }}
+            />
+            <Dropdown
+              style={{ flex: "1" }}
+              label="Местоположение"
+              items={placements.items.map((item) => ({
+                id: item.id,
+                label: item.name,
+              }))}
+              name="placementId"
+              {...bind}
+            />
+            <Input
+              label="Описание"
+              placeholder="Дополнительная информация"
+              {...bind}
+              name="description"
+              style={{ flex: "1" }}
+            />
+            <Button
+              style={{
+                marginTop: "auto",
+                marginLeft: "auto",
+                padding: "0 4rem",
+              }}
+              disabled={createStatus.isLoading}
+              margin="md"
+              type="submit"
+              color="primary"
+            >
+              {createStatus.isLoading ? <LoaderIcon /> : "Создать"}
+            </Button>
+          </Form>
+          <Header align="right">
+            Список подразделений ({departments.items.length})
+          </Header>
+        </Layout>
       </TopBarLayer>
-      <Header bottom align="right">
-        Список подразделений ({departments.items.length})
-      </Header>
       <WithLoader status={departments.status}>
-        <Table items={tableItems} columns={columns} />
+        <Table stickyTop={91} items={tableItems} columns={columns} />
       </WithLoader>
     </>
   );

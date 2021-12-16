@@ -130,14 +130,6 @@ const ViewContent: React.FC<{}> = (props) => {
     <>
       <TopBarLayer>
         <Layout flex="1">
-          <Paginator
-            style={{ marginRight: "auto" }}
-            onChange={(page) => setOffset((page - 1) * 15)}
-            min={1}
-            max={maxPage}
-            size={5}
-            current={currentPage}
-          />
           <Header unsized align="right">
             Фильтр
           </Header>
@@ -148,7 +140,7 @@ const ViewContent: React.FC<{}> = (props) => {
             <Input
               {...bindFilter}
               blurrable
-              name="id"
+              name="ids"
               label="ID"
               placeholder="1234"
             />
@@ -203,6 +195,17 @@ const ViewContent: React.FC<{}> = (props) => {
               label="Статус"
             />
           </Form>
+          <Layout flow="row" style={{ alignItems: "center" }}>
+            <Paginator
+              style={{ marginRight: "auto" }}
+              onChange={(page) => setOffset((page - 1) * 15)}
+              min={1}
+              max={maxPage}
+              size={5}
+              current={currentPage}
+            />
+            <Header align="right">Результаты ({holdings.data.total})</Header>
+          </Layout>
         </Layout>
       </TopBarLayer>
       <PopupLayer>
@@ -226,8 +229,8 @@ const ViewContent: React.FC<{}> = (props) => {
           />
         ) : (
           <>
-            <Header align="right">Результаты ({holdings.data.total})</Header>
             <Table
+              stickyTop={145}
               onSelect={
                 isSelecting
                   ? (item) => {

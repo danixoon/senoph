@@ -21,6 +21,7 @@ import TopBarLayer from "providers/TopBarLayer";
 import React from "react";
 import { api } from "store/slices/api";
 import { extractStatus } from "store/utils";
+import columnTypes from "utils/columns";
 
 export type HoldersProps = {};
 
@@ -117,6 +118,7 @@ const Holders: React.FC<HoldersProps> = (props) => {
       header: "Дополнение",
       mapper: (v, item: Api.Models.Holder) => item.description ?? "",
     },
+    ...columnTypes.entityDates(),
   ];
 
   const [bind] = useInput({});
@@ -178,67 +180,70 @@ const Holders: React.FC<HoldersProps> = (props) => {
         />
       </PopupLayer>
       <TopBarLayer>
-        {/* <Layout> */}
-        <Form
-          style={{ flexFlow: "row", flex: "1" }}
-          input={bind.input}
-          onSubmit={(data) => {
-            // onSubmit(data);
-            createHolder(data as any);
-            // noticeContext.createNotice("Пользователь создан");
-          }}
-        >
-          {/* <Layout flow="row"> */}
-          <Input
-            required
-            placeholder="Иванов"
-            label="Фамилия"
-            {...bind}
-            name="lastName"
-            style={{ flex: "1" }}
-          />
-          <Input
-            required
-            label="Имя"
-            placeholder="Иван"
-            {...bind}
-            name="firstName"
-            style={{ flex: "1" }}
-          />
-          <Input
-            required
-            label="Отчество"
-            placeholder="Иванович"
-            {...bind}
-            name="middleName"
-            style={{ flex: "1" }}
-          />
-          <Input
-            label="Дополнение"
-            placeholder="..."
-            {...bind}
-            name="description"
-            style={{ flex: "1" }}
-          />
-          <Button
-            style={{
-              marginTop: "auto",
-              marginLeft: "auto",
-              padding: "0 4rem",
+        <Layout flex="1">
+          <Form
+            style={{ flexFlow: "row", flex: "1" }}
+            input={bind.input}
+            onSubmit={(data) => {
+              // onSubmit(data);
+              createHolder(data as any);
+              // noticeContext.createNotice("Пользователь создан");
             }}
-            disabled={createStatus.isLoading}
-            margin="md"
-            type="submit"
-            color="primary"
           >
-            {createStatus.isLoading ? <LoaderIcon /> : "Создать"}
-          </Button>
-          {/* </Layout> */}
-        </Form>
+            {/* <Layout flow="row"> */}
+            <Input
+              required
+              placeholder="Иванов"
+              label="Фамилия"
+              {...bind}
+              name="lastName"
+              style={{ flex: "1" }}
+            />
+            <Input
+              required
+              label="Имя"
+              placeholder="Иван"
+              {...bind}
+              name="firstName"
+              style={{ flex: "1" }}
+            />
+            <Input
+              required
+              label="Отчество"
+              placeholder="Иванович"
+              {...bind}
+              name="middleName"
+              style={{ flex: "1" }}
+            />
+            <Input
+              label="Дополнение"
+              placeholder="..."
+              {...bind}
+              name="description"
+              style={{ flex: "1" }}
+            />
+            <Button
+              style={{
+                marginTop: "auto",
+                marginLeft: "auto",
+                padding: "0 4rem",
+              }}
+              disabled={createStatus.isLoading}
+              margin="md"
+              type="submit"
+              color="primary"
+            >
+              {createStatus.isLoading ? <LoaderIcon /> : "Создать"}
+            </Button>
+            {/* </Layout> */}
+          </Form>
+          <Header align="right">
+            Список владельцев ({holders.items.length})
+          </Header>
+        </Layout>
       </TopBarLayer>
-      <Header align="right">Список владельцев ({holders.items.length})</Header>
       <WithLoader status={holders.status}>
-        <Table items={tableItems} columns={columns} />
+        <Table stickyTop={86} items={tableItems} columns={columns} />
       </WithLoader>
       {/* </Layout> */}
     </>

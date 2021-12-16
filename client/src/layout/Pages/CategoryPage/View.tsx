@@ -186,14 +186,6 @@ export const ViewContent: React.FC<{}> = (props) => {
       </PopupLayer>
       <TopBarLayer>
         <Layout flex="1">
-          <Paginator
-            style={{ marginRight: "auto" }}
-            onChange={(page) => setOffset((page - 1) * 15)}
-            min={1}
-            max={maxPage}
-            size={5}
-            current={currentPage}
-          />
           <Header unsized align="right">
             Фильтр
           </Header>
@@ -236,11 +228,19 @@ export const ViewContent: React.FC<{}> = (props) => {
               label="Статус"
             />
           </Form>
+          <Layout flow="row" style={{ alignItems: "center" }}>
+            <Paginator
+              style={{ marginRight: "auto" }}
+              onChange={(page) => setOffset((page - 1) * 15)}
+              min={1}
+              max={maxPage}
+              size={5}
+              current={currentPage}
+            />{" "}
+            <Header align="right">Результаты ({categories.data.total})</Header>
+          </Layout>
         </Layout>
       </TopBarLayer>
-
-      {/* <Hr /> */}
-
       <WithLoader status={categories.status}>
         {categories.data.items.length === 0 ? (
           <InfoBanner
@@ -250,10 +250,8 @@ export const ViewContent: React.FC<{}> = (props) => {
           />
         ) : (
           <>
-            <Header align="right">
-              Результаты ({categories.data.items.length})
-            </Header>
             <Table
+              stickyTop={145}
               items={categories.data.items}
               columns={[actionBox, ...getColumns(getUser)]}
               onSelect={onSelect}

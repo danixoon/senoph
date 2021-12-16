@@ -6,5 +6,5 @@ export const useAuthor = () => {
 };
 
 export const getAuthorName = (user?: Api.Models.User) => {
-  return user?.name ?? "Неизвестный пользователь";
+  return !user ? "Неизвестный пользователь" : `${user.name}#${user.id}`;
 };

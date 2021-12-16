@@ -14,6 +14,7 @@ const author: <T extends { authorId?: number }>(
     hidden: props.hidden ?? true,
     header: props.header ?? "Автор",
     key: props.key ?? "authorId",
+    size: props.size ?? "100px",
     mapper: (v, item) => {
       return getAuthorName(props.getUser(item.authorId));
     },
@@ -51,4 +52,24 @@ const selection: <T>(
     },
   } as TableColumn);
 
-export default { author, selection };
+const entityDates: <
+  T extends { createAt?: string; updatedAt?: string }
+>() => // props: Partial<TableColumn<T>>
+TableColumn<T>[] = () => [
+  {
+    hidden: true,
+    header: "Дата создания",
+    key: "createdAt",
+    size: "80px",
+    type: "local-date",
+  },
+  {
+    hidden: true,
+    header: "Дата обновления",
+    key: "updatedAt",
+    size: "80px",
+    type: "local-date",
+  },
+];
+
+export default { author, selection, entityDates };

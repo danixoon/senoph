@@ -345,7 +345,7 @@ router.get(
       const isHolder = typeof holderId !== "undefined";
       const isCategory = typeof category !== "undefined";
 
-      if (isCategory && category.toString() !== lastCategory.categoryKey)
+      if (isCategory && category.toString() !== lastCategory?.categoryKey)
         return false;
       if (isHolder && lastHolding?.holderId !== holderId) return false;
       if (isDepartment && lastHolding?.departmentId !== departmentId)

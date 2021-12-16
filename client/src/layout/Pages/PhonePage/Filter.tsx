@@ -56,7 +56,32 @@ const Filter: React.FC<{
             label="Модель СС"
             items={models}
           />
-
+          <Dropdown
+            {...bind}
+            name="departmentId"
+            label="Подразделение"
+            items={departments}
+          />
+          <ClickInput
+            {...bind}
+            placeholder="Иванов Иван Иванович"
+            name="holderName"
+            label="Материально-ответственное лицо"
+            clearable
+            onClear={() => setInput({ holderId: null, holderName: null })}
+            onActive={() => holderPopup.onToggle()}
+          />
+          <Dropdown
+            {...bind}
+            name="category"
+            label="Категория"
+            items={[
+              { id: "1", label: "I (Прибыло, на гарантии)" },
+              { id: "2", label: "II (Нет гарантии, исправно)" },
+              { id: "3", label: "III (Неисправно)" },
+              { id: "4", label: "IV (Подлежит списанию)" },
+            ]}
+          />
           <Input
             {...bind}
             name="inventoryKey"
@@ -91,34 +116,6 @@ const Filter: React.FC<{
             name="comissioningDate"
             label="Дата ввода в эксплуатацию"
             type="date"
-          />
-
-          <Dropdown
-            {...bind}
-            name="category"
-            label="Категория"
-            items={[
-              { id: "1", label: "I (Прибыло, на гарантии)" },
-              { id: "2", label: "II (Нет гарантии, исправно)" },
-              { id: "3", label: "III (Неисправно)" },
-              { id: "4", label: "IV (Подлежит списанию)" },
-            ]}
-          />
-
-          <Dropdown
-            {...bind}
-            name="departmentId"
-            label="Подразделение"
-            items={departments}
-          />
-          <ClickInput
-            {...bind}
-            placeholder="Иванов Иван Иванович"
-            name="holderName"
-            label="Материально-ответственное лицо"
-            clearable
-            onClear={() => setInput({ holderId: null, holderName: null })}
-            onActive={() => holderPopup.onToggle()}
           />
         </Layout>
       </Form>

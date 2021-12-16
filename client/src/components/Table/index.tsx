@@ -40,6 +40,8 @@ type TableProps<T = any> = OverrideProps<
     name?: string;
     settingsPosition?: "top" | "bottom" | "left" | "right" | "rt-corner";
 
+    stickyTop?: number;
+
     onSelect?: (item: TableItem<T>) => void;
     selectedId?: any;
 
@@ -81,6 +83,7 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
     selectedId,
     settingsPosition = "rt-corner",
     selectMultiple,
+    stickyTop,
     ...rest
   } = props;
   const mergedProps = mergeProps(
@@ -205,7 +208,13 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
   // TODO: Unique key error
   return (
     <table {...mergedProps}>
-      <thead>
+      <thead
+        style={
+          typeof stickyTop === "undefined"
+            ? {}
+            : { top: stickyTop, position: "sticky" }
+        }
+      >
         <tr>
           {tableColumns.map((column) => {
             const mergedProps = mergeProps(

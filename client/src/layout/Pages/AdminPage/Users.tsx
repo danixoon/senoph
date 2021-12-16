@@ -20,6 +20,7 @@ import TopBarLayer from "providers/TopBarLayer";
 import React from "react";
 import { api } from "store/slices/api";
 import { extractStatus } from "store/utils";
+import columnTypes from "utils/columns";
 
 export type UsersProps = {};
 
@@ -117,6 +118,7 @@ const Users: React.FC<UsersProps> = (props) => {
     },
     { key: "username", header: "Логин", size: "150px" },
     { key: "name", header: "Имя" },
+    ...columnTypes.entityDates(),
   ];
 
   const [bind] = useInput({});
@@ -170,72 +172,70 @@ const Users: React.FC<UsersProps> = (props) => {
         />
       </PopupLayer>
       <TopBarLayer>
-        {/* <Layout flex="1"> */}
+        <Layout flex="1">
           <Form
             style={{ flexFlow: "row", flex: "1" }}
             input={bind.input}
             onSubmit={(data) => {
-              // onSubmit(data);
               createUser(data as any);
-              // noticeContext.createNotice("Пользователь создан");
             }}
           >
-            {/* <Layout flow="row"> */}
-              <Dropdown
-                required
-                style={{ flex: "1" }}
-                label="Роль"
-                name="role"
-                items={[
-                  { id: "user", label: "Пользователь" },
-                  { id: "admin", label: "Администратор" },
-                ]}
-                {...bind}
-              />
-              <Input
-                required
-                placeholder="Ivan"
-                label="Логин пользователя"
-                {...bind}
-                name="username"
-                style={{ flex: "1" }}
-              />
-              <Input
-                required
-                placeholder="Иван Иванович"
-                label="Имя пользователя"
-                {...bind}
-                name="name"
-                style={{ flex: "1" }}
-              />
-              <Input
-                required
-                label="Пароль"
-                placeholder="*********"
-                {...bind}
-                name="password"
-                style={{ flex: "1" }}
-                type="password"
-              />
-              <Button
-                style={{
-                  marginTop: "auto",
-                  marginLeft: "auto",
-                  padding: "0 4rem",
-                }}
-                margin="md"
-                type="submit"
-                color="primary"
-              >
-                {createStatus.isLoading ? <LoaderIcon /> : "Создать"}
-              </Button>
-            {/* </Layout> */}
+            <Dropdown
+              required
+              style={{ flex: "1" }}
+              label="Роль"
+              name="role"
+              items={[
+                { id: "user", label: "Пользователь" },
+                { id: "admin", label: "Администратор" },
+              ]}
+              {...bind}
+            />
+            <Input
+              required
+              placeholder="Ivan"
+              label="Логин пользователя"
+              {...bind}
+              name="username"
+              style={{ flex: "1" }}
+            />
+            <Input
+              required
+              placeholder="Иван Иванович"
+              label="Имя пользователя"
+              {...bind}
+              name="name"
+              style={{ flex: "1" }}
+            />
+            <Input
+              required
+              label="Пароль"
+              placeholder="*********"
+              {...bind}
+              name="password"
+              style={{ flex: "1" }}
+              type="password"
+            />
+            <Button
+              style={{
+                marginTop: "auto",
+                marginLeft: "auto",
+                padding: "0 4rem",
+              }}
+              margin="md"
+              type="submit"
+              color="primary"
+            >
+              {createStatus.isLoading ? <LoaderIcon /> : "Создать"}
+            </Button>
           </Form>
-        {/* </Layout> */}
+          <Header align="right">
+            Список пользователей ({users.items.length})
+          </Header>
+        </Layout>
       </TopBarLayer>
-      <Header bottom align="right">Список пользователей ({users.items.length})</Header>
       <WithLoader status={users.status}>
-        <Table items={tableItems} columns={columns} />
+        <Table stickyTop={91} items={tableItems} columns={columns} />
       </WithLoader>
     </>
   );

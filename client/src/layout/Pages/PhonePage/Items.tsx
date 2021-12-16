@@ -88,6 +88,7 @@ export const getDefaultColumns: (
     sortable: true,
     size: "50px",
   },
+  ...columns.entityDates(),
   columns.author({ getUser }),
 ];
 
@@ -183,7 +184,7 @@ const Items: React.FC<{
         </Popup>
       </PopupLayer>
       <Table
-        // {...bind}
+        stickyTop={51}
         selectedId={selectedId}
         onSelect={onSelect}
         onSort={sorting.onSort}

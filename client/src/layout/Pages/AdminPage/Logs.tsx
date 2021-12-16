@@ -19,6 +19,10 @@ import columns from "utils/columns";
 import { useTogglePayloadPopup } from "hooks/useTogglePopup";
 import PopupLayer from "providers/PopupLayer";
 import Span from "components/Span";
+import { usePaginator } from "hooks/usePaginator";
+import { parseItems } from "store/utils";
+import Paginator from "components/Paginator";
+import TopBarLayer from "providers/TopBarLayer";
 
 export type LogsProps = {};
 
@@ -46,13 +50,15 @@ const DetailsPopup: React.FC<PopupProps & { payload?: any }> = (props) => {
   );
 };
 
-const useContainer = () => {
-  const logs = api.useFetchLogsQuery({});
+const pageItems = 30;
+
+const useContainer = (offset: number) => {
+  const logs = parseItems(api.useFetchLogsQuery({ offset, amount: pageItems }));
 
   const getUser = useAuthor();
 
   return {
-    logs: { ...logs, items: logs.data?.items ?? [] },
+    logs,
     getUser,
   };
 };
@@ -101,7 +107,15 @@ const resolveTargetHref = (target: DB.LogTarget, id: number) => {
 };
 
 const Logs: React.FC<LogsProps> = (props) => {
-  const { logs, getUser } = useContainer();
+  const [offset, setOffset] = React.useState(0);
+  const { logs, getUser } = useContainer(offset);
+
+  const { currentPage, maxPage } = usePaginator(
+    offset,
+    setOffset,
+    logs.data.total,
+    pageItems
+  );
 
   const tableColumns: TableColumn<DB.LogAttributes>[] = [
     {
@@ -146,18 +160,18 @@ const Logs: React.FC<LogsProps> = (props) => {
         )),
       // size: "150px",
     },
-    columns.author({ getUser }),
     {
       key: "createdAt",
       header: "Время",
       type: "date",
       // size: "150px",
     },
+    columns.author({ getUser }),
   ];
 
   const [bind] = useInput({});
 
-  const tableItems = logs.items.map((log) => log);
+  const tableItems = logs.data.items.map((log) => log);
 
   const { state: payload, ...detailsPopup } = useTogglePayloadPopup();
 
@@ -169,6 +183,19 @@ const Logs: React.FC<LogsProps> = (props) => {
       <PopupLayer>
         <DetailsPopup {...detailsPopup} payload={payload} />
       </PopupLayer>
+      <TopBarLayer>
+        {/* <Layout flex="1"> */}
+          <Paginator
+            style={{ marginRight: "auto" }}
+            current={currentPage}
+            max={maxPage}
+            min={1}
+            size={5}
+            onChange={(page) => setOffset((page - 1) * pageItems)}
+          />
+          <Header align="right">История операций ({logs.data.total})</Header>
+        {/* </Layout> */}
+      </TopBarLayer>
       <Layout>
         {/* <Form
           input={bind.input}
@@ -201,8 +228,8 @@ const Logs: React.FC<LogsProps> = (props) => {
           </Layout>
         </Form> */}
         {/* <Hr /> */}
-        {/* <Header align="right">История операций ({logs.items.length})</Header> */}
-        <Table items={tableItems} columns={tableColumns} />
+
+        <Table stickyTop={45} items={tableItems} columns={tableColumns} />
       </Layout>
     </>
   );

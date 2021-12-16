@@ -149,40 +149,43 @@ const Departments: React.FC<BackupsProps> = (props) => {
   return (
     <>
       <TopBarLayer>
-        <Checkbox
-          containerProps={{
-            style: { marginLeft: "auto", marginRight: "0.5rem" },
-          }}
-          label="Без проверки"
-          name="unsafe"
-          {...bindUnsafe}
-        />
-        <Link
-          size="sm"
-          color="primary"
-          onClick={() => {
-            if (ref) ref.value = "";
-            ref?.click();
-          }}
-        >
-          Импортировать резервную копию <Icon.Upload color="primary" />
-        </Link>
-        <Input
-          hidden
-          name="file"
-          type="file"
-          inputProps={{ accept: ".sbac" }}
-          {...bindImport}
-        />
-      </TopBarLayer>
-      <Layout flex="1">
-        <Form
-          input={bind.input}
-          onSubmit={(data) => {
-            backups.create.exec({ ...data, tag: data.tag.toUpperCase() });
-          }}
-        >
-          <Layout flow="row">
+        <Layout flex="1">
+          <Layout flow="row" style={{ alignItems: "center" }}>
+            <Checkbox
+              containerProps={{
+                style: { marginLeft: "auto", marginRight: "0.5rem" },
+              }}
+              label="Без проверки"
+              name="unsafe"
+              {...bindUnsafe}
+            />
+            <Link
+              size="sm"
+              color="primary"
+              onClick={() => {
+                if (ref) ref.value = "";
+                ref?.click();
+              }}
+            >
+              Импортировать резервную копию <Icon.Upload color="primary" />
+            </Link>
+            <Input
+              hidden
+              name="file"
+              type="file"
+              inputProps={{ accept: ".sbac" }}
+              {...bindImport}
+            />
+          </Layout>
+          <Hr />
+          <Form
+            style={{ flex: "1", flexFlow: "row" }}
+            input={bind.input}
+            onSubmit={(data) => {
+              backups.create.exec({ ...data, tag: data.tag.toUpperCase() });
+            }}
+          >
+            {/* <Layout flow="row"> */}
             <Input
               check={(v) => {
                 if (!v) return false;
@@ -217,22 +220,20 @@ const Departments: React.FC<BackupsProps> = (props) => {
             >
               {backups.create.status.isLoading ? <LoaderIcon /> : "Создать"}
             </Button>
-          </Layout>
-        </Form>
-        <Hr />
-        <WithLoader status={backups.status}>
-          <InfoBanner
-            disabled={backups.data.total > 0}
-            text="Резервные копии отсутствуют."
-          >
-            <Header align="right">
-              Список резервных копий ({backups.data.items.length})
-            </Header>
-
-            <Table items={backups.data.items} columns={columns} />
-          </InfoBanner>
-        </WithLoader>
-      </Layout>
+          </Form>
+          <Header align="right">
+            Список резервных копий ({backups.data.items.length})
+          </Header>
+        </Layout>
+      </TopBarLayer>
+      <WithLoader status={backups.status}>
+        <InfoBanner
+          disabled={backups.data.total > 0}
+          text="Резервные копии отсутствуют."
+        >
+          <Table stickyTop={127} items={backups.data.items} columns={columns} />
+        </InfoBanner>
+      </WithLoader>
     </>
   );
 };

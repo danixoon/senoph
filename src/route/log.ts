@@ -29,19 +29,23 @@ router.get(
   "/logs",
   access("admin"),
   validate({
-    query: {},
+    query: {
+      amount: tester().isNumber(),
+      offset: tester().isNumber(),
+    },
   }),
   transactionHandler(async (req, res) => {
-    const filter = new Filter({}); //.add("id", Op.in);
-    const logs = await Log.findAll({
-      where: filter.where,
-      include: [LogTarget],
+    const { amount, offset } = req.query;
+    const logs = await Log.findAndCountAll({
+      include: [{ model: LogTarget, subQuery: true }],
+      offset,
+      limit: amount,
     });
 
     res.send(
       prepareItems(
-        logs.map((log) => log as Api.Models.Log),
-        logs.length,
+        logs.rows.map((log) => log as Api.Models.Log),
+        logs.count,
         0
       )
     );

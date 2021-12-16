@@ -131,65 +131,71 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
         <PhoneCreatePopupContainer {...createPopup} />
       </PopupLayer>
       <TopBarLayer>
-        <Paginator
-          onChange={(page) =>
-            dispatch(
-              updateFilter({
-                offset: (page - 1) * filter.pageItems,
-              })
-            )
-          }
-          min={1}
-          max={maxPage}
-          size={5}
-          current={currentPage}
-        />
-        <Header
-          align="center"
-          style={{ margin: "auto" }}
-          className="margin_md page__header"
+        <Layout
+          flow="row"
+          flex="1"
+          style={{ height: "30px", alignItems: "center" }}
         >
-          {/* <span style={{ marginRight: "auto" }}> */}
-          {fetchStatus.isLoading && (
-            <LoaderIcon style={{ marginRight: "0.5rem" }} />
-          )}{" "}
-          Результаты поиска ({totalItems}){/* </span> */}
-        </Header>
-        <RouterSwitch>
-          <Route path={`${path}/edit`}>
-            <ButtonGroup style={{ marginLeft: "auto", marginRight: "1rem" }}>
-              <Button
-                disabled={selectionIdsSet.size === 0}
-                margin="none"
-                onClick={() => selectionPopup.onToggle()}
-              >
-                Выбранное
-              </Button>
-              <Badge margin="none" color="secondary">
-                {selectionIdsSet.size}
-              </Badge>
-            </ButtonGroup>
-          </Route>
-        </RouterSwitch>
-        <Header
-          style={{ marginLeft: mode === "view" ? "auto" : 0, marginRight: 0 }}
-        >
-          Результатов:
-        </Header>
-        <Input
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === "Space")
+          <Paginator
+            onChange={(page) =>
+              dispatch(
+                updateFilter({
+                  offset: (page - 1) * filter.pageItems,
+                })
+              )
+            }
+            min={1}
+            max={maxPage}
+            size={5}
+            current={currentPage}
+          />
+          <Header
+            align="center"
+            style={{ margin: "auto" }}
+            className="margin_md page__header"
+          >
+            {/* <span style={{ marginRight: "auto" }}> */}
+            {fetchStatus.isLoading && (
+              <LoaderIcon style={{ marginRight: "0.5rem" }} />
+            )}{" "}
+            Результаты поиска ({totalItems}){/* </span> */}
+          </Header>
+          <RouterSwitch>
+            <Route path={`${path}/edit`}>
+              <ButtonGroup style={{ marginLeft: "auto", marginRight: "1rem" }}>
+                <Button
+                  disabled={selectionIdsSet.size === 0}
+                  margin="none"
+                  onClick={() => selectionPopup.onToggle()}
+                >
+                  Выбранное
+                </Button>
+                <Badge margin="none" color="secondary">
+                  {selectionIdsSet.size}
+                </Badge>
+              </ButtonGroup>
+            </Route>
+          </RouterSwitch>
+          <Header
+            style={{ marginLeft: mode === "view" ? "auto" : 0, marginRight: 0 }}
+          >
+            Результатов:
+          </Header>
+          <Input
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === "Space")
+                handleTotalPageSelection();
+            }}
+            onBlur={(e) => {
               handleTotalPageSelection();
-          }}
-          onBlur={(e) => {
-            handleTotalPageSelection();
-          }}
-          {...bind}
-          style={{ margin: 0, maxWidth: "50px" }}
-          name="items"
-          placeholder="12"
-          type="number"
-        />
+            }}
+            {...bind}
+            style={{ margin: 0, maxWidth: "50px" }}
+            name="items"
+            placeholder="12"
+            type="number"
+          />
+        </Layout>
       </TopBarLayer>
       <Layout flex="1" flow="row">
         <Layout
