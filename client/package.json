@@ -1,6 +1,6 @@
 {
   "name": "senoph-client",
-  "version": "0.8.9",
+  "version": "0.9.5",
   "main": "./build/index.js",
   "author": "Daniil Bombenkov <danixoon@gmail.com>",
   "scripts": {
