@@ -16,6 +16,7 @@ import {
   tester,
   validate,
   validateSchema,
+  ValidationError,
   Validator,
 } from "@backend/middleware/validator";
 import exceljs from "exceljs";
@@ -326,7 +327,8 @@ const extractRows = (sheet: exceljs.Worksheet) => {
     if (i === 1) return;
     const cells: (string | null)[] = [];
     row.eachCell({ includeEmpty: true }, (cell) => {
-      const value = cell.value?.toString().trim() ?? null;
+      const trimmed = cell.value?.toString().trim() ?? null;
+      const value = trimmed == null ? null : trimmed.replace(/ +(?= )/g, "");
       if (typeof value === "string" && value.length === 0) cells.push(null);
       else cells.push(value);
     });
@@ -446,7 +448,7 @@ const parsePhonesFile = async (book: exceljs.Workbook) => {
         new Date(h.orderDate).getFullYear() ===
           new Date(holding.orderDate).getFullYear() &&
         h.orderKey === holding.orderKey
-    ); 
+    );
 
     if (ex) {
       ex.merge = true;
@@ -494,15 +496,24 @@ router.post(
     const workbook = new exceljs.Workbook();
     await workbook.xlsx.load(file.buffer);
 
-    switch (target) {
-      case "phone":
-        const { phones, holdings } = await parsePhonesFile(workbook);
-        res.send({ phones, holdings });
-        break;
-      default:
-        throw new ApiError(errorType.INVALID_QUERY, {
-          description: "Импорт данного вида недоступен.",
+    try {
+      switch (target) {
+        case "phone":
+          const { phones, holdings } = await parsePhonesFile(workbook);
+          res.send({ phones, holdings });
+          break;
+        default:
+          throw new ApiError(errorType.INVALID_QUERY, {
+            description: "Импорт данного вида недоступен.",
+          });
+      }
+    } catch (err) {
+      if (err instanceof ValidationError) {
+        throw new ApiError(errorType.VALIDATION_ERROR, {
+          description: err.message,
+          ...err,
         });
+      } else throw err;
     }
   })
 );

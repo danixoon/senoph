@@ -70,7 +70,7 @@ export const syncDatabase = async (force: boolean) => {
   }
 };
 
-export const init = async () => {  
+export const init = async () => {
   dbLogger = await fs.open(path.resolve(__dirname, "../../logs/db.log"), "a+");
   sequelize = new Sequelize({
     dialect: "mysql",
@@ -137,9 +137,16 @@ export const init = async () => {
         );
     } else syncDatabase(false);
 
-    // 1141 <-> 1481
-    if (isProd) await fillProdDatabase();
-    else await fillDevDatabase(isFill, 500);
+    try {
+      // 1141 <-> 1481
+      if (isProd) await fillProdDatabase();
+      else await fillDevDatabase(isFill, 500);
+    } catch (err) {
+      logger.error(`Ошибка начального заполнения базы данных: ${err.message}`, {
+        service: "db",
+        payload: err,
+      });
+    }
   }
 
   const backupDirPath = path.resolve(__dirname, "../../backup");

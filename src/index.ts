@@ -40,7 +40,7 @@ export const init = async () => {
     payload: { port },
   });
 
-  app.use(bodyParser.json());
+  app.use(bodyParser.json({ limit: "50mb" }));
   app.use(logRequest());
 
   app.use(
@@ -71,7 +71,7 @@ export const init = async () => {
     await Promise.all([initDb()]);
     logger.info(`Сервер запущен`, {
       service: "server",
-      payload: { port },
+      payload: { port, NODE_ENV: process.env.NODE_ENV },
     });
     isStarted = true;
   });
