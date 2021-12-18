@@ -15,19 +15,22 @@ import { useQueryInput } from "hooks/useQueryInput";
 import TopBarLayer from "providers/TopBarLayer";
 import { getDefaultColumns as getPhonePageColumns } from "../PhonePage/Items";
 import React from "react";
+import restApi from "api";
 import { api } from "store/slices/api";
-import { parseItems, extractStatus } from "store/utils";
+import { parseItems, extractStatus, splitStatus } from "store/utils";
 import { clearObject, getLocalDate } from "utils";
 import { TableColumn } from "components/Table";
 import { CommitContent } from "./Content";
 import Layout from "components/Layout";
 import { useAuthor } from "hooks/misc/author";
+import { useInput } from "hooks/useInput";
+import Hr from "components/Hr";
 
 const useActionsContainer = (
-  query: { status?: CommitStatus; amount?: number; offset?: number } = {}
+  query: { status?: CommitStatus; amount?: number; offset?: number, authorId?: number } = {}
 ) => {
-  const { status, amount, offset } = query;
-  const commits = api.useFetchPhonesCommitQuery({ status, amount, offset });
+  const { status, amount, offset, authorId } = query;
+  const commits = api.useFetchPhonesCommitQuery({ status, amount, offset, authorId });
   const [commitPhone, commitPhoneInfo] = api.useCommitPhoneMutation();
   return {
     commits: parseItems(commits),
@@ -155,62 +158,149 @@ const Actions: React.FC<{}> = (props) => {
     // success: "",
   });
 
-  const { maxPage, currentPage } = usePaginator(offset, setOffset, commits.data.total, 15);
+  const { maxPage, currentPage } = usePaginator(
+    offset,
+    setOffset,
+    commits.data.total,
+    15
+  );
 
   React.useEffect(() => {
     setOffset(0);
   }, [bindQuery.input.status]);
 
+  const users = parseItems(api.useFetchUsersQuery({}));
+  const [bindFilter] = useInput<any>({});
+
+  const [commitAllStatus, setCommitAllStatus] = React.useState(
+    splitStatus("idle")
+  );
+
+  useNotice(commitAllStatus, {
+    loading: "Получение всех средств связи..",
+    success: "Средства связи получены.",
+  });
+
+  const commitAll = async (action: CommitActionType) => {
+    setCommitAllStatus(splitStatus("loading"));
+    restApi
+      .request("get", "/phone/commit", {
+        data: {},
+        params: clearObject({
+          offset: 0,
+          amount: 100000,
+          status: bindQuery.input.status as CommitStatus,
+          authorId: bindFilter.input.authorId,
+        }),
+      })
+      .then((res) => {
+        setCommitAllStatus(splitStatus("success"));
+        commit({ ids: res.items.map((item) => item.id), action });
+      })
+      .catch((err) => {
+        setCommitAllStatus(err);
+      });
+  };
+
   return (
     <>
       <TopBarLayer>
-        <ButtonGroup>
-          <Button
-            disabled={selectedIds.length === 0 || status.isLoading}
-            margin="none"
-            onClick={() => commit({ ids: selectedIds, action: "approve" })}
-          >
-            Подтвердить
-          </Button>
-          <Badge margin="none" color="secondary" style={{ borderRadius: 0 }}>
-            {status.isLoading ? <LoaderIcon /> : selectedIds.length}
-          </Badge>
-          <Button
-            disabled={selectedIds.length === 0 || status.isLoading}
-            margin="none"
-            onClick={() => commit({ ids: selectedIds, action: "decline" })}
-          >
-            Отменить
-          </Button>
-        </ButtonGroup>
-        <Paginator
-          onChange={(page) => setOffset((page - 1) * 15)}
-          min={1}
-          max={maxPage}
-          size={5}
-          current={currentPage}
-        />
+        <Layout flex="1">
+          <Layout flow="row" flex="1">
+            <Layout flex="1">
+              <Header unsized align="right">Фильтр</Header>
+              <Paginator
+                style={{ marginBottom: "auto", marginRight: "auto" }}
+                onChange={(page) => setOffset((page - 1) * 15)}
+                min={1}
+                max={maxPage}
+                size={5}
+                current={currentPage}
+              />
+              <Dropdown
+                {...bindQuery}
+                label="Статус действия"
+                name="status"
+                items={[
+                  { label: "Удаления", id: "delete-pending" },
+                  { label: "Создания", id: "create-pending" },
+                ]}
+              />
+              <Dropdown
+                {...bindQuery}
+                label="Автор действия"
+                name="authorId"
+                items={users.data.items.map((user) => ({ label: user.name, id: user.id }))}
+              />
+            
+            </Layout>
+            <Hr vertical />
+            <Layout>
+              <ButtonGroup>
+                <Button
+                  disabled={commits.data.total === 0}
+                  margin="none"
+                  onClick={() => commitAll("approve")}
+                >
+                  Подтвердить всё
+                </Button>
+                <Button
+                  disabled={commits.data.total === 0}
+                  margin="none"
+                  onClick={() => commitAll("decline")}
+                >
+                  Отменить всё
+                </Button>
+              </ButtonGroup>
+              <Dropdown
+                {...bindFilter}
+                label="По автору"
+                name="authorId"
+                items={users.data.items.map((user) => ({
+                  label: user.name,
+                  id: user.id,
+                }))}
+              />
+              <Hr />
+              <ButtonGroup>
+                <Button
+                  disabled={selectedIds.length === 0 || status.isLoading}
+                  margin="none"
+                  onClick={() =>
+                    commit({ ids: selectedIds, action: "approve" })
+                  }
+                >
+                  Подтвердить
+                </Button>
+                <Badge
+                  margin="none"
+                  color="secondary"
+                  style={{ borderRadius: 0 }}
+                >
+                  {status.isLoading ? <LoaderIcon /> : selectedIds.length}
+                </Badge>
+                <Button
+                  disabled={selectedIds.length === 0 || status.isLoading}
+                  margin="none"
+                  onClick={() =>
+                    commit({ ids: selectedIds, action: "decline" })
+                  }
+                >
+                  Отменить
+                </Button>
+              </ButtonGroup>
+            </Layout>
+          </Layout>
+          {/* <Hr /> */}
+          <Header align="right">Элементы ({commits.data.total})</Header>
+        </Layout>
       </TopBarLayer>
       <CommitContent
+        stickyTop={162}
         onCommit={(ids, action) => commit({ ids, action })}
         items={commits.data.items}
         columns={columns}
-      >
-        <Layout>
-          <Header unsized bottom align="right">
-            Фильтр
-          </Header>
-          <Dropdown
-            {...bindQuery}
-            label="Статус действия"
-            name="status"
-            items={[
-              { label: "Удаления", id: "delete-pending" },
-              { label: "Создания", id: "create-pending" },
-            ]}
-          />
-        </Layout>
-      </CommitContent>
+      ></CommitContent>
     </>
   );
 };

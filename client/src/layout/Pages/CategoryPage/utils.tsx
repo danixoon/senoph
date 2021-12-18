@@ -22,8 +22,9 @@ export const resolveCategoryName = (category?: CategoryKey) =>
     : categoryNames[category] ?? `Категория ${category}`;
 
 export const getColumns: (
-  getUser: (id?: number | undefined) => Api.Models.User | undefined
-) => TableColumn<Api.Models.Category>[] = (getUser) => {
+  getUser: (id?: number | undefined) => Api.Models.User | undefined,
+  onOpen: (id: number) => void
+) => TableColumn<Api.Models.Category>[] = (getUser, onOpen) => {
   return [
     {
       key: "id",
@@ -68,7 +69,8 @@ export const getColumns: (
           items.push(
             <Link
               onClick={() => {
-                dispatch(updateQuery({ id: item.id }));
+                onOpen(item.id);
+                // dispatch(updateQuery({ id: item.id }));
               }}
               inline
               style={{ float: "right" }}

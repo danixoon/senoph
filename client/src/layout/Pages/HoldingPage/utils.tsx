@@ -64,12 +64,14 @@ export const getTableColumns: (args: {
   departments: Map<number, Api.Models.Department>;
   getUser: (id?: number | undefined) => Api.Models.User | undefined;
   controlMapper: (v: any, item: HoldingTableItem) => React.ReactNode;
+  onOpen: (id: number) => void;
 }) => TableColumn<HoldingTableItem>[] = ({
   status,
   selection,
   departments,
   getUser,
   holders,
+  onOpen,
   controlMapper,
 }) => {
   const columns: TableColumn<HoldingItem>[] = [
@@ -174,12 +176,13 @@ export const getTableColumns: (args: {
           items.push(
             <Link
               onClick={() => {
-                dispatch(
-                  updateQuery({
-                    ...qs.parse(location.search),
-                    selectedId: item.id,
-                  })
-                );
+                onOpen(item.id);
+                // dispatch(
+                //   updateQuery({
+                //     ...qs.parse(location.search),
+                //     selectedId: item.id,
+                //   })
+                // );
               }}
               inline
               style={{ float: "right" }}

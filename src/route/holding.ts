@@ -272,7 +272,7 @@ router.post(
 
 router.put(
   "/holding",
-  access("admin"),
+  access("user"),
   validate({
     query: {
       action: tester().isIn(["add", "remove"]).required(),

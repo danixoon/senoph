@@ -19,6 +19,7 @@ import TopBarLayer from "providers/TopBarLayer";
 import ButtonGroup from "components/ButtonGroup";
 import Button from "components/Button";
 import Badge from "components/Badge";
+import { useNotice } from "hooks/useNotice";
 
 const useContainer = () => {
   const { holders, departments } = useFetchConfigMap();
@@ -57,6 +58,8 @@ const useContainer = () => {
 export const CommitPhoneContent: React.FC<{}> = (props) => {
   const { categories, getUser, commit, commitStatus, departments, holders } =
     useContainer();
+
+  useNotice(commitStatus);
 
   const selection = useSelection(categories as any);
 

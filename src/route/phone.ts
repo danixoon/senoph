@@ -39,18 +39,18 @@ router.delete(
   // owner("phone", (q) => q.query.ids),
   transactionHandler(async (req, res) => {
     const { user } = req.params;
-    const { params } = req;
-    if (!withOwner(params, "phone")) return res.sendStatus(500);
+    const { ids } = req.query;
+    //if (!withOwner(params, "phone")) return res.sendStatus(500);
+    // const { phone } = params;
+    // const phoneIds = phone.map((phone) => phone.id);
 
-    const { phone } = params;
-    const phoneIds = phone.map((phone) => phone.id);
     // TODO: Сделать назначение статуса единоместным
     await Phone.update(
       { status: "delete-pending", statusAt: new Date().toISOString() },
-      { where: { id: { [Op.in]: phoneIds } } }
+      { where: { id: { [Op.in]: ids } } }
     );
 
-    Log.log("phone", phoneIds, "commit", user.id, {});
+    Log.log("phone", ids, "commit", user.id, {});
 
     res.send();
   })
@@ -144,16 +144,18 @@ router.get(
       status: tester().isIn(["delete-pending", "create-pending"]),
       offset: tester().isNumber(),
       amount: tester().isNumber(),
+      authorId: tester().isNumber(),
     },
   }),
   transactionHandler(async (req, res, next) => {
-    const { status, amount, offset } = req.query;
+    const { status, amount, offset, authorId } = req.query;
 
     // const filter = new Filter(req.query);
     // filter.add("status");
 
     const filter = new WhereFilter<DB.PhoneAttributes>();
     filter.on("status").optional(Op.eq, status);
+    filter.on("authorId").optional(Op.eq, authorId);
 
     const phones = await Phone.scope("commit").findAndCountAll({
       where: filter.where,
@@ -199,6 +201,7 @@ router.get(
       holderId: tester().isNumber(),
       inventoryKey: tester(),
       offset: tester().isNumber(),
+      authorId: tester().isNumber(),
       phoneModelId: tester().isNumber(),
       phoneTypeId: tester().isNumber(),
       accountingDate: tester().isDate(),
@@ -227,6 +230,7 @@ router.get(
       accountingDate,
       comissioningDate,
       assemblyDate,
+      authorId,
       ids,
       exceptIds,
     } = req.query;
@@ -255,6 +259,7 @@ router.get(
     filter.on("factoryKey").optional(Op.substring, factoryKey);
     filter.on("inventoryKey").optional(Op.substring, inventoryKey);
     filter.on("accountingDate").optional(Op.eq, accountingDate);
+    filter.on("authorId").optional(Op.eq, authorId);
     // filter
     // .on("assemblyDate")
     // .optional(

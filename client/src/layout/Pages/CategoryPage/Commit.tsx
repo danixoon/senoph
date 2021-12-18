@@ -17,6 +17,10 @@ import Badge from "components/Badge";
 import Button from "components/Button";
 import ButtonGroup from "components/ButtonGroup";
 import TopBarLayer from "providers/TopBarLayer";
+import { useTogglePayloadPopup } from "hooks/useTogglePopup";
+import PhonesSelectionPopup from "layout/Popups/PhonesSelectionPopup";
+import PopupLayer from "providers/PopupLayer";
+import { useNotice } from "hooks/useNotice";
 
 const useContainer = () => {
   const fetchCategories = api.useFetchCategoriesQuery({ pending: true });
@@ -26,7 +30,7 @@ const useContainer = () => {
 
   return {
     categories: parseItems(fetchCategories),
-    category: { commit: commitCategory, status },
+    category: { commit: commitCategory, status: extractStatus(status) },
   };
 };
 
@@ -35,6 +39,8 @@ export const CommitContent: React.FC<{}> = (props) => {
 
   const handleCommit = (action: CommitActionType, ids: number[]) =>
     !category.status.isLoading && category.commit({ action, ids });
+
+  useNotice(category.status);
 
   const selection = useSelection<number>(categories.data.items);
 
@@ -56,6 +62,7 @@ export const CommitContent: React.FC<{}> = (props) => {
   };
 
   const getUser = useAuthor();
+  const phonesPopup = useTogglePayloadPopup();
 
   return (
     <>
@@ -67,6 +74,12 @@ export const CommitContent: React.FC<{}> = (props) => {
         />
       ) : (
         <>
+          <PopupLayer>
+            <PhonesSelectionPopup
+              {...phonesPopup}
+              holdingId={phonesPopup.state}
+            />
+          </PopupLayer>
           <TopBarLayer>
             <ButtonGroup>
               <Button
@@ -91,8 +104,7 @@ export const CommitContent: React.FC<{}> = (props) => {
               </Badge>
               <Button
                 disabled={
-                  selection.selection.length === 0 ||
-                  category.status.isLoading
+                  selection.selection.length === 0 || category.status.isLoading
                 }
                 margin="none"
                 onClick={() => handleCommit("decline", selection.selection)}
@@ -104,7 +116,7 @@ export const CommitContent: React.FC<{}> = (props) => {
           <Table
             columns={[
               actionBox,
-              ...getColumns(getUser),
+              ...getColumns(getUser, (id) => phonesPopup.onToggle(true, id)),
               columns.selection({ selection }),
             ]}
             items={categories.data.items}

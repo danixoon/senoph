@@ -195,6 +195,13 @@ export const ViewContent: React.FC<{}> = (props) => {
           >
             <Input
               {...bindFilter}
+              blurrable
+              name="ids"
+              label="ID"
+              placeholder="1234"
+            />
+            <Input
+              {...bindFilter}
               name="actKey"
               label="Номер акта"
               placeholder="1234"
@@ -251,9 +258,12 @@ export const ViewContent: React.FC<{}> = (props) => {
         ) : (
           <>
             <Table
-              stickyTop={145}
+              stickyTop={136}
               items={categories.data.items}
-              columns={[actionBox, ...getColumns(getUser)]}
+              columns={[
+                actionBox,
+                ...getColumns(getUser, (id) => phonesPopup.onToggle(true, id)),
+              ]}
               onSelect={onSelect}
             />
           </>

@@ -10,7 +10,7 @@ import Commit, {
   validActionTypes,
   validTargetNames,
 } from "@backend/db/models/commit.model";
-import { Filter } from "@backend/utils/db";
+import { Filter, WhereFilter } from "@backend/utils/db";
 import { Op } from "sequelize";
 import { getModel } from "../db";
 import { transactionHandler, prepareItems } from "../utils";
@@ -21,6 +21,7 @@ import Category from "@backend/db/models/category.model";
 import Log from "@backend/db/models/log.model";
 import HoldingPhone from "@backend/db/models/holdingPhone.model";
 import CategoryPhone from "@backend/db/models/categoryPhone.model";
+import Change from "@backend/db/models/change.model";
 
 const router = AppRouter();
 
@@ -29,10 +30,19 @@ router.get(
   access("user"),
   validate({ query: { target: tester().required() } }),
   async (req, res) => {
-    const { id } = req.params.user;
+    // const { id } = req.params.user;
     const { target } = req.query;
-    const changes = Object.entries(await getChanges(id, target)).reduce(
-      (acc, [key, value]) => [...acc, { id: Number(key), ...value }],
+    const changes = Object.entries(await getChanges(target)).reduce(
+      (acc, [authorId, value]) => [
+        ...acc,
+        ...Object.entries(value).reduce(
+          (acc, [targetId, changes]) => [
+            ...acc,
+            { ...changes, id: Number(targetId), authorId: Number(authorId) },
+          ],
+          []
+        ),
+      ],
       [] as any[]
     );
 
@@ -40,10 +50,10 @@ router.get(
   }
 );
 
-// ???
+// Подтверждение изменения?
 router.put(
   "/commit",
-  access("user"),
+  access("admin"),
   validate({
     query: {
       target: tester().required(),
@@ -52,6 +62,7 @@ router.put(
   }),
   // TODO: Сделать проверку на владельца изменений
   transactionHandler(async (req, res, next) => {
+    const { user } = req.params;
     const { target, targetId } = req.query;
     const { id } = req.params.user;
 
@@ -87,6 +98,7 @@ router.put(
 //   }
 // );
 
+// Создание изменения
 router.post(
   "/commit",
   access("user"),
@@ -110,7 +122,7 @@ router.post(
 
 router.put(
   "/commit/holding",
-  access("user"),
+  access("admin"),
   validate({
     body: {
       action: tester().isIn(["approve", "decline"]).required(),
@@ -148,7 +160,7 @@ router.put(
 
 router.put(
   "/commit/holding/phone",
-  access("user"),
+  access("admin"),
   validate({
     body: {
       action: tester().isIn(["approve", "decline"]).required(),
@@ -205,7 +217,7 @@ router.put(
 
 router.put(
   "/commit/category/phone",
-  access("user"),
+  access("admin"),
   validate({
     body: {
       action: tester().isIn(["approve", "decline"]).required(),
@@ -265,7 +277,7 @@ router.put(
 
 router.put(
   "/commit/category",
-  access("user"),
+  access("admin"),
   validate({
     body: {
       action: tester().isIn(["approve", "decline"]).required(),
@@ -333,7 +345,7 @@ router.put(
 
 router.put(
   "/commit/phone",
-  access("user"),
+  access("admin"),
   validate({
     body: {
       action: tester().isIn(["approve", "decline"]).required(),
@@ -354,10 +366,11 @@ router.put(
     const { ids, action } = req.body;
     const { params } = req;
 
-    if (!withOwner(params, "phone") || !withUser(params))
-      return next(new ApiError(errorType.INTERNAL_ERROR));
+    const phones = await Phone.unscoped().findAll({
+      where: { id: { [Op.in]: ids } },
+    });
 
-    const { phone: phones, user } = params;
+    const { user } = params;
 
     await Promise.all(
       phones.map(async (phone) => {
@@ -412,12 +425,30 @@ router.delete(
   // owner("phone", (r) => r.query.targetId),
   convertValues({ keys: (c) => c.toArray().value }),
   transactionHandler(async (req, res) => {
-    const { id } = req.params.user;
+    const { id, role } = req.params.user;
     const { target, targetId, keys } = req.query;
 
+    if (role === "user") {
+      const filter = new WhereFilter<DB.ChangeAttributes>();
+      filter.on("target").optional(Op.eq, target);
+      filter.on("targetId").optional(Op.eq, targetId);
+      filter.on("userId").optional(Op.not, id);
+      filter.on("column").optional(Op.in, keys);
+      const changes = await Change.unscoped().findAll({
+        where: filter.where,
+      });
+
+      if (changes.length > 0)
+        throw new ApiError(errorType.ACCESS_DENIED, {
+          description:
+            "Удалить изменение невозможно т.к. вы не являетесь его автором.",
+        });
+    }
+
     const updater = getUpdater(target, targetId, id);
-    if (!Array.isArray(keys)) await updater.clearAll();
-    else await updater.clear(...keys);
+    if (!Array.isArray(keys))
+      await updater.clearAll(role === "admin" ? null : id);
+    else await updater.clear(role === "admin" ? null : id, ...keys);
 
     Log.log(target, [targetId], "commit", id, { target, targetId, keys });
 

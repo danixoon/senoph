@@ -14,6 +14,10 @@ import Button from "components/Button";
 import Badge from "components/Badge";
 import { useSelection } from "../../../hooks/useSelection";
 import { useAuthor } from "hooks/misc/author";
+import { useTogglePayloadPopup } from "hooks/useTogglePopup";
+import PhonesSelectionPopup from "layout/Popups/PhonesSelectionPopup";
+import PopupLayer from "providers/PopupLayer";
+import { useNotice } from "hooks/useNotice";
 
 const useContainer = () => {
   const holdings = useHoldingWithHistory({ status: "pending" });
@@ -39,8 +43,12 @@ const CommitContent: React.FC<{}> = (props) => {
   const selection = useSelection(holdings.data.items);
 
   const getUser = useAuthor();
+  const phonesPopup = useTogglePayloadPopup();
+
+  useNotice(holding.commit.status);
 
   const columns = getTableColumns({
+    onOpen: (id) => phonesPopup.onToggle(true, id),
     getUser,
     holders,
     departments,
@@ -68,6 +76,12 @@ const CommitContent: React.FC<{}> = (props) => {
         />
       ) : (
         <>
+          <PopupLayer>
+            <PhonesSelectionPopup
+              {...phonesPopup}
+              holdingId={phonesPopup.state}
+            />
+          </PopupLayer>
           <TopBarLayer>
             <ButtonGroup>
               <Button
@@ -88,7 +102,6 @@ const CommitContent: React.FC<{}> = (props) => {
                 {holding.commit.status.isLoading ? (
                   <LoaderIcon />
                 ) : (
-                  
                   selection.selection.length
                 )}
               </Badge>
@@ -104,7 +117,7 @@ const CommitContent: React.FC<{}> = (props) => {
               </Button>
             </ButtonGroup>
           </TopBarLayer>
-          <Table columns={columns} items={holdings.data.items} />
+          <Table stickyTop={41} columns={columns} items={holdings.data.items} />
         </>
       )}
     </>

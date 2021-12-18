@@ -36,6 +36,8 @@ const CategoryItem: React.FC<{
     weight: "bold",
   } as Pick<LabelProps, "style" | "weight">;
 
+  const date = new Date(props.actDate).toISOString().split("T")[0];
+
   return (
     <Layout
       flow="column"
@@ -49,7 +51,9 @@ const CategoryItem: React.FC<{
           </Link>{" "}
           от
         </Label>
-        <Link>{actDate.toLocaleDateString()}</Link>
+        <Link href={`/category/view?actDate=${date}`}>
+          {actDate.toLocaleDateString()}
+        </Link>
       </Layout>
       <Layout flow="row nowrap">
         <Badge onClick={() => {}} className="category-item__level">

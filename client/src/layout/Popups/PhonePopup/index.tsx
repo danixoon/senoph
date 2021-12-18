@@ -96,7 +96,7 @@ const Content: React.FC<
     (phone.categories?.length ?? 0) > 0 ? (
       phone.categories?.map((cat) => (
         <CategoryItem
-          onSelect={() => dispatch(push(`/category/view?id=${cat.id}`))}
+          onSelect={() => dispatch(push(`/category/view?ids=${cat.id}`))}
           key={cat.id}
           deletable={edit}
           actUrl={cat.actUrl}

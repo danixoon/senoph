@@ -65,46 +65,51 @@ const RootLayout: React.FC<{}> = (props) => {
         ) : (
           <>
             <SideBarContainer />
+            {/* <Layout flex="1" style={{ position: "relative" }}> */}
+
             <Layout flow="column" flex="1" className="page-content">
               <TopBarContainer ref={topBarRef} />
-              <TopBarContext.Provider value={ref}>
-                <Switch>
-                  <Route exact path="/">
-                    <Layout
-                      style={{
-                        flex: 1,
-                        justifyContent: "center",
-                        alignItems: "center",
-                      }}
-                    >
-                      <Span> Добро пожаловать, {user.name}! </Span>
-                    </Layout>
-                  </Route>
-                  <Route path="/phone/create">
-                    <PhonePageCreate />
-                  </Route>
-                  <Route path="/phone/commit">
-                    <CommitPage />
-                  </Route>
-                  <Route path="/phone">
-                    <PhonePageContainer />
-                  </Route>
-                  <Route path="/holding">
-                    <HoldingPage />
-                  </Route>
-                  <Route path="/category">
-                    <CategoryPage />
-                  </Route>
-                  <Route path="/admin">
-                    {user.role === "admin" ? (
-                      <AdminPage />
-                    ) : (
-                      <Redirect to="/" />
-                    )}
-                  </Route>
-                </Switch>
-              </TopBarContext.Provider>
+              <Layout flex="1" style={{ zIndex: 1 }}>
+                <TopBarContext.Provider value={ref}>
+                  <Switch>
+                    <Route exact path="/">
+                      <Layout
+                        style={{
+                          flex: 1,
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                      >
+                        <Span> Добро пожаловать, {user.name}! </Span>
+                      </Layout>
+                    </Route>
+                    <Route path="/phone/create">
+                      <PhonePageCreate />
+                    </Route>
+                    <Route path="/phone/commit">
+                      <CommitPage />
+                    </Route>
+                    <Route path="/phone">
+                      <PhonePageContainer />
+                    </Route>
+                    <Route path="/holding">
+                      <HoldingPage />
+                    </Route>
+                    <Route path="/category">
+                      <CategoryPage />
+                    </Route>
+                    <Route path="/admin">
+                      {user.role === "admin" ? (
+                        <AdminPage />
+                      ) : (
+                        <Redirect to="/" />
+                      )}
+                    </Route>
+                  </Switch>
+                </TopBarContext.Provider>
+              </Layout>
             </Layout>
+            {/* </Layout> */}
           </>
         )}
       </Route>

@@ -11,18 +11,17 @@ type CommitItem = {
 type CommitContentProps = {
   columns: TableColumn[];
   items: CommitItem[];
+  stickyTop?: number;
   onCommit: (itemIds: any[], action: CommitActionType) => void;
 };
 
 export const CommitContent: React.FC<CommitContentProps> = (props) => {
-  const { children, columns, items } = props;
+  const { children, stickyTop, columns, items } = props;
   return (
     <Layout>
       {children}
-      <Hr />
-      <Header align="right">Элементы ({items.length})</Header>
       <Layout>
-        <Table columns={columns} items={items} />
+        <Table stickyTop={stickyTop} columns={columns} items={items} />
       </Layout>
     </Layout>
   );

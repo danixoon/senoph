@@ -100,7 +100,7 @@ const PhonePopupContainer: React.FC<PhonePopupContainerProps> = (props) => {
         changes={changes}
         makeChanges={makeChanges}
         undoChanges={undoChanges}
-        onSelectHolding={(id) => dispatch(push(`/holding/view?id=${id}`))}
+        onSelectHolding={(id) => dispatch(push(`/holding/view?ids=${id}`))}
         onDeleteCategory={(id) => deleteCategory({ id })}
         onDelete={() => (phone ? deletePhone({ ids: [phone.id] }) : null)}
         isEditMode={mode === "edit"}

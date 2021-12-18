@@ -18,6 +18,7 @@ import Badge from "components/Badge";
 import Button from "components/Button";
 import columnTypes from "utils/columns";
 import { useAuthor } from "hooks/misc/author";
+import { useNotice } from "hooks/useNotice";
 
 const useContainer = () => {
   const { holders, departments } = useFetchConfigMap();
@@ -60,6 +61,8 @@ const CommitPhoneContent: React.FC<{}> = (props) => {
     useContainer();
 
   const selection = useSelection(holdings as any);
+
+  useNotice(commitStatus);
 
   const columns: TableColumn<ArrayElement<typeof holdings>>[] = [
     {
@@ -217,7 +220,7 @@ const CommitPhoneContent: React.FC<{}> = (props) => {
               </Button>
             </ButtonGroup>
           </TopBarLayer>
-          <Table columns={columns} items={holdings} />
+          <Table stickyTop={41} columns={columns} items={holdings} />
         </>
       )}
     </>

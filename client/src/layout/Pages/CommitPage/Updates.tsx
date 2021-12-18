@@ -17,17 +17,26 @@ import { getDefaultColumns as getPhonePageColumns } from "../PhonePage/Items";
 import React from "react";
 import Layout from "components/Layout";
 import { api } from "store/slices/api";
-import { parseItems, extractStatus, mergeStatuses, orStatus } from "store/utils";
+import {
+  parseItems,
+  extractStatus,
+  mergeStatuses,
+  orStatus,
+} from "store/utils";
 import { clearObject, getLocalDate, groupBy } from "utils";
 import { TableColumn } from "components/Table";
 import { CommitContent } from "./Content";
 import InfoBanner from "components/InfoBanner";
 import WithLoader from "components/WithLoader";
 import Link from "components/Link";
+import columns from "utils/columns";
+import { useAuthor } from "hooks/misc/author";
 
 const useContainer = () => {
   const [approve, approveInfo] = api.useCommitChangesApproveMutation();
   const [decline, declineInfo] = api.useCommitChangesDeclineMutation();
+
+  const getUser = useAuthor();
 
   const changes = parseItems(api.useFetchChangesQuery({ target: "phone" }));
   const ids = changes.data.items.map((v) => v.id);
@@ -42,13 +51,16 @@ const useContainer = () => {
 
   const updates = changes.data.items.map((update, i) => ({
     id: update.id,
+    authorId: update.authorId,
     update,
-    original: phones.data.items[i],
+    original: phones.data.items.find((item) => item.id == update.id),
   }));
 
   return {
+    getUser,
     updates: {
       items: updates,
+      total: changes.data.total,
       status: mergeStatuses(changes.status, phones.status),
     },
     update: {
@@ -81,12 +93,13 @@ const UpdatedItem: React.FC<{
   );
 };
 const Updates: React.FC<{}> = (props) => {
-  const { updates, update } = useContainer();
+  const { updates, update, getUser } = useContainer();
 
   useNotice(update.status);
 
   type Item = ArrayElement<typeof updates.items>;
-  const columns: TableColumn<Item>[] = [
+
+  const tableColumns: TableColumn<Item>[] = [
     {
       key: "actions",
       header: "",
@@ -187,6 +200,7 @@ const Updates: React.FC<{}> = (props) => {
         />
       ),
     },
+    columns.author({ getUser }),
   ];
 
   return (
@@ -226,10 +240,11 @@ const Updates: React.FC<{}> = (props) => {
         disabled={updates.items.length > 0 || updates.status.isLoading}
       >
         <WithLoader status={updates.status}>
+          <Header align="right">Элементы ({updates.total})</Header>
           <CommitContent
             onCommit={(ids, action) => {}}
             items={updates.items}
-            columns={columns}
+            columns={tableColumns}
           >
             {/* <Layout>
           <Header unsized bottom align="right">

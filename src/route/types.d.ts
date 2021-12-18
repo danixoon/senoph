@@ -200,7 +200,12 @@ declare namespace Api {
         >)
       | (() => RouteHandler<
           "/commit",
-          ItemsResponse<{ id: number; createdAt?: string; [key: string]: any }>,
+          ItemsResponse<{
+            id: number;
+            authorId: number;
+            createdAt?: string;
+            [key: string]: any;
+          }>,
           { target: ChangesTargetName },
           {}
         >)
@@ -226,6 +231,7 @@ declare namespace Api {
             holderId: number;
             category: number;
             sortKey: string;
+            authorId: number;
             sortDir: "asc" | "desc";
             exceptIds: number[];
             ids: number[];
@@ -250,13 +256,18 @@ declare namespace Api {
       | (() => RouteHandler<
           "/phone/commit",
           ItemsResponse<Api.Models.Phone>,
-          { status?: CommitStatus; offset?: number; amount?: number },
+          {
+            status?: CommitStatus;
+            offset?: number;
+            amount?: number;
+            authorId?: number;
+          },
           {}
         >)
       | (() => RouteHandler<
           "/phone/holdings",
           ItemsResponse<Api.Models.Holding>,
-        { phoneIds: number[]; orderDate?: string; orderKey?: string },
+          { phoneIds: number[]; orderDate?: string; orderKey?: string },
           {}
         >)
       | (() => RouteHandler<

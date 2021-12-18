@@ -247,7 +247,7 @@ router.get(
 
 router.put(
   "/category",
-  access("admin"),
+  access("user"),
   validate({
     query: {
       action: tester().isIn(["add", "remove"]).required(),

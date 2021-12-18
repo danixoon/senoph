@@ -102,7 +102,7 @@ router.put(
 
 router.get(
   "/accounts",
-  access("admin"),
+  access("user"),
   validate({
     query: {},
   }),

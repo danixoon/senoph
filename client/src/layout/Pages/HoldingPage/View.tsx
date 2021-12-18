@@ -82,6 +82,7 @@ const ViewContent: React.FC<{}> = (props) => {
   const getUser = useAuthor();
 
   const columns = getTableColumns({
+    onOpen: (id) => phonesPopup.onToggle(true, id),
     status: deleteHolding.status,
     holders,
     departments,

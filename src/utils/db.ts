@@ -196,6 +196,15 @@ export const fillDevDatabase = async (full?: boolean, size: number = 150) => {
     role: "admin",
   });
 
+  // if (adminUser) return;
+  const user2 = await User.create({
+    name: "Чел",
+    username: "test",
+    passwordHash:
+      "$2b$13$PwLX48c7HTCmRfqbsd8pq.f6BCkNYnQcyfYg95hx7p2jgLCd2jkqC",
+    role: "user",
+  });
+
   if (!full) return;
 
   const depsNames = [
@@ -322,7 +331,7 @@ export const fillDevDatabase = async (full?: boolean, size: number = 150) => {
     "Телур-20",
     "Телефон 73",
     "Телефон 75",
-  ]; 
+  ];
   const models = await PhoneModel.bulkCreate(
     modelsNames.map((model) => ({
       name: model,
@@ -331,7 +340,7 @@ export const fillDevDatabase = async (full?: boolean, size: number = 150) => {
     }))
   );
 
-  // return;
+  return;
 
   const phonesData = mapGenerated(size, () => ({
     inventoryKey: uuid(),

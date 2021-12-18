@@ -27,7 +27,7 @@ import Checkbox from "components/Checkbox";
 import { useCreatePhones } from "hooks/api/useCreatePhones";
 import TopBarLayer from "providers/TopBarLayer";
 import { useAppDispatch } from "store";
-import { extractStatus, parseItems } from "store/utils";
+import { extractStatus, parseItems, splitStatus } from "store/utils";
 import { api } from "store/slices/api";
 import { getDefaultColumns } from "./Items";
 import Table, { TableColumn } from "components/Table";
@@ -249,6 +249,8 @@ const Create: React.FC<{}> = (props) => {
     createPhones(phones.map((phone) => phone.payload));
   };
 
+  // useNotice()
+
   useNotice(updateHoldingStatus, {
     loading: "Производится привязка к движению..",
   });
@@ -314,18 +316,26 @@ const Create: React.FC<{}> = (props) => {
   const noticeContext = React.useContext(NoticeContext);
   const { models, holders } = useFetchConfigMap();
 
+  const [importStatus, setImportStatus] = React.useState(splitStatus("idle"));
+
+  useNotice(importStatus, {
+    loading: "Производится обработка файла..",
+    success: "Файл успешно обработан.",
+  });
+
   React.useEffect(() => {
     const file = (bindImport.files.file ?? [])[0];
     if (file) {
+      setImportStatus(splitStatus("loading"));
       importPhone(file)
         .catch((err) => {
           const { error } = err as { error: Api.Error };
-          noticeContext.createNotice("Ошибка импорта: " + error.description);
+          setImportStatus(splitStatus(error));
           setImport({ file: null });
         })
         .then((result) => {
           if (!isResponse(result)) return;
-
+          setImportStatus(splitStatus("success"));
           const { phones, holdings } = result;
           setCreations({
             holdings,
@@ -577,17 +587,23 @@ const Create: React.FC<{}> = (props) => {
             setSearch({ view: holdingMode ? "phone" : "holding" })
           }
         />
+
         <Link
           style={{ marginLeft: "auto", marginRight: "0.5rem" }}
           size="sm"
           color="primary"
+          onMouseDown={(e) => ref && (ref.value = "")}
           onClick={(e) => {
             ref?.click();
-            if (ref) ref.value = "";
+          }}
+          altLabel={{
+            text: "Перед операцией убедитесь в корректном порядке столбцов",
+            position: "bottom"
           }}
         >
           Импорт <Icon.Database color="primary" />
         </Link>
+        {importStatus.isLoading && <LoaderIcon />}
         <Link native size="sm" color="primary" href="/api/import?entity=phone">
           Шаблон <Icon.Download color="primary" />
         </Link>
