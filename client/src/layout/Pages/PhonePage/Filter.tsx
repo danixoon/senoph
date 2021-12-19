@@ -49,6 +49,7 @@ const Filter: React.FC<{
           <Icon.ChevronLeft />
         </Button> */}
         <Layout>
+          <Input {...bind} name="ids" label="Идентификаторы" />
           <Dropdown {...bind} name="phoneTypeId" label="Тип СС" items={types} />
           <Dropdown
             {...bind}
@@ -60,7 +61,7 @@ const Filter: React.FC<{
             {...bind}
             name="departmentId"
             label="Подразделение"
-            items={departments}
+            items={[{ id: "null", label: "Без подразделения" }, ...departments]}
           />
           <ClickInput
             {...bind}
@@ -76,6 +77,7 @@ const Filter: React.FC<{
             name="category"
             label="Категория"
             items={[
+              { id: "null", label: "Без категории" },
               { id: "1", label: "I (Прибыло, на гарантии)" },
               { id: "2", label: "II (Нет гарантии, исправно)" },
               { id: "3", label: "III (Неисправно)" },

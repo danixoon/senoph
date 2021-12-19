@@ -18,12 +18,21 @@ import Button from "components/Button";
 import ButtonGroup from "components/ButtonGroup";
 import TopBarLayer from "providers/TopBarLayer";
 import { useTogglePayloadPopup } from "hooks/useTogglePopup";
-import PhonesSelectionPopup from "layout/Popups/PhonesSelectionPopup";
+import PhonesHoldingSelectionPopup from "layout/Popups/PhonesHoldingSelectionPopup";
 import PopupLayer from "providers/PopupLayer";
 import { useNotice } from "hooks/useNotice";
+import WithLoader from "components/WithLoader";
+import Input from "components/Input";
+import { useQueryInput } from "hooks/useQueryInput";
+import { clearObject } from "utils";
+import PhonesCategorySelectionPopup from "layout/Popups/PhonesCategorySelectionPopup";
 
 const useContainer = () => {
-  const fetchCategories = api.useFetchCategoriesQuery({ pending: true });
+  const [bindQuery] = useQueryInput<any>({ ids: "" });
+
+  const fetchCategories = api.useFetchCategoriesQuery(
+    clearObject({ pending: true, ids: bindQuery.input.ids })
+  );
 
   const [commitCategory, status] = api.useCommitCategoryMutation();
   const { holders, departments } = useFetchConfigMap();
@@ -31,11 +40,12 @@ const useContainer = () => {
   return {
     categories: parseItems(fetchCategories),
     category: { commit: commitCategory, status: extractStatus(status) },
+    bindQuery,
   };
 };
 
 export const CommitContent: React.FC<{}> = (props) => {
-  const { categories, category } = useContainer();
+  const { categories, category, bindQuery } = useContainer();
 
   const handleCommit = (action: CommitActionType, ids: number[]) =>
     !category.status.isLoading && category.commit({ action, ids });
@@ -66,53 +76,46 @@ export const CommitContent: React.FC<{}> = (props) => {
 
   return (
     <>
-      {categories.data.items.length === 0 ? (
+      <PopupLayer>
+        <PhonesCategorySelectionPopup {...phonesPopup} categoryId={phonesPopup.state} />
+      </PopupLayer>
+      <TopBarLayer>
+        <ButtonGroup>
+          <Button
+            disabled={
+              selection.selection.length === 0 || category.status.isLoading
+            }
+            margin="none"
+            onClick={() => handleCommit("approve", selection.selection)}
+          >
+            Подтвердить
+          </Button>
+          <Badge margin="none" color="secondary" style={{ borderRadius: 0 }}>
+            {category.status.isLoading ? (
+              <LoaderIcon />
+            ) : (
+              selection.selection.length
+            )}
+          </Badge>
+          <Button
+            disabled={
+              selection.selection.length === 0 || category.status.isLoading
+            }
+            margin="none"
+            onClick={() => handleCommit("decline", selection.selection)}
+          >
+            Отменить
+          </Button>
+        </ButtonGroup>
+        <Input placeholder="Идентификатор" name="ids" {...bindQuery} />
+      </TopBarLayer>
+      <WithLoader status={categories.status}>
         <InfoBanner
+          disabled={categories.data.total > 0}
           href="/phone/edit"
           hrefContent="средство связи"
           text="Акты категорий для потдверждения отсутствуют. Создайте их, выбрав"
-        />
-      ) : (
-        <>
-          <PopupLayer>
-            <PhonesSelectionPopup
-              {...phonesPopup}
-              holdingId={phonesPopup.state}
-            />
-          </PopupLayer>
-          <TopBarLayer>
-            <ButtonGroup>
-              <Button
-                disabled={
-                  selection.selection.length === 0 || category.status.isLoading
-                }
-                margin="none"
-                onClick={() => handleCommit("approve", selection.selection)}
-              >
-                Подтвердить
-              </Button>
-              <Badge
-                margin="none"
-                color="secondary"
-                style={{ borderRadius: 0 }}
-              >
-                {category.status.isLoading ? (
-                  <LoaderIcon />
-                ) : (
-                  selection.selection.length
-                )}
-              </Badge>
-              <Button
-                disabled={
-                  selection.selection.length === 0 || category.status.isLoading
-                }
-                margin="none"
-                onClick={() => handleCommit("decline", selection.selection)}
-              >
-                Отменить
-              </Button>
-            </ButtonGroup>
-          </TopBarLayer>
+        >
           <Table
             columns={[
               actionBox,
@@ -121,8 +124,8 @@ export const CommitContent: React.FC<{}> = (props) => {
             ]}
             items={categories.data.items}
           />
-        </>
-      )}
+        </InfoBanner>
+      </WithLoader>
     </>
   );
 };

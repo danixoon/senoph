@@ -30,6 +30,7 @@ declare type CategoryKey = "1" | "2" | "3" | "4";
 declare type WithCommit = {
   status?: CommitStatus | null;
   statusAt?: string;
+  statusId?: number | null;
 };
 
 // declare type WithCommitStatus = { status: CommitStatus };

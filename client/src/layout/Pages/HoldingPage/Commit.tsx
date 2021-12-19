@@ -15,14 +15,22 @@ import Badge from "components/Badge";
 import { useSelection } from "../../../hooks/useSelection";
 import { useAuthor } from "hooks/misc/author";
 import { useTogglePayloadPopup } from "hooks/useTogglePopup";
-import PhonesSelectionPopup from "layout/Popups/PhonesSelectionPopup";
+import PhonesHoldingSelectionPopup from "layout/Popups/PhonesHoldingSelectionPopup";
 import PopupLayer from "providers/PopupLayer";
 import { useNotice } from "hooks/useNotice";
+import { useQueryInput } from "hooks/useQueryInput";
+import Input from "components/Input";
+import WithLoader from "components/WithLoader";
 
 const useContainer = () => {
-  const holdings = useHoldingWithHistory({ status: "pending" });
   const [commitHolding, commitStatus] = api.useCommitHoldingMutation();
   const { holders, departments } = useFetchConfigMap();
+
+  const [bindQuery] = useQueryInput<any>({ ids: "" });
+  const holdings = useHoldingWithHistory({
+    status: "pending",
+    ids: bindQuery.input.ids,
+  });
 
   return {
     holdings,
@@ -31,11 +39,12 @@ const useContainer = () => {
     holding: {
       commit: { exec: commitHolding, status: extractStatus(commitStatus) },
     },
+    bindQuery,
   };
 };
 
 const CommitContent: React.FC<{}> = (props) => {
-  const { holdings, holding, holders, departments } = useContainer();
+  const { holdings, holding, holders, departments, bindQuery } = useContainer();
 
   const handleCommit = (action: CommitActionType, ids: number[]) =>
     !holding.commit.status.isLoading && holding.commit.exec({ action, ids });
@@ -68,58 +77,51 @@ const CommitContent: React.FC<{}> = (props) => {
 
   return (
     <>
-      {holdings.data.total === 0 ? (
+      <PopupLayer>
+        <PhonesHoldingSelectionPopup {...phonesPopup} holdingId={phonesPopup.state} />
+      </PopupLayer>
+      <TopBarLayer>
+        <ButtonGroup>
+          <Button
+            disabled={
+              selection.selection.length === 0 ||
+              holding.commit.status.isLoading
+            }
+            margin="none"
+            onClick={() => handleCommit("approve", selection.selection)}
+          >
+            Подтвердить
+          </Button>
+          <Badge margin="none" color="secondary" style={{ borderRadius: 0 }}>
+            {holding.commit.status.isLoading ? (
+              <LoaderIcon />
+            ) : (
+              selection.selection.length
+            )}
+          </Badge>
+          <Button
+            disabled={
+              selection.selection.length === 0 ||
+              holding.commit.status.isLoading
+            }
+            margin="none"
+            onClick={() => handleCommit("decline", selection.selection)}
+          >
+            Отменить
+          </Button>
+        </ButtonGroup>
+        <Input placeholder="Идентификатор" name="ids" {...bindQuery} />
+      </TopBarLayer>
+      <WithLoader status={holdings.status}>
         <InfoBanner
+          disabled={holdings.data.total > 0}
           href="/phone/edit"
           hrefContent="средство связи"
           text="Движения для потдверждения отсутствуют. Создайте их, выбрав"
-        />
-      ) : (
-        <>
-          <PopupLayer>
-            <PhonesSelectionPopup
-              {...phonesPopup}
-              holdingId={phonesPopup.state}
-            />
-          </PopupLayer>
-          <TopBarLayer>
-            <ButtonGroup>
-              <Button
-                disabled={
-                  selection.selection.length === 0 ||
-                  holding.commit.status.isLoading
-                }
-                margin="none"
-                onClick={() => handleCommit("approve", selection.selection)}
-              >
-                Подтвердить
-              </Button>
-              <Badge
-                margin="none"
-                color="secondary"
-                style={{ borderRadius: 0 }}
-              >
-                {holding.commit.status.isLoading ? (
-                  <LoaderIcon />
-                ) : (
-                  selection.selection.length
-                )}
-              </Badge>
-              <Button
-                disabled={
-                  selection.selection.length === 0 ||
-                  holding.commit.status.isLoading
-                }
-                margin="none"
-                onClick={() => handleCommit("decline", selection.selection)}
-              >
-                Отменить
-              </Button>
-            </ButtonGroup>
-          </TopBarLayer>
+        >
           <Table stickyTop={41} columns={columns} items={holdings.data.items} />
-        </>
-      )}
+        </InfoBanner>
+      </WithLoader>
     </>
   );
 };

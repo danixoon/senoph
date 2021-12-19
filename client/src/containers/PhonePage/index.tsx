@@ -12,7 +12,7 @@ import { api } from "store/slices/api";
 import TopBarLayer from "providers/TopBarLayer";
 import qs from "query-string";
 import { useQueryInput } from "hooks/useQueryInput";
-import { denullObject } from "utils";
+import { clearObject, denullObject } from "utils";
 import PopupLayer from "providers/PopupLayer";
 import { useFetchConfig } from "hooks/api/useFetchConfig";
 import PhonePopupContainer from "containers/PhonePopup";
@@ -61,7 +61,7 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
   // const [pageItems, setPageItems] = React.useState(() => DEFAULT_PAGE_ITEMS);
 
   const { data: itemsData, ...fetchPhones } = api.useFetchPhonesQuery({
-    ...denullObject(filter),
+    ...clearObject(filter),
     amount: filter.pageItems,
     offset: filter.offset < 0 ? 0 : filter.offset,
     sortKey: filter.sortKey ?? undefined,
@@ -94,7 +94,7 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
     );
 
     if (value < 15) value = 15;
-    else if (value > 200) value = 200;
+    else if (value > 1000) value = 1000;
 
     dispatch(
       updateFilter({

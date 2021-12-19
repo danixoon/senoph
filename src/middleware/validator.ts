@@ -133,7 +133,7 @@ export const tester = () => {
           return typeof schema === "string"
             ? values.map((value) =>
                 schema === "float" ? parseFloat(value) : parseInt(value)
-              )
+              ).filter(v => !isNaN(v))
             : values;
         },
       });

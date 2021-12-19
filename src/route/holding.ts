@@ -148,6 +148,7 @@ router.get(
             phoneIds: holding.phones?.map((phone) => phone.id) ?? [],
             reasonId: holding.reasonId,
             status: holding.status,
+            statusId: holding.statusId,
             authorId: holding.authorId,
             departmentId: holding.departmentId,
             orderKey: holding.orderKey,
@@ -172,20 +173,26 @@ router.get(
   }),
   transactionHandler(async (req, res) => {
     const holdingPhones = await HoldingPhone.unscoped().findAll({
+      raw: true,
       where: { status: { [Op.not]: null } },
     });
 
-    const groupedItems = groupBy(holdingPhones, (item) => item.holdingId);
-    const items: {
-      holdingId: number;
-      commits: ({ phoneId: number; authorId?: number } & WithCommit)[];
-    }[] = [];
+    const holdingGroup = groupBy(holdingPhones, (item) => item.holdingId);
 
-    for (const [key, value] of groupedItems)
-      items.push({
-        holdingId: key,
-        commits: value.map((item) => item.toJSON()),
-      });
+    type HoldingGroup = {
+      holdingId: number;
+      authorId: number;
+      commits: ({ phoneId: number; authorId?: number } & WithCommit)[];
+    };
+
+    const items: HoldingGroup[] = [];
+
+    for (const [holdingId, value] of holdingGroup) {
+      const authors = groupBy(value, (v) => v.authorId as number);
+
+      for (const [authorId, value] of authors)
+        items.push({ holdingId, authorId, commits: value });
+    }
 
     res.send(prepareItems(items, items.length, 0));
   })
@@ -198,8 +205,12 @@ router.delete(
     query: { id: tester().isNumber() },
   }),
   transactionHandler(async (req, res) => {
+    const { user } = req.params;
     const { id } = req.query;
-    await Holding.update({ status: "delete-pending" }, { where: { id } });
+    await Holding.update(
+      { status: "delete-pending", statusId: user.id },
+      { where: { id } }
+    );
 
     res.send();
   })
@@ -252,6 +263,8 @@ router.post(
       orderDate: (orderDate as any).toISOString(),
       orderKey,
       authorId: user.id,
+      statusId: user.id,
+      status: "create-pending",
       reasonId,
       description,
       departmentId,
@@ -290,6 +303,7 @@ router.put(
           phoneId: { [Op.in]: phoneIds },
           holdingId,
           status: null,
+          // statusId: null
         },
       });
 
@@ -303,6 +317,7 @@ router.put(
         {
           status: "delete-pending",
           statusAt: new Date().toISOString(),
+          // statusId: user.id,
           authorId: user.id,
         },
         { where: { id: { [Op.in]: holdingPhonesIds } } }

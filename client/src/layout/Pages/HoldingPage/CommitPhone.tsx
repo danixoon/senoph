@@ -38,7 +38,7 @@ const useContainer = () => {
     const targetHolding = holdings.data.items.find(
       (holding) => holding.id === item.holdingId
     );
-    return { ...item, ...targetHolding };
+    return { ...item, ...targetHolding, authorId: item.authorId };
   });
 
   const getUser = useAuthor();
@@ -102,7 +102,7 @@ const CommitPhoneContent: React.FC<{}> = (props) => {
       key: "id",
       size: "30px",
       mapper: (v, item) => (
-        <Link href={`/holding/view?id=${item.holdingId}`}>
+        <Link href={`/holding/view?ids=${item.holdingId}`}>
           #{item.holdingId}
         </Link>
       ),

@@ -399,12 +399,12 @@ export const fillDevDatabase = async (full?: boolean, size: number = 150) => {
           phoneId: phone.id,
           holdingId: holding.id,
           authorId: Math.random() > 0.5 ? user.id : null,
-          status:
-            Math.random() > 0.05
-              ? null
-              : Math.random() > 0.5
-              ? ("create-pending" as const)
-              : ("delete-pending" as const),
+          status: null,
+            // Math.random() > 0.05
+            //   ? null
+            //   : Math.random() > 0.5
+            //   ? ("create-pending" as const)
+            //   : ("delete-pending" as const),
           statusAt: new Date().toISOString(),
         })
       )
@@ -451,12 +451,12 @@ export const fillDevDatabase = async (full?: boolean, size: number = 150) => {
           phoneId: phone.id,
           categoryId: category.id,
           authorId: Math.random() > 0.5 ? user.id : null,
-          status:
-            Math.random() > 0.05
-              ? null
-              : Math.random() > 0.5
-              ? ("create-pending" as const)
-              : ("delete-pending" as const),
+          status: null,
+            // Math.random() > 0.05
+            //   ? null
+            //   : Math.random() > 0.5
+            //   ? ("create-pending" as const)
+            //   : ("delete-pending" as const),
           statusAt: new Date().toISOString(),
         })
       )

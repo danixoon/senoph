@@ -226,20 +226,26 @@ router.get(
   }),
   transactionHandler(async (req, res) => {
     const categoryPhones = await CategoryPhone.unscoped().findAll({
+      raw: true,
       where: { status: { [Op.not]: null } },
     });
 
-    const groupedItems = groupBy(categoryPhones, (item) => item.categoryId);
-    const items: {
-      categoryId: number;
-      commits: ({ phoneId: number; authorId?: number } & WithCommit)[];
-    }[] = [];
+    const categoryGroup = groupBy(categoryPhones, (item) => item.categoryId);
 
-    for (const [key, value] of groupedItems)
-      items.push({
-        categoryId: key,
-        commits: value.map((item) => item.toJSON()),
-      });
+    type CategoryGroup = {
+      categoryId: number;
+      authorId: number;
+      commits: ({ phoneId: number; authorId?: number } & WithCommit)[];
+    };
+
+    const items: CategoryGroup[] = [];
+
+    for (const [categoryId, value] of categoryGroup) {
+      const authors = groupBy(value, (v) => v.authorId as number);
+
+      for (const [authorId, value] of authors)
+        items.push({ categoryId, authorId, commits: value });
+    }
 
     res.send(prepareItems(items, items.length, 0));
   })
@@ -353,6 +359,45 @@ router.put(
   })
 );
 
+router.get(
+  "/category/phones",
+  access("user"),
+  validate({
+    query: {
+      categoryId: tester().required().isNumber(),
+      ids: tester().array("int"),
+      inventoryKey: tester(),
+    },
+  }),
+  transactionHandler(async (req, res) => {
+    const { categoryId, ids, inventoryKey } = req.query;
+
+    const filter = new WhereFilter<DB.PhoneAttributes>();
+    filter.on("id").optional(Op.in, ids);
+    filter.on("inventoryKey").optional(Op.substring, inventoryKey);
+
+    const phones = await Phone.unscoped().findAll({
+      where: filter.where,
+      include: [
+        {
+          model: Category,
+          where: { id: categoryId },
+          through: { where: { status: null } },
+          required: true,
+        },
+      ],
+    });
+
+    res.send(
+      prepareItems(
+        phones.map((v) => ({ ...v.toJSON(), categories: undefined })),
+        phones.length,
+        0
+      )
+    );
+  })
+);
+
 router.delete(
   "/category",
   access("user"),
@@ -360,8 +405,16 @@ router.delete(
     query: { id: tester().isNumber() },
   }),
   transactionHandler(async (req, res) => {
+    const { user } = req.params;
     const { id } = req.query;
-    await Category.update({ status: "delete-pending" }, { where: { id } });
+    await Category.update(
+      {
+        status: "delete-pending",
+        statusAt: new Date().toISOString(),
+        statusId: user.id,
+      },
+      { where: { id } }
+    );
 
     res.send();
   })

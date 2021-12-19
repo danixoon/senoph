@@ -98,6 +98,7 @@ const Content: React.FC<
         <CategoryItem
           onSelect={() => dispatch(push(`/category/view?ids=${cat.id}`))}
           key={cat.id}
+          status={cat.status ?? null}
           deletable={edit}
           actUrl={cat.actUrl}
           actDate={new Date(cat.actDate)}
@@ -115,6 +116,7 @@ const Content: React.FC<
           departmentId={hold.departmentId}
           holderId={hold.holderId}
           orderUrl={hold.orderUrl}
+          status={hold.status ?? null}
           department={getDepartmentName(getDepartment(hold.departmentId))}
           onSelect={() => onSelectHolding(hold.id)}
           key={hold.id}

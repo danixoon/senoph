@@ -30,7 +30,7 @@ import Input from "components/Input";
 import { useQueryInput } from "hooks/useQueryInput";
 import WithLoader from "components/WithLoader";
 import { useNotice } from "hooks/useNotice";
-import PhonesSelectionPopup from "../../Popups/PhonesSelectionPopup";
+import PhonesCategorySelectionPopup from "../../Popups/PhonesCategorySelectionPopup";
 import { useAuthor } from "hooks/misc/author";
 import Paginator from "components/Paginator";
 import { usePaginator } from "hooks/usePaginator";
@@ -111,7 +111,13 @@ const useContainer = (props: { offset?: number; amount?: number }) => {
         }
       : undefined,
     onToggle: () => dispatch(replace({ search: qs.stringify(query) })),
-    onViewCommit: (id: number) => dispatch(push("/category/commit")),
+    onViewCommit: (id: number) =>
+      dispatch(
+        push({
+          pathname: "/category/commit",
+          search: qs.stringify({ ids: id }),
+        })
+      ),
     // onEdit: (id: number) =>
     // dispatch(push({ search: qs.stringify({ ...query, id }) })),
   };
@@ -182,7 +188,7 @@ export const ViewContent: React.FC<{}> = (props) => {
   return (
     <>
       <PopupLayer>
-        <PhonesSelectionPopup {...phonesPopup} holdingId={phonesPopup.state} />
+        <PhonesCategorySelectionPopup {...phonesPopup} categoryId={phonesPopup.state} />
       </PopupLayer>
       <TopBarLayer>
         <Layout flex="1">

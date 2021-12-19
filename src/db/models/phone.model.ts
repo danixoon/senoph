@@ -103,6 +103,11 @@ export default class Phone extends Model<
   @Column(DataType.DATE)
   statusAt?: string;
 
+  @AllowNull(true)
+  @ForeignKey(() => User)
+  @Column(DataType.INTEGER)
+  statusId?: number;
+
   @AllowNull(false)
   @ForeignKey(() => User)
   @Column(DataType.INTEGER)

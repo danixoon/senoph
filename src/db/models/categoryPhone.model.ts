@@ -12,6 +12,7 @@ import {
 import Category from "./category.model";
 
 import Phone from "./phone.model";
+import User from "./user.model";
 
 @Table({ defaultScope: { where: { status: null } } })
 export default class CategoryPhone extends Model<
@@ -31,6 +32,11 @@ export default class CategoryPhone extends Model<
   @AllowNull(false)
   @Column(DataType.INTEGER)
   phoneId: number;
+
+  @ForeignKey(() => User)
+  @AllowNull(true)
+  @Column(DataType.INTEGER)
+  authorId?: number;
 
   @AllowNull(true)
   @Validate({ isIn: [["create-pending", "delete-pending"]] })

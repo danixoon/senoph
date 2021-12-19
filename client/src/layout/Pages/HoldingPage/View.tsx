@@ -1,3 +1,4 @@
+import qs from "query-string";
 import { api } from "store/slices/api";
 import Icon, { LoaderIcon } from "components/Icon";
 import { push } from "connected-react-router";
@@ -24,7 +25,7 @@ import { useTogglePayloadPopup, useTogglePopup } from "hooks/useTogglePopup";
 import ClickInput from "components/ClickInput";
 import PopupLayer from "providers/PopupLayer";
 import WithLoader from "components/WithLoader";
-import PhonesSelectionPopup from "../../Popups/PhonesSelectionPopup";
+import PhonesHoldingSelectionPopup from "../../Popups/PhonesHoldingSelectionPopup";
 import { usePaginator } from "hooks/usePaginator";
 import TopBarLayer from "providers/TopBarLayer";
 import Paginator from "components/Paginator";
@@ -95,7 +96,14 @@ const ViewContent: React.FC<{}> = (props) => {
           {item.status !== null ? (
             <>
               <SpoilerPopupButton
-                onClick={() => dispatch(push("/holding/commit"))}
+                onClick={() =>
+                  dispatch(
+                    push({
+                      pathname: "/holding/commit",
+                      search: qs.stringify({ ids: item.id }),
+                    })
+                  )
+                }
               >
                 Просмотреть
               </SpoilerPopupButton>
@@ -210,7 +218,7 @@ const ViewContent: React.FC<{}> = (props) => {
         </Layout>
       </TopBarLayer>
       <PopupLayer>
-        <PhonesSelectionPopup {...phonesPopup} holdingId={phonesPopup.state} />
+        <PhonesHoldingSelectionPopup {...phonesPopup} holdingId={phonesPopup.state} />
         <HolderSelectionPopupContainer
           {...holderPopup}
           onSelect={(id, name) => {

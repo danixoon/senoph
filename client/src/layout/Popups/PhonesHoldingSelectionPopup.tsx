@@ -6,15 +6,15 @@ import Link from "components/Link";
 import ItemSelectionPopup from "layout/Popups/ItemSelectionPopup";
 import { PopupProps } from "components/Popup";
 import { api } from "store/slices/api";
-import { extractStatus, parseItems } from "store/utils";
+import { extractStatus, parseItems, useStatus } from "store/utils";
 import { useNotice } from "hooks/useNotice";
 import { useInput } from "hooks/useInput";
 import { clearObject } from "utils";
 import Input from "components/Input";
 
-const PhonesSelectionPopup: React.FC<{ holdingId?: number } & PopupProps> = (
-  props
-) => {
+const PhonesHoldingSelectionPopup: React.FC<
+  { holdingId?: number } & PopupProps
+> = (props) => {
   const { holdingId, ...rest } = props;
 
   const [bind, setBind] = useInput<any>({});
@@ -34,11 +34,13 @@ const PhonesSelectionPopup: React.FC<{ holdingId?: number } & PopupProps> = (
 
   // console.log(commitInfo);
 
-  useNotice(extractStatus(commitInfo));
+  const status = useStatus(extractStatus(commitInfo), items.status);
+  useNotice(status);
 
   return (
     <ItemSelectionPopup
       {...rest}
+      status={status}
       header="Прикреплённые средства связи"
       onSelect={(item) => {}}
       items={items.data.items.map((item) => ({
@@ -84,4 +86,4 @@ const PhonesSelectionPopup: React.FC<{ holdingId?: number } & PopupProps> = (
   );
 };
 
-export default PhonesSelectionPopup;
+export default PhonesHoldingSelectionPopup;

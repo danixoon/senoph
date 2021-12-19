@@ -16,7 +16,7 @@ const author: <T extends { authorId?: number }>(
     key: props.key ?? "authorId",
     size: props.size ?? "100px",
     mapper: (v, item) => {
-      return getAuthorName(props.getUser(item.authorId));
+      return getAuthorName(props.getUser(v));
     },
   } as TableColumn);
 

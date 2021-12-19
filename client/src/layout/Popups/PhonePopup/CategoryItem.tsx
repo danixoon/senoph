@@ -4,16 +4,18 @@ import Icon from "components/Icon";
 import Label, { LabelProps } from "components/Label";
 import Layout from "components/Layout";
 import Link from "components/Link";
+import Span from "components/Span";
 import React from "react";
 
 const CategoryItem: React.FC<{
   category: number;
   onSelect: () => void;
   deletable?: boolean;
+  status: CommitStatus;
   actDate: Date;
   actUrl: string;
 }> = (props) => {
-  const { category, actDate, actUrl, deletable, onSelect } = props;
+  const { category, actDate, actUrl, status, deletable, onSelect } = props;
 
   let cat = "?";
   switch (category) {
@@ -54,6 +56,18 @@ const CategoryItem: React.FC<{
         <Link href={`/category/view?actDate=${date}`}>
           {actDate.toLocaleDateString()}
         </Link>
+        {status && (
+          <Span
+            style={{ marginLeft: "auto" }}
+            weight="bold"
+            font="monospace"
+            color="primary"
+          >
+            {status === "create-pending"
+              ? "ОЖИДАЕТ СОЗДАНИЯ"
+              : "ОЖИДАЕТ УДАЛЕНИЯ"}
+          </Span>
+        )}
       </Layout>
       <Layout flow="row nowrap">
         <Badge onClick={() => {}} className="category-item__level">

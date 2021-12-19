@@ -227,9 +227,9 @@ declare namespace Api {
             accountingDate: Date;
             comissioningDate: Date;
             assemblyDate: Date;
-            departmentId: number;
+            departmentId: number | null;
             holderId: number;
-            category: number;
+            category: CategoryKey | null;
             sortKey: string;
             authorId: number;
             sortDir: "asc" | "desc";
@@ -306,6 +306,7 @@ declare namespace Api {
           "/holdings/commit",
           ItemsResponse<{
             holdingId: number;
+            authorId: number;
             commits: ({ phoneId: number } & WithCommit)[];
           }>,
           {
@@ -327,6 +328,16 @@ declare namespace Api {
 
             offset?: number;
             amount?: number;
+          },
+          {}
+        >)
+      | (() => RouteHandler<
+          "/category/phones",
+          ItemsResponse<Api.Models.Phone>,
+          {
+            categoryId: number;
+            ids?: number[];
+            inventoryKey?: string;
           },
           {}
         >)

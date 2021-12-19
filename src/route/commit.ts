@@ -135,7 +135,7 @@ router.post(
 
 router.put(
   "/commit/holding",
-  access("admin"),
+  access("user"),
   validate({
     body: {
       action: tester().isIn(["approve", "decline"]).required(),
@@ -150,12 +150,18 @@ router.put(
     await Promise.all(
       holdings.map(async (holding) => {
         if (action === "approve") {
+          if (user.role !== "admin")
+            throw new ApiError(errorType.ACCESS_DENIED);
           if (holding.status === "create-pending") {
             await holding.update({ status: null });
           } else if (holding.status === "delete-pending") {
             await holding.destroy();
           }
         } else {
+          if (user.role === "user" && holding.statusId !== user.id)
+            throw new ApiError(errorType.ACCESS_DENIED, {
+              description: "Вы не являетесь автором данного движения.",
+            });
           if (holding.status === "create-pending") {
             await holding.destroy();
           } else if (holding.status === "delete-pending") {
@@ -173,7 +179,7 @@ router.put(
 
 router.put(
   "/commit/holding/phone",
-  access("admin"),
+  access("user"),
   validate({
     body: {
       action: tester().isIn(["approve", "decline"]).required(),
@@ -201,6 +207,7 @@ router.put(
     await Promise.all(
       holdingPhones.map(async (holdingPhone) => {
         if (action === "approve") {
+          if (user.role === "user") throw new ApiError(errorType.ACCESS_DENIED);
           if (holdingPhone.status === "create-pending") {
             await holdingPhone.update({
               status: null,
@@ -209,7 +216,11 @@ router.put(
           } else if (holdingPhone.status === "delete-pending") {
             await holdingPhone.destroy();
           }
-        } else {
+        } else if (action === "decline") {
+          if (user.role === "user" && holdingPhone.authorId !== user.id)
+            throw new ApiError(errorType.ACCESS_DENIED, {
+              description: "Вы не являетесь автором данного изменения.",
+            });
           if (holdingPhone.status === "create-pending") {
             await holdingPhone.destroy();
           } else if (holdingPhone.status === "delete-pending") {
@@ -358,23 +369,13 @@ router.put(
 
 router.put(
   "/commit/phone",
-  access("admin"),
+  access("user"),
   validate({
     body: {
       action: tester().isIn(["approve", "decline"]).required(),
       ids: tester().array({}),
     },
   }),
-  // owner(
-  //   "phone",
-  //   (req) => req.body.ids,
-  //   (model) => {
-  //     if (model.status === null)
-  //       throw new ApiError(errorType.INVALID_QUERY, {
-  //         description: "Объект изменений не ожидает",
-  //       });
-  //   }
-  // ),
   transactionHandler(async (req, res, next) => {
     const { ids, action } = req.body;
     const { params } = req;
@@ -389,16 +390,22 @@ router.put(
       phones.map(async (phone) => {
         switch (action) {
           case "approve":
-            if (phone.status === "create-pending")
+            if (user.role === "user")
+              throw new ApiError(errorType.ACCESS_DENIED);
+            if (phone.status === "create-pending") {
               await Phone.unscoped().update(
-                { status: null },
+                { status: null, statusId: null },
                 { where: { id: phone.id } }
               );
-            else if (phone.status === "delete-pending")
+            } else if (phone.status === "delete-pending")
               await Phone.unscoped().destroy({ where: { id: phone.id } });
             break;
 
           case "decline":
+            if (user.role === "user" && phone.statusId !== user.id)
+              throw new ApiError(errorType.ACCESS_DENIED, {
+                description: "Вы не являетесь автором данного средства связи.",
+              });
             if (phone.status === "create-pending")
               await Phone.unscoped().destroy({
                 where: { id: phone.id },

@@ -16,6 +16,7 @@ import { InputHook } from "hooks/useInput";
 import Checkbox from "components/Checkbox";
 import { Selection } from "../../../hooks/useSelection";
 import columnTypes from "utils/columns";
+import { clearObject } from "utils";
 
 export const reasonMap = [
   { id: "initial", label: "Назначение" },
@@ -172,7 +173,7 @@ export const getTableColumns: (args: {
         const dispatch = useAppDispatch();
         const location = useLocation();
 
-        if (items.length === maxItems)
+        if (item.phoneIds.length > maxItems)
           items.push(
             <Link
               onClick={() => {
@@ -213,7 +214,7 @@ export const getTableColumns: (args: {
         return <Badge>{status}</Badge>;
       },
     },
-    columnTypes.author({ getUser }),
+    columnTypes.author({ getUser, key: "statusId" }),
   ];
 
   if (selection) {
@@ -225,7 +226,7 @@ export const getTableColumns: (args: {
 
 export const useHoldingWithHistory = (filter: any = {}) => {
   const { departments } = useFetchConfigMap();
-  const holdings = parseItems(api.useFetchHoldingsQuery(filter));
+  const holdings = parseItems(api.useFetchHoldingsQuery(clearObject(filter)));
 
   const holdingPhoneIds = Array.from(
     holdings.data.items

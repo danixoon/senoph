@@ -43,7 +43,7 @@ export default class HoldingPhone extends Model<
   @ForeignKey(() => User)
   @AllowNull(true)
   @Column(DataType.INTEGER)
-  auhtorId?: number;
+  authorId?: number;
 
   @AllowNull(true)
   @Validate({ isIn: [["create-pending", "delete-pending"]] })

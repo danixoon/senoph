@@ -46,7 +46,11 @@ router.delete(
 
     // TODO: Сделать назначение статуса единоместным
     await Phone.update(
-      { status: "delete-pending", statusAt: new Date().toISOString() },
+      {
+        status: "delete-pending",
+        statusAt: new Date().toISOString(),
+        statusId: user.id,
+      },
       { where: { id: { [Op.in]: ids } } }
     );
 
@@ -197,7 +201,7 @@ router.get(
       amount: tester().isNumber(),
       factoryKey: tester(),
       category: tester(),
-      departmentId: tester().isNumber(),
+      departmentId: tester(),
       holderId: tester().isNumber(),
       inventoryKey: tester(),
       offset: tester().isNumber(),
@@ -350,11 +354,20 @@ router.get(
       const isHolder = typeof holderId !== "undefined";
       const isCategory = typeof category !== "undefined";
 
-      if (isCategory && category.toString() !== lastCategory?.categoryKey)
-        return false;
+      if (isCategory)
+        if (category === null) {
+          if (lastCategory) return false;
+        } else if (category?.toString() !== lastCategory?.categoryKey)
+          return false;
+
       if (isHolder && lastHolding?.holderId !== holderId) return false;
-      if (isDepartment && lastHolding?.departmentId !== departmentId)
-        return false;
+      if (isDepartment)
+        if (departmentId === null) {
+          if (lastHolding) return false;
+        } else if (
+          lastHolding?.departmentId.toString() !== departmentId.toString()
+        )
+          return false;
 
       return true;
     });

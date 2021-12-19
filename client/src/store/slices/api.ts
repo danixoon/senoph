@@ -311,6 +311,17 @@ export const api = createApi({
       }),
       providesTags: ["category"],
     }),
+    fetchPhonesFromCategory: builder.query<
+      Api.GetResponse<"get", "/category/phones">,
+      Api.GetQuery<"get", "/category/phones">
+    >({
+      query: (params) => ({
+        url: "category/phones",
+        params,
+        method: "GET",
+      }),
+      providesTags: ["category", "phone", "categoryPhone"],
+    }),
     createCategoryChange: builder.mutation<
       Api.GetResponse<"put", "/category">,
       Api.GetQuery<"put", "/category">
