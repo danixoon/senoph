@@ -41,6 +41,7 @@ const ModelSelectionPopupContainer: React.FC<ModelSelectionPopupContainerProps> 
         {...rest}
       >
         <Dropdown
+          style={{ flex: "1" }}
           {...searchBind}
           name="phoneTypeId"
           label="Тип"
