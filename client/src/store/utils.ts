@@ -131,10 +131,8 @@ export const useStatus = (...statuses: ApiStatus[]) => {
         if (list.length - 1 < i)
           list.push({ date: Date.now(), status: splitStatus("idle") });
 
-        if (list[i].status.status !== statuses[i].status) {
-          list[i].date = Date.now();
-          list[i].status = statuses[i];
-        }
+        list[i].date = Date.now();
+        list[i].status = { ...statuses[i] };
       }
 
       const status = [...list].sort((a, b) => (a.date < b.date ? 1 : -1))[0]
@@ -195,23 +193,30 @@ export const mergeStatuses = (...statuses: ApiStatus[]) => {
 export const extractStatus = (
   { isError, isLoading, isIdle, isSuccess, isFetching, error }: Statusable,
   fetchCheck?: boolean
-) =>
-  ({
-    isLoading: isLoading === true || (fetchCheck && isFetching),
-    isSuccess: isSuccess === true,
-    isError: isError === true,
-    isIdle: isIdle === true,
-    error: isApiError(error?.data?.error) ? error?.data?.error : null,
-    status: isLoading
-      ? "loading"
-      : isSuccess
-      ? "success"
-      : isIdle
-      ? "idle"
-      : isError
-      ? "error"
-      : null,
-  } as ApiStatus);
+) => {
+  if (isLoading || (fetchCheck && isFetching)) return splitStatus("loading");
+  else if (isError)
+    return splitStatus(
+      isApiError(error?.data?.error) ? error?.data?.error : null
+    );
+  else if (isSuccess) return splitStatus("success");
+  else return splitStatus("idle");
+
+  // return {
+  //   isLoading: isLoading === true || (fetchCheck && isFetching),
+  //   isSuccess: isSuccess === true,
+  //   isError: isError === true,
+  //   isIdle: isIdle === true,
+  //   error: isApiError(error?.data?.error) ? error?.data?.error : null,
+  //   status: isLoading
+  //     ? "loading"
+  //     : isSuccess
+  //     ? "success"
+  //     : isError
+  //     ? "error"
+  //     : "idle",
+  // } as ApiStatus;
+};
 export const splitStatus: (status: ActionStatus) => ApiStatus = (status) => {
   if (isApiError(status))
     return {

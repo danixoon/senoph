@@ -234,6 +234,7 @@ declare namespace Api {
             authorId: number;
             sortDir: "asc" | "desc";
             exceptIds: number[];
+            warranty: boolean;
             ids: number[];
           }> & { offset: number; amount: number },
           {}
@@ -345,6 +346,7 @@ declare namespace Api {
           "/categories/commit",
           ItemsResponse<{
             categoryId: number;
+            authorId: number;
             commits: ({ phoneId: number } & WithCommit)[];
           }>,
           {
@@ -396,6 +398,18 @@ declare namespace Api {
           "/logs",
           ItemsResponse<Api.Models.Log>,
           { offset?: number; amount?: number },
+          {}
+        >)
+      | (() => RouteHandler<
+          "/log/system",
+          ItemsResponse<{
+            level: string;
+            message: string;
+            service: string;
+            timestamp: string;
+            payload: any;
+          }>,
+          { offset: number; amount: number },
           {}
         >);
 

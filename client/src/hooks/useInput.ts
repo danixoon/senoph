@@ -39,7 +39,12 @@ export const handleChangeEvent = <T>(
 
   switch (e.target.type) {
     case "checkbox":
-      changedInput[e.target.name] = !changedInput[e.target.name];
+      changedInput[e.target.name] =
+        typeof changedInput[e.target.name] === "string"
+          ? changedInput[e.target.name] === "false"
+            ? true
+            : false
+          : !changedInput[e.target.name];
       break;
     case "file":
       changedInput[e.target.name] = e.target.files;

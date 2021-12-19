@@ -241,7 +241,7 @@ router.put(
 
 router.put(
   "/commit/category/phone",
-  access("admin"),
+  access("user"),
   validate({
     body: {
       action: tester().isIn(["approve", "decline"]).required(),
@@ -269,6 +269,7 @@ router.put(
     await Promise.all(
       categoryPhones.map(async (categoryPhone) => {
         if (action === "approve") {
+          if (user.role === "user") throw new ApiError(errorType.ACCESS_DENIED);
           if (categoryPhone.status === "create-pending") {
             await categoryPhone.update({
               status: null,
@@ -277,7 +278,11 @@ router.put(
           } else if (categoryPhone.status === "delete-pending") {
             await categoryPhone.destroy();
           }
-        } else {
+        } else if (action === "decline") {
+          if (user.role === "user" && categoryPhone.authorId !== user.id)
+            throw new ApiError(errorType.ACCESS_DENIED, {
+              description: "Вы не являетесь автором данного изменения.",
+            });
           if (categoryPhone.status === "create-pending") {
             await categoryPhone.destroy();
           } else if (categoryPhone.status === "delete-pending") {
@@ -301,7 +306,7 @@ router.put(
 
 router.put(
   "/commit/category",
-  access("admin"),
+  access("user"),
   validate({
     body: {
       action: tester().isIn(["approve", "decline"]).required(),
@@ -318,12 +323,16 @@ router.put(
     await Promise.all(
       categories.map(async (category) => {
         if (action === "approve") {
+          if (user.role !== "admin")
+            throw new ApiError(errorType.ACCESS_DENIED);
           if (category.status === "create-pending") {
             await category.update({ status: null });
           } else if (category.status === "delete-pending") {
             await category.destroy();
           }
         } else {
+          if (user.role === "admin" && user.id === category.statusId)
+            throw new ApiError(errorType.ACCESS_DENIED);
           if (category.status === "create-pending") {
             await category.destroy();
           } else if (category.status === "delete-pending") {

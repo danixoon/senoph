@@ -4,7 +4,7 @@ import Dropdown from "components/Dropdown";
 import Form from "components/Form";
 import Header from "components/Header";
 import Hr from "components/Hr";
-import Icon from "components/Icon";
+import Icon, { LoaderIcon } from "components/Icon";
 import Input from "components/Input";
 import Layout from "components/Layout";
 import Link from "components/Link";
@@ -23,6 +23,12 @@ import { usePaginator } from "hooks/usePaginator";
 import { parseItems } from "store/utils";
 import Paginator from "components/Paginator";
 import TopBarLayer from "providers/TopBarLayer";
+import Toggle from "components/Toggle";
+import { getLocalDate } from "utils";
+
+import "./style.styl";
+import Badge from "components/Badge";
+import WithLoader from "components/WithLoader";
 
 export type LogsProps = {};
 
@@ -50,7 +56,7 @@ const DetailsPopup: React.FC<PopupProps & { payload?: any }> = (props) => {
   );
 };
 
-const pageItems = 30;
+const pageItems = 15;
 
 const useContainer = (offset: number) => {
   const logs = parseItems(api.useFetchLogsQuery({ offset, amount: pageItems }));
@@ -169,13 +175,15 @@ const Logs: React.FC<LogsProps> = (props) => {
     columns.author({ getUser }),
   ];
 
-  const [bind] = useInput({});
+  const [bind] = useInput({ systemMode: false });
 
   const tableItems = logs.data.items.map((log) => log);
 
   const { state: payload, ...detailsPopup } = useTogglePayloadPopup();
 
   // const noticeContext = React.useContext(NoticeContext);
+
+  const isSystem = bind.input.systemMode;
 
   // TODO: Make proper typing for POST request params & form inputs
   return (
@@ -184,54 +192,131 @@ const Logs: React.FC<LogsProps> = (props) => {
         <DetailsPopup {...detailsPopup} payload={payload} />
       </PopupLayer>
       <TopBarLayer>
-        {/* <Layout flex="1"> */}
-          <Paginator
-            style={{ marginRight: "auto" }}
-            current={currentPage}
-            max={maxPage}
-            min={1}
-            size={5}
-            onChange={(page) => setOffset((page - 1) * pageItems)}
-          />
-          <Header align="right">История операций ({logs.data.total})</Header>
-        {/* </Layout> */}
+        <Layout
+          style={{ height: "24px", alignItems: "center" }}
+          flow="row"
+          flex="1"
+        >
+          <Toggle {...bind} name="systemMode" label="Системный лог" />
+          {!isSystem && (
+            <Layout
+              style={{ marginLeft: "auto", alignItems: "center" }}
+              flow="row"
+            >
+              <Paginator
+                current={currentPage}
+                max={maxPage}
+                min={1}
+                size={10}
+                onChange={(page) => setOffset((page - 1) * pageItems)}
+              />
+
+              <Header align="right">
+                История операций ({logs.data.total})
+              </Header>
+            </Layout>
+          )}
+        </Layout>
       </TopBarLayer>
       <Layout>
-        {/* <Form
-          input={bind.input}
-          onSubmit={(data) => {
-            // onSubmit(data);
-            // createPhoneModel(data as any);
-            // noticeContext.createNotice("Пользователь создан");
-          }}
-        >
-          <Layout flow="row">
-            <Input
-              required
-              label="Наименование"
-              {...bind}
-              name="name"
-              style={{ flex: "1" }}
-            />
-            <Button
-              style={{
-                marginTop: "auto",
-                marginLeft: "auto",
-                padding: "0 4rem",
-              }}
-              margin="md"
-              type="submit"
-              color="primary"
-            >
-              Создать
-            </Button>
-          </Layout>
-        </Form> */}
-        {/* <Hr /> */}
-
-        <Table stickyTop={45} items={tableItems} columns={tableColumns} />
+        {isSystem ? (
+          <SystemLogs />
+        ) : (
+          <Table stickyTop={45} items={tableItems} columns={tableColumns} />
+        )}
       </Layout>
     </>
+  );
+};
+
+type SystemLog = {
+  level: string;
+  message: string;
+  timestamp: string;
+  service: string;
+  payload: any;
+};
+const SystemLogItem: React.FC<{ item: SystemLog }> = (props) => {
+  const { item } = props;
+
+  const [opened, setOpened] = React.useState(false);
+  const crop = item.message.length > 200;
+
+  return (
+    <>
+      <Layout flex="1" className="log-item">
+        <Layout flow="row" flex="1" className="log-item__info">
+          <Span font="monospace" weight="bold" className="log-info__level">
+            {item.level}
+          </Span>
+          <Span className="log-info__message">
+            {crop && !opened ? item.message.slice(0, 200) : item.message}
+            {crop && (
+              <>
+                {" "}
+                <Link inline onClick={() => setOpened(!opened)}>
+                  {opened ? "меньше подробностей" : "подробнее"}
+                </Link>
+              </>
+            )}
+          </Span>
+
+          <Badge className="log-info__service">{item.service}</Badge>
+          <Header className="log-info__time">
+            {getLocalDate(item.timestamp)}
+          </Header>
+        </Layout>
+        {item.payload && (
+          <ReactJson
+            style={{ maxWidth: "70vw" }}
+            displayDataTypes={false}
+            name={null}
+            collapseStringsAfterLength={200}
+            displayObjectSize={false}
+            src={item.payload ?? {}}
+          />
+        )}
+      </Layout>
+    </>
+  );
+};
+const SystemLogs: React.FC<{}> = (props) => {
+  const [offset, setOffset] = React.useState(0);
+  const [amount, setAmount] = React.useState(15);
+  const fetchLogs = api.useFetchSystemLogsQuery({
+    offset,
+    amount: 1024 * amount,
+  });
+  const logs = parseItems(fetchLogs);
+
+  return (
+    <Layout flex="1" className="system-logs">
+      <TopBarLayer>
+        {logs.status.isLoading && <LoaderIcon />}
+        <Button onClick={() => fetchLogs.refetch()} color="primary">
+          Обновить
+        </Button>
+        <Input
+          blurrable
+          placeholder="КБ"
+          type="number"
+          input={{ size: amount }}
+          name="size"
+          onChange={(e) => {
+            let value = parseInt(e.target.value);
+            if (isNaN(value)) value = 1;
+            if (value > 512) value = 512;
+            if (value < 1) value = 1;
+            setAmount(value);
+          }}
+        />
+      </TopBarLayer>
+      <WithLoader status={logs.status}>
+        {logs.data.items.map((log) => (
+          <SystemLogItem key={log.timestamp} item={log} />
+        ))}
+      </WithLoader>
+    </Layout>
   );
 };
 

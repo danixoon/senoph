@@ -6,7 +6,7 @@ import Link from "components/Link";
 import Span from "components/Span";
 import { TableColumn } from "components/Table";
 import { splitHolderName } from "hooks/misc/holder";
-import React from "react";
+import React, { Fragment } from "react";
 import { useAppDispatch } from "store";
 import { parseItems, updateQuery } from "store/utils";
 import { useLocation } from "react-router";
@@ -109,15 +109,10 @@ export const getTableColumns: (args: {
         const holder = holders.get(item.holderId);
         const name = splitHolderName(holder);
         return (
-          <>
+          <Fragment key={holder?.id}>
             {item.prevHolders.map((holder) => (
               <>
-                <Span
-                  title={splitHolderName(holder)}
-                  inline
-                  strike
-                  key={holder.id}
-                >
+                <Span title={splitHolderName(holder)} inline strike>
                   {splitHolderName(holder)}
                 </Span>
                 <br />
@@ -126,7 +121,7 @@ export const getTableColumns: (args: {
             <Span inline title={name}>
               {holder ? name : <LoaderIcon />}
             </Span>
-          </>
+          </Fragment>
         );
       },
     },

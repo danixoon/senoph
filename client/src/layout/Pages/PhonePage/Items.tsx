@@ -178,13 +178,8 @@ const Items: React.FC<{
 
   return (
     <>
-      <PopupLayer>
-        <Popup size="lg" closeable onToggle={() => {}}>
-          hey
-        </Popup>
-      </PopupLayer>
       <Table
-        stickyTop={51}
+        stickyTop={31}
         selectedId={selectedId}
         onSelect={onSelect}
         onSort={sorting.onSort}

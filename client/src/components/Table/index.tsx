@@ -171,32 +171,29 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
       key: "index",
       size: "30px",
       header: (
-        <>
-          <ActionBox
-            status={splitStatus("idle")}
-            containerProps={{ style: { float: "right" } }}
-            position={settingsPosition}
-            icon={() => <Icon.Settings color="muted" />}
-          >
-            {Object.entries(columnsState).map(([key, value]) => (
-              <Checkbox
-                input={{ checked: !value.hidden }}
-                name="checked"
-                label={columns
-                  .find((col) => col.key === key)
-                  ?.header.toString()}
-                onChange={(e) =>
-                  setColumnsState({
-                    ...columnsState,
-                    [key]: { hidden: !value.hidden },
-                  })
-                }
-              />
-            ))}
-            {/* <Checkbox label="Инвентарный номер" input={{}} name="a" /> */}
-            {/* <Checkbox label="Заводской номер номер" input={{}} name="a" /> */}
-          </ActionBox>
-        </>
+        <ActionBox
+          status={splitStatus("idle")}
+          containerProps={{ style: { float: "right" } }}
+          position={settingsPosition}
+          icon={() => <Icon.Settings color="muted" />}
+        >
+          {Object.entries(columnsState).map(([key, value]) => (
+            <Checkbox
+              key={key}
+              input={{ checked: !value.hidden }}
+              name="checked"
+              label={columns.find((col) => col.key === key)?.header.toString()}
+              onChange={(e) =>
+                setColumnsState({
+                  ...columnsState,
+                  [key]: { hidden: !value.hidden },
+                })
+              }
+            />
+          ))}
+          {/* <Checkbox label="Инвентарный номер" input={{}} name="a" /> */}
+          {/* <Checkbox label="Заводской номер номер" input={{}} name="a" /> */}
+        </ActionBox>
       ),
       // props: { style: { flo } }
       mapper: (v, item, i) => (

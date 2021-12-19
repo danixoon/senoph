@@ -30,13 +30,15 @@ export const getColumns: (
       key: "id",
       header: "ID",
       size: "30px",
-      mapper: (v, item) => <Link>#{item.id}</Link>,
+      mapper: (v, item) => item.id,
     },
     {
       key: "actKey",
       header: "Номер акта",
       size: "100px",
-      mapper: (v, item) => item.actKey,
+      mapper: (v, item) => (
+        <Link native href={`/upload/${item.actUrl}`}> {item.actKey} </Link>
+      ),
     },
     {
       key: "actDate",

@@ -39,7 +39,7 @@ const useContainer = () => {
     const targetCategory = categories.data.items.find(
       (cat) => cat.id === item.categoryId
     );
-    return { ...item, ...targetCategory };
+    return { ...item, ...targetCategory, authorId: item.authorId };
   });
 
   const getUser = useAuthor();

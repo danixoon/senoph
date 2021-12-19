@@ -1,27 +1,14 @@
-import { query, Router } from "express";
+import { promises as fs } from "fs";
+import path from "path";
 
 // import department from "@backend/db/models/department";
-import phone from "@backend/db/models/phone.model";
-import model from "@backend/db/models/phoneModel.model";
-import PhoneType from "@backend/db/models/phoneType.model";
-import Department from "@backend/db/models/department.model";
-import PhoneModel from "@backend/db/models/phoneModel.model";
 import { AppRouter } from "../router";
 import { transactionHandler, prepareItems } from "../utils";
-import { access, owner } from "@backend/middleware/auth";
+import { access } from "@backend/middleware/auth";
 import { tester, validate } from "@backend/middleware/validator";
-import { upload } from "@backend/middleware/upload";
-import { ApiError, errorType } from "@backend/utils/errors";
-import Holding from "@backend/db/models/holding.model";
-import HoldingPhone from "@backend/db/models/holdingPhone.model";
-import { convertValues } from "@backend/middleware/converter";
-import Holder from "@backend/db/models/holder.model";
-import { Op } from "sequelize";
-import { Filter } from "@backend/utils/db";
-import Phone from "@backend/db/models/phone.model";
-import Category from "@backend/db/models/category.model";
 import Log from "@backend/db/models/log.model";
 import LogTarget from "@backend/db/models/logTarget.model";
+import { ApiError, errorType } from "@backend/utils/errors";
 
 const router = AppRouter();
 
@@ -37,7 +24,7 @@ router.get(
   transactionHandler(async (req, res) => {
     const { amount, offset } = req.query;
     const logs = await Log.findAndCountAll({
-      include: [{ model: LogTarget, subQuery: true }],
+      include: [{ model: LogTarget, subQuery: true, separate: true }],
       offset,
       limit: amount,
     });
@@ -49,6 +36,65 @@ router.get(
         0
       )
     );
+  })
+);
+
+router.get(
+  "/log/system",
+  access("admin"),
+  validate({
+    query: {
+      amount: tester().isNumber(),
+      offset: tester().isNumber(),
+    },
+  }),
+  transactionHandler(async (req, res) => {
+    const { amount, offset } = req.query;
+
+    const max = 1024 * 1024 * 8;
+    if (amount > max)
+      throw new ApiError(errorType.INVALID_QUERY, {
+        description: "Максимльный размер лога: " + max + " байт.",
+      });
+
+    const logPath = path.resolve(__dirname, "../../logs/combined.log");
+    const file = await fs.open(logPath, "r");
+    const stat = await file.stat();
+
+    const buffer = Buffer.alloc(amount);
+    const log = await file.read(
+      buffer,
+      0,
+      amount,
+      Math.max(0, stat.size - offset - amount)
+    );
+
+    const text = buffer.toString("utf8");
+
+    const items: any[] = [];
+    text.split("\n").forEach((value) => {
+      try {
+        const content = JSON.parse(value);
+        items.unshift(content);
+      } catch (err) {
+        //
+      }
+    });
+
+    await file.close();
+
+    // file.close();
+
+    // const items = [];
+    // const content = [];
+    // // const endl = "\
+    // for (const byte of log.buffer) {
+    //   if (byte === 10)
+    //     items.push(JSON.parse(unescape(encodeURIComponent(content))));
+    //   else content += String.fromCharCode(byte);
+    // }
+
+    res.send(prepareItems(items, log.bytesRead, offset));
   })
 );
 

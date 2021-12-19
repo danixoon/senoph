@@ -92,11 +92,7 @@ export const access: <R extends Role>(
         priority[requiredRole] > priority[role as Role]) ??
       0
     )
-      return next(
-        new ApiError(errorType.ACCESS_DENIED, {
-          description: "Недостаточно прав",
-        })
-      );
+      return next(new ApiError(errorType.ACCESS_DENIED  ));
 
     req.params.user = { id, role } as any;
     next();

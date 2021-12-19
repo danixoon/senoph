@@ -60,8 +60,14 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
 
   // const [pageItems, setPageItems] = React.useState(() => DEFAULT_PAGE_ITEMS);
 
+  const query = clearObject({
+    ...filter,
+    category:
+      filter.warranty?.toString() === "true" ? undefined : filter.category,
+  });
+
   const { data: itemsData, ...fetchPhones } = api.useFetchPhonesQuery({
-    ...clearObject(filter),
+    ...query,
     amount: filter.pageItems,
     offset: filter.offset < 0 ? 0 : filter.offset,
     sortKey: filter.sortKey ?? undefined,
@@ -134,7 +140,7 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
         <Layout
           flow="row"
           flex="1"
-          style={{ height: "30px", alignItems: "center" }}
+          style={{ height: "10px", alignItems: "center" }}
         >
           <Paginator
             onChange={(page) =>
@@ -151,8 +157,8 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
           />
           <Header
             align="center"
-            style={{ margin: "auto" }}
-            className="margin_md page__header"
+            style={{ margin: "0 auto" }}
+            className="margin_md"
           >
             {/* <span style={{ marginRight: "auto" }}> */}
             {fetchStatus.isLoading && (
@@ -198,10 +204,7 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
         </Layout>
       </TopBarLayer>
       <Layout flex="1" flow="row">
-        <Layout
-          flex="1"
-          style={{ marginLeft: "0.25rem", position: "relative" }}
-        >
+        <Layout flex="1" style={{ position: "relative" }}>
           <PhonePage.Items
             selection={{
               onSelection: (/*all,*/ ids) =>
@@ -225,7 +228,6 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
             status={fetchStatus}
           />
         </Layout>
-        <Hr vertical />
         <Layout>
           <PhonePage.Filter hook={filterHook} config={filterData} />
         </Layout>

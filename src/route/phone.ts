@@ -201,6 +201,7 @@ router.get(
       amount: tester().isNumber(),
       factoryKey: tester(),
       category: tester(),
+      warranty: tester().isBoolean(),
       departmentId: tester(),
       holderId: tester().isNumber(),
       inventoryKey: tester(),
@@ -222,6 +223,7 @@ router.get(
       search,
       sortDir,
       sortKey,
+      warranty,
       amount = 50,
       offset = 0,
       category,
@@ -360,6 +362,14 @@ router.get(
         } else if (category?.toString() !== lastCategory?.categoryKey)
           return false;
 
+      if (warranty) {
+        const yearMs = 31556952 * 1000;
+        if (
+          !lastCategory ||
+          new Date(lastCategory.actDate).getTime() + yearMs > Date.now() || lastCategory.categoryKey !== "1"
+        )
+          return false;
+      }
       if (isHolder && lastHolding?.holderId !== holderId) return false;
       if (isDepartment)
         if (departmentId === null) {

@@ -71,10 +71,10 @@ router.get(
         )
       );
 
-    const categories = await Category.findAll({
+    const categories = await Category.unscoped().findAll({
       include: [
         {
-          model: Phone,
+          model: Phone,          
           attributes: ["id"],
         },
       ],

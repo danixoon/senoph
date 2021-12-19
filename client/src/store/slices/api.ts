@@ -610,6 +610,17 @@ export const api = createApi({
       }),
       providesTags: ["log"],
     }),
+    fetchSystemLogs: builder.query<
+      Api.GetResponse<"get", "/log/system">,
+      Api.GetQuery<"get", "/log/system">
+    >({
+      query: (params) => ({
+        url: "log/system",
+        params,
+        method: "GET",
+      }),
+      providesTags: ["log"],
+    }),
     //*****//
     fetchBackups: builder.query<
       Api.GetResponse<"get", "/admin/backups">,

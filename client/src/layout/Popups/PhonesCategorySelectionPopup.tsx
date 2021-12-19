@@ -32,8 +32,10 @@ const PhonesCategorySelectionPopup: React.FC<
 
   const [commit, commitInfo] = api.useCreateCategoryChangeMutation();
 
-  const status = useStatus(extractStatus(commitInfo), items.status);
-  useNotice(status);
+  const commitStatus = extractStatus(commitInfo, true);
+  const status = useStatus(commitStatus, items.status);
+
+  useNotice(commitStatus);
 
   return (
     <ItemSelectionPopup

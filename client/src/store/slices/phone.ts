@@ -47,6 +47,7 @@ const initialState: PhoneState = {
     departmentId: null,
     holderId: null,
     exceptIds: null,
+    warranty: false,
     authorId: null,
     ids: null,
     sortKey: null,

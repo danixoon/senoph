@@ -34,8 +34,9 @@ const PhonesHoldingSelectionPopup: React.FC<
 
   // console.log(commitInfo);
 
-  const status = useStatus(extractStatus(commitInfo), items.status);
-  useNotice(status);
+  const commitStatus = extractStatus(commitInfo);
+  const status = useStatus(commitStatus, items.status);
+  useNotice(commitStatus);
 
   return (
     <ItemSelectionPopup
