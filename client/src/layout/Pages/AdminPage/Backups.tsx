@@ -30,6 +30,7 @@ import {
   mergeStatuses,
   parseItems,
   splitStatus,
+  useStatus,
 } from "store/utils";
 
 export type BackupsProps = {};
@@ -65,6 +66,9 @@ const Departments: React.FC<BackupsProps> = (props) => {
     error: "Ошибка создания резеврной копии",
   });
 
+  const actionsStatus = useStatus(backups.revert.status, backups.revert.status);
+  // useNotice(updateStatus);
+
   const columns: TableColumn<Api.Models.Backup>[] = [
     {
       key: "actions",
@@ -72,9 +76,7 @@ const Departments: React.FC<BackupsProps> = (props) => {
       size: "30px",
       required: true,
       mapper: (v, item: Api.Models.Backup) => (
-        <ActionBox
-          status={mergeStatuses(backups.revert.status, backups.remove.status)}
-        >
+        <ActionBox status={actionsStatus}>
           <SpoilerPopupButton
             onClick={() => backups.revert.exec({ id: item.id })}
           >

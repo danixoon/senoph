@@ -165,8 +165,8 @@ export const api = createApi({
       invalidatesTags: (r, e, a) => ["phone", "commit", "log"],
     }),
     commitChangesApprove: builder.mutation<
-      Api.GetResponse<"post", "/commit">,
-      Api.GetQuery<"post", "/commit">
+      Api.GetResponse<"put", "/commit">,
+      Api.GetQuery<"put", "/commit">
     >({
       query: (params) => ({
         url: "commit",

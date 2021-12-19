@@ -46,6 +46,8 @@ router.get(
       [] as any[]
     );
 
+    changes.sort((a, b) => (a.createdAt > b.createdAt ? -1 : 1));
+
     res.send(prepareItems(changes, changes.length, 0));
   }
 );
@@ -58,15 +60,23 @@ router.put(
     query: {
       target: tester().required(),
       targetId: tester().isNumber().required(),
+      userId: tester().isNumber(),
     },
   }),
   // TODO: Сделать проверку на владельца изменений
   transactionHandler(async (req, res, next) => {
-    const { user } = req.params;
-    const { target, targetId } = req.query;
-    const { id } = req.params.user;
+    const { target, targetId, userId } = req.query;
+    const { id, role } = req.params.user;
 
-    const updater = getUpdater(target, targetId, id);
+    if (role === "user" && userId && userId !== id)
+      throw new ApiError(errorType.ACCESS_DENIED, {
+        description:
+          "Применить изменение невозможно т.к. вы не являетесь его автором.",
+      });
+
+    const targetUserId = userId ?? id;
+
+    const updater = getUpdater(target, targetId, targetUserId);
     await updater.commit();
 
     // Log.log("phone", [targetId], "change", id);
@@ -103,7 +113,10 @@ router.post(
   "/commit",
   access("user"),
   validate({
-    query: { target: tester().required(), targetId: tester().required() },
+    query: {
+      target: tester().required(),
+      targetId: tester().required(),
+    },
   }),
   // owner("phone", (r) => r.query.targetId),
   transactionHandler(async (req, res) => {
@@ -420,35 +433,26 @@ router.delete(
       keys: tester(),
       targetId: tester().required(),
       target: tester().required(),
+      userId: tester().isNumber(),
     },
   }),
   // owner("phone", (r) => r.query.targetId),
   convertValues({ keys: (c) => c.toArray().value }),
   transactionHandler(async (req, res) => {
     const { id, role } = req.params.user;
-    const { target, targetId, keys } = req.query;
+    const { target, targetId, keys, userId } = req.query;
 
-    if (role === "user") {
-      const filter = new WhereFilter<DB.ChangeAttributes>();
-      filter.on("target").optional(Op.eq, target);
-      filter.on("targetId").optional(Op.eq, targetId);
-      filter.on("userId").optional(Op.not, id);
-      filter.on("column").optional(Op.in, keys);
-      const changes = await Change.unscoped().findAll({
-        where: filter.where,
+    if (role === "user" && userId && userId !== id)
+      throw new ApiError(errorType.ACCESS_DENIED, {
+        description:
+          "Отменить изменение невозможно т.к. вы не являетесь его автором.",
       });
 
-      if (changes.length > 0)
-        throw new ApiError(errorType.ACCESS_DENIED, {
-          description:
-            "Удалить изменение невозможно т.к. вы не являетесь его автором.",
-        });
-    }
+    const targetUserId = userId ?? id;
 
-    const updater = getUpdater(target, targetId, id);
-    if (!Array.isArray(keys))
-      await updater.clearAll(role === "admin" ? null : id);
-    else await updater.clear(role === "admin" ? null : id, ...keys);
+    const updater = getUpdater(target, targetId, targetUserId);
+    if (!Array.isArray(keys)) await updater.clear();
+    else await updater.clear(...keys);
 
     Log.log(target, [targetId], "commit", id, { target, targetId, keys });
 

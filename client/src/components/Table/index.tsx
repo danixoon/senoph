@@ -5,6 +5,7 @@ import Header from "components/Header";
 import Icon from "components/Icon";
 import { InputBind } from "hooks/useInput";
 import * as React from "react";
+import { extractStatus, splitStatus } from "store/utils";
 import { getLocalDate, mergeClassNames, mergeProps } from "utils";
 import "./styles.styl";
 
@@ -172,6 +173,7 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
       header: (
         <>
           <ActionBox
+            status={splitStatus("idle")}
             containerProps={{ style: { float: "right" } }}
             position={settingsPosition}
             icon={() => <Icon.Settings color="muted" />}

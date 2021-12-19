@@ -52,24 +52,28 @@ const selection: <T>(
     },
   } as TableColumn);
 
-const entityDates: <
-  T extends { createAt?: string; updatedAt?: string }
->() => // props: Partial<TableColumn<T>>
-TableColumn<T>[] = () => [
-  {
-    hidden: true,
-    header: "Дата создания",
-    key: "createdAt",
-    size: "80px",
-    type: "local-date",
-  },
-  {
-    hidden: true,
-    header: "Дата обновления",
-    key: "updatedAt",
-    size: "80px",
-    type: "local-date",
-  },
-];
+const entityDates = function <T>(
+  props: { withoutCreate?: boolean; withoutUpdate?: boolean } = {}
+) {
+  return [
+    !props.withoutCreate && {
+      hidden: true,
+      header: "Дата создания",
+      key: "createdAt",
+      size: "80px",
+      type: "local-date",
+    },
+    !props.withoutUpdate && {
+      hidden: true,
+      header: "Дата обновления",
+      key: "updatedAt",
+      size: "80px",
+      type: "local-date",
+    },
+  ].filter((v) => v) as TableColumn<{
+    createdAt?: string;
+    updatedAt?: string;
+  }>[];
+};
 
 export default { author, selection, entityDates };

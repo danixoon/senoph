@@ -7,7 +7,7 @@ import { mergeClassNames, mergeProps } from "utils";
 import "./styles.styl";
 
 export type ActionBoxProps = {
-  status?: ApiStatus;
+  status: ApiStatus;
   icon?: React.FC<any>;
   containerProps?: React.ButtonHTMLAttributes<HTMLButtonElement>;
 } & Omit<SpoilerPopupProps, "target">;
@@ -20,10 +20,18 @@ const ActionBox: React.FC<ActionBoxProps> = (props) => {
 
   const IconComponent = icon ?? Icon.Box;
 
+  const popupRef = React.useRef<HTMLElement | null>(null);
+
   React.useEffect(() => {
-    if (!status?.isSuccess) return;
+    if (!isOpen) return;
+    if (status && !status.isIdle) {
+      // if (!status.isLoading) {
+      popupRef.current?.focus();
+      // }
+      return;
+    }
     setIsOpen(false);
-  }, [status?.isSuccess]);
+  }, [status?.status]);
 
   return (
     <Button
@@ -35,6 +43,7 @@ const ActionBox: React.FC<ActionBoxProps> = (props) => {
     >
       <IconComponent />
       <SpoilerPopup
+        ref={popupRef}
         position="right"
         target={isOpen ? target : null}
         onBlur={(e) => {

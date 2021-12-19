@@ -22,6 +22,7 @@ import {
   extractStatus,
   mergeStatuses,
   orStatus,
+  useStatus,
 } from "store/utils";
 import { clearObject, getLocalDate, groupBy } from "utils";
 import { TableColumn } from "components/Table";
@@ -52,6 +53,7 @@ const useContainer = () => {
   const updates = changes.data.items.map((update, i) => ({
     id: update.id,
     authorId: update.authorId,
+    createdAt: update.createdAt,
     update,
     original: phones.data.items.find((item) => item.id == update.id),
   }));
@@ -66,7 +68,8 @@ const useContainer = () => {
     update: {
       approve,
       decline,
-      status: orStatus(extractStatus(approveInfo), extractStatus(declineInfo)),
+      approveStatus: extractStatus(approveInfo),
+      declineStatus: extractStatus(declineInfo),
     },
   };
 };
@@ -95,9 +98,13 @@ const UpdatedItem: React.FC<{
 const Updates: React.FC<{}> = (props) => {
   const { updates, update, getUser } = useContainer();
 
-  useNotice(update.status);
+  // useNotice(update.approveStatus);
+  // useNotice(update.declineStatus);
 
   type Item = ArrayElement<typeof updates.items>;
+
+  const updateStatus = useStatus(update.approveStatus, update.declineStatus);
+  useNotice(updateStatus);
 
   const tableColumns: TableColumn<Item>[] = [
     {
@@ -106,17 +113,25 @@ const Updates: React.FC<{}> = (props) => {
       size: "10px",
       required: true,
       mapper: (v, item) => (
-        <ActionBox status={update.status}>
+        <ActionBox status={updateStatus}>
           <SpoilerPopupButton
             onClick={() =>
-              update.approve({ target: "phone", targetId: item.id })
+              update.approve({
+                target: "phone",
+                targetId: item.id,
+                userId: item.authorId,
+              })
             }
           >
             Подтвердить
           </SpoilerPopupButton>
           <SpoilerPopupButton
             onClick={() =>
-              update.decline({ target: "phone", targetId: item.id })
+              update.decline({
+                target: "phone",
+                targetId: item.id,
+                userId: item.authorId,
+              })
             }
           >
             Отменить
@@ -200,6 +215,7 @@ const Updates: React.FC<{}> = (props) => {
         />
       ),
     },
+    ...(columns.entityDates({ withoutUpdate: true }) as any),
     columns.author({ getUser }),
   ];
 

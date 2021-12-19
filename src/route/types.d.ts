@@ -539,7 +539,7 @@ declare namespace Api {
       | (() => RouteHandler<
           "/commit",
           {},
-          { targetId: number; target: ChangesTargetName },
+          { targetId: number; target: ChangesTargetName; userId?: number },
           {}
         >)
       | (() => RouteHandler<
@@ -676,7 +676,12 @@ declare namespace Api {
       | (() => RouteHandler<
           "/commit",
           {},
-          { target: ChangesTargetName; targetId: number; keys?: string[] },
+          {
+            target: ChangesTargetName;
+            userId?: number;
+            targetId: number;
+            keys?: string[];
+          },
           {}
         >)
       | (() => RouteHandler<"/admin/backup", {}, { id: string }, {}>)

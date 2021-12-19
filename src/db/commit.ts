@@ -211,6 +211,7 @@ export const getChanges = async <T extends ChangesTargetName>(
 
   const changes = await Change.findAll({
     where,
+    order: [["createdAt", "ASC"]],
     raw: true,
   });
   // type Model = typeof models[keyof typeof models extends T ? T : never];
@@ -295,13 +296,14 @@ export const getUpdater = <T extends ChangesTargetName>(
     });
     await Change.bulkCreate(changesList);
   };
-  const clear = async (userId: number | null, ...columns: string[]) => {
+  const clear = async (...columns: string[]) => {
     const filter = new WhereFilter<DB.ChangeAttributes>();
     filter.on("target").optional(Op.eq, target);
-    if (!userId) filter.on("userId").optional(Op.eq, userId);
     filter.on("userId").optional(Op.eq, userId);
     filter.on("targetId").optional(Op.eq, targetId);
-    filter.on("column").optional(Op.in, columns);
+    filter
+      .on("column")
+      .optional(Op.in, columns.length > 0 ? columns : undefined);
     // const where = { target, userId, targetId } as any;
     // if (columns.length > 0) where.column = { [Op.in]: columns };
     await Change.destroy({
@@ -309,21 +311,21 @@ export const getUpdater = <T extends ChangesTargetName>(
     });
   };
 
-  const clearAll = async (userId: number | null) => {
-    // const where = { target, userId, targetId } as any;
-    const filter = new WhereFilter<DB.ChangeAttributes>();
-    filter.on("target").optional(Op.eq, target);
-    if (!userId) filter.on("userId").optional(Op.eq, userId);
-    filter.on("targetId").optional(Op.eq, targetId);
-    await Change.destroy({
-      where: filter.where,
-    });
-  };
+  // const clearAll = async () => {
+  //   // const where = { target, userId, targetId } as any;
+  //   const filter = new WhereFilter<DB.ChangeAttributes>();
+  //   filter.on("target").optional(Op.eq, target);
+  //   filter.on("userId").optional(Op.eq, userId);
+  //   filter.on("targetId").optional(Op.eq, targetId);
+  //   await Change.destroy({
+  //     where: filter.where,
+  //   });
+  // };
 
   const commit = async () => {
     const changesList = await Change.findAll({
       where: { targetId, target, userId },
-      order: [["createdAt", "ASC"]],
+      // order: [["createdAt", "ASC"]],
       raw: true,
     });
 
@@ -342,12 +344,12 @@ export const getUpdater = <T extends ChangesTargetName>(
     await model.update(changes[targetId], {
       where: { id: targetId },
     });
-    await clear(userId);
+    await clear();
   };
   return {
     push,
     clear,
-    clearAll,
+    // clearAll,
     commit,
   };
 };

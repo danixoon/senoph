@@ -23,6 +23,7 @@ import {
   FetchBaseQueryMeta,
 } from "@reduxjs/toolkit/dist/query/fetchBaseQuery";
 import { clearObject } from "utils";
+import React from "react";
 
 export const locationQueryReducer = <T extends { filter: F }, F>(
   path: string,
@@ -115,6 +116,37 @@ type Statusable = {
   error?: any;
 };
 
+export const useStatus = (...statuses: ApiStatus[]) => {
+  const { current: list } = React.useRef<{ date: number; status: ApiStatus }[]>(
+    []
+  );
+
+  const [lastStatus, setStatus] = React.useState<ApiStatus>(
+    splitStatus("idle")
+  );
+
+  React.useEffect(
+    () => {
+      for (let i = 0; i < statuses.length; i++) {
+        if (list.length - 1 < i)
+          list.push({ date: Date.now(), status: splitStatus("idle") });
+
+        if (list[i].status.status !== statuses[i].status) {
+          list[i].date = Date.now();
+          list[i].status = statuses[i];
+        }
+      }
+
+      const status = [...list].sort((a, b) => (a.date < b.date ? 1 : -1))[0]
+        ?.status;
+      setStatus(status);
+    },
+    statuses.map((s) => s.status)
+  );
+
+  return lastStatus;
+};
+
 export const orStatus = (...statuses: ApiStatus[]) => {
   const status: ApiStatus = statuses.reduce((a, b) => ({
     error: a.error || b.error,
@@ -134,7 +166,7 @@ export const orStatus = (...statuses: ApiStatus[]) => {
         : "idle",
   }));
 
-  return status;     
+  return status;
   // const status: ApiStatus =
 };
 
