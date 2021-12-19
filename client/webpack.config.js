@@ -79,6 +79,7 @@ const config = {
       title: "ИС учета средств связи",
       template: path.resolve(__dirname, "public/index.pug"),
       version,
+      production: isProduction,
     }),
     new MiniCssExtractPlugin({
       filename: "[name].css",

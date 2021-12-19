@@ -138,7 +138,7 @@ const ViewContent: React.FC<{}> = (props) => {
   return (
     <>
       <TopBarLayer>
-        <Layout flex="1">
+        <Layout flex="1" style={{ height: "124px" }}>
           <Header unsized align="right">
             Фильтр
           </Header>

@@ -44,6 +44,7 @@ const DetailsPopup: React.FC<PopupProps & { payload?: any }> = (props) => {
       </PopupTopBar>
       {payload ? (
         <ReactJson
+          theme={(window as any).__production__ ? "monokai" : "rjv-default"}
           displayDataTypes={false}
           name={null}
           displayObjectSize={false}
@@ -268,6 +269,7 @@ const SystemLogItem: React.FC<{ item: SystemLog }> = (props) => {
         </Layout>
         {item.payload && (
           <ReactJson
+            theme={(window as any).__production__ ? "monokai" : "rjv-default"}
             style={{ maxWidth: "70vw" }}
             displayDataTypes={false}
             name={null}

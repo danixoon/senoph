@@ -188,10 +188,13 @@ export const ViewContent: React.FC<{}> = (props) => {
   return (
     <>
       <PopupLayer>
-        <PhonesCategorySelectionPopup {...phonesPopup} categoryId={phonesPopup.state} />
+        <PhonesCategorySelectionPopup
+          {...phonesPopup}
+          categoryId={phonesPopup.state}
+        />
       </PopupLayer>
       <TopBarLayer>
-        <Layout flex="1">
+        <Layout flex="1" style={{ height: "124px" }}>
           <Header unsized align="right">
             Фильтр
           </Header>
@@ -264,7 +267,7 @@ export const ViewContent: React.FC<{}> = (props) => {
         ) : (
           <>
             <Table
-              stickyTop={136}
+              stickyTop={145}
               items={categories.data.items}
               columns={[
                 actionBox,

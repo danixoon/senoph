@@ -117,6 +117,7 @@ export const CommitContent: React.FC<{}> = (props) => {
           text="Акты категорий для потдверждения отсутствуют. Создайте их, выбрав"
         >
           <Table
+            stickyTop={51}
             columns={[
               actionBox,
               ...getColumns(getUser, (id) => phonesPopup.onToggle(true, id)),

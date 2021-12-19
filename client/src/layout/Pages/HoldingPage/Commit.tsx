@@ -119,7 +119,7 @@ const CommitContent: React.FC<{}> = (props) => {
           hrefContent="средство связи"
           text="Движения для потдверждения отсутствуют. Создайте их, выбрав"
         >
-          <Table stickyTop={41} columns={columns} items={holdings.data.items} />
+          <Table stickyTop={51} columns={columns} items={holdings.data.items} />
         </InfoBanner>
       </WithLoader>
     </>

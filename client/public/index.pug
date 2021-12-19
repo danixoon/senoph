@@ -6,6 +6,7 @@ html
     meta(name="viewport", content="width=device-width, initial-scale=1.0")
     script.
       window.__version__ = "#{htmlWebpackPlugin.options.version}";
+      window.__production__ = "#{htmlWebpackPlugin.options.production}";
 
     title #{htmlWebpackPlugin.options.title}
   body
