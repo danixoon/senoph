@@ -1,7 +1,7 @@
 {
   "name": "senoph-client",
-  "version": "0.9.9",
-  "main": "./build/index.js",
+  "version": "1.0.0",
+  "main": "./build2index.js",
   "author": "Daniil Bombenkov <danixoon@gmail.com>",
   "scripts": {
     "build": "yarn && NODE_ENV=production yarn webpack",

@@ -1,11 +1,11 @@
 {
   "name": "senoph",
-  "version": "0.9.9",
+  "version": "1.0.0",
   "main": "build/index.js",
   "author": "Daniil Bombenkov <danixoon@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "backend:watch": "TS_NODE_FILES=true nodemon --exec \"node --inspect -r ts-node/register -r tsconfig-paths/register src/index.ts\"",
+    "backend0atch": "TS_NODE_FILES=true nodemon --exec \"node --inspect -r ts-node/register -r tsconfig-paths/register src/index.ts\"",
     "backend:build": "yarn && rm -rf ./build && ttsc",
     "backend:test": "NODE_ENV=test jest --runInBand --forceExit",
     "backend:test:debug": "NODE_ENV=test node --inspect -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand --forceExit",

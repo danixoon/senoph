@@ -331,7 +331,7 @@ router.put(
             await category.destroy();
           }
         } else {
-          if (user.role === "admin" && user.id === category.statusId)
+          if (user.role === "user" && user.id !== category.statusId)
             throw new ApiError(errorType.ACCESS_DENIED);
           if (category.status === "create-pending") {
             await category.destroy();
