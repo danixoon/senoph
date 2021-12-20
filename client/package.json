@@ -1,6 +1,6 @@
 {
   "name": "senoph-client",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "./build2index.js",
   "author": "Daniil Bombenkov <danixoon@gmail.com>",
   "scripts": {
