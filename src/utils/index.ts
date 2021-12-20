@@ -7,6 +7,7 @@ import { sequelize } from "../db";
 export const validateEnv = () => {
   type Validator = (value?: string) => boolean | undefined | string;
   const envs: Partial<Record<keyof NodeJS.ProcessEnv, Validator>> = {
+    // MYSQL: (value) => !value && "Порт до bin каталога MYSQL не задан",
     PORT: (value) =>
       process.env.NODE_ENV === "production" &&
       !value &&

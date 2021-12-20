@@ -266,18 +266,6 @@ declare namespace Api {
           {}
         >)
       | (() => RouteHandler<
-          "/phone/holdings",
-          ItemsResponse<Api.Models.Holding>,
-          { phoneIds: number[]; orderDate?: string; orderKey?: string },
-          {}
-        >)
-      | (() => RouteHandler<
-          "/phone/categories",
-          ItemsResponse<Api.Models.Category>,
-          { phoneIds: number[]; actDate?: string; actKey?: string },
-          {}
-        >)
-      | (() => RouteHandler<
           "/holdings",
           ItemsResponse<Api.Models.Holding>,
           {
@@ -329,16 +317,6 @@ declare namespace Api {
 
             offset?: number;
             amount?: number;
-          },
-          {}
-        >)
-      | (() => RouteHandler<
-          "/category/phones",
-          ItemsResponse<Api.Models.Phone>,
-          {
-            categoryId: number;
-            ids?: number[];
-            inventoryKey?: string;
           },
           {}
         >)
@@ -413,7 +391,30 @@ declare namespace Api {
           {}
         >);
 
+    // КОСТЫЛЬ
     post:
+      | (() => RouteHandler<
+          "/category/phones",
+          ItemsResponse<Api.Models.Phone>,
+          {
+            categoryId: number;
+
+            inventoryKey?: string;
+          },
+          { ids?: number[] }
+        >)
+      | (() => RouteHandler<
+          "/phone/holdings",
+          ItemsResponse<Api.Models.Holding>,
+          { orderDate?: string; orderKey?: string },
+          { phoneIds: number[] }
+        >)
+      | (() => RouteHandler<
+          "/phone/categories",
+          ItemsResponse<Api.Models.Category>,
+          { actDate?: string; actKey?: string },
+          { phoneIds: number[] }
+        >)
       | (() => RouteHandler<
           "/admin/backup/import",
           { id: string },

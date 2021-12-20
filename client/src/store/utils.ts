@@ -53,8 +53,8 @@ export const updateQuery = <T>(query: Partial<T>, pathname?: string) => {
 export function isApiError(type: any): type is Api.Error {
   return (
     type !== undefined &&
-    typeof type.name === "string" &&
-    typeof type.code === "number"
+    typeof type?.name === "string" &&
+    typeof type?.code === "number"
   );
 }
 

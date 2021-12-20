@@ -14,6 +14,7 @@ declare global {
       readonly API_TEST_TOKEN?: string;
       readonly DEFAULT_PASSWORD: string;
       readonly SECRET: string;
+      readonly MYSQL: string;
     }
   }
 

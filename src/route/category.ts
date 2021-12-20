@@ -74,7 +74,7 @@ router.get(
     const categories = await Category.unscoped().findAll({
       include: [
         {
-          model: Phone,          
+          model: Phone,
           attributes: ["id"],
         },
       ],
@@ -359,18 +359,22 @@ router.put(
   })
 );
 
-router.get(
+router.post(
   "/category/phones",
   access("user"),
   validate({
     query: {
       categoryId: tester().required().isNumber(),
-      ids: tester().array("int"),
+
       inventoryKey: tester(),
+    },
+    body: {
+      ids: tester().array("int"),
     },
   }),
   transactionHandler(async (req, res) => {
-    const { categoryId, ids, inventoryKey } = req.query;
+    const { categoryId, inventoryKey } = req.query;
+    const { ids } = req.body;
 
     const filter = new WhereFilter<DB.PhoneAttributes>();
     filter.on("id").optional(Op.in, ids);

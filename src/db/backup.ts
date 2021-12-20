@@ -45,7 +45,7 @@ export const createBackup = async (tag: string = "normal") => {
 
   const wstream = createWriteStream(filename);
 
-  const mysqldump = spawn("mysqldump", [
+  const mysqldump = spawn(process.env.MYSQL + "mysqldump", [
     "-h" + process.env.DB_HOST,
     "-P" + process.env.DB_PORT,
     "-u" + process.env.DB_USERNAME,
@@ -114,6 +114,7 @@ export const revertBackup = (filename: string) =>
 
     exec(
       `mysql -u${process.env.DB_USERNAME} -p${process.env.DB_PASSWORD} -h${process.env.DB_HOST} ${process.env.DB_NAME} < ${backupPath}`,
+      { cwd: process.env.MYSQL },
       (err, stdout, stderr) => {
         if (err) return rej(err);
         res();

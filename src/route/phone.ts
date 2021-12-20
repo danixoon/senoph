@@ -79,22 +79,24 @@ router.get(
   })
 );
 
-router.get(
+router.post(
   "/phone/holdings",
   access("user"),
   validate({
     query: {
       // status: tester(),
       // ids: tester().array("int"),
-      phoneIds: tester().array("int"),
+
       orderDate: tester().isDate(),
       orderKey: tester(),
       // latest: tester().isBoolean(),
     },
+    body: { phoneIds: tester().array("int") },
   }),
   transactionHandler(async (req, res) => {
     // const { latest, phoneIds } = req.query;
-    const { phoneIds, orderDate, orderKey } = req.query;
+    const { orderDate, orderKey } = req.query;
+    const { phoneIds } = req.body;
     const { user } = req.params;
 
     // const filter = new Filter(req.query).add("status");
@@ -111,7 +113,7 @@ router.get(
           model: Phone,
           where: filter.where,
           attributes: ["id"],
-          required: (req.query.phoneIds ?? []).length > 0,
+          required: (phoneIds ?? []).length > 0,
         },
         Holder,
       ],
@@ -366,7 +368,8 @@ router.get(
         const yearMs = 31556952 * 1000;
         if (
           !lastCategory ||
-          new Date(lastCategory.actDate).getTime() + yearMs > Date.now() || lastCategory.categoryKey !== "1"
+          new Date(lastCategory.actDate).getTime() + yearMs > Date.now() ||
+          lastCategory.categoryKey !== "1"
         )
           return false;
       }

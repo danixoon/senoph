@@ -257,13 +257,15 @@ export const api = createApi({
       providesTags: ["holding", "phone", "holdingPhone"],
     }),
     fetchPhoneHoldings: builder.query<
-      Api.GetResponse<"get", "/phone/holdings">,
-      Api.GetQuery<"get", "/phone/holdings">
+      Api.GetResponse<"post", "/phone/holdings">,
+      Api.GetQuery<"post", "/phone/holdings"> &
+        Api.GetBody<"post", "/phone/holdings">
     >({
-      query: (params) => ({
+      query: ({ phoneIds, ...params }) => ({
         url: "phone/holdings",
         params,
-        method: "GET",
+        body: { phoneIds },
+        method: "POST",
       }),
       providesTags: ["holding"],
     }),
@@ -312,13 +314,15 @@ export const api = createApi({
       providesTags: ["category"],
     }),
     fetchPhonesFromCategory: builder.query<
-      Api.GetResponse<"get", "/category/phones">,
-      Api.GetQuery<"get", "/category/phones">
+      Api.GetResponse<"post", "/category/phones">,
+      Api.GetQuery<"post", "/category/phones"> &
+        Api.GetBody<"post", "/category/phones">
     >({
-      query: (params) => ({
+      query: ({ ids, ...params }) => ({
         url: "category/phones",
         params,
-        method: "GET",
+        body: { ids },
+        method: "POST",
       }),
       providesTags: ["category", "phone", "categoryPhone"],
     }),
