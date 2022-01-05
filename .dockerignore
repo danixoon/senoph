@@ -1,4 +1,11 @@
+# frontend
+.storybook
+.gitignore
+
+# misc
+.env
 node_modules
+.dockerignore
 build
 backup
 deploy

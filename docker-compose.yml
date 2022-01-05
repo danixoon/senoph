@@ -1,0 +1,29 @@
+services:
+  mysqldb:
+    image: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=memelord
+      - MYSQL_DATABASE=app
+      - MYSQL_USER=memelord
+      - MYSQL_PASSWORD=memelord
+    volumes:
+      - dbs:/var/lib/mysql
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - SECRET=1234
+      - DB_NAME=app
+      - DB_PASSWORD=memelord
+      - DB_USERNAME=memelord
+      - DB_PORT=3306
+      - DB_HOST=mysqldb
+      - DEFAULT_PASSWORD=1234
+      - MYSQL=
+    depends_on:
+      - mysqldb
+
+volumes:
+  dbs: null

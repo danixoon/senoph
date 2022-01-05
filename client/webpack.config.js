@@ -100,7 +100,7 @@ const config = {
     stats: "errors-only",
     host: "0.0.0.0",
     disableHostCheck: true,
-    public: require("child_process").execSync("gp url 3000").toString().trim(),
+    // public: require("child_process").execSync("gp url 3000").toString().trim(),
     proxy: {
       "/api": {
         target: "http://localhost:5000/",
