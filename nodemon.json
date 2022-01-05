@@ -1,6 +1,6 @@
 {
   "restartable": "rs",
-  "ignore": [".git", "node_modules/**/node_modules", "client"],
+  "ignore": [".git", "node_modules/**/node_modules", "client", "sync.json"],
   "events": {
     "start": "kill-port 5000",
     "restart": "kill-port 5000",

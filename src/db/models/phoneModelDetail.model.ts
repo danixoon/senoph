@@ -33,7 +33,7 @@ export default class PhoneModelDetail extends Model<
 
   @AllowNull(false)
   @Column(DataType.FLOAT)
-  amount: string;
+  amount: number;
 
   @ForeignKey(() => PhoneModel)
   @AllowNull(false)

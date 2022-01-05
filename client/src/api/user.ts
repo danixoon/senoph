@@ -1,7 +1,7 @@
 import axios, { AxiosResponse } from "axios";
 
 export const userLogin = async (username: string, password: string) => {
-  const token = window.localStorage.getItem("token");
+  const token = window.sessionStorage.getItem("token");
   return (
     await axios.get("/api/auth", {
       params: { username, password },
@@ -13,7 +13,7 @@ export const userLogin = async (username: string, password: string) => {
 // axios.request({ })
 
 export const userFetchData = async () => {
-  const token = window.localStorage.getItem("token");
+  const token = window.sessionStorage.getItem("token");
   return (
     await axios.get("/api/user", {
       headers: token ? { Authorization: token } : undefined,

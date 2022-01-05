@@ -32,6 +32,7 @@ import PopupLayer from "providers/PopupLayer";
 type PhoneListItem = {
   id: any;
   name: string;
+  inventoryKey: string;
 };
 
 export type PhoneSelectionPopup = OverrideProps<
@@ -61,11 +62,12 @@ export type PhoneSelectionPopup = OverrideProps<
 
 const PhoneItem: React.FC<{
   id: any;
+  inventoryKey: string;
   modelName: string;
   href: string;
   onDelete: () => void;
 }> = (props) => {
-  const { id, modelName, href, onDelete } = props;
+  const { id, modelName, inventoryKey, href, onDelete } = props;
   return (
     <Layout flow="row">
       <Button color="primary" inverted onClick={onDelete}>
@@ -73,9 +75,9 @@ const PhoneItem: React.FC<{
       </Button>
       <Hr vertical />
       <Link isMonospace href={href} style={{ marginRight: "0.25rem" }}>
-        {modelName}
+        #{id} {modelName}
       </Link>
-      <Label style={{ marginLeft: "auto" }}> #{id}</Label>
+      <Header style={{ marginLeft: "auto" }}>{inventoryKey}</Header>
     </Layout>
   );
 };
@@ -157,6 +159,7 @@ const PhoneSelectionPopup: React.FC<PhoneSelectionPopup> = (props) => {
                       onDelete={() => onDeselect(item.id)}
                       href={`/phone/edit?${qs.stringify(q)}`}
                       modelName={item.name}
+                      inventoryKey={item.inventoryKey}
                       id={item.id}
                       key={item.id}
                     />

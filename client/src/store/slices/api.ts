@@ -15,24 +15,30 @@ const convertItem = (item: any) => {
   return converted;
 };
 
+const tagTypes = [
+  "commit",
+  "holder",
+  "phone",
+  "holding",
+  "holdingPhone",
+  "categoryPhone",
+  "holder",
+  "category",
+  "placement",
+  "user",
+  "department",
+  "phoneType",
+  "phoneModel",
+  "log",
+  "backup",
+] as const;
+
+// api.
+
 export const api = createApi({
   reducerPath: "api",
-  tagTypes: [
-    "commit",
-    "holder",
-    "phone",
-    "holding",
-    "holdingPhone",
-    "categoryPhone",
-    "holder",
-    "category",
-    "placement",
-    "user",
-    "department",
-    "phoneType",
-    "phoneModel",
-    "log",
-  ],
+  tagTypes,
+  keepUnusedDataFor: 5,
   baseQuery: fetchBaseQuery({
     baseUrl: "/api",
     prepareHeaders: (headers, { getState }) => {
@@ -159,8 +165,8 @@ export const api = createApi({
       invalidatesTags: (r, e, a) => ["phone", "commit", "log"],
     }),
     commitChangesApprove: builder.mutation<
-      Api.GetResponse<"post", "/commit">,
-      Api.GetQuery<"post", "/commit">
+      Api.GetResponse<"put", "/commit">,
+      Api.GetQuery<"put", "/commit">
     >({
       query: (params) => ({
         url: "commit",
@@ -239,14 +245,27 @@ export const api = createApi({
       }),
       providesTags: ["holding"],
     }),
-    fetchPhoneHoldings: builder.query<
-      Api.GetResponse<"get", "/phone/holdings">,
-      Api.GetQuery<"get", "/phone/holdings">
+    fetchPhonesFromHolding: builder.query<
+      Api.GetResponse<"get", "/holding/phones">,
+      Api.GetQuery<"get", "/holding/phones">
     >({
       query: (params) => ({
-        url: "phone/holdings",
+        url: "holding/phones",
         params,
         method: "GET",
+      }),
+      providesTags: ["holding", "phone", "holdingPhone"],
+    }),
+    fetchPhoneHoldings: builder.query<
+      Api.GetResponse<"post", "/phone/holdings">,
+      Api.GetQuery<"post", "/phone/holdings"> &
+        Api.GetBody<"post", "/phone/holdings">
+    >({
+      query: ({ phoneIds, ...params }) => ({
+        url: "phone/holdings",
+        params,
+        body: { phoneIds },
+        method: "POST",
       }),
       providesTags: ["holding"],
     }),
@@ -293,6 +312,19 @@ export const api = createApi({
         method: "GET",
       }),
       providesTags: ["category"],
+    }),
+    fetchPhonesFromCategory: builder.query<
+      Api.GetResponse<"post", "/category/phones">,
+      Api.GetQuery<"post", "/category/phones"> &
+        Api.GetBody<"post", "/category/phones">
+    >({
+      query: ({ ids, ...params }) => ({
+        url: "category/phones",
+        params,
+        body: { ids },
+        method: "POST",
+      }),
+      providesTags: ["category", "phone", "categoryPhone"],
     }),
     createCategoryChange: builder.mutation<
       Api.GetResponse<"put", "/category">,
@@ -384,6 +416,13 @@ export const api = createApi({
       query: (params) => ({ url: "account", params, method: "DELETE" }),
       invalidatesTags: ["user", "log"],
     }),
+    editUser: builder.mutation<
+      Api.GetResponse<"put", "/account">,
+      Api.GetQuery<"put", "/account">
+    >({
+      query: (params) => ({ url: "account", params, method: "PUT" }),
+      invalidatesTags: ["user", "log"],
+    }),
     createUser: builder.mutation<
       Api.GetResponse<"post", "/account">,
       Api.GetQuery<"post", "/account">
@@ -409,6 +448,13 @@ export const api = createApi({
       Api.GetQuery<"delete", "/department">
     >({
       query: (params) => ({ url: "department", params, method: "DELETE" }),
+      invalidatesTags: ["department", "log"],
+    }),
+    editDepartment: builder.mutation<
+      Api.GetResponse<"put", "/department">,
+      Api.GetQuery<"put", "/department">
+    >({
+      query: (params) => ({ url: "department", params, method: "PUT" }),
       invalidatesTags: ["department", "log"],
     }),
     createDepartment: builder.mutation<
@@ -438,6 +484,13 @@ export const api = createApi({
       query: (params) => ({ url: "placement", params, method: "DELETE" }),
       invalidatesTags: ["placement", "log", "department"],
     }),
+    editPlacement: builder.mutation<
+      Api.GetResponse<"put", "/placement">,
+      Api.GetQuery<"put", "/placement">
+    >({
+      query: (params) => ({ url: "placement", params, method: "PUT" }),
+      invalidatesTags: ["placement", "log"],
+    }),
     createPlacement: builder.mutation<
       Api.GetResponse<"post", "/placement">,
       Api.GetQuery<"post", "/placement">
@@ -464,6 +517,13 @@ export const api = createApi({
       query: (params) => ({ url: "phone/type", params, method: "DELETE" }),
       invalidatesTags: ["phoneType", "log"],
     }),
+    editPhoneType: builder.mutation<
+      Api.GetResponse<"put", "/phone/type">,
+      Api.GetQuery<"put", "/phone/type">
+    >({
+      query: (params) => ({ url: "phone/type", params, method: "PUT" }),
+      invalidatesTags: ["phoneType", "log"],
+    }),
     createPhoneType: builder.mutation<
       Api.GetResponse<"post", "/phone/type">,
       Api.GetQuery<"post", "/phone/type">
@@ -477,6 +537,13 @@ export const api = createApi({
       Api.GetQuery<"delete", "/holder">
     >({
       query: (params) => ({ url: "holder", params, method: "DELETE" }),
+      invalidatesTags: ["holder", "log"],
+    }),
+    editHolder: builder.mutation<
+      Api.GetResponse<"put", "/holder">,
+      Api.GetQuery<"put", "/holder">
+    >({
+      query: (params) => ({ url: "holder", params, method: "PUT" }),
       invalidatesTags: ["holder", "log"],
     }),
     createHolder: builder.mutation<
@@ -505,6 +572,25 @@ export const api = createApi({
       query: (params) => ({ url: "phone/model", params, method: "DELETE" }),
       invalidatesTags: ["phoneModel", "log"],
     }),
+    editPhoneModel: builder.mutation<
+      Api.GetResponse<"put", "/phone/model">,
+      Api.GetQuery<"put", "/phone/model"> & {
+        details: {
+          type: DB.PhoneModelDetailType;
+          name: string;
+          amount: number;
+          units: string;
+        }[];
+      }
+    >({
+      query: ({ details, ...params }) => ({
+        url: "phone/model",
+        params,
+        body: { details },
+        method: "PUT",
+      }),
+      invalidatesTags: ["phoneModel", "log"],
+    }),
     createPhoneModel: builder.mutation<
       Api.GetResponse<"post", "/phone/model">,
       Api.GetQuery<"post", "/phone/model">
@@ -523,10 +609,92 @@ export const api = createApi({
     >({
       query: (params) => ({
         url: "logs",
-        // params,
+        params,
         method: "GET",
       }),
       providesTags: ["log"],
+    }),
+    fetchSystemLogs: builder.query<
+      Api.GetResponse<"get", "/log/system">,
+      Api.GetQuery<"get", "/log/system">
+    >({
+      query: (params) => ({
+        url: "log/system",
+        params,
+        method: "GET",
+      }),
+      providesTags: ["log"],
+    }),
+    //*****//
+    fetchBackups: builder.query<
+      Api.GetResponse<"get", "/admin/backups">,
+      Api.GetQuery<"get", "/admin/backups">
+    >({
+      query: (params) => ({
+        url: "admin/backups",
+        params,
+        method: "GET",
+      }),
+      providesTags: ["backup"],
+    }),
+    importBackup: builder.mutation<
+      Api.GetResponse<"post", "/admin/backup/import">,
+      { body: Api.GetBody<"post", "/admin/backup/import"> } & Api.GetQuery<
+        "post",
+        "/admin/backup/import"
+      >
+    >({
+      query: ({ unsafe, body }) => ({
+        url: "admin/backup/import",
+        method: "POST",
+        params: { unsafe },
+        body,
+      }),
+      invalidatesTags: (r, e, a) => ["backup", "log"],
+    }),
+    createBackup: builder.mutation<
+      Api.GetResponse<"post", "/admin/backup">,
+      Api.GetQuery<"post", "/admin/backup">
+    >({
+      query: (params) => ({
+        url: "admin/backup",
+        params,
+        method: "POST",
+      }),
+      invalidatesTags: ["backup"],
+    }),
+    revertBackup: builder.mutation<
+      Api.GetResponse<"post", "/admin/backup/revert">,
+      Api.GetQuery<"post", "/admin/backup/revert">
+    >({
+      query: (params) => ({
+        url: "admin/backup/revert",
+        params,
+        method: "POST",
+      }),
+      invalidatesTags: tagTypes,
+    }),
+    removeBackup: builder.mutation<
+      Api.GetResponse<"delete", "/admin/backup">,
+      Api.GetQuery<"delete", "/admin/backup">
+    >({
+      query: (params) => ({
+        url: "admin/backup",
+        params,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["backup"],
+    }),
+    fetchNotice: builder.query<
+      Api.GetResponse<"get", "/notice">,
+      Api.GetQuery<"get", "/notice">
+    >({
+      query: (params) => ({
+        url: "notice",
+        params,
+        method: "GET",
+      }),
+      providesTags: tagTypes,
     }),
   }),
 });

@@ -85,7 +85,7 @@ const FieldEditPopup: React.FC<FieldEditPopupProps> = (props) => {
   const isReset = bind.input.value === null;
 
   return (
-    <Popup {...rest} size="sm">
+    <Popup {...rest} style={{ zIndex: 35 }} size="sm">
       <Form input={bind.input}>
         {renderField()}
         <Button

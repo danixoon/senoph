@@ -1,3 +1,4 @@
+import ActionBox from "components/ActionBox";
 import Button from "components/Button";
 import Dropdown from "components/Dropdown";
 import Form from "components/Form";
@@ -8,11 +9,18 @@ import Input from "components/Input";
 import Layout from "components/Layout";
 import SpoilerPopup, { SpoilerPopupButton } from "components/SpoilerPopup";
 import Table, { TableColumn } from "components/Table";
+import WithLoader from "components/WithLoader";
 import { useInput } from "hooks/useInput";
+import { useNotice } from "hooks/useNotice";
+import { useTogglePayloadPopup, useTogglePopup } from "hooks/useTogglePopup";
+import ItemEditPopup from "layout/Popups/ItemEditPopup";
 import { NoticeContext } from "providers/NoticeProvider";
+import PopupLayer from "providers/PopupLayer";
+import TopBarLayer from "providers/TopBarLayer";
 import React from "react";
 import { api } from "store/slices/api";
 import { extractStatus } from "store/utils";
+import columnTypes from "utils/columns";
 
 export type UsersProps = {};
 
@@ -20,13 +28,20 @@ const useUsersContainer = () => {
   const users = api.useFetchUsersQuery({});
   const [deleteUser, deleteStatus] = api.useDeleteUserMutation();
   const [createUser, createStatus] = api.useCreateUserMutation();
+  const [editUser, editStatus] = api.useEditUserMutation();
 
   return {
-    users: { ...users, items: users.data?.items ?? [] },
+    users: {
+      ...users,
+      items: users.data?.items ?? [],
+      status: extractStatus(users, true),
+    },
     deleteUser,
+    createUser,
+    editUser,
     deleteStatus: extractStatus(deleteStatus),
     createStatus: extractStatus(createStatus),
-    createUser,
+    editStatus: extractStatus(editStatus),
   };
 };
 
@@ -36,8 +51,15 @@ const roleNameMapper = (role: Role) =>
   ] ?? "Неизвестно");
 
 const Users: React.FC<UsersProps> = (props) => {
-  const { users, deleteUser, createUser, createStatus, deleteStatus } =
-    useUsersContainer();
+  const {
+    users,
+    deleteUser,
+    createUser,
+    editUser,
+    createStatus,
+    deleteStatus,
+    editStatus,
+  } = useUsersContainer();
 
   const noticeContext = React.useContext(NoticeContext);
 
@@ -63,16 +85,23 @@ const Users: React.FC<UsersProps> = (props) => {
       );
   }, [deleteStatus.status]);
 
+  const { state: editedUser, ...editPopup } = useTogglePayloadPopup();
+
   const columns: TableColumn[] = [
     {
       key: "actions",
       header: "",
       size: "30px",
+      required: true,
       mapper: (v, item) => (
-        <ActionBox
-          status={deleteStatus}
-          onDelete={() => deleteUser({ id: item.id })}
-        />
+        <ActionBox status={deleteStatus}>
+          <SpoilerPopupButton onClick={() => editPopup.onToggle(true, item)}>
+            Изменить
+          </SpoilerPopupButton>
+          <SpoilerPopupButton onClick={() => deleteUser({ id: item.id })}>
+            Удалить
+          </SpoilerPopupButton>
+        </ActionBox>
       ),
     },
 
@@ -89,27 +118,68 @@ const Users: React.FC<UsersProps> = (props) => {
     },
     { key: "username", header: "Логин", size: "150px" },
     { key: "name", header: "Имя" },
+    ...columnTypes.entityDates(),
   ];
 
   const [bind] = useInput({});
 
   const tableItems = users.items.map((user) => user);
 
-  // const noticeContext = React.useContext(NoticeContext);
-
   // TODO: Make proper typing for POST request params & form inputs
   return (
     <>
-      <Layout>
-        <Form
-          input={bind.input}
-          onSubmit={(data) => {
-            // onSubmit(data);
-            createUser(data as any);
-            // noticeContext.createNotice("Пользователь создан");
-          }}
-        >
-          <Layout flow="row">
+      <PopupLayer>
+        <ItemEditPopup
+          {...editPopup}
+          status={editStatus}
+          defaults={editedUser}
+          onSubmit={(payload) => editUser({ id: editedUser.id, ...payload })}
+          items={[
+            {
+              name: "username",
+              content: ({ bind, name }) => (
+                <Input {...bind} required label="Логин" name={name} />
+              ),
+            },
+            {
+              name: "name",
+              content: ({ bind, name }) => (
+                <Input {...bind} required label="Имя" name={name} />
+              ),
+            },
+            {
+              name: "role",
+              content: ({ bind, name }) => (
+                <Dropdown
+                  {...bind}
+                  required
+                  items={[
+                    { label: "Администратор", id: "admin" },
+                    { label: "Пользователь", id: "user" },
+                  ]}
+                  label="Роль"
+                  name={name}
+                />
+              ),
+            },
+            {
+              name: "password",
+              content: ({ bind, name }) => (
+                <Input {...bind} label="Пароль" type="password" name={name} />
+              ),
+            },
+          ]}
+        />
+      </PopupLayer>
+      <TopBarLayer>
+        <Layout flex="1">
+          <Form
+            style={{ flexFlow: "row", flex: "1" }}
+            input={bind.input}
+            onSubmit={(data) => {
+              createUser(data as any);
+            }}
+          >
             <Dropdown
               required
               style={{ flex: "1" }}
@@ -158,48 +228,49 @@ const Users: React.FC<UsersProps> = (props) => {
             >
               {createStatus.isLoading ? <LoaderIcon /> : "Создать"}
             </Button>
-          </Layout>
-        </Form>
-        <Hr />
-        <Header align="right">
-          Список пользователей ({users.items.length})
-        </Header>
-        <Table items={tableItems} columns={columns} />
-      </Layout>
+          </Form>
+          <Header align="right">
+            Список пользователей ({users.items.length})
+          </Header>
+        </Layout>
+      </TopBarLayer>
+      <WithLoader status={users.status}>
+        <Table stickyTop={91} items={tableItems} columns={columns} />
+      </WithLoader>
     </>
   );
 };
 
-const ActionBox = (props: { status: ApiStatus; onDelete: () => void }) => {
-  // const { commit } = props;
-  const [target, setTarget] = React.useState<HTMLElement | null>(() => null);
-  const [isOpen, setIsOpen] = React.useState(() => false);
+// const ActionBox = (props: { status: ApiStatus; onDelete: () => void }) => {
+//   // const { commit } = props;
+//   const [target, setTarget] = React.useState<HTMLElement | null>(() => null);
+//   const [isOpen, setIsOpen] = React.useState(() => false);
 
-  return (
-    <Button
-      ref={(r) => setTarget(r)}
-      color="primary"
-      inverted
-      onClick={() => setIsOpen(true)}
-    >
-      <Icon.Box />
-      <SpoilerPopup
-        target={isOpen ? target : null}
-        position="right"
-        onBlur={(e) => {
-          if (e.currentTarget.contains(e.relatedTarget as any))
-            e.preventDefault();
-          else setIsOpen(false);
-        }}
-      >
-        <SpoilerPopupButton
-          onClick={() => !props.status.isLoading && props.onDelete()}
-        >
-          {props.status.isLoading ? <LoaderIcon /> : "Удалить"}
-        </SpoilerPopupButton>
-      </SpoilerPopup>
-    </Button>
-  );
-};
+//   return (
+//     <Button
+//       ref={(r) => setTarget(r)}
+//       color="primary"
+//       inverted
+//       onClick={() => setIsOpen(true)}
+//     >
+//       <Icon.Box />
+//       <SpoilerPopup
+//         target={isOpen ? target : null}
+//         position="right"
+//         onBlur={(e) => {
+//           if (e.currentTarget.contains(e.relatedTarget as any))
+//             e.preventDefault();
+//           else setIsOpen(false);
+//         }}
+//       >
+//         <SpoilerPopupButton
+//           onClick={() => !props.status.isLoading && props.onDelete()}
+//         >
+//           {props.status.isLoading ? <LoaderIcon /> : "Удалить"}
+//         </SpoilerPopupButton>
+//       </SpoilerPopup>
+//     </Button>
+//   );
+// };
 
 export default Users;

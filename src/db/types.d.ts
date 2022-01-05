@@ -17,7 +17,7 @@ declare type CommitTargetName = keyof Pick<
 
 declare type ChangedDataType = "string" | "date" | "number";
 declare type CommitActionType = "approve" | "decline";
-declare type CommitStatus = "delete-pending" | "create-pending";
+declare type CommitStatus = "delete-pending" | "create-pending" | null;
 declare type HoldingReason =
   | "dismissal"
   | "movement"
@@ -30,6 +30,7 @@ declare type CategoryKey = "1" | "2" | "3" | "4";
 declare type WithCommit = {
   status?: CommitStatus | null;
   statusAt?: string;
+  statusId?: number | null;
 };
 
 // declare type WithCommitStatus = { status: CommitStatus };
@@ -49,6 +50,7 @@ declare namespace DB {
   type PhoneTypeAttributes = Attributes<{
     name: string;
     description?: string;
+    lifespan?: number;
   }>;
 
   type PhoneModelAttributes = Attributes<{
@@ -57,6 +59,8 @@ declare namespace DB {
     phoneTypeId: number;
     phoneType?: PhoneTypeAttributes;
     description?: string;
+
+    details?: PhoneModelDetailAttributes[];
   }>;
 
   type PhoneModelDetailAttributes = Attributes<{
@@ -84,8 +88,10 @@ declare namespace DB {
   type CategoryPhoneAttributes = Attributes<{
     categoryId: number;
     phoneId: number;
+    authorId?: number;
     category?: CategoryAttributes;
     phone?: PhoneAttributes;
+    author?: UserAttributes;
   }> &
     WithCommit;
 
@@ -108,8 +114,10 @@ declare namespace DB {
   type HoldingPhoneAttributes = Attributes<{
     holdingId: number;
     phoneId: number;
+    authorId?: number;
     holding?: HoldingAttributes;
     phone?: PhoneAttributes;
+    author?: UserAttributes;
   }> &
     WithCommit;
 
@@ -117,6 +125,8 @@ declare namespace DB {
     firstName: string;
     lastName: string;
     middleName: string;
+
+    description?: string;
   }>;
 
   type DepartmentAttributes = Attributes<{
@@ -186,7 +196,7 @@ declare namespace DB {
     | "placement"
     | "holder"
     | "model";
-  type LogType = "create" | "delete" | "commit";
+  type LogType = "create" | "delete" | "commit" | "edit";
 
   type LogAttributes = Attributes<{
     target: LogTarget;

@@ -1,3 +1,4 @@
+import ActionBox from "components/ActionBox";
 import Button from "components/Button";
 import Dropdown from "components/Dropdown";
 import Form from "components/Form";
@@ -8,11 +9,17 @@ import Input from "components/Input";
 import Layout from "components/Layout";
 import SpoilerPopup, { SpoilerPopupButton } from "components/SpoilerPopup";
 import Table, { TableColumn } from "components/Table";
+import WithLoader from "components/WithLoader";
 import { useInput } from "hooks/useInput";
+import { useTogglePayloadPopup } from "hooks/useTogglePopup";
+import ItemEditPopup from "layout/Popups/ItemEditPopup";
 import { NoticeContext } from "providers/NoticeProvider";
+import PopupLayer from "providers/PopupLayer";
+import TopBarLayer from "providers/TopBarLayer";
 import React from "react";
 import { api } from "store/slices/api";
 import { extractStatus } from "store/utils";
+import columnTypes from "utils/columns";
 
 export type DepartmentsProps = {};
 
@@ -21,14 +28,21 @@ const useDepartmentsContainer = () => {
   const departments = api.useFetchDepartmentsQuery({});
   const [deleteDepartment, deleteStatus] = api.useDeleteDepartmentMutation();
   const [createDepartment, createStatus] = api.useCreateDepartmentMutation();
+  const [editDepartment, editStatus] = api.useEditDepartmentMutation();
 
   return {
-    departments: { ...departments, items: departments.data?.items ?? [] },
+    departments: {
+      ...departments,
+      items: departments.data?.items ?? [],
+      status: extractStatus(departments, true),
+    },
     placements: { ...placements, items: placements.data?.items ?? [] },
     deleteDepartment,
     deleteStatus: extractStatus(deleteStatus),
     createStatus: extractStatus(createStatus),
+    editStatus: extractStatus(editStatus),
     createDepartment,
+    editDepartment,
   };
 };
 
@@ -38,7 +52,9 @@ const Departments: React.FC<DepartmentsProps> = (props) => {
     placements,
     deleteDepartment,
     createDepartment,
+    editDepartment,
     deleteStatus,
+    editStatus,
     createStatus,
   } = useDepartmentsContainer();
 
@@ -71,11 +87,25 @@ const Departments: React.FC<DepartmentsProps> = (props) => {
       key: "actions",
       header: "",
       size: "30px",
+      required: true,
       mapper: (v, item) => (
-        <ActionBox
-          status={deleteStatus}
-          onDelete={() => deleteDepartment({ id: item.id })}
-        />
+        <ActionBox status={deleteStatus}>
+          <SpoilerPopupButton
+            onClick={() =>
+              editPopup.onToggle(true, {
+                id: item.id,
+                name: item.name,
+                placementId: item.placementId,
+                description: item.description,
+              })
+            }
+          >
+            Изменить
+          </SpoilerPopupButton>
+          <SpoilerPopupButton onClick={() => deleteDepartment({ id: item.id })}>
+            Удалить
+          </SpoilerPopupButton>
+        </ActionBox>
       ),
     },
     {
@@ -100,6 +130,7 @@ const Departments: React.FC<DepartmentsProps> = (props) => {
       header: "Описание",
       // size: "150px",
     },
+    ...columnTypes.entityDates(),
   ];
 
   const [bind] = useInput({});
@@ -108,19 +139,73 @@ const Departments: React.FC<DepartmentsProps> = (props) => {
 
   // const noticeContext = React.useContext(NoticeContext);
 
+  const { state: editedDepartment, ...editPopup } = useTogglePayloadPopup();
+
   // TODO: Make proper typing for POST request params & form inputs
   return (
     <>
-      <Layout>
-        <Form
-          input={bind.input}
-          onSubmit={(data) => {
-            // onSubmit(data);
-            createDepartment(data as any);
-            // noticeContext.createNotice("Пользователь создан");
-          }}
-        >
-          <Layout flow="row">
+      <PopupLayer>
+        <ItemEditPopup
+          {...editPopup}
+          status={editStatus}
+          defaults={editedDepartment}
+          onSubmit={(payload) =>
+            editDepartment({ id: editedDepartment.id, ...payload })
+          }
+          items={[
+            {
+              name: "name",
+              content: ({ bind, name, disabled }) => (
+                <Input
+                  {...bind}
+                  required
+                  label="Наименование"
+                  name={name}
+                  disabled={disabled}
+                />
+              ),
+            },
+            {
+              name: "placementId",
+              nullable: true,
+              content: ({ bind, name, disabled }) => (
+                <Dropdown
+                  {...bind}
+                  items={placements.items.map((place) => ({
+                    label: place.name,
+                    id: place.id,
+                  }))}
+                  label="Местоположение"
+                  name={name}
+                  disabled={disabled}
+                />
+              ),
+            },
+            {
+              name: "description",
+              content: ({ bind, name, disabled }) => (
+                <Input
+                  {...bind}
+                  label="Описание"
+                  name={name}
+                  disabled={disabled}
+                />
+              ),
+            },
+          ]}
+        />
+      </PopupLayer>
+      <TopBarLayer>
+        <Layout flex="1">
+          <Form
+            style={{ flexFlow: "row", flex: "1" }}
+            input={bind.input}
+            onSubmit={(data) => {
+              // onSubmit(data);
+              createDepartment(data as any);
+              // noticeContext.createNotice("Пользователь создан");
+            }}
+          >
             <Input
               required
               placeholder="Отделение связи и ИТ"
@@ -159,49 +244,16 @@ const Departments: React.FC<DepartmentsProps> = (props) => {
             >
               {createStatus.isLoading ? <LoaderIcon /> : "Создать"}
             </Button>
-          </Layout>
-        </Form>
-        <Hr />
-        <Header align="right">
-          Список подразделений ({departments.items.length})
-        </Header>
-        <Table items={tableItems} columns={columns} />
-      </Layout>
+          </Form>
+          <Header align="right">
+            Список подразделений ({departments.items.length})
+          </Header>
+        </Layout>
+      </TopBarLayer>
+      <WithLoader status={departments.status}>
+        <Table stickyTop={91} items={tableItems} columns={columns} />
+      </WithLoader>
     </>
   );
 };
-
-const ActionBox = (props: { status: ApiStatus; onDelete: () => void }) => {
-  const { status } = props;
-  const [target, setTarget] = React.useState<HTMLElement | null>(() => null);
-
-  const [isOpen, setIsOpen] = React.useState(() => false);
-
-  return (
-    <Button
-      ref={(r) => setTarget(r)}
-      color="primary"
-      inverted
-      onClick={() => setIsOpen(true)}
-    >
-      <Icon.Box />
-      <SpoilerPopup
-        target={isOpen ? target : null}
-        position="right"
-        onBlur={(e) => {
-          if (e.currentTarget.contains(e.relatedTarget as any))
-            e.preventDefault();
-          else setIsOpen(false);
-        }}
-      >
-        <SpoilerPopupButton
-          onClick={() => !status.isLoading && props.onDelete()}
-        >
-          {status.isLoading ? <LoaderIcon /> : "Удаление"}
-        </SpoilerPopupButton>
-      </SpoilerPopup>
-    </Button>
-  );
-};
-
 export default Departments;

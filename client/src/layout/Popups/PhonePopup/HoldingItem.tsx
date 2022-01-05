@@ -4,6 +4,7 @@ import Label from "components/Label";
 import Layout from "components/Layout";
 import Link from "components/Link";
 import ListItem from "components/ListItem";
+import Span from "components/Span";
 import React from "react";
 
 const HoldingItem: React.FC<{
@@ -12,6 +13,7 @@ const HoldingItem: React.FC<{
   department: string;
   departmentId: number;
   orderKey: string;
+  status: CommitStatus;
   orderDate: Date;
   orderUrl?: string;
   onSelect: () => void;
@@ -21,6 +23,18 @@ const HoldingItem: React.FC<{
   return (
     <Layout flow="row" className="holding-item">
       <Layout>
+        {props.status && (
+          <Span
+            color="primary"
+            weight="bold"
+            font="monospace"
+            style={{ marginLeft: "auto", marginRight: "auto" }}
+          >
+            {props.status === "create-pending"
+              ? "ОЖИДАЕТ СОЗДАНИЯ"
+              : "ОЖИДАЕТ УДАЛЕНИЯ"}
+          </Span>
+        )}
         <ListItem label="Владелец">
           <Link href={`/holding/view?holderId=${props.holderId}`}>
             {props.holder}

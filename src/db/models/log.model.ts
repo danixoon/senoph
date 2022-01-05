@@ -12,7 +12,12 @@ import { Optional } from "sequelize/types";
 import LogTarget from "./logTarget.model";
 import User from "./user.model";
 
-export const validLogTypes: DB.LogType[] = ["create", "delete", "commit"];
+export const validLogTypes: DB.LogType[] = [
+  "create",
+  "delete",
+  "commit",
+  "edit",
+];
 export const validLogTargetTypes: DB.LogTarget[] = [
   "user",
   "category",

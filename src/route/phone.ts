@@ -28,6 +28,7 @@ import Log from "@backend/db/models/log.model";
 import phone from "@backend/db/queries/phone";
 import { sequelize } from "../db";
 import { Sequelize } from "sequelize";
+import CategoryPhone from "@backend/db/models/categoryPhone.model";
 
 const router = AppRouter();
 
@@ -35,17 +36,25 @@ router.delete(
   "/phone",
   access("user"),
   validate({ query: { ids: tester().array("int").required() } }),
-  owner("phone", (q) => q.query.ids),
+  // owner("phone", (q) => q.query.ids),
   transactionHandler(async (req, res) => {
-    const { params } = req;
-    if (!withOwner(params, "phone")) return res.sendStatus(500);
+    const { user } = req.params;
+    const { ids } = req.query;
+    //if (!withOwner(params, "phone")) return res.sendStatus(500);
+    // const { phone } = params;
+    // const phoneIds = phone.map((phone) => phone.id);
 
-    const { phone } = params;
     // TODO: Сделать назначение статуса единоместным
     await Phone.update(
-      { status: "delete-pending", statusAt: new Date().toISOString() },
-      { where: { id: { [Op.in]: phone.map((phone) => phone.id) } } }
+      {
+        status: "delete-pending",
+        statusAt: new Date().toISOString(),
+        statusId: user.id,
+      },
+      { where: { id: { [Op.in]: ids } } }
     );
+
+    Log.log("phone", ids, "commit", user.id, {});
 
     res.send();
   })
@@ -70,22 +79,24 @@ router.get(
   })
 );
 
-router.get(
+router.post(
   "/phone/holdings",
   access("user"),
   validate({
     query: {
       // status: tester(),
       // ids: tester().array("int"),
-      phoneIds: tester().array("int"),
+
       orderDate: tester().isDate(),
       orderKey: tester(),
       // latest: tester().isBoolean(),
     },
+    body: { phoneIds: tester().array("int") },
   }),
   transactionHandler(async (req, res) => {
     // const { latest, phoneIds } = req.query;
-    const { phoneIds, orderDate, orderKey } = req.query;
+    const { orderDate, orderKey } = req.query;
+    const { phoneIds } = req.body;
     const { user } = req.params;
 
     // const filter = new Filter(req.query).add("status");
@@ -102,7 +113,7 @@ router.get(
           model: Phone,
           where: filter.where,
           attributes: ["id"],
-          required: (req.query.phoneIds ?? []).length > 0,
+          required: (phoneIds ?? []).length > 0,
         },
         Holder,
       ],
@@ -135,17 +146,32 @@ router.get(
   "/phone/commit",
   access("user"),
   validate({
-    query: { status: tester().isIn(["delete-pending", "create-pending"]) },
+    query: {
+      status: tester().isIn(["delete-pending", "create-pending"]),
+      offset: tester().isNumber(),
+      amount: tester().isNumber(),
+      authorId: tester().isNumber(),
+    },
   }),
   transactionHandler(async (req, res, next) => {
-    const { status } = req.query;
+    const { status, amount, offset, authorId } = req.query;
 
-    const filter = new Filter(req.query);
-    filter.add("status");
+    // const filter = new Filter(req.query);
+    // filter.add("status");
 
-    const phones = await Phone.scope("commit").findAll({ where: filter.where });
+    const filter = new WhereFilter<DB.PhoneAttributes>();
+    filter.on("status").optional(Op.eq, status);
+    filter.on("authorId").optional(Op.eq, authorId);
 
-    res.send(prepareItems(phones as Api.Models.Phone[], phones.length, 0));
+    const phones = await Phone.scope("commit").findAndCountAll({
+      where: filter.where,
+      offset,
+      limit: amount,
+    });
+
+    res.send(
+      prepareItems(phones.rows as Api.Models.Phone[], phones.count, offset ?? 0)
+    );
   })
 );
 
@@ -177,10 +203,12 @@ router.get(
       amount: tester().isNumber(),
       factoryKey: tester(),
       category: tester(),
-      departmentId: tester().isNumber(),
+      warranty: tester().isBoolean(),
+      departmentId: tester(),
       holderId: tester().isNumber(),
       inventoryKey: tester(),
       offset: tester().isNumber(),
+      authorId: tester().isNumber(),
       phoneModelId: tester().isNumber(),
       phoneTypeId: tester().isNumber(),
       accountingDate: tester().isDate(),
@@ -197,6 +225,7 @@ router.get(
       search,
       sortDir,
       sortKey,
+      warranty,
       amount = 50,
       offset = 0,
       category,
@@ -209,6 +238,7 @@ router.get(
       accountingDate,
       comissioningDate,
       assemblyDate,
+      authorId,
       ids,
       exceptIds,
     } = req.query;
@@ -221,7 +251,7 @@ router.get(
       ? [
           orderByKey(sortKey, sortDir ?? "asc", {
             modelName: [PhoneModel, "model", "name"],
-            category: [Category, "category", "category"],
+            category: [Category, "category", "categoryKey"],
             id: "id",
             inventoryKey: "inventoryKey",
             factoryKey: "factoryKey",
@@ -237,6 +267,7 @@ router.get(
     filter.on("factoryKey").optional(Op.substring, factoryKey);
     filter.on("inventoryKey").optional(Op.substring, inventoryKey);
     filter.on("accountingDate").optional(Op.eq, accountingDate);
+    filter.on("authorId").optional(Op.eq, authorId);
     // filter
     // .on("assemblyDate")
     // .optional(
@@ -259,42 +290,103 @@ router.get(
     // const categoryFilter = new WhereFilter<DB.CategoryAttributes>();
     // categoryFilter.on("categoryKey").optional(Op.eq, category);
 
+    // console.log("searching..");
+
     const items = await Phone.findAll({
-      order,
+      order: [
+        ...order,
+        // [Sequelize.literal("`holdings.orderDate`"), "DESC"],
+        // [Sequelize.literal("`categories.actDate`"), "DESC"],
+      ],
       where: filter.where,
       include: [
-        // { model: Category, where: categoryFilter.where },
+        // {
+        //   model: Category,
+        //   // attributes: ["id", "actDate"],
+        // },
         { model: PhoneModel, where: modelFilter.where },
-        { model: Holding },
+        // {
+        //   model: Holding,
+        //   // attributes: ["id", "orderDate"],
+        // },
       ],
+
       //attributes: ["id"],
     });
 
-    const filteredItems =
-      // typeof departmentId === "undefined"
-      // ? items
-      items.filter((item) => {
-        const lastHolding = [...(item.holdings ?? [])].sort((a, b) =>
-          a.orderDate > b.orderDate ? 1 : -1
-        )[0];
+    const phoneIds = items.map((item) => item.id);
 
-        const isDepartment = typeof departmentId !== "undefined";
-        const isHolder = typeof holderId !== "undefined";
+    const holdings = await HoldingPhone.unscoped().findAll({
+      where: { phoneId: { [Op.in]: phoneIds } },
+      include: [Holding],
+      order: [[Sequelize.literal("`holding.orderDate`"), "DESC"]],
+    });
 
-        // if (isDepartment && lastHolding?.departmentId !== departmentId)
-        // return false;
-        // if (isHolder && lastHolding?.holderId !== holderId) return false;
+    const categories = await CategoryPhone.unscoped().findAll({
+      where: { phoneId: { [Op.in]: phoneIds } },
+      include: [Category],
+      order: [[Sequelize.literal("`category.actDate`"), "DESC"]],
+    });
 
-        return (
-          (isHolder ? lastHolding?.holderId === holderId : true) &&
-          (isDepartment ? lastHolding?.departmentId === departmentId : true)
-        );
+    const populatedItems = items.map((v) => {
+      const holding = holdings.find((h) => h.phoneId === v.id)
+        ?.holding as Holding;
+      const category = categories.find((h) => h.phoneId === v.id)
+        ?.category as Category;
 
-        // return true;
-      });
+      return {
+        ...v.toJSON(),
+        holdings: holding ? [holding.toJSON()] : [],
+        categories: category ? [category.toJSON()] : [],
+      };
+    });
+
+    // console.log("filtering..");
+
+    const filteredItems = populatedItems.filter((item) => {
+      // const lastHolding = [...(item.holdings ?? [])].sort((a, b) =>
+      //   a.orderDate > b.orderDate ? 1 : -1
+      // )[0];
+      // const lastCategory = [...(item.categories ?? [])].sort((a, b) =>
+      //   a.actDate > b.actDate ? 1 : -1
+      // )[0];
+
+      const lastHolding = item.holdings[0];
+      const lastCategory = item.categories[0];
+
+      const isDepartment = typeof departmentId !== "undefined";
+      const isHolder = typeof holderId !== "undefined";
+      const isCategory = typeof category !== "undefined";
+
+      if (isCategory)
+        if (category === null) {
+          if (lastCategory) return false;
+        } else if (category?.toString() !== lastCategory?.categoryKey)
+          return false;
+
+      if (warranty) {
+        const yearMs = 31556952 * 1000;
+        if (
+          !lastCategory ||
+          new Date(lastCategory.actDate).getTime() + yearMs > Date.now() ||
+          lastCategory.categoryKey !== "1"
+        )
+          return false;
+      }
+      if (isHolder && lastHolding?.holderId !== holderId) return false;
+      if (isDepartment)
+        if (departmentId === null) {
+          if (lastHolding) return false;
+        } else if (
+          lastHolding?.departmentId.toString() !== departmentId.toString()
+        )
+          return false;
+
+      return true;
+    });
+    // console.log("slicing..");
     const phones = filteredItems.slice(offset, offset + amount);
-
-    // const phones = await Phone.withHolders(ofsetted);
+    // console.log("sending..");
 
     res.send(
       prepareItems(phones as Api.Models.Phone[], filteredItems.length, offset)
@@ -444,7 +536,11 @@ router.post(
       const ids = phones.map((p) => p.id as number);
 
       // TODO: Сделать логгирование более строгим (через хуки?)
-      Log.log("phone", ids, "create", user.id);
+      Log.log("phone", ids, "create", user.id, {
+        amount: ids.length,
+      }).catch((err) => {
+        console.log(err);
+      });
 
       res.send({
         created: ids.map((v, i) => ({
@@ -480,6 +576,48 @@ router.get(
   })
 );
 
+router.put(
+  "/phone/model",
+  access("admin"),
+  validate({
+    query: {
+      id: tester().isNumber().required(),
+      name: tester(),
+      description: tester(),
+    },
+  }),
+  transactionHandler(async (req, res) => {
+    const { id } = req.params.user;
+    const { id: targetId, ...rest } = req.query;
+    const { details } = req.body;
+
+    const type = await PhoneModel.findByPk(targetId);
+    if (!type)
+      throw new ApiError(errorType.NOT_FOUND, {
+        description: `Модель средства связи #${targetId} не найдена.`,
+      });
+
+    const prev = type.toJSON();
+
+    const updated = await type?.update({ ...rest });
+
+    if (typeof details !== "undefined") {
+      await PhoneModelDetail.destroy({ where: { modelId: updated.id } });
+      await PhoneModelDetail.bulkCreate(
+        details.map((detail) => ({ ...detail, modelId: updated.id }))
+      );
+    }
+
+    Log.log("model", [targetId], "edit", id, {
+      before: prev,
+      after: type,
+      query: req.query,
+    });
+
+    res.send({ id: targetId });
+  })
+);
+
 router.post(
   "/phone/model",
   access("admin"),
@@ -509,7 +647,12 @@ router.post(
       description,
     });
 
-    Log.log("model", [model.id], "create", user.id);
+    Log.log("model", [model.id], "create", user.id, {
+      phoneTypeId,
+      name,
+      details,
+      description,
+    });
 
     if (details) {
       await PhoneModelDetail.bulkCreate(
@@ -596,6 +739,41 @@ router.post(
     const type = await PhoneType.create({ name, description });
     Log.log("phoneType", [type.id], "create", user.id);
     res.send({ id: type.id });
+  })
+);
+
+router.put(
+  "/phone/type",
+  access("admin"),
+  validate({
+    query: {
+      id: tester().isNumber().required(),
+      name: tester(),
+      description: tester(),
+      lifespan: tester(),
+    },
+  }),
+  transactionHandler(async (req, res) => {
+    const { id } = req.params.user;
+    const { id: targetId, ...rest } = req.query;
+
+    const type = await PhoneType.findByPk(targetId);
+    if (!type)
+      throw new ApiError(errorType.NOT_FOUND, {
+        description: `Тип средства связи #${targetId} не найдено.`,
+      });
+
+    const prev = type.toJSON();
+
+    const updated = await type?.update({ ...rest });
+
+    Log.log("phoneType", [targetId], "edit", id, {
+      before: prev,
+      after: type,
+      query: req.query,
+    });
+
+    res.send({ id: targetId });
   })
 );
 

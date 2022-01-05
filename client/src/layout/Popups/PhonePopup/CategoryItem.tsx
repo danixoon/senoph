@@ -4,16 +4,18 @@ import Icon from "components/Icon";
 import Label, { LabelProps } from "components/Label";
 import Layout from "components/Layout";
 import Link from "components/Link";
+import Span from "components/Span";
 import React from "react";
 
 const CategoryItem: React.FC<{
   category: number;
-  onDelete: () => void;
+  onSelect: () => void;
   deletable?: boolean;
+  status: CommitStatus;
   actDate: Date;
   actUrl: string;
 }> = (props) => {
-  const { category, actDate, actUrl, deletable, onDelete } = props;
+  const { category, actDate, actUrl, status, deletable, onSelect } = props;
 
   let cat = "?";
   switch (category) {
@@ -36,11 +38,14 @@ const CategoryItem: React.FC<{
     weight: "bold",
   } as Pick<LabelProps, "style" | "weight">;
 
+  const date = new Date(props.actDate).toISOString().split("T")[0];
+
   return (
-    <Layout flow="column" className="category-item">
-      <Badge onClick={() => {}} className="category-item__level">
-        {cat}
-      </Badge>
+    <Layout
+      flow="column"
+      // style={{ alignItems: "center" }}
+      className="category-item"
+    >
       <Layout flow="row">
         <Label {...labelStyle}>
           <Link native inline href={`/upload/${actUrl}`}>
@@ -48,17 +53,34 @@ const CategoryItem: React.FC<{
           </Link>{" "}
           от
         </Label>
-        <Link>{actDate.toLocaleDateString()}</Link>
-        {deletable && (
-          <Button
-            onClick={onDelete}
+        <Link href={`/category/view?actDate=${date}`}>
+          {actDate.toLocaleDateString()}
+        </Link>
+        {status && (
+          <Span
             style={{ marginLeft: "auto" }}
-            inverted
+            weight="bold"
+            font="monospace"
             color="primary"
           >
-            <Icon.X />
-          </Button>
+            {status === "create-pending"
+              ? "ОЖИДАЕТ СОЗДАНИЯ"
+              : "ОЖИДАЕТ УДАЛЕНИЯ"}
+          </Span>
         )}
+      </Layout>
+      <Layout flow="row nowrap">
+        <Badge onClick={() => {}} className="category-item__level">
+          {cat}
+        </Badge>
+        <Button
+          onClick={onSelect}
+          style={{ marginLeft: "auto" }}
+          inverted
+          color="primary"
+        >
+          <Icon.ExternalLink />
+        </Button>
       </Layout>
     </Layout>
   );

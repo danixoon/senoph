@@ -23,6 +23,7 @@ import {
   FetchBaseQueryMeta,
 } from "@reduxjs/toolkit/dist/query/fetchBaseQuery";
 import { clearObject } from "utils";
+import React from "react";
 
 export const locationQueryReducer = <T extends { filter: F }, F>(
   path: string,
@@ -52,8 +53,8 @@ export const updateQuery = <T>(query: Partial<T>, pathname?: string) => {
 export function isApiError(type: any): type is Api.Error {
   return (
     type !== undefined &&
-    typeof type.name === "string" &&
-    typeof type.code === "number"
+    typeof type?.name === "string" &&
+    typeof type?.code === "number"
   );
 }
 
@@ -114,26 +115,108 @@ type Statusable = {
   isFetching?: boolean;
   error?: any;
 };
+
+export const useStatus = (...statuses: ApiStatus[]) => {
+  const { current: list } = React.useRef<{ date: number; status: ApiStatus }[]>(
+    []
+  );
+
+  const [lastStatus, setStatus] = React.useState<ApiStatus>(
+    splitStatus("idle")
+  );
+
+  React.useEffect(
+    () => {
+      for (let i = 0; i < statuses.length; i++) {
+        if (list.length - 1 < i)
+          list.push({ date: Date.now(), status: splitStatus("idle") });
+
+        list[i].date = Date.now();
+        list[i].status = { ...statuses[i] };
+      }
+
+      const status = [...list].sort((a, b) => (a.date < b.date ? 1 : -1))[0]
+        ?.status;
+      setStatus(status);
+    },
+    statuses.map((s) => s.status)
+  );
+
+  return lastStatus;
+};
+
+export const orStatus = (...statuses: ApiStatus[]) => {
+  const status: ApiStatus = statuses.reduce((a, b) => ({
+    error: a.error || b.error,
+    isError: a.isError || b.isError,
+    isIdle: a.isIdle || b.isIdle,
+    isLoading: a.isLoading || b.isLoading,
+    isSuccess: a.isSuccess || b.isSuccess,
+    status:
+      a.status === b.status
+        ? b.status
+        : a.status === "error" || b.status === "error"
+        ? "error"
+        : a.status === "loading" || b.status === "loading"
+        ? "loading"
+        : a.status === "success" || b.status === "success"
+        ? "success"
+        : "idle",
+  }));
+
+  return status;
+  // const status: ApiStatus =
+};
+
+export const mergeStatuses = (...statuses: ApiStatus[]) => {
+  const status: ApiStatus = statuses.reduce((a, b) => ({
+    error: a.error || b.error,
+    isError: a.isError || b.isError,
+    isIdle: a.isIdle && b.isIdle,
+    isLoading: a.isLoading || b.isLoading,
+    isSuccess: a.isSuccess && b.isSuccess,
+    status:
+      a.status === b.status
+        ? b.status
+        : a.status === "error" || b.status === "error"
+        ? "error"
+        : a.status === "loading" || b.status === "loading"
+        ? "loading"
+        : a.status === "success" && b.status === "success"
+        ? "success"
+        : "idle",
+  }));
+  // const status: ApiStatus =
+  return status;
+};
+
 export const extractStatus = (
   { isError, isLoading, isIdle, isSuccess, isFetching, error }: Statusable,
   fetchCheck?: boolean
-) =>
-  ({
-    isLoading: isLoading === true || (fetchCheck && isFetching),
-    isSuccess: isSuccess === true,
-    isError: isError === true,
-    isIdle: isIdle === true,
-    error: isApiError(error?.data?.error) ? error?.data?.error : null,
-    status: isLoading
-      ? "loading"
-      : isSuccess
-      ? "success"
-      : isIdle
-      ? "idle"
-      : isError
-      ? "error"
-      : null,
-  } as ApiStatus);
+) => {
+  if (isLoading || (fetchCheck && isFetching)) return splitStatus("loading");
+  else if (isError)
+    return splitStatus(
+      isApiError(error?.data?.error) ? error?.data?.error : null
+    );
+  else if (isSuccess) return splitStatus("success");
+  else return splitStatus("idle");
+
+  // return {
+  //   isLoading: isLoading === true || (fetchCheck && isFetching),
+  //   isSuccess: isSuccess === true,
+  //   isError: isError === true,
+  //   isIdle: isIdle === true,
+  //   error: isApiError(error?.data?.error) ? error?.data?.error : null,
+  //   status: isLoading
+  //     ? "loading"
+  //     : isSuccess
+  //     ? "success"
+  //     : isError
+  //     ? "error"
+  //     : "idle",
+  // } as ApiStatus;
+};
 export const splitStatus: (status: ActionStatus) => ApiStatus = (status) => {
   if (isApiError(status))
     return {

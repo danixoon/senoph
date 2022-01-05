@@ -1,4 +1,4 @@
-import axios, { AxiosError, AxiosRequestConfig } from "axios";
+import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
 import { store } from "store";
 
 export const getToken = () => store.getState().app.token;
@@ -32,6 +32,35 @@ export const request: <M extends Api.Methods, R extends Api.Routes<M>>(
   }
 };
 
+export const requestFull: <M extends Api.Methods, R extends Api.Routes<M>>(
+  method: M,
+  url: R,
+  config: AxiosRequestConfig & {
+    params: Api.GetQuery<M, R>;
+    data: Api.GetBody<M, R>;
+    token?: string;
+  }
+) => Promise<AxiosResponse<Api.GetResponse<M, R>>> = async (
+  method,
+  url,
+  config
+) => {
+  try {
+    const headers = { ...getHeaders(config.token), ...(config.headers ?? {}) };
+    // console.log(headers);
+    const response = await axios.request({
+      ...{ ...config },
+      url: "/api" + url,
+      method: method as any,
+      headers,
+    });
+    return response;
+  } catch (err) {
+    const e = err as AxiosError;
+    throw e;
+  }
+};
+
 // class Er extends Error {
 //   payload: any;
 //   constructor(e: any) {
@@ -40,7 +69,7 @@ export const request: <M extends Api.Methods, R extends Api.Routes<M>>(
 //   }
 // }
 
-export default { request };
+export default { request, requestFull };
 
 // export const api: {
 //   get: typeof axios.get;

@@ -23,7 +23,6 @@ import "./style.styl";
 import HolderSelectionPopupContainer from "containers/HolderSelectionPopup";
 import PopupLayer from "providers/PopupLayer";
 import Checkbox from "components/Checkbox";
-import { HoldingItem } from "layout/Pages/HoldingPage";
 
 export type PhoneCreatePopupProps = OverrideProps<
   PopupProps,

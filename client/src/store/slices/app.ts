@@ -75,11 +75,11 @@ export const appSlice = createSlice({
   name: "app",
   initialState: {
     ...initialState,
-    token: localStorage.getItem("token") ?? null,
+    token: sessionStorage.getItem("token") ?? null,
   },
   reducers: {
     logout: (state, { payload }: PayloadAction) => {
-      window.localStorage.removeItem("token");
+      window.sessionStorage.removeItem("token");
 
       return initialState;
     },
@@ -92,7 +92,7 @@ export const appSlice = createSlice({
       .addCase(login.rejected, (state, { payload }) => {
         state.status = payload as Api.Error;
 
-        window.localStorage.removeItem("token");
+        window.sessionStorage.removeItem("token");
       })
       .addCase(login.fulfilled, (state, { payload }) => {
         const { token, account } = payload;
@@ -101,7 +101,7 @@ export const appSlice = createSlice({
         state.token = token;
         state.status = "success";
 
-        window.localStorage.setItem("token", token);
+        window.sessionStorage.setItem("token", token);
       }),
   // .addCase(fetchAccount.pending, (state, { payload }) => {
   //   state.user.status = "loading";

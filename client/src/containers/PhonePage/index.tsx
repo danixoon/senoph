@@ -12,7 +12,7 @@ import { api } from "store/slices/api";
 import TopBarLayer from "providers/TopBarLayer";
 import qs from "query-string";
 import { useQueryInput } from "hooks/useQueryInput";
-import { denullObject } from "utils";
+import { clearObject, denullObject } from "utils";
 import PopupLayer from "providers/PopupLayer";
 import { useFetchConfig } from "hooks/api/useFetchConfig";
 import PhonePopupContainer from "containers/PhonePopup";
@@ -38,6 +38,8 @@ import Input from "components/Input";
 import Span from "components/Span";
 import Header from "components/Header";
 import Paginator from "components/Paginator";
+import { usePaginator } from "hooks/usePaginator";
+import { useNotice } from "hooks/useNotice";
 
 type PhonePageContainerProps = {};
 
@@ -58,8 +60,14 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
 
   // const [pageItems, setPageItems] = React.useState(() => DEFAULT_PAGE_ITEMS);
 
+  const query = clearObject({
+    ...filter,
+    category:
+      filter.warranty?.toString() === "true" ? undefined : filter.category,
+  });
+
   const { data: itemsData, ...fetchPhones } = api.useFetchPhonesQuery({
-    ...denullObject(filter),
+    ...query,
     amount: filter.pageItems,
     offset: filter.offset < 0 ? 0 : filter.offset,
     sortKey: filter.sortKey ?? undefined,
@@ -74,13 +82,11 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
   const fetchStatus = extractStatus(fetchPhones, true);
   const noticeContext = React.useContext(NoticeContext);
 
-  React.useEffect(() => {
-    if (fetchStatus.isError) {
-      noticeContext.createNotice(
-        `Ошибка поиска (${fetchStatus.error?.name}): ${fetchStatus.error?.description}`
-      );
-    }
-  }, [fetchStatus.status]);
+  useNotice(fetchStatus, {
+    error: "Ошибка поиска",
+    loading: null,
+    success: null,
+  });
 
   const [bind, setBind] = useInput({ items: DEFAULT_PAGE_ITEMS });
 
@@ -93,8 +99,8 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
       bind.input.items?.toString() ?? DEFAULT_PAGE_ITEMS.toString()
     );
 
-    if (value <= 0) value = 1;
-    else if (value >= 200) value = 200;
+    if (value < 15) value = 15;
+    else if (value > 1000) value = 1000;
 
     dispatch(
       updateFilter({
@@ -103,22 +109,25 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
     );
   };
 
-  const maxPage = Math.ceil(totalItems / filter.pageItems);
-  let currentPage = Math.floor((filter.offset / totalItems) * maxPage) + 1;
-  if (Number.isNaN(currentPage)) currentPage = 1;
+  const { maxPage, currentPage } = usePaginator(
+    parseInt(filter.offset.toString()),
+    (off) => dispatch(updateFilter({ offset: off })),
+    totalItems,
+    filter.pageItems
+  );
   // if (currentPage > maxPage) currentPage = maxPage;
 
-  React.useEffect(() => {
-    if (totalItems > 0) {
-      if (currentPage > maxPage) {
-        dispatch(
-          updateFilter({
-            offset: Math.max(0, (maxPage - 1) * filter.pageItems),
-          })
-        );
-      }
-    }
-  }, [filter.offset, totalItems]);
+  // React.useEffect(() => {
+  //   if (totalItems > 0) {
+  //     if (currentPage > maxPage) {
+  //       dispatch(
+  //         updateFilter({
+  //           offset: Math.max(0, (maxPage - 1) * filter.pageItems),
+  //         })
+  //       );
+  //     }
+  //   }
+  // }, [filter.offset, totalItems]);
 
   return (
     <>
@@ -128,79 +137,74 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
         <PhoneCreatePopupContainer {...createPopup} />
       </PopupLayer>
       <TopBarLayer>
-        <Paginator
-          onChange={(page) =>
-            dispatch(
-              updateFilter({
-                offset: Math.max(0, (page - 1) * filter.pageItems),
-              })
-            )
-          }
-          min={1}
-          max={maxPage}
-          size={5}
-          current={currentPage}
-        />
-        <Header
-          align="center"
-          style={{ margin: "auto" }}
-          className="margin_md page__header"
+        <Layout
+          flow="row"
+          flex="1"
+          style={{ height: "10px", alignItems: "center" }}
         >
-          {/* <span style={{ marginRight: "auto" }}> */}
-          {fetchStatus.isLoading && (
-            <LoaderIcon style={{ marginRight: "0.5rem" }} />
-          )}{" "}
-          Результаты поиска ({totalItems}){/* </span> */}
-        </Header>
-        <RouterSwitch>
-          <Route path={`${path}/edit`}>
-            <ButtonGroup style={{ marginLeft: "auto", marginRight: "1rem" }}>
-              <Button
-                disabled={selectionIdsSet.size === 0}
-                margin="none"
-                onClick={() => selectionPopup.onToggle()}
-              >
-                Выбранное
-              </Button>
-              <Badge margin="none" color="secondary">
-                {selectionIdsSet.size}
-              </Badge>
-            </ButtonGroup>
-            <Button
-              style={{ marginRight: "4rem" }}
-              margin="none"
-              color="primary"
-              onClick={() => createPopup.onToggle()}
-            >
-              <Icon.Plus size="md" />
-            </Button>
-          </Route>
-        </RouterSwitch>
-        <Header
-          style={{ marginLeft: mode === "view" ? "auto" : 0, marginRight: 0 }}
-        >
-          Результатов:
-        </Header>
-        <Input
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === "Space")
+          <Paginator
+            onChange={(page) =>
+              dispatch(
+                updateFilter({
+                  offset: (page - 1) * filter.pageItems,
+                })
+              )
+            }
+            min={1}
+            max={maxPage}
+            size={5}
+            current={currentPage}
+          />
+          <Header
+            align="center"
+            style={{ margin: "0 auto" }}
+            className="margin_md"
+          >
+            {/* <span style={{ marginRight: "auto" }}> */}
+            {fetchStatus.isLoading && (
+              <LoaderIcon style={{ marginRight: "0.5rem" }} />
+            )}{" "}
+            Результаты поиска ({totalItems}){/* </span> */}
+          </Header>
+          <RouterSwitch>
+            <Route path={`${path}/edit`}>
+              <ButtonGroup style={{ marginLeft: "auto", marginRight: "1rem" }}>
+                <Button
+                  disabled={selectionIdsSet.size === 0}
+                  margin="none"
+                  onClick={() => selectionPopup.onToggle()}
+                >
+                  Выбранное
+                </Button>
+                <Badge margin="none" color="secondary">
+                  {selectionIdsSet.size}
+                </Badge>
+              </ButtonGroup>
+            </Route>
+          </RouterSwitch>
+          <Header
+            style={{ marginLeft: mode === "view" ? "auto" : 0, marginRight: 0 }}
+          >
+            Результатов:
+          </Header>
+          <Input
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === "Space")
+                handleTotalPageSelection();
+            }}
+            onBlur={(e) => {
               handleTotalPageSelection();
-          }}
-          onBlur={(e) => {
-            handleTotalPageSelection();
-          }}
-          {...bind}
-          style={{ margin: 0, maxWidth: "50px" }}
-          name="items"
-          placeholder="12"
-          type="number"
-        />
+            }}
+            {...bind}
+            style={{ margin: 0, maxWidth: "50px" }}
+            name="items"
+            placeholder="12"
+            type="number"
+          />
+        </Layout>
       </TopBarLayer>
       <Layout flex="1" flow="row">
-        <Layout
-          flex="1"
-          style={{ marginLeft: "0.25rem", position: "relative" }}
-        >
+        <Layout flex="1" style={{ position: "relative" }}>
           <PhonePage.Items
             selection={{
               onSelection: (/*all,*/ ids) =>
@@ -224,7 +228,6 @@ const PhonePageContainer: React.FC<PhonePageContainerProps> = (props) => {
             status={fetchStatus}
           />
         </Layout>
-        <Hr vertical />
         <Layout>
           <PhonePage.Filter hook={filterHook} config={filterData} />
         </Layout>

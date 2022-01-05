@@ -10,6 +10,7 @@ import Category from "./models/category.model";
 // import { models } from "./models";
 import { logger } from "../utils";
 import { getModel } from ".";
+import { WhereFilter } from "@backend/utils/db";
 
 // export const bindHooks = (
 //   name: CommitTargetName,
@@ -202,13 +203,15 @@ export class Commit {
 //   : never;
 
 export const getChanges = async <T extends ChangesTargetName>(
-  userId: number,
-  target: T
+  target: T,
+  userId?: number
 ) => {
-  const where = { target, userId } as any;
+  const where = { target } as any;
+  if (typeof userId === "number") where.userId = userId;
 
   const changes = await Change.findAll({
     where,
+    order: [["createdAt", "ASC"]],
     raw: true,
   });
   // type Model = typeof models[keyof typeof models extends T ? T : never];
@@ -229,8 +232,8 @@ export const getChangesById = async <T extends ChangesTargetName>(
   target: T,
   targetId: number
 ) => {
-  const changes = await getChanges<T>(userId, target);
-  return changes[targetId];
+  const changes = await getChanges<T>(target, userId);
+  return (changes[userId] ?? {})[targetId];
 };
 
 const getChangesList: (
@@ -265,14 +268,18 @@ const getChangesList: (
 };
 
 export const convertChangesList = (changes: DB.ChangeAttributes[]) => {
+  // const groupedByAuthor =
   return changes.reduce((a, v) => {
-    a[v.targetId] = {
-      ...(a[v.targetId] ?? {}),
+    const users = a[v.userId] ?? {};
+    const oldUpdates = users[v.targetId] ?? {};
+    const updates = {
+      ...oldUpdates,
       [v.column]: v.value,
       createdAt: v.createdAt,
     };
-    return a;
-  }, {} as { [key: number]: any });
+    users[v.targetId] = updates;
+    return { ...a, [v.userId]: users };
+  }, {} as { [key: number]: { [key: number]: any } });
 };
 
 // const createCommit =
@@ -290,35 +297,50 @@ export const getUpdater = <T extends ChangesTargetName>(
     await Change.bulkCreate(changesList);
   };
   const clear = async (...columns: string[]) => {
-    const where = { target, userId, targetId } as any;
-    if (columns.length > 0) where.column = { [Op.in]: columns };
+    const filter = new WhereFilter<DB.ChangeAttributes>();
+    filter.on("target").optional(Op.eq, target);
+    filter.on("userId").optional(Op.eq, userId);
+    filter.on("targetId").optional(Op.eq, targetId);
+    filter
+      .on("column")
+      .optional(Op.in, columns.length > 0 ? columns : undefined);
+    // const where = { target, userId, targetId } as any;
+    // if (columns.length > 0) where.column = { [Op.in]: columns };
     await Change.destroy({
-      where,
+      where: filter.where,
     });
   };
 
-  const clearAll = async () => {
-    const where = { target, userId, targetId } as any;
-    await Change.destroy({
-      where,
-    });
-  };
+  // const clearAll = async () => {
+  //   // const where = { target, userId, targetId } as any;
+  //   const filter = new WhereFilter<DB.ChangeAttributes>();
+  //   filter.on("target").optional(Op.eq, target);
+  //   filter.on("userId").optional(Op.eq, userId);
+  //   filter.on("targetId").optional(Op.eq, targetId);
+  //   await Change.destroy({
+  //     where: filter.where,
+  //   });
+  // };
 
   const commit = async () => {
     const changesList = await Change.findAll({
       where: { targetId, target, userId },
+      // order: [["createdAt", "ASC"]],
       raw: true,
     });
 
-    const changes = convertChangesList(changesList);
+    const allChanges = convertChangesList(changesList);
+
+    const changes = allChanges[userId] ?? null;
 
     const upperCase = (str: string) => {
       return str[0].toUpperCase() + str.slice(1);
     };
 
+    if (!changes) return;
+
     // TODO: Any typing
     const model = getModel(upperCase(target));
-    console.log("whjat");
     await model.update(changes[targetId], {
       where: { id: targetId },
     });
@@ -327,7 +349,7 @@ export const getUpdater = <T extends ChangesTargetName>(
   return {
     push,
     clear,
-    clearAll,
+    // clearAll,
     commit,
   };
 };

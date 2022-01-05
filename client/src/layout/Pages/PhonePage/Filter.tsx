@@ -11,6 +11,8 @@ import HolderSelectionPopupContainer from "containers/HolderSelectionPopup";
 import PopupLayer from "providers/PopupLayer";
 import Icon from "components/Icon";
 import Button from "components/Button";
+import Checkbox from "components/Checkbox";
+import Hr from "components/Hr";
 
 const Filter: React.FC<{
   hook: InputHook;
@@ -49,6 +51,8 @@ const Filter: React.FC<{
           <Icon.ChevronLeft />
         </Button> */}
         <Layout>
+          <Input {...bind} name="ids" label="Идентификаторы" />
+          <Hr />
           <Dropdown {...bind} name="phoneTypeId" label="Тип СС" items={types} />
           <Dropdown
             {...bind}
@@ -56,7 +60,43 @@ const Filter: React.FC<{
             label="Модель СС"
             items={models}
           />
-
+          <Hr />
+          <Dropdown
+            {...bind}
+            name="departmentId"
+            label="Подразделение"
+            items={[{ id: "null", label: "Без подразделения" }, ...departments]}
+          />
+          <ClickInput
+            {...bind}
+            placeholder="Иванов Иван Иванович"
+            name="holderName"
+            label="Материально-ответственное лицо"
+            clearable
+            onClear={() => setInput({ holderId: null, holderName: null })}
+            onActive={() => holderPopup.onToggle()}
+          />
+          <Hr />
+          <Dropdown
+            {...bind}
+            disabled={bind.input.warranty === "true"}
+            name="category"
+            label="Категория"
+            items={[
+              { id: "null", label: "Без категории" },
+              { id: "1", label: "I (Прибыло, на гарантии)" },
+              { id: "2", label: "II (Нет гарантии, исправно)" },
+              { id: "3", label: "III (Неисправно)" },
+              { id: "4", label: "IV (Подлежит списанию)" },
+            ]}
+          />
+          <Checkbox
+            style={{ flex: 1 }}
+            {...bind}
+            name="warranty"
+            label="Ожидающие перевода на гарантию"
+          />
+          <Hr />
           <Input
             {...bind}
             name="inventoryKey"
@@ -69,6 +109,7 @@ const Filter: React.FC<{
             label="Заводской номер"
             placeholder="110xxxxxxxxx"
           />
+          <Hr />
           <Input
             style={{ flex: 1 }}
             {...bind}
@@ -91,34 +132,6 @@ const Filter: React.FC<{
             name="comissioningDate"
             label="Дата ввода в эксплуатацию"
             type="date"
-          />
-
-          <Dropdown
-            {...bind}
-            name="category"
-            label="Категория"
-            items={[
-              { id: "1", label: "I (Прибыло, на гарантии)" },
-              { id: "2", label: "II (Нет гарантии, исправно)" },
-              { id: "3", label: "III (Неисправно)" },
-              { id: "4", label: "IV (Подлежит списанию)" },
-            ]}
-          />
-
-          <Dropdown
-            {...bind}
-            name="departmentId"
-            label="Подразделение"
-            items={departments}
-          />
-          <ClickInput
-            {...bind}
-            placeholder="Иванов Иван Иванович"
-            name="holderName"
-            label="Материально-ответственное лицо"
-            clearable
-            onClear={() => setInput({ holderId: null, holderName: null })}
-            onActive={() => holderPopup.onToggle()}
           />
         </Layout>
       </Form>

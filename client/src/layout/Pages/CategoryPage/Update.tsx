@@ -14,7 +14,7 @@ import Link from "components/Link";
 import { useHistory, useLocation, useRouteMatch } from "react-router";
 import { useQueryInput } from "hooks/useQueryInput";
 import { useStoreQueryInput } from "hooks/useStoreQueryInput";
-import { defaultColumns } from "../PhonePage/Items";
+import { getDefaultColumns } from "../PhonePage/Items";
 import Header from "components/Header";
 import Span from "components/Span";
 import WithLoader from "components/WithLoader";
@@ -23,6 +23,7 @@ import Hr from "components/Hr";
 import Form from "components/Form";
 import Layout from "components/Layout";
 import { useNotice } from "hooks/useNotice";
+import { useAuthor } from "hooks/misc/author";
 
 const useContainer = () => {
   const dispatch = useAppDispatch();
@@ -97,6 +98,8 @@ export const UpdateContent: React.FC<{}> = (props) => {
     success: "Средства успешно добавлены и ожидают подтверждения.",
   });
 
+  const getUser = useAuthor();
+
   return (
     <>
       {typeof selectedId === "undefined" ? (
@@ -142,7 +145,7 @@ export const UpdateContent: React.FC<{}> = (props) => {
           <Header align="right">
             Список добавляемых средств связи ({phones.data.items.length})
           </Header>
-          <Table columns={defaultColumns} items={phones.data.items} />
+          <Table columns={getDefaultColumns(getUser)} items={phones.data.items} />
         </WithLoader>
       )}
     </>

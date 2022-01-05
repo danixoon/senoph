@@ -1,3 +1,4 @@
+import ActionBox from "components/ActionBox";
 import Button from "components/Button";
 import Dropdown from "components/Dropdown";
 import Form from "components/Form";
@@ -8,13 +9,19 @@ import Input from "components/Input";
 import Layout from "components/Layout";
 import SpoilerPopup, { SpoilerPopupButton } from "components/SpoilerPopup";
 import Table, { TableColumn } from "components/Table";
+import WithLoader from "components/WithLoader";
 import { useDepartment } from "hooks/misc/department";
 import { splitHolderName, useHolder } from "hooks/misc/holder";
 import { useInput } from "hooks/useInput";
+import { useTogglePayloadPopup } from "hooks/useTogglePopup";
+import ItemEditPopup from "layout/Popups/ItemEditPopup";
 import { NoticeContext } from "providers/NoticeProvider";
+import PopupLayer from "providers/PopupLayer";
+import TopBarLayer from "providers/TopBarLayer";
 import React from "react";
 import { api } from "store/slices/api";
 import { extractStatus } from "store/utils";
+import columnTypes from "utils/columns";
 
 export type HoldersProps = {};
 
@@ -22,14 +29,21 @@ const useContainer = () => {
   const holders = api.useFetchHoldersQuery({});
   const [deleteHolder, deleteStatus] = api.useDeleteHolderMutation();
   const [createHolder, createStatus] = api.useCreateHolderMutation();
+  const [editHolder, editStatus] = api.useEditHolderMutation();
   const getHolderName = useHolder();
 
   return {
-    holders: { ...holders, items: holders.data?.items ?? [] },
+    holders: {
+      ...holders,
+      items: holders.data?.items ?? [],
+      status: extractStatus(holders, true),
+    },
     deleteHolder,
     createHolder,
+    editHolder,
     deleteStatus: extractStatus(deleteStatus),
     createStatus: extractStatus(createStatus),
+    editStatus: extractStatus(editStatus),
     getHolderName,
   };
 };
@@ -39,8 +53,10 @@ const Holders: React.FC<HoldersProps> = (props) => {
     holders,
     deleteHolder,
     createHolder,
+    editHolder,
     createStatus,
     deleteStatus,
+    editStatus,
     getHolderName,
   } = useContainer();
 
@@ -68,16 +84,23 @@ const Holders: React.FC<HoldersProps> = (props) => {
       );
   }, [deleteStatus.status]);
 
+  const { state: editedHolder, ...editPopup } = useTogglePayloadPopup();
+
   const columns: TableColumn[] = [
     {
       key: "actions",
       header: "",
       size: "30px",
+      required: true,
       mapper: (v, item) => (
-        <ActionBox
-          status={deleteStatus}
-          onDelete={() => deleteHolder({ id: item.id })}
-        />
+        <ActionBox status={deleteStatus}>
+          <SpoilerPopupButton onClick={() => editPopup.onToggle(true, item)}>
+            Изменить
+          </SpoilerPopupButton>
+          <SpoilerPopupButton onClick={() => deleteHolder({ id: item.id })}>
+            Удалить
+          </SpoilerPopupButton>
+        </ActionBox>
       ),
     },
     {
@@ -90,6 +113,12 @@ const Holders: React.FC<HoldersProps> = (props) => {
       header: "ФИО",
       mapper: (v, item: Api.Models.Holder) => splitHolderName(item),
     },
+    {
+      key: "description",
+      header: "Дополнение",
+      mapper: (v, item: Api.Models.Holder) => item.description ?? "",
+    },
+    ...columnTypes.entityDates(),
   ];
 
   const [bind] = useInput({});
@@ -98,19 +127,70 @@ const Holders: React.FC<HoldersProps> = (props) => {
 
   // const noticeContext = React.useContext(NoticeContext);
 
+  /*
+
+
+  */
   // TODO: Make proper typing for POST request params & form inputs
   return (
     <>
-      <Layout>
-        <Form
-          input={bind.input}
-          onSubmit={(data) => {
-            // onSubmit(data);
-            createHolder(data as any);
-            // noticeContext.createNotice("Пользователь создан");
-          }}
-        >
-          <Layout flow="row">
+      <PopupLayer>
+        <ItemEditPopup
+          {...editPopup}
+          status={editStatus}
+          defaults={editedHolder}
+          onSubmit={(payload) =>
+            editHolder({
+              id: editedHolder.id,
+              firstName: payload.firstName,
+              lastName: payload.lastName,
+              middleName: payload.middleName,
+              description: payload.description,
+            })
+          }
+          items={[
+            {
+              name: "lastName",
+              content: ({ bind, name, disabled }) => (
+                <Input {...bind} required label="Фамилия" name={name} />
+              ),
+            },
+            {
+              name: "firstName",
+              nullable: true,
+              content: ({ bind, name }) => (
+                <Input {...bind} required label="Имя" name={name} />
+              ),
+            },
+            {
+              name: "middleName",
+              nullable: true,
+              content: ({ bind, name }) => (
+                <Input {...bind} required label="Отчество" name={name} />
+              ),
+            },
+            {
+              name: "description",
+              nullable: true,
+              content: ({ bind, name }) => (
+                <Input {...bind} label="Дополнение" name={name} />
+              ),
+            },
+          ]}
+        />
+      </PopupLayer>
+      <TopBarLayer>
+        <Layout flex="1">
+          <Form
+            style={{ flexFlow: "row", flex: "1" }}
+            input={bind.input}
+            onSubmit={(data) => {
+              // onSubmit(data);
+              createHolder(data as any);
+              // noticeContext.createNotice("Пользователь создан");
+            }}
+          >
+            {/* <Layout flow="row"> */}
             <Input
               required
               placeholder="Иванов"
@@ -135,6 +215,13 @@ const Holders: React.FC<HoldersProps> = (props) => {
               name="middleName"
               style={{ flex: "1" }}
             />
+            <Input
+              label="Дополнение"
+              placeholder="..."
+              {...bind}
+              name="description"
+              style={{ flex: "1" }}
+            />
             <Button
               style={{
                 marginTop: "auto",
@@ -148,46 +235,18 @@ const Holders: React.FC<HoldersProps> = (props) => {
             >
               {createStatus.isLoading ? <LoaderIcon /> : "Создать"}
             </Button>
-          </Layout>
-        </Form>
-        <Hr />
-        <Header align="right">
-          Список владельцев ({holders.items.length})
-        </Header>
-        <Table items={tableItems} columns={columns} />
-      </Layout>
+            {/* </Layout> */}
+          </Form>
+          <Header align="right">
+            Список владельцев ({holders.items.length})
+          </Header>
+        </Layout>
+      </TopBarLayer>
+      <WithLoader status={holders.status}>
+        <Table stickyTop={86} items={tableItems} columns={columns} />
+      </WithLoader>
+      {/* </Layout> */}
     </>
-  );
-};
-
-const ActionBox = (props: { status: ApiStatus; onDelete: () => void }) => {
-  // const { commit } = props;
-  const [target, setTarget] = React.useState<HTMLElement | null>(() => null);
-
-  const [isOpen, setIsOpen] = React.useState(() => false);
-
-  return (
-    <Button
-      ref={(r) => setTarget(r)}
-      color="primary"
-      inverted
-      onClick={() => setIsOpen(true)}
-    >
-      <Icon.Box />
-      <SpoilerPopup
-        target={isOpen ? target : null}
-        position="right"
-        onBlur={(e) => {
-          if (e.currentTarget.contains(e.relatedTarget as any))
-            e.preventDefault();
-          else setIsOpen(false);
-        }}
-      >
-        <SpoilerPopupButton onClick={() => props.onDelete()}>
-          {props.status.isLoading ? <LoaderIcon /> : "Удалить"}
-        </SpoilerPopupButton>
-      </SpoilerPopup>
-    </Button>
   );
 };
 

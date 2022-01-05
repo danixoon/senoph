@@ -7,20 +7,35 @@ import { mergeClassNames, mergeProps } from "utils";
 import "./styles.styl";
 
 export type ActionBoxProps = {
-  status?: ApiStatus;
+  status: ApiStatus;
   icon?: React.FC<any>;
+  containerProps?: React.ButtonHTMLAttributes<HTMLButtonElement>;
 } & Omit<SpoilerPopupProps, "target">;
 // React.PropsWithChildren<React.HTMLAttributes<HTMLElement>>
 
 const ActionBox: React.FC<ActionBoxProps> = (props) => {
-  const { status, icon, children, ...rest } = props;
+  const { status, icon, children, containerProps, ...rest } = props;
   const [target, setTarget] = React.useState<HTMLElement | null>(() => null);
   const [isOpen, setIsOpen] = React.useState(() => false);
 
   const IconComponent = icon ?? Icon.Box;
 
+  const popupRef = React.useRef<HTMLElement | null>(null);
+
+  React.useEffect(() => {
+    if (!isOpen) return;
+    if (status && !status.isIdle) {
+      // if (!status.isLoading) {
+      popupRef.current?.focus();
+      // }
+      return;
+    }
+    setIsOpen(false);
+  }, [status?.status]);
+
   return (
     <Button
+      {...containerProps}
       ref={(r) => setTarget(r)}
       color="primary"
       inverted
@@ -28,6 +43,7 @@ const ActionBox: React.FC<ActionBoxProps> = (props) => {
     >
       <IconComponent />
       <SpoilerPopup
+        ref={popupRef}
         position="right"
         target={isOpen ? target : null}
         onBlur={(e) => {

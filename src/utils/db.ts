@@ -1,3 +1,4 @@
+import bcrypt from "bcryptjs";
 import Department from "@backend/db/models/department.model";
 import Holder from "@backend/db/models/holder.model";
 import Holding from "@backend/db/models/holding.model";
@@ -172,11 +173,14 @@ const mapGenerated = <T = any>(size: number, f: (i: number) => T) =>
 export const fillProdDatabase = async () => {
   const adminUser = await User.findOne({ where: { role: "admin" } });
   if (adminUser) return;
+
+  const defaultPassword = process.env.DEFAULT_PASSWORD;
+  const hash = await bcrypt.hash(defaultPassword, await bcrypt.genSalt(13));
+
   await User.create({
     name: "Администратор",
     username: "admin",
-    passwordHash:
-      "$2b$13$PwLX48c7HTCmRfqbsd8pq.f6BCkNYnQcyfYg95hx7p2jgLCd2jkqC",
+    passwordHash: hash,
     role: "admin",
   });
 };
@@ -192,6 +196,15 @@ export const fillDevDatabase = async (full?: boolean, size: number = 150) => {
     role: "admin",
   });
 
+  // if (adminUser) return;
+  const user2 = await User.create({
+    name: "Чел",
+    username: "test",
+    passwordHash:
+      "$2b$13$PwLX48c7HTCmRfqbsd8pq.f6BCkNYnQcyfYg95hx7p2jgLCd2jkqC",
+    role: "user",
+  });
+
   if (!full) return;
 
   const depsNames = [
@@ -203,6 +216,7 @@ export const fillDevDatabase = async (full?: boolean, size: number = 150) => {
     "Отделение функциональной диагностики",
     "Отеделение гипербарической оксигенации",
     "ЦИТАР",
+    "АТС",
     "Отделение сосудистой хирургии",
     "Хирургическое отделение",
     "Гинекологическое отделение",
@@ -230,6 +244,7 @@ export const fillDevDatabase = async (full?: boolean, size: number = 150) => {
     "Капустина Анастасия Макаровна",
     "Королёв Герман Никитич",
     "Логинова Елизавета Тимофеевна",
+    "Коновалов Дмитрий Геннадьевич",
   ];
 
   const holders = await Holder.bulkCreate(
@@ -245,7 +260,7 @@ export const fillDevDatabase = async (full?: boolean, size: number = 150) => {
   );
 
   const phoneTypes = await PhoneType.bulkCreate(
-    ["СС", "ТА", "БТА", "IP", "РС"].map((type) => ({ name: type }))
+    ["СС", "ТА", "DECT", "IP", "ЦТА"].map((type) => ({ name: type }))
   );
 
   const modelsNames = [
@@ -254,22 +269,38 @@ export const fillDevDatabase = async (full?: boolean, size: number = 150) => {
     "BBK BKT-203RU",
     "Bremier Sydney",
     "Coguar CPS160",
-    "Euroset 2005",
+    "Siemens Euroset 5005",
+    "Siemens Euroset 5020",
+    "Siemens Euroset 2015",
+    "LG LK 200 чёрный",
     "Euroset 2015",
     "Euroset 801",
     "Euroset 805",
+    "Siemens 5005",
     "Euroset 815",
     "Euroset 821",
+    "Panasonic KX-TS2356RU",
+    "Gigaset A415",
     "Flaver Flims",
+    "Siemens Optipoint 500",
+    "Siemens Optiset Key Module 90",
     "Florida, RT",
     "Gigaset 5005",
+    "Gigaset DA100",
+    "Gigaset A420",
     "Gigaset 502U",
     "Gigaset A160",
+    "Gigaset А420",
+    "Gigaset A540",
+    "Texet TX-214 B1",
     "Gigaset AS16H",
-    "Gigaset DA100",
+    "Gigaset A420H",
+    "LG LK 200",
     "Gigaset DA310",
     "Gigaset DA710",
     "Harvest HT-4b",
+    "Siemens Optiset Key Module 16",
+    "Gigaset С430",
     "LG Ericson LKA-200",
     "LG GS-472H",
     "LG GS5140",
@@ -278,6 +309,7 @@ export const fillDevDatabase = async (full?: boolean, size: number = 150) => {
     "LG Nortel LKA-220C",
     "Panasonic KX-T2335",
     "Panasonic KX-T2365",
+    "Panasonic KX-TS2350",
     "Panasonic KX-TC1501B",
     "Panasonic KX-TCD951RUB",
     "Panasonic KX-TS10MX-W",
@@ -287,6 +319,7 @@ export const fillDevDatabase = async (full?: boolean, size: number = 150) => {
     "Ritmix RT-003",
     "Siemens (Цифровой)",
     "Sony SPP-L338",
+    "Siemens 2005",
     "TA Vanguard",
     "Texet TX-214",
     "Varix S 5/2",
@@ -307,6 +340,8 @@ export const fillDevDatabase = async (full?: boolean, size: number = 150) => {
     }))
   );
 
+  // return;
+
   const phonesData = mapGenerated(size, () => ({
     inventoryKey: uuid(),
     factoryKey: uuid(),
@@ -323,34 +358,110 @@ export const fillDevDatabase = async (full?: boolean, size: number = 150) => {
         : Math.random() > 0.5
         ? ("create-pending" as const)
         : ("delete-pending" as const),
+    statusAt: new Date().toISOString(),
   }));
 
   const phones = await Phone.bulkCreate(phonesData);
-  const holding = await Holding.create({
-    holderId: getRandomItem(holders).id,
-    orderUrl: "sample.pdf",
-    authorId: user.id,
-    departmentId: getRandomItem(deps).id,
-    orderKey: Math.floor(10 + Math.random() * 200).toString(),
-    orderDate: new Date().toISOString(),
-    reasonId: "movement" as const,
-    status: null,
-  });
-
-  const holdingPhones = await HoldingPhone.bulkCreate(
-    phones.map((phone) => ({ phoneId: phone.id, holdingId: holding.id }))
+  const holdings = await Holding.bulkCreate(
+    mapGenerated(Math.floor(size / 4), (i) => {
+      const holding = {
+        holderId: getRandomItem(holders).id,
+        orderUrl: "sample.pdf",
+        authorId: user.id,
+        departmentId: getRandomItem(deps).id,
+        orderKey: `${i}-${Math.floor(10 + Math.random() * 200)}`,
+        orderDate:
+          // Сегодня и -10 лет
+          new Date(
+            Math.floor(
+              Date.now() - 1000 * 60 * 60 * 24 * 30 * 12 * 10 * Math.random()
+            )
+          ).toISOString(),
+        reasonId: "movement" as const,
+        status:
+          Math.random() > 0.5
+            ? null
+            : Math.random() > 0.5
+            ? ("create-pending" as const)
+            : ("delete-pending" as const),
+        statusAt: new Date().toISOString(),
+      };
+      return holding;
+    })
   );
 
-  const category = await Category.create({
-    categoryKey: "1",
-    actDate: randomDate().toISOString(),
-    actKey: (100 + Math.floor(Math.random() * 200)).toString(),
-    authorId: user.id,
-    actUrl: "test.pdf",
-    status: null,
-  });
+  const holdingPhones: DB.HoldingPhoneAttributes[] = [];
 
-  const categoryPhones = await CategoryPhone.bulkCreate(
-    phones.map((phone) => ({ phoneId: phone.id, categoryId: category.id }))
+  for (const holding of holdings) {
+    holdingPhones.push(
+      ...getRandomItems(Math.floor(phones.length / 20), phones).map(
+        (phone) => ({
+          phoneId: phone.id,
+          holdingId: holding.id,
+          authorId: Math.random() > 0.5 ? user.id : null,
+          status: null,
+            // Math.random() > 0.05
+            //   ? null
+            //   : Math.random() > 0.5
+            //   ? ("create-pending" as const)
+            //   : ("delete-pending" as const),
+          statusAt: new Date().toISOString(),
+        })
+      )
+    );
+  }
+
+  await HoldingPhone.bulkCreate(holdingPhones);
+
+  // const category = await Category.create({
+  //   categoryKey: "1",
+  //   actDate: randomDate().toISOString(),
+  //   actKey: (100 + Math.floor(Math.random() * 200)).toString(),
+  //   authorId: user.id,
+  //   actUrl: "test.pdf",
+  //   status: null,
+  // });
+
+  const categories = await Category.bulkCreate(
+    mapGenerated(Math.floor(size / 4), (i) => {
+      const category = {
+        categoryKey: "1" as CategoryKey,
+        actDate: randomDate().toISOString(),
+        actKey: (100 + Math.floor(Math.random() * 200)).toString(),
+        authorId: user.id,
+        actUrl: "test.pdf",
+        status:
+          Math.random() > 0.5
+            ? null
+            : Math.random() > 0.5
+            ? ("create-pending" as const)
+            : ("delete-pending" as const),
+        statusAt: new Date().toISOString(),
+      };
+      return category;
+    })
   );
+
+  const categoryPhones: DB.CategoryPhoneAttributes[] = [];
+
+  for (const category of categories) {
+    categoryPhones.push(
+      ...getRandomItems(Math.floor(phones.length / 20), phones).map(
+        (phone) => ({
+          phoneId: phone.id,
+          categoryId: category.id,
+          authorId: Math.random() > 0.5 ? user.id : null,
+          status: null,
+            // Math.random() > 0.05
+            //   ? null
+            //   : Math.random() > 0.5
+            //   ? ("create-pending" as const)
+            //   : ("delete-pending" as const),
+          statusAt: new Date().toISOString(),
+        })
+      )
+    );
+  }
+
+  await CategoryPhone.bulkCreate(categoryPhones);
 };

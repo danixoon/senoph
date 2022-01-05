@@ -1,4 +1,6 @@
 const path = require("path");
+const { version } = require("./package.json");
+const DefinePlugin = require("webpack").DefinePlugin;
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const TsconfigPathsPlugin = require("tsconfig-paths-webpack-plugin");
 const BundleAnalyzerPlugin =
@@ -8,6 +10,7 @@ const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
 
 const isProduction = process.env.NODE_ENV === "production";
 const isDevelopment = process.env.NODE_ENV === "development";
+// const packageJson =
 
 const config = {
   mode: isDevelopment ? "development" : "production",
@@ -75,12 +78,17 @@ const config = {
     new HtmlWebpackPlugin({
       title: "ИС учета средств связи",
       template: path.resolve(__dirname, "public/index.pug"),
+      version,
+      production: isProduction,
     }),
     new MiniCssExtractPlugin({
       filename: "[name].css",
       chunkFilename: "[id].css",
       // attributes: { id: "theme" },
     }),
+    // new DefinePlugin({
+    //   __version__: version,
+    // }),
   ],
   devServer: {
     contentBase: path.resolve(__dirname, "build"),

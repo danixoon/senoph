@@ -10,7 +10,7 @@ import { resolveStatusName } from "resolvers/commit";
 import { api } from "store/slices/api";
 import { extractStatus, parseItems } from "store/utils";
 import { getLocalDate } from "utils";
-import { defaultColumns } from "../PhonePage/Items";
+// import { defaultColumns } from "../PhonePage/Items";
 import { categoryNames, resolveCategoryName } from "./utils";
 import Header from "components/Header";
 import Hr from "components/Hr";

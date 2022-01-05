@@ -1,6 +1,6 @@
 import AltPopup from "components/AltPopup";
 import Button from "components/Button";
-import { FormContext } from "components/Form";
+import { CheckAdder, CheckPredicate, FormContext } from "components/Form";
 import Icon from "components/Icon";
 import Label from "components/Label";
 import Span from "components/Span";
@@ -19,6 +19,7 @@ export type InputProps<T = any> = OverrideProps<
     info?: string;
     size?: Size;
     mapper?: (value: any) => any;
+    check?: CheckPredicate;
     required?: boolean;
     clearable?: boolean;
     onClear?: () => void;
@@ -36,6 +37,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>((props, ref) => {
     input,
     name,
     required,
+    check,
     placeholder,
     clearable,
     blurrable,
@@ -69,6 +71,9 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>((props, ref) => {
       v == null ? "Значение обязательно" : false
     );
 
+  if (check) {
+    formContext.addCheck(input, name, check);
+  }
   if (type === "date")
     formContext.addCheck(input, name, (v) => {
       try {
@@ -99,7 +104,10 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>((props, ref) => {
   const [capturedEvent, setCapturedEvent] =
     React.useState<null | React.ChangeEvent<HTMLInputElement>>(null);
 
-  const value = (blurrable ? capturedEvent?.target.value : originalValue) ?? "";
+  const value =
+    (blurrable && capturedEvent
+      ? capturedEvent?.target.value
+      : originalValue) ?? "";
 
   return (
     <div {...mergedProps}>

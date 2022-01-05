@@ -84,11 +84,23 @@ const PhonePopupContainer: React.FC<PhonePopupContainerProps> = (props) => {
           isOpen: filter.selectedId != null,
           onToggle: () => dispatch(updateFilter({ selectedId: null })),
         }}
-        phone={phone ?? null}
+        phone={
+          phone
+            ? {
+                ...phone,
+                categories: [...(phone?.categories ?? [])].sort((a, b) =>
+                  a.actDate < b.actDate ? 1 : -1
+                ),
+                holdings: [...(phone?.holdings ?? [])].sort((a, b) =>
+                  a.orderDate < b.orderDate ? 1 : -1
+                ),
+              }
+            : null
+        }
         changes={changes}
         makeChanges={makeChanges}
         undoChanges={undoChanges}
-        onSelectHolding={(id) => dispatch(push(`/holding/view?id=${id}`))}
+        onSelectHolding={(id) => dispatch(push(`/holding/view?ids=${id}`))}
         onDeleteCategory={(id) => deleteCategory({ id })}
         onDelete={() => (phone ? deletePhone({ ids: [phone.id] }) : null)}
         isEditMode={mode === "edit"}

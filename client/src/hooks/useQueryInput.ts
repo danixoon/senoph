@@ -22,10 +22,11 @@ export const useQueryInput = <T>(
   const { pathname, search, ...rest } = useLocation();
 
   const dispatchQuery = (input: PartialType<T, null | string>) => {
-    const urlSearch = { ...input };
-    const search = clearObject(urlSearch);
+    const oldSearch = qs.parse(search);
+    const urlSearch = { ...oldSearch, ...input };
+    const s = clearObject(urlSearch);
 
-    dispatch(replace({ ...rest, pathname, search: qs.stringify(search) }));
+    dispatch(replace({ ...rest, pathname, search: qs.stringify(s) }));
   };
 
   const [bind, setInput] = useInput<PartialType<T, null | string>>(
@@ -36,6 +37,10 @@ export const useQueryInput = <T>(
       return null;
     }
   );
+
+  React.useEffect(() => {
+    // dispatchQuery({ ...qs.parse(search), ...defaultInput });
+  }, []);
 
   React.useEffect(() => {
     const q = prepare(qs.parse(search) as any);

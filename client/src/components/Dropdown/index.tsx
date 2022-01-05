@@ -126,7 +126,7 @@ const Dropdown: React.FC<DropdownProps> = (props) => {
         </Button>
         {listItems.map((item, i) => (
           <Button
-            key={item.id}
+            key={item.id + item.label}
             fill
             inverted
             className="dropdown-item"

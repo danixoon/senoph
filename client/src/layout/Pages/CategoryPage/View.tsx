@@ -4,7 +4,7 @@ import Badge from "components/Badge";
 import Link from "components/Link";
 import { SpoilerPopupButton } from "components/SpoilerPopup";
 import Table, { TableColumn } from "components/Table";
-import { useTogglePopup } from "hooks/useTogglePopup";
+import { useTogglePayloadPopup, useTogglePopup } from "hooks/useTogglePopup";
 import ItemSelectionPopup from "layout/Popups/ItemSelectionPopup";
 import { NoticeContext } from "providers/NoticeProvider";
 import PopupLayer from "providers/PopupLayer";
@@ -29,8 +29,15 @@ import InfoBanner from "components/InfoBanner";
 import Input from "components/Input";
 import { useQueryInput } from "hooks/useQueryInput";
 import WithLoader from "components/WithLoader";
+import { useNotice } from "hooks/useNotice";
+import PhonesCategorySelectionPopup from "../../Popups/PhonesCategorySelectionPopup";
+import { useAuthor } from "hooks/misc/author";
+import Paginator from "components/Paginator";
+import { usePaginator } from "hooks/usePaginator";
+import TopBarLayer from "providers/TopBarLayer";
+import Layout from "components/Layout";
 
-const useContainer = () => {
+const useContainer = (props: { offset?: number; amount?: number }) => {
   const filterHook = useQueryInput<{
     actKey?: string;
     actDate?: string;
@@ -41,7 +48,7 @@ const useContainer = () => {
   // const input = filterHook[0].input;
 
   const fetchedCategories = api.useFetchCategoriesQuery({
-    ...clearObject(filterHook[0].input as any),
+    ...clearObject({ ...filterHook[0].input, ...props } as any),
   });
 
   const categories = parseItems(fetchedCategories);
@@ -74,6 +81,11 @@ const useContainer = () => {
 
   const isSelecting = location.state?.act === "select";
 
+  // useNotice(orStatus(commitInfo));
+
+  useNotice(extractStatus(commitCategoryInfo));
+  useNotice(extractStatus(deleteCategoryInfo));
+
   return {
     filterHook,
     categories,
@@ -99,13 +111,20 @@ const useContainer = () => {
         }
       : undefined,
     onToggle: () => dispatch(replace({ search: qs.stringify(query) })),
-    onViewCommit: (id: number) => dispatch(push("/category/commit")),
-    onEdit: (id: number) =>
-      dispatch(push({ search: qs.stringify({ ...query, id }) })),
+    onViewCommit: (id: number) =>
+      dispatch(
+        push({
+          pathname: "/category/commit",
+          search: qs.stringify({ ids: id }),
+        })
+      ),
+    // onEdit: (id: number) =>
+    // dispatch(push({ search: qs.stringify({ ...query, id }) })),
   };
 };
 
 export const ViewContent: React.FC<{}> = (props) => {
+  const [offset, setOffset] = React.useState(0);
   const {
     filterHook,
     category,
@@ -114,14 +133,21 @@ export const ViewContent: React.FC<{}> = (props) => {
     selectedId,
     onToggle,
     onViewCommit,
-    onEdit,
     onSelect,
-  } = useContainer();
+  } = useContainer({ offset, amount: 15 });
+
+  const { currentPage, maxPage } = usePaginator(
+    offset,
+    setOffset,
+    categories.data.total,
+    15
+  );
 
   const actionBox: TableColumn = {
     key: "actions",
     header: "",
     size: "30px",
+    required: true,
     mapper: (v, item) => (
       <ActionBox key="ok" icon={Icon.Box} status={category.deleteStatus}>
         {item.status !== null ? (
@@ -129,13 +155,17 @@ export const ViewContent: React.FC<{}> = (props) => {
             <SpoilerPopupButton onClick={() => onViewCommit(item.id)}>
               Просмотреть
             </SpoilerPopupButton>
-            <SpoilerPopupButton onClick={() => onEdit(item.id)}>
+            <SpoilerPopupButton
+              onClick={() => phonesPopup.onToggle(true, item.id)}
+            >
               Изменить
             </SpoilerPopupButton>
           </>
         ) : (
           <>
-            <SpoilerPopupButton onClick={() => onEdit(item.id)}>
+            <SpoilerPopupButton
+              onClick={() => phonesPopup.onToggle(true, item.id)}
+            >
               Изменить
             </SpoilerPopupButton>
             <SpoilerPopupButton
@@ -149,109 +179,100 @@ export const ViewContent: React.FC<{}> = (props) => {
     ),
   };
 
-  const noticeContext = React.useContext(NoticeContext);
   const [bindFilter] = filterHook;
+
+  const phonesPopup = useTogglePayloadPopup();
+
+  const getUser = useAuthor();
 
   return (
     <>
       <PopupLayer>
-        <ItemSelectionPopup
-          onToggle={() => onToggle()}
-          isOpen={!isNaN(selectedId)}
-          header="Прикреплённые средства связи"
-          onSelect={(item) => {}}
-          status={categoryPhones.status}
-          items={categoryPhones.data.items.map((item) => ({
-            id: item.id.toString(),
-            content: (
-              <>
-                <Button
-                  onClick={() => {
-                    if (categoryPhones.data.items.length === 1)
-                      noticeContext.createNotice(
-                        "Ошибка: Невозможно удалить последнее средство связи из категории. \nВероятно, вы хотите удалить категорию полностью?"
-                      );
-                    else if (selectedId)
-                      category.commit({
-                        action: "remove",
-                        phoneIds: [item.id],
-                        categoryId: selectedId,
-                      });
-                  }}
-                  inverted
-                  style={{ marginRight: "1rem" }}
-                >
-                  <Icon.X />
-                </Button>
-                <Link href={`/phone/view?selectedId=${item.id}`}>
-                  {item.model?.name ?? `#${item.id}`}
-                </Link>
-                <Span
-                  size="xs"
-                  style={{ marginLeft: "auto", marginRight: "1rem" }}
-                  font="monospace"
-                >
-                  {item.inventoryKey ?? "Инвентарный отсутствует"}
-                </Span>
-              </>
-            ),
-            name: item.model?.name ?? `#${item.id}`,
-          }))}
+        <PhonesCategorySelectionPopup
+          {...phonesPopup}
+          categoryId={phonesPopup.state}
         />
       </PopupLayer>
-      <Form style={{ flexFlow: "column wrap", maxHeight: "100px" }} input={{}}>
-        <Input
-          {...bindFilter}
-          name="actKey"
-          label="Номер акта"
-          placeholder="1234"
-        />
-        <Input
-          {...bindFilter}
-          type="date"
-          name="actDate"
-          label="Дата акта"
-          blurrable
-        />
-        <Dropdown
-          {...bindFilter}
-          style={{ flex: "1" }}
-          items={Object.entries(categoryNames).map(([id, label]) => ({
-            label,
-            id,
-          }))}
-          name="categoryKey"
-          label="Категория"
-        />
-        <Dropdown
-          {...bindFilter}
-          style={{ flex: "1" }}
-          items={[
-            { id: "create-pending", label: "Ожидает создания" },
-            { id: "delete-pending", label: "Ожидает удаления" },
-            { id: "based", label: "Подтверждённые" },
-          ]}
-          name="status"
-          label="Статус"
-        />
-      </Form>
-      <Hr />
-
+      <TopBarLayer>
+        <Layout flex="1" style={{ height: "124px" }}>
+          <Header unsized align="right">
+            Фильтр
+          </Header>
+          <Form
+            style={{ flexFlow: "column wrap", maxHeight: "100px" }}
+            input={{}}
+          >
+            <Input
+              {...bindFilter}
+              blurrable
+              name="ids"
+              label="ID"
+              placeholder="1234"
+            />
+            <Input
+              {...bindFilter}
+              name="actKey"
+              label="Номер акта"
+              placeholder="1234"
+            />
+            <Input
+              {...bindFilter}
+              type="date"
+              name="actDate"
+              label="Дата акта"
+              blurrable
+            />
+            <Dropdown
+              {...bindFilter}
+              style={{ flex: "1" }}
+              items={Object.entries(categoryNames).map(([id, label]) => ({
+                label,
+                id,
+              }))}
+              name="categoryKey"
+              label="Категория"
+            />
+            <Dropdown
+              {...bindFilter}
+              style={{ flex: "1" }}
+              items={[
+                { id: "create-pending", label: "Ожидает создания" },
+                { id: "delete-pending", label: "Ожидает удаления" },
+                { id: "based", label: "Подтверждённые" },
+              ]}
+              name="status"
+              label="Статус"
+            />
+          </Form>
+          <Layout flow="row" style={{ alignItems: "center" }}>
+            <Paginator
+              style={{ marginRight: "auto" }}
+              onChange={(page) => setOffset((page - 1) * 15)}
+              min={1}
+              max={maxPage}
+              size={5}
+              current={currentPage}
+            />{" "}
+            <Header align="right">Результаты ({categories.data.total})</Header>
+          </Layout>
+        </Layout>
+      </TopBarLayer>
       <WithLoader status={categories.status}>
         {categories.data.items.length === 0 ? (
           <InfoBanner
             href="/phone/edit"
             hrefContent="средства связи"
-            text="Движения по запросу отсутствуют. Вы можете создать их, выбрав"
+            text="Акты категорий по запросу отсутствуют. Вы можете создать их, выбрав"
           />
         ) : (
           <>
-            <Header align="right">
-              Результаты ({categories.data.items.length})
-            </Header>
             <Table
+              stickyTop={145}
               items={categories.data.items}
-              columns={[actionBox, ...getColumns()]}
+              columns={[
+                actionBox,
+                ...getColumns(getUser, (id) => phonesPopup.onToggle(true, id)),
+              ]}
               onSelect={onSelect}
             />
           </>

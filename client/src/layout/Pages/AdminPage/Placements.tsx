@@ -9,12 +9,18 @@ import Input from "components/Input";
 import Layout from "components/Layout";
 import SpoilerPopup, { SpoilerPopupButton } from "components/SpoilerPopup";
 import Table, { TableColumn } from "components/Table";
+import WithLoader from "components/WithLoader";
 import { useInput } from "hooks/useInput";
 import { useNotice } from "hooks/useNotice";
+import { useTogglePayloadPopup } from "hooks/useTogglePopup";
+import ItemEditPopup from "layout/Popups/ItemEditPopup";
 import { NoticeContext } from "providers/NoticeProvider";
+import PopupLayer from "providers/PopupLayer";
+import TopBarLayer from "providers/TopBarLayer";
 import React from "react";
 import { api } from "store/slices/api";
 import { extractStatus } from "store/utils";
+import columnTypes from "utils/columns";
 
 export type PlacementsProps = {};
 
@@ -22,13 +28,20 @@ const usePlacementsContainer = () => {
   const placements = api.useFetchPlacementsQuery({});
   const [deletePlacement, deleteStatus] = api.useDeletePlacementMutation();
   const [createPlacement, createStatus] = api.useCreatePlacementMutation();
+  const [editPlacement, editStatus] = api.useEditPlacementMutation();
 
   return {
-    placements: { ...placements, items: placements.data?.items ?? [] },
+    placements: {
+      ...placements,
+      items: placements.data?.items ?? [],
+      status: extractStatus(placements, true),
+    },
     deletePlacement,
     deleteStatus: extractStatus(deleteStatus),
     createStatus: extractStatus(createStatus),
+    editStatus: extractStatus(editStatus),
     createPlacement,
+    editPlacement,
   };
 };
 
@@ -39,6 +52,8 @@ const Departments: React.FC<PlacementsProps> = (props) => {
     createPlacement,
     deleteStatus,
     createStatus,
+    editPlacement,
+    editStatus,
   } = usePlacementsContainer();
 
   const noticeContext = React.useContext(NoticeContext);
@@ -58,8 +73,12 @@ const Departments: React.FC<PlacementsProps> = (props) => {
       key: "actions",
       header: "",
       size: "30px",
+      required: true,
       mapper: (v, item: Api.Models.Placement) => (
         <ActionBox status={deleteStatus}>
+          <SpoilerPopupButton onClick={() => editPopup.onToggle(true, item)}>
+            Изменить
+          </SpoilerPopupButton>
           <SpoilerPopupButton onClick={() => deletePlacement({ id: item.id })}>
             Удалить
           </SpoilerPopupButton>
@@ -81,27 +100,70 @@ const Departments: React.FC<PlacementsProps> = (props) => {
       header: "Описание",
       // size: "150px",
     },
+    ...columnTypes.entityDates(),
   ];
 
   const [bind] = useInput({});
 
   const tableItems = placements.items.map((department) => department);
 
-  // const noticeContext = React.useContext(NoticeContext);
+  const { state: editedPlacement, ...editPopup } = useTogglePayloadPopup();
 
   // TODO: Make proper typing for POST request params & form inputs
   return (
     <>
-      <Layout>
-        <Form
-          input={bind.input}
-          onSubmit={(data) => {
-            // onSubmit(data);
-            createPlacement(data as any);
-            // noticeContext.createNotice("Пользователь создан");
-          }}
-        >
-          <Layout flow="row">
+      <PopupLayer>
+        <ItemEditPopup
+          {...editPopup}
+          status={editStatus}
+          defaults={editedPlacement}
+          onSubmit={(payload) =>
+            editPlacement({
+              id: editedPlacement.id,
+              name: payload.name,
+              description: payload.descriotion,
+            })
+          }
+          items={[
+            {
+              name: "name",
+              content: ({ bind, name, disabled }) => (
+                <Input
+                  {...bind}
+                  required
+                  label="Наименование"
+                  name={name}
+                  disabled={disabled}
+                />
+              ),
+            },
+            {
+              name: "description",
+              content: ({ bind, name, disabled }) => (
+                <Input
+                  {...bind}
+                  label="Описание"
+                  name={name}
+                  disabled={disabled}
+                />
+              ),
+            },
+          ]}
+        />
+      </PopupLayer>
+      {/* <Layout> */}
+      <TopBarLayer>
+        <Layout flex="1">
+          <Form
+            input={bind.input}
+            style={{ flex: "1", flexFlow: "row" }}
+            onSubmit={(data) => {
+              // onSubmit(data);
+              createPlacement(data as any);
+              // noticeContext.createNotice("Пользователь создан");
+            }}
+          >
+            {/* <Layout flow="row"> */}
             <Input
               required
               placeholder="Консультативный корпус"
@@ -130,14 +192,18 @@ const Departments: React.FC<PlacementsProps> = (props) => {
             >
               {createStatus.isLoading ? <LoaderIcon /> : "Создать"}
             </Button>
-          </Layout>
-        </Form>
-        <Hr />
-        <Header align="right">
-          Список местоположений ({placements.items.length})
-        </Header>
-        <Table items={tableItems} columns={columns} />
-      </Layout>
+            {/* </Layout> */}
+          </Form>
+          <Header align="right">
+            Список местоположений ({placements.items.length})
+          </Header>
+        </Layout>
+      </TopBarLayer>
+      {/* <Hr /> */}
+
+      <WithLoader status={placements.status}>
+        <Table stickyTop={86} items={tableItems} columns={columns} />
+      </WithLoader>
     </>
   );
 };

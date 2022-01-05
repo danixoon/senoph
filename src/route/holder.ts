@@ -52,6 +52,42 @@ router.get(
   })
 );
 
+router.put(
+  "/holder",
+  access("admin"),
+  validate({
+    query: {
+      id: tester().isNumber().required(),
+      firstName: tester(),
+      lastName: tester(),
+      middleName: tester(),
+      description: tester(),
+    },
+  }),
+  transactionHandler(async (req, res) => {
+    const { id } = req.params.user;
+    const { id: targetId, ...rest } = req.query;
+
+    const holder = await Holder.findByPk(targetId);
+    if (!holder)
+      throw new ApiError(errorType.NOT_FOUND, {
+        description: `Владелец #${targetId} не найден.`,
+      });
+
+    const prevHolder = holder.toJSON();
+
+    const updatedHolder = await holder?.update({ ...rest });
+
+    Log.log("holder", [targetId], "edit", id, {
+      before: prevHolder,
+      after: holder,
+      query: req.query,
+    });
+
+    res.send({ id: targetId });
+  })
+);
+
 router.post(
   "/holder",
   access("admin"),
@@ -60,16 +96,18 @@ router.post(
       firstName: tester().required(),
       lastName: tester().required(),
       middleName: tester().required(),
+      description: tester(),
     },
   }),
   transactionHandler(async (req, res) => {
     const { user } = req.params;
-    const { firstName, lastName, middleName } = req.query;
+    const { firstName, lastName, middleName, description } = req.query;
 
     const holder = await Holder.create({
       firstName,
       lastName,
       middleName,
+      description,
     });
 
     Log.log("holder", [holder.id], "create", user.id);

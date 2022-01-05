@@ -1,7 +1,12 @@
+import ActionBox from "components/ActionBox";
+import Button from "components/Button";
 import Checkbox from "components/Checkbox";
+import Header from "components/Header";
+import Icon from "components/Icon";
 import { InputBind } from "hooks/useInput";
 import * as React from "react";
-import { mergeClassNames, mergeProps } from "utils";
+import { extractStatus, splitStatus } from "store/utils";
+import { getLocalDate, mergeClassNames, mergeProps } from "utils";
 import "./styles.styl";
 
 type TableItem<T> = {
@@ -17,11 +22,14 @@ export type TableColumn<T = any> = {
   header: React.ReactChild;
   size?: string;
   sortable?: boolean;
+  hidden?: boolean;
+  required?: boolean;
   wrap?: boolean;
   props?: React.TdHTMLAttributes<HTMLElement>;
-  mapper?: (v: any, row: T) => any;
+  mapper?: (v: any, row: T, i: number) => any;
 } & (
   | { type?: "date" }
+  | { type?: "local-date" }
   | { type?: "checkbox"; onToggle: (state: boolean, id: any) => void }
 );
 
@@ -31,6 +39,9 @@ type TableProps<T = any> = OverrideProps<
     items: TableItem<T>[];
     columns: TableColumn[];
     name?: string;
+    settingsPosition?: "top" | "bottom" | "left" | "right" | "rt-corner";
+
+    stickyTop?: number;
 
     onSelect?: (item: TableItem<T>) => void;
     selectedId?: any;
@@ -47,8 +58,8 @@ type TableProps<T = any> = OverrideProps<
 
 type TableCellProps = OverrideProps<
   React.DetailedHTMLProps<
-    React.TdHTMLAttributes<HTMLTableDataCellElement>,
-    HTMLTableDataCellElement
+    React.TdHTMLAttributes<HTMLTableCellElement>,
+    HTMLTableCellElement
   >,
   {}
 >;
@@ -71,7 +82,9 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
     sortDir,
     onSort,
     selectedId,
+    settingsPosition = "rt-corner",
     selectMultiple,
+    stickyTop,
     ...rest
   } = props;
   const mergedProps = mergeProps(
@@ -97,11 +110,14 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
   const convertValue = (
     column: TableColumn,
     item: TableItem<any>,
-    value: any
+    value: any,
+    i: number
   ) => {
     const mapper = column.mapper ?? ((v: any) => v);
 
     switch (column.type) {
+      case "local-date":
+        return getLocalDate(value);
       case "date":
         return new Date(value).toLocaleDateString();
       case "checkbox":
@@ -115,17 +131,91 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
           />
         );
     }
-    return mapper(value, item);
+    return mapper(value, item, i);
   };
+
+  type ColumnsState = Record<string, { hidden: boolean }>;
+
+  const getColumnsState = (columnsState?: ColumnsState) => {
+    const state: ColumnsState = columns.reduce(
+      (st, v) =>
+        v.required
+          ? st
+          : {
+              ...st,
+              [v.key]: {
+                hidden: columnsState
+                  ? columnsState[v.key]?.hidden ?? !!v.hidden
+                  : !!v.hidden,
+              },
+            },
+      {} as any
+    );
+    return state;
+  };
+  const [columnsState, setColumnsState] = React.useState<ColumnsState>(() =>
+    getColumnsState()
+  );
+
+  React.useEffect(() => {
+    setColumnsState(getColumnsState(columnsState));
+  }, [columns.map((v) => v.key).join("_")]);
+
+  const filteredColumns = columns.filter(
+    (column) => !columnsState[column.key]?.hidden
+  );
+
+  const tableColumns: TableColumn[] = [
+    ...filteredColumns,
+    {
+      key: "index",
+      size: "30px",
+      header: (
+        <ActionBox
+          status={splitStatus("idle")}
+          containerProps={{ style: { float: "right" } }}
+          position={settingsPosition}
+          icon={() => <Icon.Settings color="muted" />}
+        >
+          {Object.entries(columnsState).map(([key, value]) => (
+            <Checkbox
+              key={key}
+              input={{ checked: !value.hidden }}
+              name="checked"
+              label={columns.find((col) => col.key === key)?.header.toString()}
+              onChange={(e) =>
+                setColumnsState({
+                  ...columnsState,
+                  [key]: { hidden: !value.hidden },
+                })
+              }
+            />
+          ))}
+          {/* <Checkbox label="Инвентарный номер" input={{}} name="a" /> */}
+          {/* <Checkbox label="Заводской номер номер" input={{}} name="a" /> */}
+        </ActionBox>
+      ),
+      // props: { style: { flo } }
+      mapper: (v, item, i) => (
+        <Header style={{ float: "right" }}>{i + 1}</Header>
+      ),
+    },
+  ];
 
   // console.log(sortDir);
 
   // TODO: Unique key error
   return (
     <table {...mergedProps}>
-      <thead>
+      <thead
+        style={
+          typeof stickyTop === "undefined"
+            ? {}
+            : { top: stickyTop, position: "sticky" }
+        }
+      >
         <tr>
-          {columns.map((column) => {
+          {tableColumns.map((column) => {
             const mergedProps = mergeProps(
               {
                 className: mergeClassNames(
@@ -157,7 +247,7 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
         </tr>
       </thead>
       <tbody>
-        {items.map((item, i) => (
+        {items.map((item, ir) => (
           <tr
             id={item.id}
             className={mergeClassNames(
@@ -166,10 +256,10 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
             )}
             // TODO: Make rows selectable with keyboard
             tabIndex={onSelect ? 0 : undefined}
-            key={`${item.id ?? "id"}-${i}`}
+            key={`${item.id ?? "id"}-${ir}`}
             {...item.props}
           >
-            {columns.map((column, i) => {
+            {tableColumns.map((column, i) => {
               const mergedProps = mergeProps(
                 {
                   className: mergeClassNames(
@@ -181,13 +271,13 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = (
               );
               return (
                 <TableCell
-                  key={`${column.key}-${item.id}-${i}`}
+                  key={`${column.key}-${item.id}-${ir}-${i}`}
                   onClick={() =>
                     column.type != "checkbox" && onSelect && onSelect(item)
                   }
                   {...mergedProps}
                 >
-                  {convertValue(column, item, item[column.key])}
+                  {convertValue(column, item, item[column.key], ir)}
                 </TableCell>
               );
             })}

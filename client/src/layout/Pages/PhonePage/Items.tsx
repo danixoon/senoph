@@ -1,3 +1,4 @@
+import qs from "query-string";
 import Checkbox from "components/Checkbox";
 import Dropdown from "components/Dropdown";
 import Form from "components/Form";
@@ -9,23 +10,50 @@ import Link from "components/Link";
 import Paginator from "components/Paginator";
 import Popup from "components/Popup";
 import Table, { TableColumn } from "components/Table";
+import { push } from "connected-react-router";
 import { InputHook, useInput } from "hooks/useInput";
 import PopupLayer from "providers/PopupLayer";
 import TopBarLayer from "providers/TopBarLayer";
 import * as React from "react";
+import { useDispatch } from "react-redux";
+import { useLocation } from "react-router";
 import { PhoneState } from "store/slices/phone";
+import Span from "components/Span";
+import columns from "utils/columns";
+import { useAuthor } from "hooks/misc/author";
 
-export const defaultColumns: TableColumn[] = [
+export const getDefaultColumns: (
+  getUser: (id?: number | undefined) => Api.Models.User | undefined,
+  withoutSelection?: boolean
+) => TableColumn[] = (getUser, without) => [
   {
     key: "id",
     header: "ID",
     sortable: true,
     size: "30px",
-    mapper: (v, item) => (
-      <Link tabIndex={-1} href={`/phone?selectedId=${v}`}>
-        #{v}
-      </Link>
-    ),
+    mapper: (v, item) => {
+      // const dispatch = useDispatch();
+      // const location = useLocation();
+      // const search = save ? qs.parse(location.search) : {};
+      // search.selectedId = item.id;
+
+      if (without) return <Span>#{item.id}</Span>;
+
+      return (
+        <Link
+          tabIndex={-1}
+          href={`/phone?selectedId=${v}`}
+
+          // onClick={() => {
+          // dispatch(
+          // push({ pathname: "/phone/view", search: qs.stringify(search) })
+          // );
+          // }}
+        >
+          #{v}
+        </Link>
+      );
+    },
   },
   {
     key: "modelName",
@@ -60,6 +88,8 @@ export const defaultColumns: TableColumn[] = [
     sortable: true,
     size: "50px",
   },
+  ...columns.entityDates(),
+  columns.author({ getUser }),
 ];
 
 const Items: React.FC<{
@@ -114,11 +144,13 @@ const Items: React.FC<{
     };
   });
 
-  const columns: TableColumn[] = [...defaultColumns];
+  const getUser = useAuthor();
+  const columns: TableColumn[] = getDefaultColumns(getUser, true);
 
   if (mode === "edit")
     columns.push({
       key: "selected",
+      required: true,
       header: (
         <Checkbox
           name="selectAll"
@@ -146,13 +178,8 @@ const Items: React.FC<{
 
   return (
     <>
-      <PopupLayer>
-        <Popup size="lg" closeable onToggle={() => {}}>
-          hey
-        </Popup>
-      </PopupLayer>
       <Table
-        // {...bind}
+        stickyTop={31}
         selectedId={selectedId}
         onSelect={onSelect}
         onSort={sorting.onSort}

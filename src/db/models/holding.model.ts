@@ -83,6 +83,11 @@ export default class Holding extends Model<
   @Column(DataType.DATE)
   statusAt?: string;
 
+  @AllowNull(true)
+  @ForeignKey(() => User)
+  @Column(DataType.INTEGER)
+  statusId?: number;
+
   @BeforeBulkUpdate
   static onBeforeUpdate(args: any) {
     args.fields.push("statusAt");

@@ -35,14 +35,14 @@ const PopupEditActions: React.FC<PopupEditActionsProps> = (props) => {
         href={`/category/create?phoneIds=${phoneIds.join()}`}
         style={{ display: "flex", margin: "0.25rem" }}
       >
-        <Icon.Key size="md" /> Создать категорию
+        <Icon.Folder size="md" /> Создать категорию
       </Link>
       <Link
         href={`/category/update?phoneIds=${phoneIds.join()}`}
         size="sm"
         style={{ display: "flex", margin: "0.25rem" }}
       >
-        <Icon.UserPlus size="md" /> Прикрепить к акту категории
+        <Icon.FolderPlus size="md" /> Прикрепить к акту категории
       </Link>
       {children}
     </Layout>

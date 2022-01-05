@@ -7,6 +7,7 @@ import {
   DataType,
   Unique,
   DefaultScope,
+  Validate,
 } from "sequelize-typescript";
 import { Optional } from "sequelize/types";
 
@@ -21,6 +22,7 @@ export default class User extends Model<
 
   @Unique
   @AllowNull(false)
+  @Validate({ min: 4 })
   @Column(DataType.STRING)
   username: string;
 

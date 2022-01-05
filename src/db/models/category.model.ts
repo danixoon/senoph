@@ -52,6 +52,11 @@ export default class Category extends Model<
   @Column(DataType.DATE)
   statusAt?: string;
 
+  @AllowNull(true)
+  @ForeignKey(() => User)
+  @Column(DataType.INTEGER)
+  statusId?: number;
+
   @BelongsToMany(() => Phone, {
     through: { model: () => CategoryPhone, scope: { status: null } },
   })

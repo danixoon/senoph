@@ -12,15 +12,16 @@ type ToggleProps = OverrideProps<
     name: string;
     label: string;
     disabled?: boolean;
+    inverted?: boolean;
     onChange: HookOnChange;
   }
 >;
 
 const Toggle: React.FC<ToggleProps> = (props) => {
-  const { label, input, disabled, onChange, name, ...rest } = props;
+  const { label, input, inverted, disabled, onChange, name, ...rest } = props;
 
   const mergedProps = mergeProps(
-    { className: mergeClassNames("toggle") },
+    { className: mergeClassNames("toggle", inverted && "toggle_inverted") },
     rest
   );
 

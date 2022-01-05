@@ -3,7 +3,12 @@ import path from "path";
 import express, { Router } from "express";
 import dotenv from "dotenv";
 import * as bodyParser from "body-parser";
-import { transactionHandler, logger, handler } from "@backend/utils/index";
+import {
+  transactionHandler,
+  logger,
+  handler,
+  validateEnv,
+} from "@backend/utils/index";
 import { logger as logRequest } from "@backend/middleware/logger";
 
 dotenv.config(
@@ -16,12 +21,16 @@ import { init as initDb, close as closeDb } from "@backend/db/index";
 import { errorHandler, notFoundHandler } from "@backend/middleware/error";
 import { routers } from "./route";
 import { ApiError, errorType } from "./utils/errors";
+import { revertBackup, createBackup } from "./db/backup";
 
 let server: http.Server | null;
 let isStarted = false;
 
 export const init = async () => {
   if (server) throw new Error("Сервер уже запущен.");
+
+  validateEnv();
+
   const app = express();
 
   const port = process.env.PORT || 5000;
@@ -31,7 +40,7 @@ export const init = async () => {
     payload: { port },
   });
 
-  app.use(bodyParser.json());
+  app.use(bodyParser.json({ limit: "50mb" }));
   app.use(logRequest());
 
   app.use(
@@ -62,7 +71,7 @@ export const init = async () => {
     await Promise.all([initDb()]);
     logger.info(`Сервер запущен`, {
       service: "server",
-      payload: { port },
+      payload: { port, NODE_ENV: process.env.NODE_ENV },
     });
     isStarted = true;
   });

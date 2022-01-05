@@ -26,8 +26,8 @@ mv ./build ./deploy
 # Установка флага NODE_ENV на прод
 echo -e 'process.env.NODE_ENV="production";\n' | cat - ./deploy/build/index.js > temp && mv temp ./deploy/build/index.js
 # Создание сценарных файлов запуска для винды/линухи
-echo "node ./build/index.js" > ./deploy/start.bat
-echo -e '#!/usr/bin/env bash\n node ./build/index.js' > ./deploy/start.sh
+echo "node ./build/index.js %*" > ./deploy/start.bat
+echo -e '#!/usr/bin/env bash\n node ./build/index.js "$@"' > ./deploy/start.sh
 
 # Копирование продового шаблона env-переменных и файла списка зависимостей
 cp .production.env ./deploy

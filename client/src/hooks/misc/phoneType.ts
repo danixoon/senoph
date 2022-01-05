@@ -17,6 +17,10 @@ export const usePhoneType = () => {
   return (phoneTypeId?: number) => {
     const type = types.find((type) => type.id === phoneTypeId);
 
-    return type ? type.name : "Неизвестно";
+    return type;
   };
+};
+
+export const getPhoneTypeName = (type?: DB.PhoneTypeAttributes) => {
+  return type?.name ?? "Неизвестно";
 };

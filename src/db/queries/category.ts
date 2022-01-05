@@ -26,6 +26,9 @@ const create = async (
     ...payload,
     actDate: payload.actDate.toISOString(),
     authorId,
+    status: "create-pending",
+    statusId: authorId,
+    statusAt: new Date().toISOString()
   };
 
   const category = await Category.create(categoryAttr);
@@ -58,4 +61,4 @@ const createMany = async (authorId: number, creations: CategoryCreation[]) => {
   return categories;
 };
 
-export default { create, createMany };
+export default { create };

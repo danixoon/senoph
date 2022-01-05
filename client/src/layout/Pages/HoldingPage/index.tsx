@@ -20,7 +20,7 @@ import CreateContent from "./Create";
 import CommitPhoneContent from "./CommitPhone";
 import ItemSelectionPopup from "layout/Popups/ItemSelectionPopup";
 import { useAppDispatch } from "store";
-import { parseItems } from "store/utils";
+import { extractStatus, parseItems } from "store/utils";
 import { api } from "store/slices/api";
 import Link from "components/Link";
 import Button from "components/Button";
@@ -29,155 +29,153 @@ import { NoticeContext } from "providers/NoticeProvider";
 import UpdateContent from "./Update";
 import Span from "components/Span";
 import { InputBind, InputHook } from "hooks/useInput";
+import { push } from "connected-react-router";
+import { useFetchConfigMap } from "hooks/api/useFetchConfigMap";
+import { useNotice } from "hooks/useNotice";
+import { usePaginator } from "hooks/usePaginator";
+import { useQueryInput } from "hooks/useQueryInput";
+import { clearObject } from "utils";
+import { useHoldingWithHistory } from "./utils";
 
-export type HoldingItem = Api.Models.Holding & {
-  prevHolders: Api.Models.Holder[];
-};
 
-export type HoldingPageProps = {
-  phones: Api.Models.Phone[];
-  holdings: HoldingItem[];
-  phonesStatus: ApiStatus;
-  holdingsStatus: ApiStatus;
-  holdingCreationStatus: ApiStatus;
+// const useContainer = (props: { holdings: Api.Models.Holding[] }) => {
+//   const { holdings } = props;
+//   const { path } = useRouteMatch();
+//   const location = useLocation<{ act?: "select" }>();
+//   const history = useHistory();
+//   const query = qs.parse(location.search);
 
-  onSubmitHolding: (data: any) => void;
+//   const isId = typeof query.selectedId === "string";
 
-  filterHook: InputHook<any>;
-};
+//   const ids = isId
+//     ? holdings.find((holding) => holding.id.toString() === query.selectedId)
+//         ?.phoneIds ?? []
+//     : [];
 
-export type HoldingTableItem = Api.Models.Holding & {
-  prevHolders: Api.Models.Holder[];
-  prevDepartments: Api.Models.Department[];
-};
+//   const phones = parseItems(
+//     api.useFetchPhonesQuery(
+//       { ids, amount: ids.length, offset: 0 },
+//       { skip: ids.length === 0 }
+//     )
+//   );
 
-const useContainer = (props: { holdings: Api.Models.Holding[] }) => {
-  const { holdings } = props;
+//   const [commit] = api.useCreateHoldingChangeMutation();
+
+//   return {
+//     path,
+//     phones: {
+//       ...phones,
+//       data: ids.length === 0 ? { items: [], total: 0, offset: 0 } : phones.data,
+//     },
+//     holderId: isId ? parseInt(query.selectedId as string) : undefined,
+//     isOpen: isId,
+//     onToggle: (id?: number) => {
+//       history.replace({
+//         search: qs.stringify({ ...query, selectedId: id }),
+//       });
+//     },
+//     act: location.state?.act,
+//     onCommit: (action: "add" | "remove", holdingId: number, phoneId: number) =>
+//       commit({ action, holdingId, phoneIds: [phoneId] }),
+//     // onSelect: (id: string) =>
+//     //   history.replace({
+//     //     pathname: `/phone/view`,
+//     //     search: qs.stringify({ selectedId: id }),
+//     //   }),
+//   };
+// };
+
+const useContainer = () => {
+  const dispatch = useAppDispatch();
+
+  const pageItems = 10;
+
+  const filterHook = useQueryInput<{
+    orderKey?: string;
+    orderDate?: string;
+    status?: any;
+    holderId?: any;
+    departmentId?: any;
+  }>({});
+
+  const [bindFilter, setFilter] = filterHook;
+  // const [offset, setOffset] = React.useState(() => 0);
+
+  // React.useEffect(() => {
+  //   setOffset(0);
+  // }, [
+  //   bindFilter.input.orderDate,
+  //   bindFilter.input.orderKey,
+  //   bindFilter.input.departmentId,
+  //   bindFilter.input.holderId,
+  //   bindFilter.input.status,
+  // ]);
+
+  // TODO: Possible weak?
+  const { id, ...filterData } = clearObject(bindFilter.input) as any;
+  const holdings = useHoldingWithHistory({
+    ...filterData,
+    ids: id ? [id] : undefined,
+  });
+
+  const [createHolding, holdingCreationInfo] = api.useCreateHoldingMutation();
+
+  const holdingCreationStatus = extractStatus(holdingCreationInfo);
+
+  useNotice(holdingCreationStatus, {
+    onSuccess: () => dispatch(push("/holding/commit")),
+  });
+
   const { path } = useRouteMatch();
-  const location = useLocation<{ act?: "select" }>();
-  const history = useHistory();
-  const query = qs.parse(location.search);
 
-  const isId = typeof query.id === "string";
-
-  const ids = isId
-    ? holdings.find((holding) => holding.id.toString() === query.id)
-        ?.phoneIds ?? []
-    : [];
-
-  const phones = parseItems(
-    api.useFetchPhonesQuery(
-      { ids, amount: ids.length, offset: 0 },
-      { skip: ids.length === 0 }
-    )
-  );
-
-  const [commit] = api.useCreateHoldingChangeMutation();
+  // const { currentPage, maxPage } = usePaginator(
+  //   offset,
+  //   holdings.data.total ?? pageItems,
+  //   pageItems
+  // );
 
   return {
+    createHolding,
+    holdings,
     path,
-    phones,
-    holderId: isId ? parseInt(query.id as string) : undefined,
-    isOpen: isId,
-    onToggle: (id?: number) => {
-      history.replace({
-        search: qs.stringify({ ...query, id }),
-      });
-    },
-    act: location.state?.act,
-    onCommit: (action: "add" | "remove", holdingId: number, phoneId: number) =>
-      commit({ action, holdingId, phoneIds: [phoneId] }),
-    // onSelect: (id: string) =>
-    //   history.replace({
-    //     pathname: `/phone/view`,
-    //     search: qs.stringify({ selectedId: id }),
-    //   }),
+    holdingCreationStatus,
+    filterHook,
   };
 };
 
-const HoldingPage: React.FC<HoldingPageProps> = (props) => {
-  const { phones, holdings } = props;
-  const {
-    phones: holdingPhones,
-    holderId,
-    isOpen,
-    onToggle,
-    onCommit,
-    act,
-    path,
-  } = useContainer({ holdings });
+const HoldingPage: React.FC = (props) => {
+  const { path, holdings } = useContainer();
 
-  const noticeContext = React.useContext(NoticeContext);
+  // const {
+  //   phones: holdingPhones,
+  //   holderId,
+  //   isOpen,
+  //   onToggle,
+  //   onCommit,
+  //   act,
+  //   path,
+  // } = useContainer({ holdings: holdings.items });
+
+  // const noticeContext = React.useContext(NoticeContext);
 
   return (
     <>
-      <PopupLayer>
-        <ItemSelectionPopup
-          isOpen={isOpen}
-          onToggle={() => onToggle()}
-          header="Прикреплённые средства связи"
-          onSelect={(item) => {}}
-          status={holdingPhones.status}
-          items={holdingPhones.data.items.map((item) => ({
-            id: item.id.toString(),
-            content: (
-              <>
-                <Button
-                  onClick={() => {
-                    if (holdingPhones.data.items.length === 1)
-                      noticeContext.createNotice(
-                        "Ошибка: Невозможно удалить последнее средство связи из движения. \nВероятно, вы хотите удалить движение полностью?"
-                      );
-                    else if (holderId) onCommit("remove", holderId, item.id);
-                  }}
-                  inverted
-                  style={{ marginRight: "1rem" }}
-                >
-                  <Icon.X />
-                </Button>
-                <Link href={`/phone/view?selectedId=${item.id}`}>
-                  {item.model?.name ?? `#${item.id}`}
-                </Link>
-                <Span
-                  size="xs"
-                  style={{ marginLeft: "auto", marginRight: "1rem" }}
-                  font="monospace"
-                >
-                  {item.inventoryKey ?? "Инвентарный отсутствует"}
-                </Span>
-              </>
-            ),
-            name: item.model?.name ?? `#${item.id}`,
-          }))}
-        />
-      </PopupLayer>
       <Layout flex="1" className="holding-page">
         <Switch>
           <Route path={`${path}/create`}>
-            {phones.length === 0 ? (
-              <InfoBanner
-                href="/phone/edit"
-                hrefContent="средство связи"
-                text="Для создания движения выберите"
-              />
-            ) : (
-              <CreateContent {...props} />
-            )}
+            <CreateContent />
           </Route>
           <Route path={`${path}/commit`}>
-            <CommitContent
-              {...props}
-              holdings={props.holdings.filter((p) => p.status !== null)}
-            />
+            <CommitContent />
           </Route>
           <Route path={`${path}/view`}>
-            <ViewContent {...props} onEdit={(id) => onToggle(id)} act={act} />
+            <ViewContent />
           </Route>
           <Route path={`${path}/update`}>
-            <UpdateContent {...props} />
+            <UpdateContent />
           </Route>
           <Route path={`${path}/phone/commit`}>
-            <CommitPhoneContent {...props} />
+            <CommitPhoneContent />
           </Route>
         </Switch>
       </Layout>

@@ -1,5 +1,6 @@
 node_modules
 build
+backup
 deploy
 deploy.zip
 uploads
@@ -8,3 +9,4 @@ yarn.lock
 logs
 *.log
 *.blg
+sync.json

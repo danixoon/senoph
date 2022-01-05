@@ -4,6 +4,52 @@ import { inspect } from "util";
 import winston from "winston";
 import { sequelize } from "../db";
 
+export const validateEnv = () => {
+  type Validator = (value?: string) => boolean | undefined | string;
+  const envs: Partial<Record<keyof NodeJS.ProcessEnv, Validator>> = {
+    // MYSQL: (value) => !value && "Порт до bin каталога MYSQL не задан",
+    PORT: (value) =>
+      process.env.NODE_ENV === "production" &&
+      !value &&
+      "Порт приложения не задан",
+    SECRET: (value) => !value && "Секретный ключ приложения не задан",
+    DEFAULT_PASSWORD: (value) =>
+      !value && "Резервный пароль администратора не задан",
+    DB_NAME: (value) => !value && "Имя базы данных для подключения не указано",
+    DB_USERNAME: (value) =>
+      !value && "Имя пользователя базы данных для подключения не указано",
+    DB_PASSWORD: (value) =>
+      !value && "Пароль пользователя базы данных для подключения не указан",
+    DB_HOST: (value) => !value && "Хост базы данных для подключения не указан",
+  };
+
+  for (const env in envs) {
+    const validator = envs[env as keyof typeof envs] as Validator;
+    const error = validator(process.env[env]);
+    if (error)
+      throw new Error(
+        `Ошибка переменной окружения ${env}${
+          typeof error === "string" ? `: ${error}` : ""
+        }`
+      );
+  }
+};
+
+// Deletes empty arrays, strings & null values
+export const clearObject = function <T>(obj: T) {
+  const filtered = { ...obj };
+  for (const k in filtered) {
+    const v = filtered[k];
+    if (v === undefined) delete filtered[k];
+    if (typeof v === "number") if (isNaN(v)) delete filtered[k];
+    if (Array.isArray(v) && v.length === 0) delete filtered[k];
+    else if (typeof v === "string" && v.trim().length === 0) delete filtered[k];
+    else if (v === null) delete filtered[k];
+  }
+
+  return filtered as { [K in keyof T]: Exclude<T[K], null | undefined> };
+};
+
 export const groupBy = <T, K>(list: T[], getKey: (value: T) => K) => {
   const map = new Map<K, T[]>();
   for (const item of list) {

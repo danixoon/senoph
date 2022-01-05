@@ -17,6 +17,7 @@ const create = async (authorId: number, creationPhones: PhoneCreation[]) => {
   const phones: DB.PhoneAttributes[] = creationPhones.map((phone) => ({
     ...phone,
     statusAt: new Date().toISOString(),
+    statusId: authorId,
     authorId,
   }));
 

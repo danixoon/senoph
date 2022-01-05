@@ -12,6 +12,7 @@ import ClickInput from "components/ClickInput";
 import PopupLayer from "providers/PopupLayer";
 import Dropdown, { DropdownProps } from "components/Dropdown";
 import { api } from "store/slices/api";
+import Input from "components/Input";
 
 export type HolderSelectionPopupContainerProps = {
   onToggle: () => void;
@@ -20,32 +21,34 @@ export type HolderSelectionPopupContainerProps = {
   dropdownProps?: Omit<DropdownProps, "name" | "input" | "onChange" | "items">;
 };
 
-const HolderSelectionPopupContainer: React.FC<HolderSelectionPopupContainerProps> =
-  (props) => {
-    const { onSelect, dropdownProps = {}, ...rest } = props;
+const HolderSelectionPopupContainer: React.FC<
+  HolderSelectionPopupContainerProps
+> = (props) => {
+  const { onSelect, dropdownProps = {}, ...rest } = props;
 
-    const [searchBind] = useInput({ departmentId: null, holderName: null });
-    const { departmentId } = searchBind.input;
+  const [searchBind] = useInput({ query: "" });
+  const { query } = searchBind.input;
 
-    const { holders } = useFetchHolder({});
+  const { holders } = useFetchHolder({});
 
-    return (
-      <ItemSelectionPopup
-        items={
-          holders?.items.map((item) => ({
-            content: splitHolderName(item),
-            name: splitHolderName(item),
-            ...item,
-          })) ?? []
-        }
-        selectable
-        onSelect={(item) => {
-          onSelect(item.id, item.name);
-        }}
-        header="Выбор владельца"
-        {...rest}
-      />
-    );
-  };
+  return (
+    <ItemSelectionPopup
+      items={(
+        holders?.items.map((item) => ({
+          name: splitHolderName(item),
+          ...item,
+        })) ?? []
+      ).filter((item) => (!query ? true : item.name.includes(query)))}
+      selectable
+      onSelect={(item) => {
+        onSelect(item.id, item.name);
+      }}
+      header="Выбор владельца"
+      {...rest}
+    >
+      <Input style={{ flex: "1" }} placeholder="Запрос" name="query" {...searchBind} />
+    </ItemSelectionPopup>
+  );
+};
 
 export default HolderSelectionPopupContainer;

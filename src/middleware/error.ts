@@ -3,11 +3,13 @@ import { ErrorRequestHandler, RequestHandler } from "express";
 import { UniqueConstraintError } from "sequelize";
 import { transactionHandler, logger } from "../utils";
 
-export const notFoundHandler: RequestHandler = transactionHandler((req, res, next) => {
-  throw new ApiError(errorType.NOT_FOUND, {
-    description: "Страница не найдена.",
-  });
-});
+export const notFoundHandler: RequestHandler = transactionHandler(
+  (req, res, next) => {
+    throw new ApiError(errorType.NOT_FOUND, {
+      description: "Страница не найдена.",
+    });
+  }
+);
 export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   if (err instanceof ApiError) {
     const e = err as ApiError;
@@ -19,11 +21,11 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   } else {
     const e = err as Error;
     const p =
-      process.env.NODE_ENV !== "production"
-        ? {
-            payload: { ...e, stack: e.stack, name: e.name, message: e.message },
-          }
-        : {};
+      // process.env.NODE_ENV !== "production"
+      {
+        payload: { ...e, stack: e.stack, name: e.name, message: e.message },
+      };
+    // : {};
 
     const errorResponse = {
       error: {

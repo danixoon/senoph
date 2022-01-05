@@ -10,7 +10,7 @@ import Commit, {
   validActionTypes,
   validTargetNames,
 } from "@backend/db/models/commit.model";
-import { Filter } from "@backend/utils/db";
+import { Filter, WhereFilter } from "@backend/utils/db";
 import { Op } from "sequelize";
 import { getModel } from "../db";
 import { transactionHandler, prepareItems } from "../utils";
@@ -21,6 +21,7 @@ import Category from "@backend/db/models/category.model";
 import Log from "@backend/db/models/log.model";
 import HoldingPhone from "@backend/db/models/holdingPhone.model";
 import CategoryPhone from "@backend/db/models/categoryPhone.model";
+import Change from "@backend/db/models/change.model";
 
 const router = AppRouter();
 
@@ -29,33 +30,53 @@ router.get(
   access("user"),
   validate({ query: { target: tester().required() } }),
   async (req, res) => {
-    const { id } = req.params.user;
+    // const { id } = req.params.user;
     const { target } = req.query;
-    const changes = Object.entries(await getChanges(id, target)).reduce(
-      (acc, [key, value]) => [...acc, { id: Number(key), ...value }],
+    const changes = Object.entries(await getChanges(target)).reduce(
+      (acc, [authorId, value]) => [
+        ...acc,
+        ...Object.entries(value).reduce(
+          (acc, [targetId, changes]) => [
+            ...acc,
+            { ...changes, id: Number(targetId), authorId: Number(authorId) },
+          ],
+          []
+        ),
+      ],
       [] as any[]
     );
+
+    changes.sort((a, b) => (a.createdAt > b.createdAt ? -1 : 1));
 
     res.send(prepareItems(changes, changes.length, 0));
   }
 );
 
-// ???
+// Подтверждение изменения?
 router.put(
   "/commit",
-  access("user"),
+  access("admin"),
   validate({
     query: {
       target: tester().required(),
       targetId: tester().isNumber().required(),
+      userId: tester().isNumber(),
     },
   }),
   // TODO: Сделать проверку на владельца изменений
   transactionHandler(async (req, res, next) => {
-    const { target, targetId } = req.query;
-    const { id } = req.params.user;
+    const { target, targetId, userId } = req.query;
+    const { id, role } = req.params.user;
 
-    const updater = getUpdater(target, targetId, id);
+    if (role === "user" && userId && userId !== id)
+      throw new ApiError(errorType.ACCESS_DENIED, {
+        description:
+          "Применить изменение невозможно т.к. вы не являетесь его автором.",
+      });
+
+    const targetUserId = userId ?? id;
+
+    const updater = getUpdater(target, targetId, targetUserId);
     await updater.commit();
 
     // Log.log("phone", [targetId], "change", id);
@@ -87,13 +108,17 @@ router.put(
 //   }
 // );
 
+// Создание изменения
 router.post(
   "/commit",
   access("user"),
   validate({
-    query: { target: tester().required(), targetId: tester().required() },
+    query: {
+      target: tester().required(),
+      targetId: tester().required(),
+    },
   }),
-  owner("phone", (r) => r.query.targetId),
+  // owner("phone", (r) => r.query.targetId),
   transactionHandler(async (req, res) => {
     const { id } = req.params.user;
     const { target, targetId } = req.query;
@@ -125,12 +150,18 @@ router.put(
     await Promise.all(
       holdings.map(async (holding) => {
         if (action === "approve") {
+          if (user.role !== "admin")
+            throw new ApiError(errorType.ACCESS_DENIED);
           if (holding.status === "create-pending") {
             await holding.update({ status: null });
           } else if (holding.status === "delete-pending") {
             await holding.destroy();
           }
         } else {
+          if (user.role === "user" && holding.statusId !== user.id)
+            throw new ApiError(errorType.ACCESS_DENIED, {
+              description: "Вы не являетесь автором данного движения.",
+            });
           if (holding.status === "create-pending") {
             await holding.destroy();
           } else if (holding.status === "delete-pending") {
@@ -176,6 +207,7 @@ router.put(
     await Promise.all(
       holdingPhones.map(async (holdingPhone) => {
         if (action === "approve") {
+          if (user.role === "user") throw new ApiError(errorType.ACCESS_DENIED);
           if (holdingPhone.status === "create-pending") {
             await holdingPhone.update({
               status: null,
@@ -184,7 +216,11 @@ router.put(
           } else if (holdingPhone.status === "delete-pending") {
             await holdingPhone.destroy();
           }
-        } else {
+        } else if (action === "decline") {
+          if (user.role === "user" && holdingPhone.authorId !== user.id)
+            throw new ApiError(errorType.ACCESS_DENIED, {
+              description: "Вы не являетесь автором данного изменения.",
+            });
           if (holdingPhone.status === "create-pending") {
             await holdingPhone.destroy();
           } else if (holdingPhone.status === "delete-pending") {
@@ -233,6 +269,7 @@ router.put(
     await Promise.all(
       categoryPhones.map(async (categoryPhone) => {
         if (action === "approve") {
+          if (user.role === "user") throw new ApiError(errorType.ACCESS_DENIED);
           if (categoryPhone.status === "create-pending") {
             await categoryPhone.update({
               status: null,
@@ -241,7 +278,11 @@ router.put(
           } else if (categoryPhone.status === "delete-pending") {
             await categoryPhone.destroy();
           }
-        } else {
+        } else if (action === "decline") {
+          if (user.role === "user" && categoryPhone.authorId !== user.id)
+            throw new ApiError(errorType.ACCESS_DENIED, {
+              description: "Вы не являетесь автором данного изменения.",
+            });
           if (categoryPhone.status === "create-pending") {
             await categoryPhone.destroy();
           } else if (categoryPhone.status === "delete-pending") {
@@ -282,12 +323,16 @@ router.put(
     await Promise.all(
       categories.map(async (category) => {
         if (action === "approve") {
+          if (user.role !== "admin")
+            throw new ApiError(errorType.ACCESS_DENIED);
           if (category.status === "create-pending") {
             await category.update({ status: null });
           } else if (category.status === "delete-pending") {
             await category.destroy();
           }
         } else {
+          if (user.role === "user" && user.id !== category.statusId)
+            throw new ApiError(errorType.ACCESS_DENIED);
           if (category.status === "create-pending") {
             await category.destroy();
           } else if (category.status === "delete-pending") {
@@ -340,39 +385,36 @@ router.put(
       ids: tester().array({}),
     },
   }),
-  owner(
-    "phone",
-    (req) => req.body.ids,
-    (model) => {
-      if (model.status === null)
-        throw new ApiError(errorType.INVALID_QUERY, {
-          description: "Объект изменений не ожидает",
-        });
-    }
-  ),
   transactionHandler(async (req, res, next) => {
     const { ids, action } = req.body;
     const { params } = req;
 
-    if (!withOwner(params, "phone") || !withUser(params))
-      return next(new ApiError(errorType.INTERNAL_ERROR));
+    const phones = await Phone.unscoped().findAll({
+      where: { id: { [Op.in]: ids } },
+    });
 
-    const { phone: phones, user } = params;
+    const { user } = params;
 
     await Promise.all(
       phones.map(async (phone) => {
         switch (action) {
           case "approve":
-            if (phone.status === "create-pending")
+            if (user.role === "user")
+              throw new ApiError(errorType.ACCESS_DENIED);
+            if (phone.status === "create-pending") {
               await Phone.unscoped().update(
-                { status: null },
+                { status: null, statusId: null },
                 { where: { id: phone.id } }
               );
-            else if (phone.status === "delete-pending")
+            } else if (phone.status === "delete-pending")
               await Phone.unscoped().destroy({ where: { id: phone.id } });
             break;
 
           case "decline":
+            if (user.role === "user" && phone.statusId !== user.id)
+              throw new ApiError(errorType.ACCESS_DENIED, {
+                description: "Вы не являетесь автором данного средства связи.",
+              });
             if (phone.status === "create-pending")
               await Phone.unscoped().destroy({
                 where: { id: phone.id },
@@ -407,17 +449,28 @@ router.delete(
       keys: tester(),
       targetId: tester().required(),
       target: tester().required(),
+      userId: tester().isNumber(),
     },
   }),
-  owner("phone", (r) => r.query.targetId),
+  // owner("phone", (r) => r.query.targetId),
   convertValues({ keys: (c) => c.toArray().value }),
   transactionHandler(async (req, res) => {
-    const { id } = req.params.user;
-    const { target, targetId, keys } = req.query;
+    const { id, role } = req.params.user;
+    const { target, targetId, keys, userId } = req.query;
 
-    const updater = getUpdater(target, targetId, id);
-    if (!Array.isArray(keys)) await updater.clearAll();
+    if (role === "user" && userId && userId !== id)
+      throw new ApiError(errorType.ACCESS_DENIED, {
+        description:
+          "Отменить изменение невозможно т.к. вы не являетесь его автором.",
+      });
+
+    const targetUserId = userId ?? id;
+
+    const updater = getUpdater(target, targetId, targetUserId);
+    if (!Array.isArray(keys)) await updater.clear();
     else await updater.clear(...keys);
+
+    Log.log(target, [targetId], "commit", id, { target, targetId, keys });
 
     res.send();
   })

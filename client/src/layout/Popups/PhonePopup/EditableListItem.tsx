@@ -75,7 +75,13 @@ const EditableListItem: React.FC<
             color="bgDark"
             size="xs"
             style={{ marginLeft: "0.5rem" }}
-            altLabel={{ text: "Изменён", position: "right", zIndex: "popup" }}
+            altLabel={{
+              text: `Изменено с '${
+                children == null ? "Отсутствует" : mapper(children)
+              }'`,
+              position: "right",
+              zIndex: "popup",
+            }}
           />
         )}
       </Layout>

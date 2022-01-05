@@ -1,10 +1,39 @@
 @require 'stylus/theme.styl'
 
 .sidebar
-
+  width: 200px
   // box-shadow: 5px 0px 10px 5px rgba(0, 0, 0, 0.05)
   border-right: 1px solid colors.light
   &__group
     display: flex
     flex-flow: column
+
+  height: 100vh
+  overflow-y: auto
+
+  &__item-text
+    margin-right: 1rem
+
+
+.notice-icon
+  width: 6px
+  height: 6px
+  background-color: colors.primary
+  border-radius: 50%
+  margin-left: auto
+
+.notice-badge
+  background-color: colors.primary
+  border-radius: 50px
+  font-size: (fontSize.xs / 1.2)
+  color: white
+  padding: 3px
+  height: 12px
+  min-width: 12px
+  text-align: center
+  font-weight: bold
+  display: flex
+  justify-content: center
+  align-items: center
+  margin-left: auto
   

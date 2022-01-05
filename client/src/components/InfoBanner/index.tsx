@@ -13,17 +13,22 @@ export type InfoBannerProps = OverrideProps<
     text: string;
     href?: string;
     hrefContent?: string;
+    disabled?: boolean;
   }
 >;
-const InfoBanner: React.FC<InfoBannerProps> = (props) => (
-  <Label style={{ margin: "auto" }}>
-    <Span>{props.text}</Span>
-    {props.href && (
-      <Link href={`${props.href}`} style={{ marginLeft: "0.2rem" }}>
-        {props.hrefContent ?? "¯\\_(ツ)_/¯"}
-      </Link>
-    )}
-  </Label>
+const InfoBanner: React.FC<InfoBannerProps> = (props) =>
+  props.disabled ? (
+    (props.children as React.ReactElement) ?? <></>
+  ) : (
+    <Label style={{ margin: "auto" }}>
+      <Span>{props.text}</Span>
+      {props.href && (
+        <Link href={`${props.href}`} style={{ marginLeft: "0.2rem" }}>
+          {props.hrefContent ?? "¯\\_(ツ)_/¯"}
+        </Link>
+      )}
+    </Label>
+
 );
 
 export default InfoBanner;
